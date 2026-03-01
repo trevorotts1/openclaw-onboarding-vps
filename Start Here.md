@@ -80,7 +80,7 @@ use their path everywhere. Do not rename their folder.
 Download the onboarding ZIP from the GitHub repository:
 
 ```bash
-curl -L https://github.com/[REPO_URL]/archive/refs/heads/main.zip -o /tmp/onboarding.zip
+curl -L https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip -o /tmp/onboarding.zip
 ```
 
 **Extract it into the master files folder, inside a subfolder called `OpenClaw Onboarding`:**
