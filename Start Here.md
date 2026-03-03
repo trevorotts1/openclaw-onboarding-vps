@@ -371,6 +371,29 @@ When Playwright is used, it must use persistent sessions with:
 
 Never use regular `launch()` for onboarding automation.
 
+
+### ALREADY-INSTALLED DETECTION (MANDATORY)
+
+Before starting each skill, run a quick pre-check to detect whether the skill is already configured.
+
+Rule:
+1. If pre-check shows the skill is already installed and verified, mark it as ALREADY_INSTALLED.
+2. Record short proof (what check passed).
+3. Skip re-installation and continue to the next skill.
+4. Never re-run setup steps blindly when the system is already configured.
+
+Examples of pre-checks:
+- Tool exists (`command --version` succeeds)
+- Required env key exists and is non-empty in discovered env files
+- Required config block already exists in target file
+- Required account/token already validated by API test
+
+Status values allowed per skill:
+- INSTALLED
+- ALREADY_INSTALLED
+- SKIPPED (optional only, with reason)
+- FAILED (core skill failure stops onboarding)
+
 ### INSTALL ORDER
 
 All skill folders are located inside:
@@ -440,7 +463,7 @@ alongside the .skill package and tell the human what to do and tell the AI how t
 ## WHEN ONBOARDING IS COMPLETE
 
 When every skill on the list above is installed and verified, tell the user:
-1. Everything that was installed (all 15 skills with status)
+1. Everything that was installed (all 15 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
 2. Everything that was added to each workspace file (AGENTS.md, TOOLS.md, MEMORY.md, etc.)
 3. Which workspace files were updated and which were not touched
 4. Where the full documentation for each skill is saved (the master files folder path)
