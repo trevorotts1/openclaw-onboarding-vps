@@ -1,3 +1,9 @@
+
+## 🔴 ORDER LOCK (SOVEREIGN)
+- OpenRouter setup must run LAST in onboarding sequence.
+- Before any OpenRouter config edits, back up the model config first.
+- If backup fails, stop OpenRouter setup and report error.
+
 # OpenRouter Setup - Usage Instructions
 
 This document covers how to use the OpenRouter model roster day to day. It assumes you have already completed the installation steps in INSTALL.md. If you have not set up OpenRouter yet, go do that first.

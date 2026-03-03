@@ -2,7 +2,7 @@
 
 **The complete skill package for setting up a fully operational OpenClaw AI assistant.**
 
-14 skills. Installed in order. Each one teaches your AI agent how to use a different tool or service - from backing up your files to generating images to managing a team through Telegram.
+15 skills. Installed in order. Each one teaches your AI agent how to use a different tool or service - from backing up your files to generating images to managing a team through Telegram.
 
 ---
 
@@ -110,6 +110,7 @@ These must be installed in this exact order. Each skill builds on the ones befor
 | 12 | **Google Workspace Setup** | Creates the Google Cloud project, service account, and API connections for Gmail, Calendar, and Drive. |
 | 13 | **Google Workspace Integration** | The deep technical guide for Google Workspace - 70+ permission scopes, 26 APIs, troubleshooting. |
 | 14 | **BlackCEO Team Management** | Sets up multi-person team management through Telegram with message routing and worker agents. |
+| 15 | **Summarize YouTube Setup** | Installs summarize CLI for YouTube transcript extraction and summaries with OpenAI-first, Gemini-fallback key handling. |
 
 ---
 
@@ -164,7 +165,7 @@ No. Skills 01 (Teach Yourself Protocol) and 02 (Backup Protocol) are required - 
 No. The skills build on each other. Skill 01 must be first because every other skill uses the Teach Yourself Protocol to store its documentation properly. Skill 02 must be second because every configuration change after that requires a backup first.
 
 **How long does the full onboarding take?**
-About 1 to 2 hours if you are installing all 14 skills. Each skill takes 5 to 15 minutes depending on whether you need to create new accounts.
+About 1 to 2 hours if you are installing all 15 skills. Each skill takes 5 to 15 minutes depending on whether you need to create new accounts.
 
 **What if something goes wrong?**
 The Start Here.md file includes troubleshooting guidance. Your AI agent is also trained to handle errors - it will try multiple approaches before asking you for help.

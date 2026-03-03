@@ -317,14 +317,59 @@ It tells you:
 ### If a Skill Fails to Install
 
 If any step in a skill's installation fails:
-1. STOP. Do not move to the next skill.
-2. Tell the user exactly what failed, which step it failed on, and the error message.
-3. Attempt to fix the problem. Try alternative methods if the first fix does not work.
-4. If you cannot fix it after exhausting all options, tell the user what you tried and what access or information you need from them.
-5. Do NOT skip the failed skill and move on. The install order exists for a reason. Later skills may depend on earlier ones.
-6. Only proceed to the next skill after the failed skill is fully installed and verified.
+1. Tell the user exactly what failed, which step failed, and the exact error.
+2. Try at least one alternative fix before deciding final status.
+3. Classify the skill:
+   - CORE skills: 01 Teach Yourself Protocol, 02 Back Yourself Up Protocol, 03 Superpowers
+   - OPTIONAL skills: all platform/API-dependent skills (GHL, Vercel, Context7, GitHub, Google, KIE, etc.)
+4. If a CORE skill fails, STOP onboarding and request what is needed.
+5. If an OPTIONAL skill fails due to missing API key, missing account, or user says they do not use that system:
+   - mark skill status as SKIPPED
+   - record exact reason
+   - continue to next skill
+6. Never silently skip. Always report INSTALLED or SKIPPED with reason.
 
 ---
+
+### EXECUTION STRATEGY (MANDATORY)
+
+1. Run skill 01 and skill 02 sequentially in the main agent.
+2. After skill 02 completes, use staggered sub-agents for remaining non-core skills.
+3. Keep OpenRouter setup for last after model config backup is verified.
+4. Superdesign is the only skill allowed to rely on service CLI commands.
+
+### API KEY DISCOVERY (MANDATORY BEFORE ASKING USER)
+
+Before asking for any API key, scan these files first:
+- `.env`
+- `secrets/.env`
+- `~/clawd/secrets/.env` (if present)
+
+Use flexible matching for key names. Treat these as possible equivalents:
+- OPENROUTER_API_KEY, OPEN_ROUTER_API_KEY, OPEN ROUTER API KEY
+- CONTEXT7_API_KEY, CONTEXT_7_API_KEY, CONTEXT 7 API KEY
+- VERCEL_TOKEN, VERCEL_API_TOKEN
+- GITHUB_TOKEN, GH_TOKEN, GITHUB_PAT
+
+If a usable key is found, use it and continue without asking the user.
+If no key is found, ask once. If still missing and skill is optional, mark SKIPPED and continue.
+
+### GOOGLE ACCOUNT BRANCHING (MANDATORY)
+
+At the start of Google setup, ask:
+- "Do you use Google Workspace (custom domain) or regular Gmail?"
+
+Routing:
+- If Workspace domain account: use Workspace path (service account + delegated setup where required)
+- If regular Gmail only: use Gmail path (OAuth/user-based setup)
+
+### PLAYWRIGHT REQUIREMENT (MANDATORY)
+
+Install Playwright early in onboarding before automation-heavy skills.
+When Playwright is used, it must use persistent sessions with:
+- `launchPersistentContext(userDataDir)`
+
+Never use regular `launch()` for onboarding automation.
 
 ### INSTALL ORDER
 
@@ -341,14 +386,16 @@ All skill folders are located inside:
 | 4 | GHL / Convert and Flow Setup | 04-ghl-setup |
 | 5 | GHL / Convert and Flow - Install Pages | 05-ghl-install-pages |
 | 6 | KIE Setup and HTTP Structure | 06-kie-setup |
-| 7 | Vercel Setup | 07-vercel-setup |
-| 8 | Context7 Setup | 08-context7 |
-| 9 | GitHub / Git Setup | 09-github-setup |
+| 7 | Vercel Setup (API/browser path only) | 07-vercel-setup |
+| 8 | Context7 Setup (API/browser path only) | 08-context7 |
+| 9 | GitHub / Git Setup (API/browser path only) | 09-github-setup |
 | 10 | SuperDesign Instructions Setup | 10-superdesign |
-| 11 | OpenRouter Setup | 11-openrouter-setup |
-| 12 | Google Workspace Setup | 12-google-workspace-setup |
-| 13 | Google Workspace Integration | 13-google-workspace-integration |
-| 14 | BlackCEO Team Management Setup | 14-blackceo-team-management |
+| 11 | Google Workspace Setup (branch: Workspace vs Gmail) | 12-google-workspace-setup |
+| 12 | Google Workspace Integration | 13-google-workspace-integration |
+| 13 | BlackCEO Team Management Setup | 14-blackceo-team-management |
+| 14 | Summarize YouTube Setup | 15-summarize-youtube |
+| 15 | OpenRouter Setup (MUST BE LAST, after model backup) | 11-openrouter-setup |
+
 
 ---
 
@@ -370,25 +417,30 @@ alongside the .skill package and tell the human what to do and tell the AI how t
 
 - Do NOT change any API keys, terminal commands, or config values from what is written
 - Do NOT add steps that are not in the instructions
+- Do NOT use service CLIs for GitHub, Vercel, or Context7 during onboarding
+- Use API and browser setup paths for GitHub, Vercel, and Context7
+- Only Superdesign is allowed to rely on CLI-specific service commands
 - Do NOT skip verification steps
 - Do NOT tell the user a skill is installed until you have verified it works
 - Do NOT bloat AGENTS.md, TOOLS.md, or MEMORY.md with full documentation
 - Do NOT update workspace files that CORE_UPDATES.md does not list for that skill
 - Do NOT rewrite the text provided in CORE_UPDATES.md - use it exactly as written
-- Do NOT skip a failed skill and move to the next one - fix it first
+- Do NOT silently skip any skill
+- Optional skills with missing account/API may be marked SKIPPED with reason and onboarding should continue
+- Core skills (01, 02, 03) cannot be skipped
 - Do NOT create a duplicate master files folder if one already exists
 - ALWAYS back up config files before editing them
 - ALWAYS use human-readable dates on all backup filenames: date +'%B %-d at %-I-%M %p'
 - ALWAYS read .md files in the order specified (SKILL, INSTALL, INSTRUCTIONS, EXAMPLES, CORE_UPDATES)
 - ALWAYS confirm to the user after each skill is installed before moving on
-- If anything fails, stop and tell the user exactly what failed before proceeding
+- If anything fails, report exact failure and classify as CORE stop or OPTIONAL skip
 
 ---
 
 ## WHEN ONBOARDING IS COMPLETE
 
 When every skill on the list above is installed and verified, tell the user:
-1. Everything that was installed (all 14 skills with status)
+1. Everything that was installed (all 15 skills with status)
 2. Everything that was added to each workspace file (AGENTS.md, TOOLS.md, MEMORY.md, etc.)
 3. Which workspace files were updated and which were not touched
 4. Where the full documentation for each skill is saved (the master files folder path)

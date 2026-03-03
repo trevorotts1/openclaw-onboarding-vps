@@ -1,4 +1,10 @@
 
+## 🔴 ORDER LOCK (SOVEREIGN)
+- OpenRouter setup must run LAST in onboarding sequence.
+- Before any OpenRouter config edits, back up the model config first.
+- If backup fails, stop OpenRouter setup and report error.
+
+
 ╔══════════════════════════════════════════════════════════════╗
   MANDATORY TSP CHECK - READ THIS BEFORE ANYTHING ELSE
   DO NOT SKIP. DO NOT PROCEED UNTIL THIS CHECK IS COMPLETE.

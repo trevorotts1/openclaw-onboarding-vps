@@ -1,3 +1,10 @@
+
+## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
+- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
+- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
+- Use API-driven setup and browser-based account/token creation flows only.
+- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
+
 ╔══════════════════════════════════════════════════════════════╗
   MANDATORY TSP CHECK - READ THIS BEFORE ANYTHING ELSE
   DO NOT SKIP. DO NOT PROCEED UNTIL THIS CHECK IS COMPLETE.

@@ -10,6 +10,12 @@ metadata:
   priority: STANDARD
 ---
 
+## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
+- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
+- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
+- Use API-driven setup and browser-based account/token creation flows only.
+- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
+
 # Vercel Setup
 
 Vercel is a platform for putting websites on the internet. When you build a

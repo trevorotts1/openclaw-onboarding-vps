@@ -1,3 +1,9 @@
+
+## 🔴 ORDER LOCK (SOVEREIGN)
+- OpenRouter setup must run LAST in onboarding sequence.
+- Before any OpenRouter config edits, back up the model config first.
+- If backup fails, stop OpenRouter setup and report error.
+
 # OpenRouter Setup - SKILL.md
 
 ## What This Skill Is About

@@ -1,3 +1,12 @@
+
+## 🔴 GOOGLE ACCOUNT ROUTING + PLAYWRIGHT PERSISTENCE (SOVEREIGN)
+- Ask account type first: Google Workspace (custom domain) or regular Gmail.
+- Workspace path: use Workspace setup flow.
+- Gmail path: use Gmail OAuth flow.
+- Do not force Workspace-only setup for Gmail users.
+- If browser automation is used, Playwright must use `launchPersistentContext(userDataDir)`.
+- Never use regular `launch()` for onboarding automation.
+
 # Google Workspace Setup - Usage Instructions
 
 This document covers how to USE your Google Workspace integration day to day, after you have completed the installation steps in INSTALL.md.
