@@ -473,3 +473,24 @@ When every skill on the list above is installed and verified, tell the user:
 
 This file is part of the OpenClaw Onboarding system built by Trevor Otts.
 Do not modify this file without Trevor's explicit permission.
+
+
+---
+
+## NEW SKILLS ADDED (MARCH 3, 2026)
+
+The onboarding package now includes:
+
+- `16-self-improving-agent/`
+- `17-proactive-agent/`
+
+Both folders follow the 7-file onboarding standard and also preserve all upstream files under `upstream-original/`.
+
+Install order after core skills:
+1. 16-self-improving-agent
+2. 17-proactive-agent
+
+Before installing either skill, execute Teach Yourself Protocol on that skill folder and read:
+- `SKILL.md`
+- `[skill-name]-full.md`
+- all `.md` files in `upstream-original/`
