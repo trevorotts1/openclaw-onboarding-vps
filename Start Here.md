@@ -494,3 +494,19 @@ Before installing either skill, execute Teach Yourself Protocol on that skill fo
 - `SKILL.md`
 - `[skill-name]-full.md`
 - all `.md` files in `upstream-original/`
+
+
+## Imported Skills Pack (16-18) - install sequence
+These are imported/recreated skills preserved from upstream with TSP wrapper files.
+
+Order:
+1. 16-self-improving-agent
+2. 17-proactive-agent
+3. 18-humanizer
+
+For each imported skill:
+- Run Teach Yourself Protocol on that folder
+- Read `SKILL.md`
+- Read `[skill-name]-full.md`
+- Read all docs in `upstream-original/`
+- Install to `~/.openclaw/skills/<slug>/`
