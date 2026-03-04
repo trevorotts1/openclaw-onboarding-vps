@@ -529,3 +529,16 @@ For every imported skill (16+), this is mandatory:
 2. Read all upstream markdown files
 3. Apply only relevant core file updates listed in that skill's CORE_UPDATES.md
 4. Do not edit non-relevant core files
+
+
+## Imported Skills Pack (16-20) - install sequence
+
+Order:
+1. 16-self-improving-agent
+2. 17-proactive-agent
+3. 18-humanizer
+4. 19-youtube-watcher
+5. 20-tavily-search
+
+Conflict rule:
+- If generic TYP wrapper instructions conflict with a skill set's own docs, follow the skill's `SKILL.md` and `CORE_UPDATES.md`.
