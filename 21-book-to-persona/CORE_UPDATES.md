@@ -40,17 +40,29 @@ To add a new book: follow SOP in MEMORY.md under "Add New Book to Coaching Perso
 
 ## TOOLS.md
 
-**Where:** Add a new section under model routing titled `## Book-to-Persona - Model Routing`
+**Where:** Add a new section under model routing titled `## Book-to-Persona - Model Routing and QMD`
 
 **Exact text to add:**
 ```
-## Book-to-Persona - Model Routing
+## Book-to-Persona - Model Routing and QMD
+Pipeline model routing:
 - Phase 1: moonshot/kimi-k2.5 — MOONSHOT_API_KEY in ~/clawd/secrets/.env — endpoint: https://api.moonshot.ai/v1 — temperature MUST be 1.0
 - Phase 2: deepseek/deepseek-v3.2 via OpenRouter ONLY (OPENROUTER_API_KEY)
 - Phase 3: openai/gpt-5.2-codex via direct OpenAI API
 - Fallback (content filter): OpenRouter moonshotai/kimi-k2.5 for flagged books
-- QMD search: qmd search coaching-personas "<keywords>" — returns persona folder path
-Full pipeline reference: ~/clawd/skills/book-to-persona/PIPELINE.md
+
+QMD collection: coaching-personas
+Setup commands (run once on fresh install):
+  qmd collection add ~/.openclaw/skills/21-book-to-persona/personas --name coaching-personas --mask "**/*.md"
+  qmd update
+  qmd embed  (takes 3-8 min first time, downloads local model, runs offline after)
+
+Runtime query: qmd search coaching-personas "<task keywords>"
+After adding new book: qmd update (no need to re-embed everything)
+If stale/broken: qmd cleanup && qmd update && qmd embed
+
+Full pipeline reference: ~/.openclaw/skills/21-book-to-persona/PIPELINE.md
+Full QMD guide: ~/.openclaw/skills/21-book-to-persona/QMD-RETRIEVAL-GUIDE.md
 ```
 
 ---

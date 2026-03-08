@@ -175,23 +175,69 @@ If Codex OAuth is not found or expired: reconnect via OpenClaw settings using yo
 
 ---
 
-## Step 5 - Update Core Files
+## Step 5 - Set Up QMD Collection (coaching-personas)
+
+The 40 pre-built personas are already in this skill folder. Now add them to QMD so agents can search them.
+
+### 5a - Add the collection
+```bash
+qmd collection add ~/.openclaw/skills/21-book-to-persona/personas \
+  --name coaching-personas \
+  --mask "**/*.md"
+```
+
+**Expected output:** Something like "Added collection coaching-personas with 120 files"
+If you see an error, check that the personas folder exists at the path above.
+
+### 5b - Index the files
+```bash
+qmd update
+```
+
+**Expected output:** File count confirmation. Should show 120 files indexed (3 per persona x 40 personas).
+
+### 5c - Run the embedding (this takes 3-8 minutes on first run)
+```bash
+qmd embed
+```
+
+**What this does:** Downloads a small local model (one time only) and generates semantic vectors for all 447 documents. This runs locally - no API keys needed, no data leaves your machine.
+
+**Expected output:** Progress updates showing chunks processed. Final line will show total chunks embedded.
+
+**This only runs once.** After the first embed, `qmd update` is all you need when adding new books.
+
+### 5d - Verify it works
+```bash
+qmd search coaching-personas "negotiation objection handling"
+```
+
+**Expected output:** Results showing content from the Voss (Never Split the Difference) persona.
+If you get no results, run `qmd embed` again and wait for it to complete fully.
+
+---
+
+## Step 6 - Update Core Files
 
 See `CORE_UPDATES.md` for exactly what to add to which files.
 The updates are concise - a summary paragraph plus a reference path. No bulk content is added to core files.
 
 ---
 
-## Step 6 - Confirm Ready
+## Step 7 - Confirm Ready
 
 Run through this checklist:
-- [ ] All 7 skill .md files read (TYP complete)
+- [ ] All 8 skill .md files read (TSP complete)
 - [ ] QMD installed and returning version
 - [ ] pdfplumber installed
+- [ ] ebooklib installed
+- [ ] Calibre ebook-convert available
 - [ ] Master files folder located or created
-- [ ] Moonshot API key confirmed
-- [ ] OpenRouter API key confirmed
+- [ ] Moonshot API key confirmed in ~/clawd/secrets/.env
+- [ ] OpenRouter API key confirmed in ~/clawd/secrets/.env
 - [ ] Codex OAuth token confirmed and not expired
-- [ ] Core files updated per CORE_UPDATES.md
+- [ ] QMD collection coaching-personas added and embedded (Step 5)
+- [ ] QMD test query returns results
+- [ ] Core files updated per CORE_UPDATES.md (Step 6)
 
-When all boxes are checked: say "Book Intelligence Pipeline ready. Provide a PDF to begin."
+When all boxes are checked: announce "Book-to-Persona skill fully installed. QMD collection active. 40 pre-built personas ready. Ready to add new books or query personas."
