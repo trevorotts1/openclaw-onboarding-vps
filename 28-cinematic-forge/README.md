@@ -19,7 +19,7 @@ Cinematic Forge is an OpenClaw skill that produces complete videos using AI. It 
 
 ## What It Does
 
-1. **Intake** - 11 structured questions asked one at a time
+1. **Intake** - 14 structured questions asked one at a time
 2. **Pre-Production** - Storyboard, reference images, scripts
 3. **Video Generation** - VEO 3.1 Fast segments with Extend chaining
 4. **Audio Production** - ElevenLabs voices + Suno music + SFX (all separate from video)

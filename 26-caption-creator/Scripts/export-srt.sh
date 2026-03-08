@@ -1,6 +1,8 @@
 #!/bin/bash
-# export-srt.sh - Export SRT file from video
-# Usage: export-srt.sh --input video.mp4 --output captions.srt
+# export-srt.sh - Export an SRT subtitle file from a video using Whisper
+#
+# Usage:
+#   export-srt.sh --input video.mp4 --output captions.srt [--model tiny|base|small|medium|large]
 
 set -e
 
@@ -34,7 +36,33 @@ if [[ -z "$INPUT" || -z "$OUTPUT" ]]; then
   exit 1
 fi
 
+OUT_DIR="$(dirname "$OUTPUT")"
+mkdir -p "$OUT_DIR"
+
+TMP_DIR="$(mktemp -d "/tmp/caption_srt_XXXXXX")"
+cleanup() {
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
+
+BASE_NAME="$(basename "$INPUT")"
+BASE_STEM="${BASE_NAME%.*}"
+
 echo "Transcribing with Whisper (model: $MODEL)..."
-whisper "$INPUT" --model "$MODEL" --output_format srt --output_dir "$(dirname "$OUTPUT")"
+whisper "$INPUT" --model "$MODEL" --output_format srt --output_dir "$TMP_DIR"
+
+GENERATED_SRT="$TMP_DIR/${BASE_STEM}.srt"
+
+# Fallback if Whisper chose a different filename (rare)
+if [[ ! -f "$GENERATED_SRT" ]]; then
+  GENERATED_SRT="$(find "$TMP_DIR" -maxdepth 1 -type f -name "*.srt" | head -n 1)"
+fi
+
+if [[ -z "$GENERATED_SRT" || ! -f "$GENERATED_SRT" ]]; then
+  echo "Error: Whisper did not produce an SRT file."
+  exit 1
+fi
+
+mv -f "$GENERATED_SRT" "$OUTPUT"
 
 echo "SRT exported to: $OUTPUT"

@@ -1,11 +1,10 @@
-"""
-Video Creator Skill for BlackCEO
+"""Video Creator Skill
 
-Create videos from scratch using AI models and professional editing tools.
+Create videos from scratch using AI models and basic editing tools.
 """
 
 __version__ = "1.0.0"
-__author__ = "BlackCEO"
+__author__ = "OpenClaw"
 
 from pathlib import Path
 
@@ -45,7 +44,7 @@ class VideoCreator:
         Args:
             config_path: Path to configuration file
         """
-        self.config_path = config_path or Path.home() / ".blackceo" / "config.json"
+        self.config_path = config_path or (Path.home() / ".openclaw" / "video-creator" / "config.json")
         self.config = self._load_config()
         
     def _load_config(self):

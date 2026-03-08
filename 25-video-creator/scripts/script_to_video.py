@@ -269,8 +269,8 @@ def assemble_clips(clip_paths: List[Path], scenes: List[Scene],
 
 
 def load_config():
-    """Load configuration."""
-    config_path = Path.home() / ".blackceo" / "config.json"
+    """Load optional configuration."""
+    config_path = Path.home() / ".openclaw" / "video-creator" / "config.json"
     if config_path.exists():
         with open(config_path) as f:
             return json.load(f)

@@ -18,8 +18,8 @@ from ai_providers import AIProvider
 
 
 def load_config():
-    """Load configuration from ~/.blackceo/config.json"""
-    config_path = Path.home() / ".blackceo" / "config.json"
+    """Load optional configuration."""
+    config_path = Path.home() / ".openclaw" / "video-creator" / "config.json"
     if config_path.exists():
         with open(config_path) as f:
             return json.load(f)

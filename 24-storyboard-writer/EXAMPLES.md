@@ -1,6 +1,6 @@
 # Storyboard Writer - Examples
 
-## Example 1: 5-Minute Tutorial with Veo 3.1
+## Example 1: 5-minute tutorial with Veo 3.1
 
 ```bash
 python3 scripts/create_storyboard.py \
@@ -10,12 +10,12 @@ python3 scripts/create_storyboard.py \
   --output sourdough_tutorial
 ```
 
-**Result:**
-- 38 segments (8s each)
-- Estimated cost: $15.20
-- Files: `sourdough_tutorial.json`, `sourdough_tutorial.md`
+What you get:
+- a segment-by-segment plan sized to the model's clip duration
+- a cost estimate based on `scripts/model-database.json`
+- files: `sourdough_tutorial.json`, `sourdough_tutorial.md`
 
-## Example 2: 3-Minute Promo with Sora 25s
+## Example 2: 3-minute promo with Sora (25s clips)
 
 ```bash
 python3 scripts/create_storyboard.py \
@@ -25,35 +25,19 @@ python3 scripts/create_storyboard.py \
   --output summer_sale
 ```
 
-**Result:**
-- 8 segments (25s each)
-- Estimated cost: $3.04
-- Files: `summer_sale.json`, `summer_sale.md`
+What you get:
+- a storyboard with prompts for each segment
+- files: `summer_sale.json`, `summer_sale.md`
 
-## Example 3: 10-Minute Documentary with Sora 15s
+## Example 3: compare models for the same runtime
 
-```bash
-python3 scripts/create_storyboard.py \
-  --duration 600 \
-  --model sora-15s \
-  --topic "History of Coffee" \
-  --output coffee_doc
+```python
+from scripts.model_database import calculate_cost
+
+for model_id in ["veo-3-1", "sora-10s", "sora-15s", "sora-25s"]:
+    cost = calculate_cost(model_id, 300)
+    print(model_id, cost)
 ```
 
-**Result:**
-- 40 segments (15s each)
-- Estimated cost: $9.20
-
-## Cost Comparison
-
-For a 5-minute (300s) video:
-
-| Model | Clips | Cost |
-|-------|-------|------|
-| Veo 3.1 (8s) | 38 | $15.20 |
-| Sora 10s | 30 | $4.50 |
-| Sora 15s | 20 | $4.60 |
-| Sora 25s | 12 | $4.56 |
-
-**Best value:** Sora 25s for longer scenes
-**Most clips:** Veo 3.1 for variety
+Notes:
+- Pricing changes over time. Update `scripts/model-database.json` to keep estimates current.

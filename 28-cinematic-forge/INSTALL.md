@@ -13,8 +13,9 @@ Before you run any commands in this skill:
 3. Use this read order:
    1) `SKILL.md`
    2) `INSTALL.md`
-   3) `INSTRUCTIONS.md` and `EXAMPLES.md` (and any `*-full.md`)
-   4) `CORE_UPDATES.md`
+   3) `INSTRUCTIONS.md` and `EXAMPLES.md` (and any `*-full.md`) (if present)
+   4) Any other `.md` files (if present)
+   5) `CORE_UPDATES.md`
 
 Conflict rule:
 - If any generic wrapper guidance conflicts with this skill folder, this skill folder wins.
@@ -81,121 +82,54 @@ These models must be available on the KIE.ai account:
 
 ## Installation Steps
 
-### Step 1: Find the Master Files Folder
+### Step 1: Confirm the skill is installed in the right place
 
-Search `~/Downloads/` for the master files folder. It may be named:
-- `openclaw-master-files`
-- `openclaw-master-docs`
-- or similar
+1. Open Terminal.
+2. Run:
 
-If it doesn't exist, create it:
 ```bash
-mkdir -p ~/Downloads/openclaw-master-files
+ls -la ~/.openclaw/skills/28-cinematic-forge/
 ```
 
-### Step 2: Place the Skill Files
+3. You should see files like `SKILL.md`, `INSTALL.md`, `README.md`, and `CORE_UPDATES.md`.
 
-Copy the entire `cinematic-forge/` folder into the master files folder:
+If you do not see that folder, re-run the onboarding installer for this package so the skill is copied into `~/.openclaw/skills/`.
 
-```
-~/Downloads/[MASTER_FILES_PATH]/cinematic-forge/
-  SKILL.md          (complete skill reference - intake, production, assembly)
-  INSTALL.md        (this file)
-  README.md         (quick overview)
-```
+### Step 2: Teach the agent the skill
 
-### Step 3: Teach the Agent
+1. In chat with your agent, say:
 
-Say to your agent:
+> Teach yourself this skill
 
-> "Teach yourself this skill"
+2. Paste the full contents of `~/.openclaw/skills/28-cinematic-forge/SKILL.md`.
 
-Then provide the contents of `SKILL.md`.
+The agent should follow Teach Yourself Protocol (TYP): discover all `.md` files in the folder, read them, then summarize pointers into the allowed core files.
 
-The agent should (following TYP):
-1. Announce it is activating the Teach Yourself Protocol
-2. Recognize this as a HIGH priority skill
-3. Store the deep file in the master files folder (it's already there from Step 2)
-4. Write lightweight summaries in the core files (see exact text below)
-5. Confirm what it learned
-
-### Step 3a: Core File Updates (What Goes Where)
-
-The Teach Yourself Protocol should handle this automatically, but in case the agent needs guidance, here is EXACTLY what should be added to each core file. If the agent writes something vague like "video skill in master files folder" - that's wrong. These are the minimum entries:
-
-**Add to TOOLS.md:**
-```
-## Cinematic Forge - AI Video Production Skill [PRIORITY: HIGH]
-- **What it does:** Takes a user from concept to finished, uploaded video through a 14-question intake, 
-  AI video generation (VEO 3.1 Fast), AI audio (ElevenLabs + Suno), FFmpeg assembly, and media library upload
-- **Triggers on:** "create a video," "make me a video," "produce a video," or any request to build a video from scratch
-- **NOT for:** Editing existing videos (use video-editor skill), cutting/trimming clips, downloading YouTube videos
-- **Tools used:** VEO 3.1 Fast (video), Nano Banana Pro (images), ElevenLabs (voice/SFX), Suno (music), FFmpeg (assembly)
-- **API provider:** KIE.ai for all generation models. Auth: Bearer token.
-- **Cost:** ~$8.50 for a 90-second video (12 segments x $0.40 + images + audio + music)
-- **Key rules:**
-  - Ask 14 intake questions ONE AT A TIME (never all at once)
-  - Budget confirmation BEFORE spending any credits
-  - Narrator and character dialogue NEVER overlap in same segment
-  - All VEO audio is discarded - replaced with ElevenLabs + Suno
-  - 9:16 vertical is always primary format
-  - No Topaz upscale until user approves draft
-  - Agent must support tool calls (MiniMax M2.5 OK, Kimi K2.5 BANNED)
-- **Project folders:** ~/Downloads/cinematic-forge-projects/[project-name]/
-- **Session recovery:** project-state.json in each project folder tracks progress
-- **Companion skills:** video-frames (frame extraction), summarize (YouTube analysis) - install if missing
-- **When to go deeper:** First time producing a video, hitting VEO errors, complex audio sync issues,
-  user provides a reference video to analyze, debugging FFmpeg assembly
-- **Full reference:** ~/Downloads/[MASTER_FILES_PATH]/cinematic-forge/SKILL.md
-- **Last learned:** [DATE]
-```
-
-**Add to AGENTS.md:**
-```
-## Cinematic Forge - Video Production Rules [PRIORITY: HIGH]
-- When a user asks to CREATE a video from scratch, use the Cinematic Forge skill
-- ALWAYS ask the 14 intake questions one at a time - never dump all questions at once
-- ALWAYS confirm the budget estimate and get user approval before generating anything
-- ALWAYS check KIE.ai credit balance before starting production
-- NEVER use Kimi K2.5 for this skill - it cannot make API calls. Use MiniMax M2.5 or similar.
-- NEVER overlap narrator voiceover and character dialogue in the same segment
-- NEVER use VEO to generate text or logos - all text overlays added in post-production via FFmpeg
-- NEVER upscale with Topaz until the user has approved the draft video
-- 9:16 vertical is ALWAYS the primary format. 16:9 only after 9:16 is approved.
-- Update project-state.json after EVERY completed step for session recovery
-- Send progress updates to user after each segment completes - never leave them waiting in silence
-- If user provides a reference video (Q12), analyze it using video-frames + summarize skills.
-  If those skills aren't installed, install them and use TYP to learn them.
-- Full skill reference: ~/.openclaw/skills/28-cinematic-forge/SKILL.md
-```
-
-### Step 3: Core file updates (mandatory)
+### Step 3: Apply the core file updates (mandatory)
 
 Apply the updates in `CORE_UPDATES.md`.
 
 Rules:
 - Update ONLY the core files listed in `CORE_UPDATES.md`.
-- Do NOT update `IDENTITY.md`, `SOUL.md`, or `USER.md` for this skill.
 - Do NOT paste large documentation into core files. Add short pointers only.
 
-### Step 4: Verify API Access
+### Step 4: Verify API access
 
-Verify the required API keys are present:
+Verify the required API keys are present.
 
-- Confirm KIE.ai key is present and you can access VEO, Nano Banana Pro, ElevenLabs, and Suno via KIE.ai
+Minimum expectation:
+- KIE.ai key is present and you can access VEO, Nano Banana Pro, ElevenLabs, and Suno via KIE.ai
 
-The agent should check its secrets/environment files and confirm access.
-
-### Step 5: Test with a Simple Video
+### Step 5: Test with a simple video
 
 Try a quick test:
 
 - Create a short 15 second test video: a person walking on a beach at sunset
 
 The agent should:
-1. Start the 14-question intake (one at a time)
-2. For a test, you can give quick answers
-3. Watch for: proper question sequencing, image generation, video generation, audio creation, FFmpeg assembly, media library upload
+1. Start the 14-question intake (one question at a time)
+2. For a test, you can answer quickly
+3. Assemble the final output and return the deliverable
 
 ## Troubleshooting
 

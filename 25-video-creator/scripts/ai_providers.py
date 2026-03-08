@@ -25,7 +25,17 @@ class AIProvider:
         """
         self.provider = provider_name.lower()
         self.config = config.get(provider_name, {})
-        self.api_key = self.config.get('api_key') or os.getenv(f'{provider_name.upper()}_API_KEY')
+
+        # API key policy:
+        # - KIE.ai uses KIE_API_KEY (preferred). KIEAI_API_KEY is accepted as a fallback.
+        # - Other providers use {PROVIDER}_API_KEY (for example RUNWAY_API_KEY).
+        self.api_key = self.config.get('api_key')
+        if not self.api_key:
+            if self.provider == 'kieai':
+                self.api_key = os.getenv('KIE_API_KEY') or os.getenv('KIEAI_API_KEY')
+            else:
+                self.api_key = os.getenv(f'{provider_name.upper()}_API_KEY')
+
         self.endpoint = self.config.get('endpoint', self._default_endpoint())
         
     def _default_endpoint(self) -> str:
@@ -70,7 +80,7 @@ class AIProvider:
     def _generate_kieai(self, prompt, duration, resolution, style, output, **kwargs):
         """Generate video using KIE.AI API."""
         if not self.api_key:
-            raise ValueError("KIE.AI API key not configured")
+            raise ValueError("KIE_API_KEY not configured (set it in your environment to use provider=kieai)")
         
         headers = {
             'Authorization': f'Bearer {self.api_key}',

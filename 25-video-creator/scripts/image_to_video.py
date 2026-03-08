@@ -254,9 +254,9 @@ def apply_pan(clip, duration: float, direction: str):
 
 
 def load_config():
-    """Load configuration."""
+    """Load optional configuration."""
     import json
-    config_path = Path.home() / ".blackceo" / "config.json"
+    config_path = Path.home() / ".openclaw" / "video-creator" / "config.json"
     if config_path.exists():
         with open(config_path) as f:
             return json.load(f)

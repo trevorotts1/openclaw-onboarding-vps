@@ -1,6 +1,6 @@
 # FINAL INSTRUCTIONS FOR AI AGENT - PROFESSIONAL B-ROLL VIDEO EDITING
 
-Corey wants you to transform a talking-head video into a professionally edited video where the person appears only at key moments, with B-roll filling the rest. The person's voice continues throughout as voiceover.
+Your goal is to transform a talking-head video into a professionally edited video where the person appears only at key moments, with B-roll filling the rest. The person's voice continues throughout as voiceover.
 
 ---
 
@@ -43,13 +43,13 @@ openclaw skill install video-editor.skill
 
 ---
 
-### STEP 3: DOWNLOAD COREY'S VIDEO
+### STEP 3: DOWNLOAD THE CLIENT VIDEO
 
-Corey gives you video link. **You download it:**
+The client gives you a video link. **You download it:**
 
 ```bash
 ~/.openclaw/skills/video-editor/scripts/download.sh \
-  --url "[COREY'S_VIDEO_URL]" \
+  --url "[VIDEO_URL]" \
   --output original_video.mp4
 ```
 
@@ -209,7 +209,7 @@ video_sequence = concatenate_videoclips([
 final_video = video_sequence.set_audio(voiceover)
 
 # Write output
-final_video.write_videofile("corey_professional_edit.mp4", codec='libx264', audio_codec='aac')
+final_video.write_videofile("client_professional_edit.mp4", codec='libx264', audio_codec='aac')
 ```
 
 **Or use FFmpeg for faster processing:**
@@ -229,7 +229,7 @@ file 'person_end.mp4'
 Then:
 ```bash
 ffmpeg -f concat -safe 0 -i concat_list.txt -i full_voiceover.aac \
-  -c:v libx264 -c:a aac -shortest corey_assembled.mp4
+  -c:v libx264 -c:a aac -shortest client_assembled.mp4
 ```
 
 ---
@@ -239,8 +239,8 @@ ffmpeg -f concat -safe 0 -i concat_list.txt -i full_voiceover.aac \
 **Add captions:**
 ```bash
 ~/.openclaw/skills/video-editor/scripts/caption.sh \
-  --input corey_assembled.mp4 \
-  --output corey_with_captions.mp4
+  --input client_assembled.mp4 \
+  --output client_with_captions.mp4
 ```
 
 **Optional: Add subtle transitions between segments**
@@ -253,15 +253,15 @@ Use MoviePy for crossfades if needed for smoother flow.
 ```bash
 # For TikTok/Reels (9:16 vertical)
 ~/.openclaw/skills/video-editor/scripts/resize.sh \
-  --input corey_with_captions.mp4 \
+  --input client_with_captions.mp4 \
   --platform tiktok \
-  --output corey_final_tiktok.mp4
+  --output client_final_tiktok.mp4
 
 # For YouTube/LinkedIn (16:9)
 ~/.openclaw/skills/video-editor/scripts/resize.sh \
-  --input corey_with_captions.mp4 \
+  --input client_with_captions.mp4 \
   --platform youtube \
-  --output corey_final_youtube.mp4
+  --output client_final_youtube.mp4
 ```
 
 ---
@@ -343,7 +343,7 @@ Let me know what to change!
 
 ---
 
-## VIDEO STRUCTURE EXAMPLE (51-Second Video - COREY'S TEST)
+## VIDEO STRUCTURE EXAMPLE (51-Second Video - CLIENT TEST)
 
 ```
 00:00-00:08  PERSON VISIBLE (8 sec) - Hook/Intro
@@ -432,6 +432,6 @@ whisper voiceover.aac --model medium --output_format json --output_dir /tmp
 **Voiceover:** Continuous throughout (person's voice never stops)  
 **Result:** Professional documentary-style video
 
-**YOU do ALL the work.** Corey just gives you the video link. You analyze, extract, generate B-roll, assemble, and deliver.
+**YOU do ALL the work.** The client just gives you the video link. You analyze, extract, generate B-roll, assemble, and deliver.
 
-**Ready to create Corey's professional video!**
+**Ready to create a professional B-roll cut!**

@@ -125,6 +125,12 @@ def test_moviepy_functionality():
         print("  ✓ MoviePy working correctly")
         return True
         
+    except ImportError as e:
+        print(f"  ✗ MoviePy import failed: {e}")
+        print("    This skill requires MoviePy v1.x (moviepy.editor).")
+        print("    Install: pip install \"moviepy==1.0.3\"")
+        return False
+
     except Exception as e:
         print(f"  ✗ MoviePy test failed: {e}")
         return False
@@ -174,6 +180,12 @@ def create_test_video():
             print("  ✗ Test video not created")
             return False
             
+    except ImportError as e:
+        print(f"  ✗ Test video failed (MoviePy import): {e}")
+        print("    This skill requires MoviePy v1.x (moviepy.editor).")
+        print("    Install: pip install \"moviepy==1.0.3\"")
+        return False
+
     except Exception as e:
         print(f"  ✗ Test video failed: {e}")
         return False
@@ -183,29 +195,29 @@ def test_config():
     """Test configuration file."""
     print("\nTesting configuration...")
     
-    config_path = Path.home() / ".blackceo" / "config.json"
-    
+    config_path = Path.home() / ".openclaw" / "video-creator" / "config.json"
+
     if config_path.exists():
         import json
         try:
             with open(config_path) as f:
                 config = json.load(f)
-            
+
             if "video_providers" in config:
                 providers = list(config["video_providers"].keys())
                 print(f"  ✓ Config loaded, providers: {', '.join(providers)}")
             else:
                 print("  ⚠ Config exists but no video_providers defined")
-            
+
             return True
-            
+
         except json.JSONDecodeError:
             print("  ✗ Config file is invalid JSON")
             return False
     else:
-        print(f"  ⚠ Config not found at {config_path}")
-        print("    Run: mkdir -p ~/.blackceo && create config.json")
-        return False
+        print(f"  ℹ Optional config not found at {config_path} (this is OK)")
+        print("    You can use environment variables like KIE_API_KEY instead.")
+        return True
 
 
 def main():

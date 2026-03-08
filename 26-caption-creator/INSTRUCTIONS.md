@@ -1,204 +1,134 @@
-# Caption Creator Skill - Complete Instructions
+# Caption Creator (Skill 26) - Instructions
 
-## What This Skill Is
+## What this skill does
 
-The **Caption Creator Skill** automatically generates professional captions for any video. It uses OpenAI's Whisper for transcription and MoviePy for rendering captions directly into videos.
+The Caption Creator skill helps you do two things:
 
-**Purpose:** Make videos accessible, engaging, and platform-ready with perfectly timed captions.
+1. **Export an SRT subtitle file** from a video (good for YouTube uploads and editors)
+2. **Create a new captioned video** where the captions are burned into the video
 
----
+It uses Whisper for transcription and FFmpeg for rendering.
 
-## What It Does
+## Before you start (one-time setup)
 
-1. **Auto-Transcribe** - Converts speech to text with 95%+ accuracy
-2. **Multiple Caption Styles** - Minimal, full, or animated/karaoke-style
-3. **Multi-Language Support** - Works with 25+ languages
-4. **Export Options** - Burn captions into video or export SRT files
-5. **Position Control** - Bottom, top, centered, or follow speaker
+### Step 1: Install FFmpeg
 
----
+#### On macOS
 
-## How to Install
+1. Open the Terminal app.
+2. Run:
 
-### Step 1: Install Dependencies
 ```bash
-pip install openai-whisper moviepy opencv-python
+brew install ffmpeg
 ```
 
-### Step 2: Install the Skill
+3. Verify it works:
+
+```bash
+ffmpeg -version
+```
+
+#### On Ubuntu / Debian
+
+1. Open Terminal.
+2. Run:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ffmpeg
+```
+
+3. Verify it works:
+
+```bash
+ffmpeg -version
+```
+
+### Step 2: Install Whisper (the CLI)
+
+1. Open Terminal.
+2. Run:
+
+```bash
+pip install --upgrade openai-whisper
+```
+
+3. Verify Whisper works:
+
+```bash
+whisper --help
+```
+
+## Install the skill
+
+1. Download or locate `caption-creator.skill`.
+2. Install it:
+
 ```bash
 openclaw skill install caption-creator.skill
 ```
 
-Or manually:
+3. Confirm the folder exists:
+
 ```bash
-unzip caption-creator.skill -d ~/.openclaw/skills/
-chmod +x ~/.openclaw/skills/caption-creator/Scripts/*.sh
+ls -la ~/.openclaw/skills/caption-creator
 ```
 
----
+You should see files like `SKILL.md`, `INSTALL.md`, `Scripts/`, and `CORE_UPDATES.md`.
 
-## How to Run
+## How to use the skill
 
-### Basic Caption Generation
-```bash
-~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
-  --input video.mp4 \
-  --output video_captioned.mp4 \
-  --style minimal
-```
+### Option A: Export subtitles (SRT)
 
-### Export SRT Only
+1. Pick the video you want to transcribe (example: `video.mp4`).
+2. Run:
+
 ```bash
 ~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
-  --input video.mp4 \
-  --output captions.srt
+  --input "video.mp4" \
+  --output "captions.srt" \
+  --model medium
 ```
 
-### Python API
-```python
-from caption_creator import generate_captions
-generate_captions("video.mp4", "output.mp4", style="animated")
-```
+3. After it finishes, you will have:
+- `captions.srt` in the location you specified
 
----
+### Option B: Create a captioned video (burn-in captions)
 
-## Memory File Updates Required
+1. Pick the video you want to caption (example: `video.mp4`).
+2. Choose a style: `minimal`, `full`, or `animated`.
+3. Run:
 
-### Update TOOLS.md
-```markdown
-### Caption Creator
-- **Purpose:** Auto-generate video captions
-- **Location:** ~/.openclaw/skills/caption-creator/
-- **Key Scripts:** generate-captions.sh, export-srt.sh
-- **Dependencies:** whisper, moviepy, opencv-python
-- **Styles:** minimal, full, animated
-```
-
-### Update AGENTS.md
-```markdown
-## Caption Creator Agent
-I can add professional captions to videos:
-- Auto-transcribe any video
-- Multiple caption styles (minimal, full, animated)
-- Export SRT files separately
-- Multi-language support
-
-Usage: Use generate-captions.sh with --style flag
-```
-
-### Update USER.md
-```markdown
-## Video Caption Preferences
-- Default caption style: [minimal/full/animated]
-- Preferred position: [bottom/top/center]
-- Languages needed: [list]
-```
-
-### Update IDENTITY.md (Optional)
-```markdown
-### Caption Specialist
-Part of my role includes making content accessible through professional captioning.
-```
-
----
-
-## GitHub Repositories Used
-
-1. **openai/whisper** - Speech-to-text transcription
-   - https://github.com/openai/whisper
-   - Local processing, no API needed
-
-2. **Zulko/moviepy** - Video editing and caption rendering
-   - https://github.com/Zulko/moviepy
-   - Python-based video manipulation
-
----
-
-## For Clients/Customers
-
-### What You Can Do
-
-**"Make any video accessible and engaging with professional captions."**
-
-**Examples:**
-- Add captions to your YouTube videos for better engagement
-- Make Instagram Reels accessible to deaf/hard-of-hearing viewers
-- Export SRT files for professional editing workflows
-- Create karaoke-style animated captions for TikTok
-
-**Benefits:**
-- Increases video engagement by 12%
-- Makes content accessible to 466M deaf/hard-of-hearing people worldwide
-- Improves SEO (search engines can read captions)
-- Works in sound-off environments (social media scrolling)
-
----
-
-## How This Skill Relates to Others
-
-### Works With Video Editor
-1. Edit video (Video Editor)
-2. Add captions (Caption Creator)
-3. Export final video
-
-### Works With Video Creator
-1. Create video from script (Video Creator)
-2. Add captions (Caption Creator)
-3. Post to social media
-
-### Works With Storyboard Writer
-1. Plan video structure (Storyboard Writer)
-2. Create video (Video Creator)
-3. Add captions (Caption Creator)
-
----
-
-## Combined Usage Examples
-
-### Example 1: Full Video Production Pipeline
 ```bash
-# 1. Plan video
-storyboard-writer --duration 300 --model veo-3-1 --topic "Product Demo"
-
-# 2. Create video
-video-creator --script script.txt --output video.mp4
-
-# 3. Add captions
-caption-creator --input video.mp4 --output final.mp4 --style animated
+~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
+  --input "video.mp4" \
+  --output "video_captioned.mp4" \
+  --style minimal \
+  --model medium
 ```
 
-### Example 2: Edit Existing Video
+4. After it finishes, you will have:
+- `video_captioned.mp4`
+
+## Choosing a Whisper model
+
+- Faster, lower accuracy: `tiny`, `base`, `small`
+- Slower, higher accuracy: `medium`, `large`
+
+Example (fast):
+
 ```bash
-# 1. Download YouTube video
-video-editor --download "URL" --output raw.mp4
-
-# 2. Extract best clips
-video-editor --clip raw.mp4 --start 00:05:00 --duration 60 --output clip.mp4
-
-# 3. Add captions
-caption-creator --input clip.mp4 --output clip_captioned.mp4
+~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+  --input "video.mp4" \
+  --output "captions.srt" \
+  --model base
 ```
 
----
+## Core updates policy
 
-## Troubleshooting
+This skill has a strict policy for what core files it is allowed to update.
 
-**"Whisper not found"**
-→ Run: `pip install openai-whisper`
+1. Open `CORE_UPDATES.md`.
+2. Follow it exactly.
 
-**"MoviePy import error"**
-→ Run: `pip install moviepy opencv-python`
-
-**"Permission denied on scripts"**
-→ Run: `chmod +x ~/.openclaw/skills/caption-creator/Scripts/*.sh`
-
----
-
-## Quick Reference
-
-| Style | Best For | Command |
-|-------|----------|---------|
-| minimal | Clean, professional | `--style minimal` |
-| full | Maximum readability | `--style full` |
-| animated | Social media, TikTok | `--style animated` |
+Do not add instructions in other files that expand core file updates beyond what `CORE_UPDATES.md` allows.

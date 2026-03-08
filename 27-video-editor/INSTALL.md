@@ -1,4 +1,4 @@
-# 📦 Installation Guide
+# Installation Guide (Video Editor)
 
 ## Teach Yourself Protocol (TYP) - Mandatory Read Order
 
@@ -19,323 +19,192 @@ Before you run any commands in this skill:
 Conflict rule:
 - If any generic wrapper guidance conflicts with this skill folder, this skill folder wins.
 
-
-**Video Editor Skill (Client-Generic)**
-
 ---
 
-## Requirements
+## What this skill needs
 
-- Python 3.8+
-- FFmpeg (system dependency)
-- 4GB+ RAM recommended
-- GPU optional (for faster Whisper transcription)
+This skill runs locally using:
 
----
+- **FFmpeg** (video processing)
+- **yt-dlp** (downloading videos from URLs)
+- **Whisper CLI** (captions)
+- **PySceneDetect** (scene detection for B-roll planning)
+- **MoviePy** (used by the B-roll merge helper)
 
-## Quick Install
+## Step 1: Install FFmpeg
 
-### Step 1: Install System Dependencies
+### macOS
 
-**macOS:**
+1. Install Homebrew (if you do not have it): https://brew.sh/
+2. Install FFmpeg:
+
 ```bash
 brew install ffmpeg
 ```
 
-**Ubuntu/Debian:**
+3. Verify:
+
+```bash
+ffmpeg -version
+```
+
+### Ubuntu or Debian
+
+1. Update package lists:
+
 ```bash
 sudo apt update
-sudo apt install ffmpeg
 ```
 
-**Windows:**
-1. Download from https://ffmpeg.org/download.html
-2. Add to PATH
-3. Verify: `ffmpeg -version`
-
-### Step 2: Install Python Dependencies
+2. Install FFmpeg:
 
 ```bash
-pip install yt-dlp moviepy scenedetect opencv-python
+sudo apt install -y ffmpeg
 ```
 
-### Step 3: Install Optional Tools (Recommended)
+3. Verify:
 
 ```bash
-# Whisper for transcription
-pip install openai-whisper
-
-# Auto-editor for silence removal
-pip install auto-editor
-
-# ffsubsync for subtitle sync
-pip install ffsubsync
-
-# Additional utilities
-pip install numpy pillow requests tqdm
+ffmpeg -version
 ```
 
-### Step 4: Verify Installation
+### Windows
+
+Option A (recommended): use WSL2 (Windows Subsystem for Linux), then follow the Ubuntu steps.
+
+Option B: install FFmpeg from https://ffmpeg.org/download.html and add it to your PATH.
+
+Verify in PowerShell:
+
+```powershell
+ffmpeg -version
+```
+
+## Step 2: Install Python packages
+
+1. Make sure you have Python 3 installed:
 
 ```bash
-python scripts/video_editor.py --version
+python3 --version || python --version
 ```
 
----
-
-## Full Installation (All Features)
+2. Install the required packages:
 
 ```bash
-# Core tools
-pip install yt-dlp moviepy scenedetect opencv-python
-
-# AI/ML tools
-pip install openai-whisper torch torchvision torchaudio
-
-# Audio processing
-pip install pydub librosa
-
-# Subtitle tools
-pip install ffsubsync
-
-# Video processing
-pip install auto-editor
-
-# Utilities
-pip install numpy pandas pillow requests tqdm colorama
+python3 -m pip install -U yt-dlp scenedetect openai-whisper moviepy
 ```
 
----
+Notes:
+- `openai-whisper` installs the `whisper` command used by `scripts/caption.sh`.
+- Whisper models download the first time you run it. This can take a while.
 
-## Manual Tool Installation
+3. Verify each tool:
 
-### yt-dlp
-```bash
-pip install -U yt-dlp
-```
-
-Verify:
 ```bash
 yt-dlp --version
-```
-
-### MoviePy
-```bash
-pip install moviepy
-```
-
-Note: MoviePy requires ImageMagick for some features:
-- macOS: `brew install imagemagick`
-- Ubuntu: `sudo apt install imagemagick`
-
-### PySceneDetect
-```bash
-pip install scenedetect
-```
-
-Verify:
-```bash
 scenedetect --version
+whisper --help | head
 ```
 
-### Whisper (OpenAI)
+## Step 3: Make the scripts executable (macOS/Linux)
+
+From inside the skill folder:
+
 ```bash
-pip install -U openai-whisper
+chmod +x scripts/*.sh
 ```
 
-Or install from source:
+## Step 4: Quick smoke tests
+
+### Test 1: Download
+
 ```bash
-pip install git+https://github.com/openai/whisper.git
+./scripts/download.sh \
+  --url "https://www.youtube.com/watch?v=dQw4w9WgXcQ" \
+  --output test-input.mp4
 ```
 
-Models will download on first use (~1-3GB depending on model size).
+### Test 2: Cut
 
-### Auto-Editor
 ```bash
-pip install auto-editor
+./scripts/cut.sh \
+  --input test-input.mp4 \
+  --start 00:00:05 \
+  --duration 5 \
+  --output test-clip.mp4
 ```
 
-Verify:
+### Test 3: Resize
+
 ```bash
-auto-editor --version
+./scripts/resize.sh \
+  --input test-clip.mp4 \
+  --platform tiktok \
+  --output test-clip-vertical.mp4
 ```
 
-### ffsubsync
+### Test 4: Captions
+
 ```bash
-pip install ffsubsync
+./scripts/caption.sh \
+  --input test-clip-vertical.mp4 \
+  --output test-clip-vertical-captioned.mp4 \
+  --model small
 ```
 
-Verify:
-```bash
-ffsubsync --version
-```
-
----
-
-## GPU Acceleration (Optional)
-
-### For Whisper (faster transcription)
-
-**CUDA (NVIDIA):**
-```bash
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-```
-
-**macOS Metal (M1/M2/M3):**
-```bash
-pip install torch torchvision torchaudio
-```
-
-Verify GPU is available:
-```python
-import torch
-print(torch.cuda.is_available())  # True = GPU acceleration active
-```
-
----
+What to expect:
+- The first caption run may take longer because Whisper downloads a model.
 
 ## Troubleshooting
 
 ### "ffmpeg not found"
-Install FFmpeg and ensure it's in your PATH:
+
+1. Run:
+
 ```bash
-which ffmpeg  # Should return path
-ffmpeg -version  # Should show version info
+which ffmpeg
 ```
 
-### "ImageMagick not found" (MoviePy)
-**macOS:**
+2. If it prints nothing, FFmpeg is not installed or not on your PATH.
+
+### "scenedetect not found"
+
+1. Run:
+
 ```bash
-brew install imagemagick
+python3 -m pip show scenedetect
 ```
 
-**Ubuntu:**
+2. If it is not installed, run:
+
 ```bash
-sudo apt install imagemagick
+python3 -m pip install -U scenedetect
 ```
 
-**Edit MoviePy config:**
-```python
-from moviepy.config import change_settings
-change_settings({"IMAGEMAGICK_BINARY": "/usr/local/bin/convert"})
-```
+### "whisper: command not found"
 
-### Whisper model download fails
-Download manually:
+1. Install Whisper:
+
 ```bash
-whisper --model large-v3 dummy.mp3  # Will download model
+python3 -m pip install -U openai-whisper
 ```
 
-Models are stored in:
-- macOS/Linux: `~/.cache/whisper/`
-- Windows: `%USERPROFILE%\.cache\whisper\`
+2. Then verify:
 
-### Permission denied errors
 ```bash
-chmod +x scripts/*.py
+whisper --help | head
 ```
 
-### Module not found errors
-Ensure you're in the correct directory:
+### Permission denied running scripts
+
+From the skill folder:
+
 ```bash
-cd /Users/trevorotts2021macair/clawd/skills/video-editor
-python -m pip install -e .
+chmod +x scripts/*.sh
 ```
 
----
+## Done
 
-## Test Your Installation
-
-Run the test suite:
-```bash
-python scripts/video_editor.py test
-```
-
-This will:
-1. Check all dependencies
-2. Download a test video
-3. Run through the full pipeline
-4. Generate test output
-
----
-
-## Docker Alternative
-
-If you prefer containerization:
-
-```dockerfile
-FROM python:3.11-slim
-
-RUN apt-get update && apt-get install -y ffmpeg
-
-RUN pip install yt-dlp moviepy scenedetect opencv-python \
-    openai-whisper auto-editor ffsubsync
-
-WORKDIR /workspace
-COPY . .
-
-ENTRYPOINT ["python", "scripts/video_editor.py"]
-```
-
-Build and run:
-```bash
-docker build -t video-editor .
-docker run -v $(pwd):/workspace video-editor --help
-```
-
----
-
-## Directory Setup
-
-Create working directories:
-```bash
-mkdir -p ~/VideoProjects/{downloads,clips,exports,templates}
-```
-
-Set in config:
-```json
-{
-  "download_path": "~/VideoProjects/downloads",
-  "clip_path": "~/VideoProjects/clips",
-  "export_path": "~/VideoProjects/exports"
-}
-```
-
----
-
-## Update Tools
-
-Update all tools:
-```bash
-pip install -U yt-dlp moviepy scenedetect opencv-python
-pip install -U openai-whisper auto-editor ffsubsync
-```
-
----
-
-## Getting Help
-
-- Check SKILL.md for usage examples
-- See EXAMPLES.md for tutorials
-- Visit tool documentation in references/
-
-**Common Commands Reference:**
-```bash
-# Download
-yt-dlp "URL" -o video.mp4
-
-# Scene detect
-scenedetect -i video.mp4 detect-content list-scenes
-
-# Whisper transcribe
-whisper video.mp4 --model large-v3 --language en
-
-# Remove silence
-auto-editor video.mp4 --edit audio:threshold=4%
-```
-
----
-
-**Installation Complete!** 🎉
-
-Next: Check out EXAMPLES.md to start creating content.
+Next:
+- Read `INSTRUCTIONS.md` for workflows.
+- Read `EXAMPLES.md` for copy-paste commands.

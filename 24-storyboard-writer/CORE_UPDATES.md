@@ -5,7 +5,7 @@
 - `TOOLS.md`
 - `MEMORY.md`
 
-Do NOT update any other core files for this skill (for example: `AGENTS.md`, `USER.md`, `SOUL.md`, `IDENTITY.md`, `HEARTBEAT.md`) unless the user explicitly requests it.
+Do NOT update any other core files for this skill unless the user explicitly requests it.
 
 ## What to add (exact text)
 
@@ -16,7 +16,7 @@ Add this section:
 ## Video Skills Suite
 
 ### Storyboard Writer (Skill 24)
-- Location: `~/.openclaw/skills/24-storyboard-writer/`
+- Location: `~/.openclaw/skills/storyboard-writer/`
 - Purpose: turn a video idea into a structured storyboard that matches model limits (Veo, Sora, etc.)
 - Use when: user asks for a storyboard, shot list, scene plan, or "turn this script into a video plan"
 ```
@@ -26,5 +26,5 @@ Add this pointer:
 
 ```md
 ## Video Skills Suite
-- Storyboard Writer (Skill 24): `~/.openclaw/skills/24-storyboard-writer/`
+- Storyboard Writer (Skill 24): `~/.openclaw/skills/storyboard-writer/`
 ```

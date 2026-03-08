@@ -406,14 +406,13 @@ done
 echo "Batch processing complete!"
 ```
 
-### Generate Thumbnails for All Videos
+### Extract Thumbnail Frames from Videos
 
 ```bash
+# Use ffmpeg directly to grab a frame as a thumbnail
 for video in output/*.mp4; do
-  python scripts/generate_thumbnail.py "$video" \
-    --timestamp 00:00:03 \
-    --text "$(basename $video .mp4)" \
-    --output "thumbnails/$(basename $video .mp4).jpg"
+  ffmpeg -i "$video" -ss 00:00:03 -vframes 1 \
+    "thumbnails/$(basename $video .mp4).jpg"
 done
 ```
 
@@ -423,27 +422,16 @@ done
 VIDEO="master_content.mp4"
 
 # YouTube version (16:9, high quality)
-python scripts/convert.py "$VIDEO" \
-  --resolution 1920x1080 \
-  --quality high \
-  --output youtube_version.mp4
+ffmpeg -i "$VIDEO" -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2" youtube_version.mp4
 
-# Instagram (1:1 square)
-python scripts/convert.py "$VIDEO" \
-  --resolution 1080x1080 \
-  --crop center \
-  --output instagram_version.mp4
+# Instagram (1:1 square, center crop)
+ffmpeg -i "$VIDEO" -vf "crop=min(iw\,ih):min(iw\,ih),scale=1080:1080" instagram_version.mp4
 
 # TikTok/Reels (9:16 vertical)
-python scripts/convert.py "$VIDEO" \
-  --resolution 1080x1920 \
-  --crop smart \
-  --output tiktok_version.mp4
+ffmpeg -i "$VIDEO" -vf "crop=iw*9/16:ih,scale=1080:1920" tiktok_version.mp4
 
 # Twitter/X (2:1)
-python scripts/convert.py "$VIDEO" \
-  --resolution 1280x640 \
-  --output twitter_version.mp4
+ffmpeg -i "$VIDEO" -vf "crop=iw:iw/2,scale=1280:640" twitter_version.mp4
 ```
 
 ---
@@ -510,21 +498,23 @@ EOF
 ### Fix Audio Sync
 
 ```bash
-python scripts/fix_sync.py video.mp4 --offset -0.5 --output fixed.mp4
+# Use ffmpeg to shift audio by -0.5 seconds
+ffmpeg -i video.mp4 -itsoffset -0.5 -i video.mp4 -map 0:v -map 1:a -c copy fixed.mp4
 ```
 
 ### Extract and Recombine
 
 ```bash
-# Extract audio
-python scripts/extract_audio.py video.mp4 --output audio.wav
+# Extract audio using add_music.py extract subcommand
+python3 scripts/add_music.py video.mp4 extract --output audio.wav
 
 # Edit audio externally, then recombine
-python scripts/combine.py video.mp4 edited_audio.wav --output final.mp4
+ffmpeg -i video.mp4 -i edited_audio.wav -map 0:v -map 1:a -c:v copy -shortest final.mp4
 ```
 
 ### Convert Format
 
 ```bash
-python scripts/convert.py video.mov --format mp4 --codec h264 --output video.mp4
+# Use ffmpeg directly for format conversion
+ffmpeg -i video.mov -c:v libx264 -c:a aac video.mp4
 ```

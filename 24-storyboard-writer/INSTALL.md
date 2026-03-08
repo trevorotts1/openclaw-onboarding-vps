@@ -12,48 +12,33 @@ Before you run any commands in this skill:
 2. Read every discovered `.md` file.
 3. Use this read order:
    1) `SKILL.md`
-   2) `INSTALL.md`
-   3) `INSTRUCTIONS.md` and `EXAMPLES.md` (and any `*-full.md`)
-   4) `CORE_UPDATES.md`
+   2) `CORE_UPDATES.md`
+   3) `INSTALL.md`
+   4) `INSTRUCTIONS.md`
+   5) `EXAMPLES.md`
 
 Conflict rule:
 - If any generic wrapper guidance conflicts with this skill folder, this skill folder wins.
 
+## Install
 
-## Quick Install
-
-```bash
-pip install pyyaml
-```
+This skill uses Python's standard library only.
 
 ## Usage
 
-### Basic Storyboard
-
-Create a 5-minute product demo using Veo 3.1:
+### Basic storyboard (run from the skill folder)
 
 ```bash
-cd ~/.openclaw/skills/storyboard-writer/scripts
-python3 create_storyboard.py --duration 300 --model veo-3-1 --topic "Product Demo"
+python3 scripts/create_storyboard.py --duration 300 --model veo-3-1 --topic "Product Demo" --output storyboard
 ```
 
-### With Sora 25s Model
+### List available model IDs
 
 ```bash
-python3 create_storyboard.py --duration 300 --model sora-25s --topic "Tutorial Video"
+python3 -c "from scripts.model_database import list_models; print('\n'.join(list_models()))"
 ```
 
-## Available Models
+## Output files
 
-- `veo-3-1` - 8s clips, ~$0.40/video
-- `sora-10s` - 10s clips, $0.15/video
-- `sora-15s` - 15s clips, $0.23/video
-- `sora-25s` - 25s clips, $0.38/video
-- `kling-3` - Variable duration
-- `seed-dance` - Movement focused
-- `wan-2-6` - General purpose
-
-## Output Files
-
-- `storyboard.json` - Machine-readable format
-- `storyboard.md` - Human-readable with all prompts
+- `<output>.json` - machine-readable format
+- `<output>.md` - human-readable storyboard with prompts
