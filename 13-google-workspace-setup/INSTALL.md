@@ -292,7 +292,78 @@ KEY_FILE_PATH=""       # Final location of JSON key file
 
 ---
 
+#### CREDENTIAL CHECK - RUN THIS BEFORE OPENING ANY BROWSER
+
+**Step 1: Scan ENV files for existing Google credentials**
+
+Check these locations in order:
+```bash
+# Workspace root secrets
+cat [WORKSPACE_ROOT]/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
+# OpenClaw secrets
+cat ~/.openclaw/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
+# OpenClaw config
+grep -i "google\|gmail" ~/.openclaw/openclaw.json 2>/dev/null
+# Shell environment
+printenv | grep -i "google\|gmail\|gws\|gcp"
+```
+
+Look for any of these keys: `GOOGLE_EMAIL`, `GOOGLE_USERNAME`, `GOOGLE_ACCOUNT`, `GCP_IMPERSONATE_USER`, `GOOGLE_WORKSPACE_EMAIL`, `GWS_EMAIL`, `GMAIL_EMAIL`, `GOOGLE_PASSWORD`, `GOOGLE_PASS`, `GWS_PASSWORD`
+
+**If credentials found in ENV:**
+- Use them directly. Skip to the browser automation steps.
+- Do not ask the user for credentials they have already provided.
+
+**If credentials NOT found - ask the user to choose:**
+
+> "To set up your Google Workspace, I need to log in to your Google account.
+> Which do you prefer?
+>
+> **Option A - I'll handle it automatically:**
+> Provide your Google email and password and I will log in for you.
+>
+> **Option B - You log in yourself:**
+> I'll open the browser and you type your credentials directly.
+> Nothing is shared with me.
+>
+> Which option: A or B?"
+
+**If user chooses Option A:**
+1. Ask: "What is your Google email address?"
+2. Ask: "What is your Google password?" (remind them it will only be used for this login and not stored)
+3. Store credentials in memory for this session only - do NOT write password to any file
+4. Proceed to browser automation - use the credentials to fill the login form automatically
+5. After login succeeds, clear the password from memory
+
+**If user chooses Option B:**
+1. Open the browser to accounts.google.com
+2. Tell the user: "The browser is open. Please log in to your Google account, then come back and tell me when you're done."
+3. Wait for user confirmation
+4. Once confirmed, take over browser automation from there
+
+**Either way - use Playwright persistent context:**
+```javascript
+const browser = await chromium.launchPersistentContext(
+  path.join(os.homedir(), '.openclaw', 'playwright-data', 'google-setup'),
+  { headless: false }
+);
+```
+Session is saved - user only logs in once. Next run detects existing session automatically.
+
+---
+
 ## Step A1: Create a Google Cloud Project
+
+**Check for existing session first:**
+```bash
+# Check if Playwright session already exists
+ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "SESSION EXISTS" || echo "NO SESSION"
+```
+
+If session exists: open the browser with persistent context - it may already be logged in.
+Check the current page URL. If already at console.cloud.google.com (not a login page), proceed directly to the next step without asking for credentials again.
+
+If no session: follow the CREDENTIAL CHECK flow above.
 
 1. Open the Google Cloud Console:
    ```
@@ -717,11 +788,11 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 7. DO NOT STOP OR PAUSE HERE. Move the key file immediately:
    ```bash
-   mkdir -p ~/clawd/secrets
-   mv ~/Downloads/*-*.json ~/clawd/secrets/gcp-service-account.json 2>/dev/null || \
-   mv ~/Downloads/"$PROJECT_ID"-*.json ~/clawd/secrets/gcp-service-account.json
-   chmod 600 ~/clawd/secrets/gcp-service-account.json
-   ls -la ~/clawd/secrets/gcp-service-account.json
+   mkdir -p [WORKSPACE_ROOT]/secrets
+   mv ~/Downloads/*-*.json [WORKSPACE_ROOT]/secrets/gcp-service-account.json 2>/dev/null || \
+   mv ~/Downloads/"$PROJECT_ID"-*.json [WORKSPACE_ROOT]/secrets/gcp-service-account.json
+   chmod 600 [WORKSPACE_ROOT]/secrets/gcp-service-account.json
+   ls -la [WORKSPACE_ROOT]/secrets/gcp-service-account.json
    ```
    Store the path:
    ```
@@ -898,15 +969,15 @@ Run the following commands. The agent fills in actual values from previous steps
 
 ```bash
 # Create secrets directory if not present
-mkdir -p ~/clawd/secrets
+mkdir -p [WORKSPACE_ROOT]/secrets
 
 # Write environment variables
-cat >> ~/clawd/secrets/.env << 'ENVEOF'
+cat >> [WORKSPACE_ROOT]/secrets/.env << 'ENVEOF'
 export GCP_PROJECT_ID=ACTUAL_PROJECT_ID
 export GCP_SERVICE_ACCOUNT_EMAIL=ACTUAL_SERVICE_ACCOUNT_EMAIL
 export GCP_SERVICE_ACCOUNT_CLIENT_ID=ACTUAL_CLIENT_ID
 export GCP_IMPERSONATE_USER=ACTUAL_USER_EMAIL
-export GCP_KEY_FILE=~/clawd/secrets/gcp-service-account.json
+export GCP_KEY_FILE=[WORKSPACE_ROOT]/secrets/gcp-service-account.json
 ENVEOF
 ```
 
@@ -914,8 +985,8 @@ Replace the ACTUAL_ placeholders with the stored variable values before running.
 
 Also add to shell profile for persistence:
 ```bash
-echo 'source ~/clawd/secrets/.env' >> ~/.zshrc
-source ~/clawd/secrets/.env
+echo 'source [WORKSPACE_ROOT]/secrets/.env' >> ~/.zshrc
+source [WORKSPACE_ROOT]/secrets/.env
 ```
 
 CONTINUE IMMEDIATELY. Do not pause.
@@ -946,7 +1017,7 @@ except ImportError:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests'])
     import requests
 
-KEY_FILE = os.path.expanduser("~/clawd/secrets/gcp-service-account.json")
+KEY_FILE = os.path.expanduser("[WORKSPACE_ROOT]/secrets/gcp-service-account.json")
 SCOPE = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly"
 
 with open(KEY_FILE) as f:
@@ -955,7 +1026,7 @@ with open(KEY_FILE) as f:
 # Get impersonate user from env or key file
 SUB = os.environ.get("GCP_IMPERSONATE_USER", "")
 if not SUB:
-    print("ERROR: GCP_IMPERSONATE_USER not set. Set it in ~/clawd/secrets/.env")
+    print("ERROR: GCP_IMPERSONATE_USER not set. Set it in [WORKSPACE_ROOT]/secrets/.env")
     sys.exit(1)
 
 def b64url(d):
@@ -1048,7 +1119,7 @@ PYTEST
 - Check the error message.
 - Common fixes:
   - "Access denied" or 403: DWD scopes not authorized. Go back to Step A7 Part B and re-enter scopes.
-  - "Service account not found": JSON key file path wrong. Verify ~/clawd/secrets/gcp-service-account.json exists.
+  - "Service account not found": JSON key file path wrong. Verify [WORKSPACE_ROOT]/secrets/gcp-service-account.json exists.
   - 401 Unauthorized: OAuth consent screen not configured. Go back to Step A3.
   - "Cannot impersonate": DWD not enabled in BOTH Cloud Console AND Admin Console.
 - Fix the issue, then re-run the test.
@@ -1078,7 +1149,7 @@ to access Gmail, Calendar, Drive, Docs, Sheets, and Contacts.
 
 3. Register the service account with GOG:
    ```bash
-   gog auth sa ~/clawd/secrets/gcp-service-account.json --impersonate "$GCP_IMPERSONATE_USER"
+   gog auth sa [WORKSPACE_ROOT]/secrets/gcp-service-account.json --impersonate "$GCP_IMPERSONATE_USER"
    ```
 
 4. Add the account with all required services:
@@ -1095,8 +1166,8 @@ to access Gmail, Calendar, Drive, Docs, Sheets, and Contacts.
 
 6. Store the default account in environment:
    ```bash
-   echo "export GOG_DEFAULT_ACCOUNT=$GCP_IMPERSONATE_USER" >> ~/clawd/secrets/.env
-   source ~/clawd/secrets/.env
+   echo "export GOG_DEFAULT_ACCOUNT=$GCP_IMPERSONATE_USER" >> [WORKSPACE_ROOT]/secrets/.env
+   source [WORKSPACE_ROOT]/secrets/.env
    ```
 
 GOG setup is now complete. The agent can access Gmail, Calendar, Drive,
@@ -1110,7 +1181,7 @@ Report to the user:
 - Google Cloud Project created: [PROJECT_ID]
 - 6 APIs enabled
 - Service account created: [SERVICE_ACCOUNT_EMAIL]
-- JSON key file stored at: ~/clawd/secrets/gcp-service-account.json
+- JSON key file stored at: [WORKSPACE_ROOT]/secrets/gcp-service-account.json
 - Domain-Wide Delegation configured with 6 scopes
 - Connection test passed
 - GOG CLI installed and configured
@@ -1142,9 +1213,80 @@ USER_EMAIL=""         # The user's Gmail address (e.g. user@gmail.com)
 
 ---
 
+#### CREDENTIAL CHECK - RUN THIS BEFORE OPENING ANY BROWSER
+
+**Step 1: Scan ENV files for existing Google credentials**
+
+Check these locations in order:
+```bash
+# Workspace root secrets
+cat [WORKSPACE_ROOT]/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
+# OpenClaw secrets
+cat ~/.openclaw/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
+# OpenClaw config
+grep -i "google\|gmail" ~/.openclaw/openclaw.json 2>/dev/null
+# Shell environment
+printenv | grep -i "google\|gmail\|gws\|gcp"
+```
+
+Look for any of these keys: `GOOGLE_EMAIL`, `GOOGLE_USERNAME`, `GOOGLE_ACCOUNT`, `GCP_IMPERSONATE_USER`, `GOOGLE_WORKSPACE_EMAIL`, `GWS_EMAIL`, `GMAIL_EMAIL`, `GOOGLE_PASSWORD`, `GOOGLE_PASS`, `GWS_PASSWORD`
+
+**If credentials found in ENV:**
+- Use them directly. Skip to the browser automation steps.
+- Do not ask the user for credentials they have already provided.
+
+**If credentials NOT found - ask the user to choose:**
+
+> "To set up your Google Workspace, I need to log in to your Google account.
+> Which do you prefer?
+>
+> **Option A - I'll handle it automatically:**
+> Provide your Google email and password and I will log in for you.
+>
+> **Option B - You log in yourself:**
+> I'll open the browser and you type your credentials directly.
+> Nothing is shared with me.
+>
+> Which option: A or B?"
+
+**If user chooses Option A:**
+1. Ask: "What is your Google email address?"
+2. Ask: "What is your Google password?" (remind them it will only be used for this login and not stored)
+3. Store credentials in memory for this session only - do NOT write password to any file
+4. Proceed to browser automation - use the credentials to fill the login form automatically
+5. After login succeeds, clear the password from memory
+
+**If user chooses Option B:**
+1. Open the browser to accounts.google.com
+2. Tell the user: "The browser is open. Please log in to your Google account, then come back and tell me when you're done."
+3. Wait for user confirmation
+4. Once confirmed, take over browser automation from there
+
+**Either way - use Playwright persistent context:**
+```javascript
+const browser = await chromium.launchPersistentContext(
+  path.join(os.homedir(), '.openclaw', 'playwright-data', 'google-setup'),
+  { headless: false }
+);
+```
+Session is saved - user only logs in once. Next run detects existing session automatically.
+
+---
+
 ## Step B1: Create a Google Cloud Project
 
 Same as Step A1. Follow the exact same steps:
+
+**Check for existing session first:**
+```bash
+# Check if Playwright session already exists
+ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "SESSION EXISTS" || echo "NO SESSION"
+```
+
+If session exists: open the browser with persistent context - it may already be logged in.
+Check the current page URL. If already at console.cloud.google.com (not a login page), proceed directly to the next step without asking for credentials again.
+
+If no session: follow the CREDENTIAL CHECK flow above.
 
 1. Open Google Cloud Console:
    ```
@@ -1372,9 +1514,9 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 9. Move the credentials file:
    ```bash
-   mkdir -p ~/clawd/secrets
-   mv ~/Downloads/client_secret_*.json ~/clawd/secrets/google-oauth-credentials.json
-   chmod 600 ~/clawd/secrets/google-oauth-credentials.json
+   mkdir -p [WORKSPACE_ROOT]/secrets
+   mv ~/Downloads/client_secret_*.json [WORKSPACE_ROOT]/secrets/google-oauth-credentials.json
+   chmod 600 [WORKSPACE_ROOT]/secrets/google-oauth-credentials.json
    ```
 
 10. Click "OK" to close the dialog:
@@ -1413,7 +1555,7 @@ CONTINUE IMMEDIATELY. Do not pause.
    IF GOG requires the client credentials file:
    ```bash
    gog auth add "$USER_EMAIL" --services gmail,calendar,drive,contacts,docs,sheets \
-     --credentials ~/clawd/secrets/google-oauth-credentials.json
+     --credentials [WORKSPACE_ROOT]/secrets/google-oauth-credentials.json
    ```
 
 4. Verify GOG is working:
@@ -1424,8 +1566,8 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 5. Store the default account:
    ```bash
-   echo "export GOG_DEFAULT_ACCOUNT=$USER_EMAIL" >> ~/clawd/secrets/.env
-   source ~/clawd/secrets/.env
+   echo "export GOG_DEFAULT_ACCOUNT=$USER_EMAIL" >> [WORKSPACE_ROOT]/secrets/.env
+   source [WORKSPACE_ROOT]/secrets/.env
    ```
 
 ---
@@ -1468,7 +1610,7 @@ through GOG CLI commands using OAuth 2.0 authentication.
 | Problem | What to check | Fix |
 |---------|---------------|-----|
 | "Access denied" or 403 errors | DWD scopes not authorized (Workspace only) | Re-do Step A7 Part B - re-enter Client ID and scopes |
-| "Service account not found" | JSON key file path wrong | Verify ~/clawd/secrets/gcp-service-account.json exists and is valid JSON |
+| "Service account not found" | JSON key file path wrong | Verify [WORKSPACE_ROOT]/secrets/gcp-service-account.json exists and is valid JSON |
 | "Cannot impersonate user" | DWD not enabled in BOTH consoles | Enable in Cloud Console (Step A7 Part A) AND Admin Console (Step A7 Part B) |
 | Gmail or Calendar not working | APIs not enabled | Re-do Step A2/B2 - verify all 6 APIs show "Manage" not "Enable" |
 | "401 Unauthorized" | OAuth consent screen missing | Configure it (Step A3 or B3) |
