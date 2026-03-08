@@ -137,15 +137,26 @@ Before you begin onboarding, verify all of the following. If any check fails, st
 and tell the user what is missing. Do not start onboarding until every check passes.
 
 ### 0. Operating system
-This onboarding package is designed for macOS. All install commands, paths, and tooling
-assume macOS (Darwin). Proceed without asking about OS - if the machine is not macOS,
-tell the user and stop.
+This onboarding package supports macOS and Linux. Run this check first:
 
 ```bash
 uname -s
 ```
 
-Expected output: Darwin
+- **Darwin** (macOS): Proceed normally. Full support.
+- **Linux**: Proceed, but note the following:
+  ```
+  Note: You are running on Linux. All core functionality is supported.
+  Some install steps reference macOS-specific tools (brew, open, etc.).
+  For those steps, use the Linux equivalent (apt/snap for package installs,
+  xdg-open for open commands). Flag any brew commands to the user as
+  "macOS only - use your package manager instead."
+  ```
+- **Anything else** (including Windows/MINGW/CYGWIN): Stop and tell the user:
+  ```
+  This onboarding package requires macOS or Linux. Windows is not supported.
+  Please run this on a Mac or a Linux machine (including cloud VPS).
+  ```
 
 ### 1. OpenClaw is installed and running
 
