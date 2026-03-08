@@ -189,24 +189,30 @@ agent-browser --version
 
 Pattern reference for agent-browser commands used throughout this document:
 ```
-agent-browser open <url>                              # navigate to URL
-agent-browser snapshot -i --json                      # get interactive elements with refs (@e1, @e2...)
-agent-browser snapshot -i                             # get interactive elements (human-readable)
-agent-browser click @e1                               # click element by ref
-agent-browser fill @e2 "value"                        # fill input field by ref
-agent-browser find text "Submit" click                # find element by visible text, click it
-agent-browser find label "Email" fill "user@email.com"  # find by label, fill value
-agent-browser find role button click --name "Create"  # find by ARIA role + name, click
-agent-browser wait "text"                             # wait for text to appear on page
-agent-browser wait 2000                               # wait N milliseconds
-agent-browser get url                                 # get current page URL
-agent-browser get text @e3                            # get text content of element
+agent-browser --session-name google-setup open <url>                              # navigate to URL
+agent-browser --session-name google-setup snapshot -i --json                      # get interactive elements with refs (@e1, @e2...)
+agent-browser --session-name google-setup snapshot -i                             # get interactive elements (human-readable)
+agent-browser --session-name google-setup click @e1                               # click element by ref
+agent-browser --session-name google-setup fill @e2 "value"                        # fill input field by ref
+agent-browser --session-name google-setup find text "Submit" click                # find element by visible text, click it
+agent-browser --session-name google-setup find label "Email" fill "user@email.com"  # find by label, fill value
+agent-browser --session-name google-setup find role button click --name "Create"  # find by ARIA role + name, click
+agent-browser --session-name google-setup wait "text"                             # wait for text to appear on page
+agent-browser --session-name google-setup wait 2000                               # wait N milliseconds
+agent-browser --session-name google-setup get url                                 # get current page URL
+agent-browser --session-name google-setup get text @e3                            # get text content of element
 ```
 
 If agent-browser is available, set:
 ```
 BROWSER_TOOL="agent-browser"
 ```
+
+SESSION PERSISTENCE: All agent-browser commands in this skill use --session-name google-setup.
+Session state is saved automatically to ~/.agent-browser/sessions/ after each command.
+User logs in once. On subsequent runs, session is restored automatically.
+To check saved sessions: agent-browser state list
+To clear and re-login: agent-browser state clear google-setup
 
 ### Priority 2: Playwright with launchPersistentContext - FALLBACK
 
@@ -363,7 +369,7 @@ Session is saved regardless of tool - user only logs in once. Next run detects e
 ```bash
 # Check if a persistent browser session already exists
 ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "PLAYWRIGHT SESSION EXISTS" || true
-agent-browser get url 2>/dev/null && echo "AGENT-BROWSER SESSION EXISTS" || true
+agent-browser --session-name google-setup get url 2>/dev/null && echo "AGENT-BROWSER SESSION EXISTS" || true
 ```
 
 If a session exists for the active browser tool and the current URL is console.cloud.google.com (not a login page), proceed directly to the next step without asking for credentials again.
@@ -372,14 +378,14 @@ If no session: follow the CREDENTIAL CHECK flow above.
 
 1. Open the Google Cloud Console:
    ```
-   agent-browser open https://console.cloud.google.com/
+   agent-browser --session-name google-setup open https://console.cloud.google.com/
    ```
    # Playwright: await page.goto('https://console.cloud.google.com/')
 
 2. Check login state:
    ```
-   agent-browser snapshot -i --json
-   agent-browser get url
+   agent-browser --session-name google-setup snapshot -i --json
+   agent-browser --session-name google-setup get url
    ```
    IF the current URL contains "accounts.google.com":
    - This is the ONLY acceptable pause in the flow.
@@ -387,50 +393,50 @@ If no session: follow the CREDENTIAL CHECK flow above.
    - Wait for the user to confirm.
    - After confirmation, verify redirect back to console.cloud.google.com:
      ```
-     agent-browser get url
+     agent-browser --session-name google-setup get url
      ```
    - If still on accounts.google.com, wait and check again.
    - Once on console.cloud.google.com, continue WITHOUT pausing again.
 
 3. Open the project dropdown:
    ```
-   agent-browser snapshot -i
-   agent-browser find role button click --name "Select a project"
+   agent-browser --session-name google-setup snapshot -i
+   agent-browser --session-name google-setup find role button click --name "Select a project"
    ```
-   # Fallback: agent-browser find text "Select a project" click
+   # Fallback: agent-browser --session-name google-setup find text "Select a project" click
    ```
-   agent-browser wait 1000
+   agent-browser --session-name google-setup wait 1000
    ```
 
 4. Click New Project:
    ```
-   agent-browser find text "New Project" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "New Project" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 5. Fill in the project name:
    ```
-   agent-browser find label "Project name" fill "OpenClaw AI"
+   agent-browser --session-name google-setup find label "Project name" fill "OpenClaw AI"
    ```
 
 6. Click Create:
    ```
-   agent-browser find role button click --name "Create"
-   agent-browser wait "OpenClaw AI"
+   agent-browser --session-name google-setup find role button click --name "Create"
+   agent-browser --session-name google-setup wait "OpenClaw AI"
    ```
    Wait for the notification that says the project was created.
 
 7. Select the new project:
    ```
-   agent-browser find role button click --name "Select a project"
-   agent-browser wait 1000
-   agent-browser find text "OpenClaw AI" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Select a project"
+   agent-browser --session-name google-setup wait 1000
+   agent-browser --session-name google-setup find text "OpenClaw AI" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 8. Capture the Project ID:
    ```
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup snapshot -i
    ```
    The Project ID appears under the project name in the dashboard or dropdown.
    It looks like "openclaw-ai-123456". Store it:
@@ -452,82 +458,82 @@ move to the next one immediately.
 
 ### API 1: Gmail API
 ```
-agent-browser open https://console.cloud.google.com/apis/library/gmail.googleapis.com
-agent-browser wait 2000
-agent-browser snapshot -i
+agent-browser --session-name google-setup open https://console.cloud.google.com/apis/library/gmail.googleapis.com
+agent-browser --session-name google-setup wait 2000
+agent-browser --session-name google-setup snapshot -i
 ```
 If "Enable" button exists:
 ```
-agent-browser find role button click --name "Enable"
-agent-browser wait 3000
+agent-browser --session-name google-setup find role button click --name "Enable"
+agent-browser --session-name google-setup wait 3000
 ```
 If "Manage" is visible, skip to next API.
 
 ### API 2: Google Calendar API
 ```
-agent-browser open https://console.cloud.google.com/apis/library/calendar-json.googleapis.com
-agent-browser wait 2000
-agent-browser snapshot -i
+agent-browser --session-name google-setup open https://console.cloud.google.com/apis/library/calendar-json.googleapis.com
+agent-browser --session-name google-setup wait 2000
+agent-browser --session-name google-setup snapshot -i
 ```
 If "Enable" button exists:
 ```
-agent-browser find role button click --name "Enable"
-agent-browser wait 3000
+agent-browser --session-name google-setup find role button click --name "Enable"
+agent-browser --session-name google-setup wait 3000
 ```
 
 ### API 3: Google Drive API
 ```
-agent-browser open https://console.cloud.google.com/apis/library/drive.googleapis.com
-agent-browser wait 2000
-agent-browser snapshot -i
+agent-browser --session-name google-setup open https://console.cloud.google.com/apis/library/drive.googleapis.com
+agent-browser --session-name google-setup wait 2000
+agent-browser --session-name google-setup snapshot -i
 ```
 If "Enable" button exists:
 ```
-agent-browser find role button click --name "Enable"
-agent-browser wait 3000
+agent-browser --session-name google-setup find role button click --name "Enable"
+agent-browser --session-name google-setup wait 3000
 ```
 
 ### API 4: Google Docs API
 ```
-agent-browser open https://console.cloud.google.com/apis/library/docs.googleapis.com
-agent-browser wait 2000
-agent-browser snapshot -i
+agent-browser --session-name google-setup open https://console.cloud.google.com/apis/library/docs.googleapis.com
+agent-browser --session-name google-setup wait 2000
+agent-browser --session-name google-setup snapshot -i
 ```
 If "Enable" button exists:
 ```
-agent-browser find role button click --name "Enable"
-agent-browser wait 3000
+agent-browser --session-name google-setup find role button click --name "Enable"
+agent-browser --session-name google-setup wait 3000
 ```
 
 ### API 5: Google Sheets API
 ```
-agent-browser open https://console.cloud.google.com/apis/library/sheets.googleapis.com
-agent-browser wait 2000
-agent-browser snapshot -i
+agent-browser --session-name google-setup open https://console.cloud.google.com/apis/library/sheets.googleapis.com
+agent-browser --session-name google-setup wait 2000
+agent-browser --session-name google-setup snapshot -i
 ```
 If "Enable" button exists:
 ```
-agent-browser find role button click --name "Enable"
-agent-browser wait 3000
+agent-browser --session-name google-setup find role button click --name "Enable"
+agent-browser --session-name google-setup wait 3000
 ```
 
 ### API 6: People API (Contacts)
 ```
-agent-browser open https://console.cloud.google.com/apis/library/people.googleapis.com
-agent-browser wait 2000
-agent-browser snapshot -i
+agent-browser --session-name google-setup open https://console.cloud.google.com/apis/library/people.googleapis.com
+agent-browser --session-name google-setup wait 2000
+agent-browser --session-name google-setup snapshot -i
 ```
 If "Enable" button exists:
 ```
-agent-browser find role button click --name "Enable"
-agent-browser wait 3000
+agent-browser --session-name google-setup find role button click --name "Enable"
+agent-browser --session-name google-setup wait 3000
 ```
 
 After all 6 APIs: verify by navigating to the API dashboard:
 ```
-agent-browser open https://console.cloud.google.com/apis/dashboard
-agent-browser wait 2000
-agent-browser snapshot -i
+agent-browser --session-name google-setup open https://console.cloud.google.com/apis/dashboard
+agent-browser --session-name google-setup wait 2000
+agent-browser --session-name google-setup snapshot -i
 ```
 All 6 APIs should appear in the list. If any are missing, go back and enable them.
 
@@ -541,64 +547,64 @@ Required by Google before the agent can access sensitive services like Gmail.
 
 1. Navigate to the consent screen:
    ```
-   agent-browser open https://console.cloud.google.com/apis/credentials/consent
-   agent-browser wait 2000
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup open https://console.cloud.google.com/apis/credentials/consent
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup snapshot -i
    ```
 
 2. If a "Get Started" button is present, click it:
    ```
-   agent-browser find text "Get Started" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "Get Started" click
+   agent-browser --session-name google-setup wait 2000
    ```
    If no "Get Started" button, look for the consent screen configuration page directly.
 
 3. Select User Type "Internal":
    ```
-   agent-browser find text "Internal" click
+   agent-browser --session-name google-setup find text "Internal" click
    ```
    # Playwright: await page.click('text=Internal')
 
 4. Click "Create":
    ```
-   agent-browser find role button click --name "Create"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Create"
+   agent-browser --session-name google-setup wait 2000
    ```
 
 5. Fill in the app information:
    ```
-   agent-browser find label "App name" fill "AI Workspace Agent"
+   agent-browser --session-name google-setup find label "App name" fill "AI Workspace Agent"
    ```
    For "User support email" - select the admin email from the dropdown:
    ```
-   agent-browser snapshot -i
-   agent-browser find label "User support email" click
-   agent-browser wait 500
+   agent-browser --session-name google-setup snapshot -i
+   agent-browser --session-name google-setup find label "User support email" click
+   agent-browser --session-name google-setup wait 500
    ```
    Select the admin email from the dropdown options.
    
    For "Developer contact email":
    ```
-   agent-browser find label "Developer contact" fill "$USER_EMAIL"
+   agent-browser --session-name google-setup find label "Developer contact" fill "$USER_EMAIL"
    ```
    (Use the Workspace admin email address.)
 
 6. Click "Save and Continue":
    ```
-   agent-browser find role button click --name "Save and Continue"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Save and Continue"
+   agent-browser --session-name google-setup wait 2000
    ```
 
 7. On the Scopes page, click "Save and Continue" again (scopes are handled through DWD):
    ```
-   agent-browser find role button click --name "Save and Continue"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Save and Continue"
+   agent-browser --session-name google-setup wait 2000
    ```
 
 8. Click "Back to Dashboard":
    ```
-   agent-browser find text "Back to Dashboard" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "Back to Dashboard" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 Without this step, Gmail returns "401 Unauthorized" errors.
@@ -611,54 +617,54 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 1. Navigate to the service accounts page:
    ```
-   agent-browser open https://console.cloud.google.com/iam-admin/serviceaccounts
-   agent-browser wait 2000
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup open https://console.cloud.google.com/iam-admin/serviceaccounts
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup snapshot -i
    ```
 
 2. Click "Create Service Account":
    ```
-   agent-browser find text "CREATE SERVICE ACCOUNT" click
+   agent-browser --session-name google-setup find text "CREATE SERVICE ACCOUNT" click
    ```
-   # Fallback: agent-browser find text "Create service account" click
+   # Fallback: agent-browser --session-name google-setup find text "Create service account" click
    ```
-   agent-browser wait 2000
+   agent-browser --session-name google-setup wait 2000
    ```
 
 3. Fill in the service account details:
    ```
-   agent-browser find label "Service account name" fill "OpenClaw-assistant"
-   agent-browser wait 500
+   agent-browser --session-name google-setup find label "Service account name" fill "OpenClaw-assistant"
+   agent-browser --session-name google-setup wait 500
    ```
    The Service account ID auto-populates. Let it.
    
    Fill the description:
    ```
-   agent-browser find label "Service account description" fill "Service account for AI assistant"
+   agent-browser --session-name google-setup find label "Service account description" fill "Service account for AI assistant"
    ```
 
 4. Click "Create and Continue":
    ```
-   agent-browser find role button click --name "Create and Continue"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Create and Continue"
+   agent-browser --session-name google-setup wait 2000
    ```
-   # Fallback: agent-browser find text "CREATE AND CONTINUE" click
+   # Fallback: agent-browser --session-name google-setup find text "CREATE AND CONTINUE" click
 
 5. On the roles screen, click "Continue" (no roles needed):
    ```
-   agent-browser find role button click --name "Continue"
-   agent-browser wait 1000
+   agent-browser --session-name google-setup find role button click --name "Continue"
+   agent-browser --session-name google-setup wait 1000
    ```
 
 6. On the user access screen, click "Done":
    ```
-   agent-browser find role button click --name "Done"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Done"
+   agent-browser --session-name google-setup wait 2000
    ```
 
 7. Capture the service account email:
    ```
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup snapshot -i
    ```
    The service account email appears in the list. It looks like:
    `openclaw-assistant@openclaw-ai-123456.iam.gserviceaccount.com`
@@ -675,42 +681,42 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 1. Click the service account email in the list:
    ```
-   agent-browser find text "$SERVICE_ACCOUNT_EMAIL" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "$SERVICE_ACCOUNT_EMAIL" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 2. Click the "Keys" tab:
    ```
-   agent-browser find text "Keys" click
-   agent-browser wait 1000
+   agent-browser --session-name google-setup find text "Keys" click
+   agent-browser --session-name google-setup wait 1000
    ```
-   # Fallback: agent-browser find text "KEYS" click
+   # Fallback: agent-browser --session-name google-setup find text "KEYS" click
 
 3. Click "Add Key":
    ```
-   agent-browser find text "Add Key" click
-   agent-browser wait 1000
+   agent-browser --session-name google-setup find text "Add Key" click
+   agent-browser --session-name google-setup wait 1000
    ```
 
 4. Click "Create new key":
    ```
-   agent-browser find text "Create new key" click
-   agent-browser wait 1000
+   agent-browser --session-name google-setup find text "Create new key" click
+   agent-browser --session-name google-setup wait 1000
    ```
 
 5. Verify "JSON" is selected as key type:
    ```
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup snapshot -i
    ```
    If JSON is not already selected, select it:
    ```
-   agent-browser find text "JSON" click
+   agent-browser --session-name google-setup find text "JSON" click
    ```
 
 6. Click "Create":
    ```
-   agent-browser find role button click --name "Create"
-   agent-browser wait 3000
+   agent-browser --session-name google-setup find role button click --name "Create"
+   agent-browser --session-name google-setup wait 3000
    ```
 
    A .json file downloads automatically to ~/Downloads/.
@@ -724,67 +730,67 @@ CONTINUE IMMEDIATELY. Do not pause.
 
    a. Navigate to the Organization Policy page:
       ```
-      agent-browser open https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation
-      agent-browser wait 3000
-      agent-browser snapshot -i
+      agent-browser --session-name google-setup open https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation
+      agent-browser --session-name google-setup wait 3000
+      agent-browser --session-name google-setup snapshot -i
       ```
       If URL does not load, try the alternate:
       ```
-      agent-browser open https://console.cloud.google.com/iam-admin/orgpolicies/iam.disableServiceAccountKeyCreation
-      agent-browser wait 3000
-      agent-browser snapshot -i
+      agent-browser --session-name google-setup open https://console.cloud.google.com/iam-admin/orgpolicies/iam.disableServiceAccountKeyCreation
+      agent-browser --session-name google-setup wait 3000
+      agent-browser --session-name google-setup snapshot -i
       ```
 
    b. Click "Manage Policy" or "Edit Policy":
       ```
-      agent-browser find text "Manage Policy" click
+      agent-browser --session-name google-setup find text "Manage Policy" click
       ```
-      # Fallback: agent-browser find text "Edit Policy" click
+      # Fallback: agent-browser --session-name google-setup find text "Edit Policy" click
       ```
-      agent-browser wait 2000
-      agent-browser snapshot -i
+      agent-browser --session-name google-setup wait 2000
+      agent-browser --session-name google-setup snapshot -i
       ```
 
    c. Override the parent policy:
       ```
-      agent-browser find text "Override parent's policy" click
+      agent-browser --session-name google-setup find text "Override parent's policy" click
       ```
       # Fallback options:
-      # agent-browser find text "Off" click
-      # agent-browser find text "Not enforced" click
-      # agent-browser find text "Disable enforcement" click
+      # agent-browser --session-name google-setup find text "Off" click
+      # agent-browser --session-name google-setup find text "Not enforced" click
+      # agent-browser --session-name google-setup find text "Disable enforcement" click
       ```
-      agent-browser wait 1000
+      agent-browser --session-name google-setup wait 1000
       ```
 
       Look for rules that enforce the constraint and change them:
       ```
-      agent-browser snapshot -i
+      agent-browser --session-name google-setup snapshot -i
       ```
       If there is a rule set to "Enforce", change it to "Off" or "Not enforced".
       If there is an "Add a rule" or "Add rule" option, add a rule that allows all.
 
    d. Click Save:
       ```
-      agent-browser find role button click --name "Save"
-      agent-browser wait 3000
+      agent-browser --session-name google-setup find role button click --name "Save"
+      agent-browser --session-name google-setup wait 3000
       ```
 
    e. Navigate back to the service account Keys tab and retry key creation:
       ```
-      agent-browser open https://console.cloud.google.com/iam-admin/serviceaccounts
-      agent-browser wait 2000
-      agent-browser find text "$SERVICE_ACCOUNT_EMAIL" click
-      agent-browser wait 2000
-      agent-browser find text "Keys" click
-      agent-browser wait 1000
-      agent-browser find text "Add Key" click
-      agent-browser wait 1000
-      agent-browser find text "Create new key" click
-      agent-browser wait 1000
-      agent-browser find text "JSON" click
-      agent-browser find role button click --name "Create"
-      agent-browser wait 3000
+      agent-browser --session-name google-setup open https://console.cloud.google.com/iam-admin/serviceaccounts
+      agent-browser --session-name google-setup wait 2000
+      agent-browser --session-name google-setup find text "$SERVICE_ACCOUNT_EMAIL" click
+      agent-browser --session-name google-setup wait 2000
+      agent-browser --session-name google-setup find text "Keys" click
+      agent-browser --session-name google-setup wait 1000
+      agent-browser --session-name google-setup find text "Add Key" click
+      agent-browser --session-name google-setup wait 1000
+      agent-browser --session-name google-setup find text "Create new key" click
+      agent-browser --session-name google-setup wait 1000
+      agent-browser --session-name google-setup find text "JSON" click
+      agent-browser --session-name google-setup find role button click --name "Create"
+      agent-browser --session-name google-setup wait 3000
       ```
 
    f. Verify the key downloaded. Continue without asking.
@@ -817,19 +823,19 @@ CONTINUE IMMEDIATELY to Step A6. Do not pause. Do not ask the user anything.
 
 1. Navigate to the service accounts page:
    ```
-   agent-browser open https://console.cloud.google.com/iam-admin/serviceaccounts
-   agent-browser wait 2000
+   agent-browser --session-name google-setup open https://console.cloud.google.com/iam-admin/serviceaccounts
+   agent-browser --session-name google-setup wait 2000
    ```
 
 2. Click the service account email:
    ```
-   agent-browser find text "$SERVICE_ACCOUNT_EMAIL" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "$SERVICE_ACCOUNT_EMAIL" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 3. Find the Unique ID / Client ID:
    ```
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup snapshot -i
    ```
    Look for "Unique ID" or "OAuth 2 Client ID". It is a long number like: 115886301121225599053
 
@@ -856,46 +862,46 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 1. Navigate to the service account detail page:
    ```
-   agent-browser open https://console.cloud.google.com/iam-admin/serviceaccounts
-   agent-browser wait 2000
-   agent-browser find text "$SERVICE_ACCOUNT_EMAIL" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup open https://console.cloud.google.com/iam-admin/serviceaccounts
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup find text "$SERVICE_ACCOUNT_EMAIL" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 2. Find the Domain-Wide Delegation section:
    ```
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup snapshot -i
    ```
    Look for "Show Advanced Settings" or "Domain-wide delegation".
 
    If "Show Advanced Settings" exists:
    ```
-   agent-browser find text "Show Advanced Settings" click
-   agent-browser wait 1000
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup find text "Show Advanced Settings" click
+   agent-browser --session-name google-setup wait 1000
+   agent-browser --session-name google-setup snapshot -i
    ```
 
 3. Enable the delegation checkbox:
    ```
-   agent-browser find text "Enable Google Workspace Domain-wide Delegation" click
+   agent-browser --session-name google-setup find text "Enable Google Workspace Domain-wide Delegation" click
    ```
-   # Fallback: agent-browser find text "Domain-wide Delegation" click
+   # Fallback: agent-browser --session-name google-setup find text "Domain-wide Delegation" click
    # Look for a checkbox element near this text and click it
 
 4. Click Save:
    ```
-   agent-browser find role button click --name "Save"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Save"
+   agent-browser --session-name google-setup wait 2000
    ```
 
 ### Part B - In Google Workspace Admin Console
 
 1. Navigate to the Admin Console:
    ```
-   agent-browser open https://admin.google.com/
-   agent-browser wait 3000
-   agent-browser snapshot -i
-   agent-browser get url
+   agent-browser --session-name google-setup open https://admin.google.com/
+   agent-browser --session-name google-setup wait 3000
+   agent-browser --session-name google-setup snapshot -i
+   agent-browser --session-name google-setup get url
    ```
    
    IF the URL contains "accounts.google.com" or a login page appears:
@@ -906,44 +912,44 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 2. Navigate to API controls (direct URL to skip menu drilling):
    ```
-   agent-browser open https://admin.google.com/ac/owl/domainwidedelegation
-   agent-browser wait 3000
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup open https://admin.google.com/ac/owl/domainwidedelegation
+   agent-browser --session-name google-setup wait 3000
+   agent-browser --session-name google-setup snapshot -i
    ```
 
    If the direct URL does not work, navigate manually:
    ```
-   agent-browser open https://admin.google.com/
-   agent-browser wait 2000
-   agent-browser find text "Security" click
-   agent-browser wait 2000
-   agent-browser find text "Access and data control" click
-   agent-browser wait 2000
-   agent-browser find text "API controls" click
-   agent-browser wait 2000
-   agent-browser find text "Manage Domain Wide Delegation" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup open https://admin.google.com/
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup find text "Security" click
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup find text "Access and data control" click
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup find text "API controls" click
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup find text "Manage Domain Wide Delegation" click
+   agent-browser --session-name google-setup wait 2000
    ```
-   # Fallback: agent-browser find text "MANAGE DOMAIN WIDE DELEGATION" click
+   # Fallback: agent-browser --session-name google-setup find text "MANAGE DOMAIN WIDE DELEGATION" click
 
 3. Click "Add new":
    ```
-   agent-browser find text "Add new" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "Add new" click
+   agent-browser --session-name google-setup wait 2000
    ```
-   # Fallback: agent-browser find text "Add API client" click
+   # Fallback: agent-browser --session-name google-setup find text "Add API client" click
 
 4. Enter the Client ID:
    ```
-   agent-browser find label "Client ID" fill "$SERVICE_ACCOUNT_CLIENT_ID"
+   agent-browser --session-name google-setup find label "Client ID" fill "$SERVICE_ACCOUNT_CLIENT_ID"
    ```
-   # Fallback: agent-browser find label "Client id" fill "$SERVICE_ACCOUNT_CLIENT_ID"
+   # Fallback: agent-browser --session-name google-setup find label "Client id" fill "$SERVICE_ACCOUNT_CLIENT_ID"
 
 5. Enter the OAuth scopes (all on one line, comma-separated):
    ```
-   agent-browser find label "OAuth scopes" fill "https://www.googleapis.com/auth/gmail.modify,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/contacts.readonly"
+   agent-browser --session-name google-setup find label "OAuth scopes" fill "https://www.googleapis.com/auth/gmail.modify,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/contacts.readonly"
    ```
-   # Fallback: agent-browser find label "scopes" fill "..."
+   # Fallback: agent-browser --session-name google-setup find label "scopes" fill "..."
 
    The complete scope string (copy exactly):
    ```
@@ -952,13 +958,13 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 6. Click "Authorize":
    ```
-   agent-browser find role button click --name "Authorize"
-   agent-browser wait 3000
+   agent-browser --session-name google-setup find role button click --name "Authorize"
+   agent-browser --session-name google-setup wait 3000
    ```
 
 7. Verify the delegation appears in the list:
    ```
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup snapshot -i
    ```
    The Client ID and scopes should appear in the domain-wide delegation table.
 
@@ -1291,7 +1297,7 @@ Same as Step A1. Follow the exact same steps:
 ```bash
 # Check if a persistent browser session already exists
 ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "PLAYWRIGHT SESSION EXISTS" || true
-agent-browser get url 2>/dev/null && echo "AGENT-BROWSER SESSION EXISTS" || true
+agent-browser --session-name google-setup get url 2>/dev/null && echo "AGENT-BROWSER SESSION EXISTS" || true
 ```
 
 If session exists: open the browser with persistent context - it may already be logged in.
@@ -1301,12 +1307,12 @@ If no session: follow the CREDENTIAL CHECK flow above.
 
 1. Open Google Cloud Console:
    ```
-   agent-browser open https://console.cloud.google.com/
+   agent-browser --session-name google-setup open https://console.cloud.google.com/
    ```
 
 2. Check login state:
    ```
-   agent-browser get url
+   agent-browser --session-name google-setup get url
    ```
    IF on a login page:
    - Tell the user: "Please log in to Google Cloud Console with your Gmail account. Press Enter when done."
@@ -1314,30 +1320,30 @@ If no session: follow the CREDENTIAL CHECK flow above.
 
 3. Open the project dropdown and click "New Project":
    ```
-   agent-browser find role button click --name "Select a project"
-   agent-browser wait 1000
-   agent-browser find text "New Project" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Select a project"
+   agent-browser --session-name google-setup wait 1000
+   agent-browser --session-name google-setup find text "New Project" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 4. Name the project "OpenClaw AI" and create:
    ```
-   agent-browser find label "Project name" fill "OpenClaw AI"
-   agent-browser find role button click --name "Create"
-   agent-browser wait "OpenClaw AI"
+   agent-browser --session-name google-setup find label "Project name" fill "OpenClaw AI"
+   agent-browser --session-name google-setup find role button click --name "Create"
+   agent-browser --session-name google-setup wait "OpenClaw AI"
    ```
 
 5. Select the project:
    ```
-   agent-browser find role button click --name "Select a project"
-   agent-browser wait 1000
-   agent-browser find text "OpenClaw AI" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Select a project"
+   agent-browser --session-name google-setup wait 1000
+   agent-browser --session-name google-setup find text "OpenClaw AI" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 6. Capture the Project ID:
    ```
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup snapshot -i
    ```
    Store: `PROJECT_ID="openclaw-ai-123456"`
 
@@ -1350,9 +1356,9 @@ CONTINUE IMMEDIATELY. Do not pause.
 Same as Step A2. Enable all 6 APIs:
 
 ```
-agent-browser open https://console.cloud.google.com/apis/library/gmail.googleapis.com
-agent-browser wait 2000
-agent-browser snapshot -i
+agent-browser --session-name google-setup open https://console.cloud.google.com/apis/library/gmail.googleapis.com
+agent-browser --session-name google-setup wait 2000
+agent-browser --session-name google-setup snapshot -i
 ```
 Click "Enable" if present. Repeat for:
 - https://console.cloud.google.com/apis/library/calendar-json.googleapis.com
@@ -1373,45 +1379,45 @@ For Gmail accounts, the consent screen type must be "External" (not "Internal").
 
 1. Navigate to the consent screen:
    ```
-   agent-browser open https://console.cloud.google.com/apis/credentials/consent
-   agent-browser wait 2000
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup open https://console.cloud.google.com/apis/credentials/consent
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup snapshot -i
    ```
 
 2. If asked to choose user type, select "External":
    ```
-   agent-browser find text "External" click
+   agent-browser --session-name google-setup find text "External" click
    ```
 
 3. Click "Create":
    ```
-   agent-browser find role button click --name "Create"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Create"
+   agent-browser --session-name google-setup wait 2000
    ```
 
 4. Fill in the app information:
    ```
-   agent-browser find label "App name" fill "OpenClaw AI Agent"
+   agent-browser --session-name google-setup find label "App name" fill "OpenClaw AI Agent"
    ```
    For "User support email" - enter or select the user's Gmail:
    ```
-   agent-browser find label "User support email" fill "$USER_EMAIL"
+   agent-browser --session-name google-setup find label "User support email" fill "$USER_EMAIL"
    ```
    For "Developer contact email":
    ```
-   agent-browser find label "Developer contact" fill "$USER_EMAIL"
+   agent-browser --session-name google-setup find label "Developer contact" fill "$USER_EMAIL"
    ```
 
 5. Click "Save and Continue":
    ```
-   agent-browser find role button click --name "Save and Continue"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Save and Continue"
+   agent-browser --session-name google-setup wait 2000
    ```
 
 6. On the Scopes page, click "Add or Remove Scopes":
    ```
-   agent-browser find text "Add or Remove Scopes" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "Add or Remove Scopes" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 7. Add the following scopes. In the "Manually add scopes" input, paste:
@@ -1424,39 +1430,39 @@ For Gmail accounts, the consent screen type must be "External" (not "Internal").
    https://www.googleapis.com/auth/contacts.readonly
    ```
    ```
-   agent-browser find label "Manually add scopes" fill "https://www.googleapis.com/auth/gmail.modify,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/contacts.readonly"
+   agent-browser --session-name google-setup find label "Manually add scopes" fill "https://www.googleapis.com/auth/gmail.modify,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/contacts.readonly"
    ```
    Click "Add to Table" or "Update":
    ```
-   agent-browser find text "Add to Table" click
-   agent-browser wait 1000
+   agent-browser --session-name google-setup find text "Add to Table" click
+   agent-browser --session-name google-setup wait 1000
    ```
 
 8. Click "Save and Continue":
    ```
-   agent-browser find role button click --name "Save and Continue"
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find role button click --name "Save and Continue"
+   agent-browser --session-name google-setup wait 2000
    ```
 
 9. On the Test Users page, click "Add Users":
    ```
-   agent-browser find text "Add Users" click
-   agent-browser wait 1000
-   agent-browser find label "Email" fill "$USER_EMAIL"
-   agent-browser find text "Add" click
-   agent-browser wait 1000
+   agent-browser --session-name google-setup find text "Add Users" click
+   agent-browser --session-name google-setup wait 1000
+   agent-browser --session-name google-setup find label "Email" fill "$USER_EMAIL"
+   agent-browser --session-name google-setup find text "Add" click
+   agent-browser --session-name google-setup wait 1000
    ```
 
 10. Click "Save and Continue":
     ```
-    agent-browser find role button click --name "Save and Continue"
-    agent-browser wait 2000
+    agent-browser --session-name google-setup find role button click --name "Save and Continue"
+    agent-browser --session-name google-setup wait 2000
     ```
 
 11. Click "Back to Dashboard":
     ```
-    agent-browser find text "Back to Dashboard" click
-    agent-browser wait 2000
+    agent-browser --session-name google-setup find text "Back to Dashboard" click
+    agent-browser --session-name google-setup wait 2000
     ```
 
 NOTE: The app stays in "Testing" mode. That is fine for personal use.
@@ -1471,45 +1477,45 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 1. Navigate to Credentials:
    ```
-   agent-browser open https://console.cloud.google.com/apis/credentials
-   agent-browser wait 2000
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup open https://console.cloud.google.com/apis/credentials
+   agent-browser --session-name google-setup wait 2000
+   agent-browser --session-name google-setup snapshot -i
    ```
 
 2. Click "Create Credentials":
    ```
-   agent-browser find text "Create Credentials" click
-   agent-browser wait 1000
+   agent-browser --session-name google-setup find text "Create Credentials" click
+   agent-browser --session-name google-setup wait 1000
    ```
 
 3. Select "OAuth client ID":
    ```
-   agent-browser find text "OAuth client ID" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "OAuth client ID" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 4. Set the application type to "Desktop app":
    ```
-   agent-browser find label "Application type" click
-   agent-browser wait 500
-   agent-browser find text "Desktop app" click
-   agent-browser wait 1000
+   agent-browser --session-name google-setup find label "Application type" click
+   agent-browser --session-name google-setup wait 500
+   agent-browser --session-name google-setup find text "Desktop app" click
+   agent-browser --session-name google-setup wait 1000
    ```
 
 5. Set the name:
    ```
-   agent-browser find label "Name" fill "OpenClaw Desktop Client"
+   agent-browser --session-name google-setup find label "Name" fill "OpenClaw Desktop Client"
    ```
 
 6. Click "Create":
    ```
-   agent-browser find role button click --name "Create"
-   agent-browser wait 3000
+   agent-browser --session-name google-setup find role button click --name "Create"
+   agent-browser --session-name google-setup wait 3000
    ```
 
 7. A dialog appears showing the Client ID and Client Secret. Capture both:
    ```
-   agent-browser snapshot -i
+   agent-browser --session-name google-setup snapshot -i
    ```
    Store these values:
    ```
@@ -1519,8 +1525,8 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 8. Click "Download JSON" to download the credentials file:
    ```
-   agent-browser find text "Download JSON" click
-   agent-browser wait 2000
+   agent-browser --session-name google-setup find text "Download JSON" click
+   agent-browser --session-name google-setup wait 2000
    ```
 
 9. Move the credentials file:
@@ -1532,7 +1538,7 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 10. Click "OK" to close the dialog:
     ```
-    agent-browser find role button click --name "OK"
+    agent-browser --session-name google-setup find role button click --name "OK"
     ```
 
 CONTINUE IMMEDIATELY. Do not pause.

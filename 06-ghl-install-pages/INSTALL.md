@@ -216,12 +216,17 @@ Required settings:
 
 Use this browser launch configuration:
 
+# PERSISTENT SESSION - user logs in once, session saved automatically
+# Session stored at: ~/.openclaw/playwright-data/ghl-install-pages/
+# To reset and re-login: rm -rf ~/.openclaw/playwright-data/ghl-install-pages/
+
 ```python
+import os
 from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
     browser = p.chromium.launch_persistent_context(
-        user_data_dir="./ghl_session",
+        user_data_dir=os.path.expanduser("~/.openclaw/playwright-data/ghl-install-pages"),
         headless=False,
         viewport={"width": 1440, "height": 900},
         args=[

@@ -748,13 +748,50 @@ Routing:
 - If Workspace domain account: use Workspace path (service account + delegated setup where required)
 - If regular Gmail only: use Gmail path (OAuth/user-based setup)
 
-### PLAYWRIGHT REQUIREMENT (MANDATORY)
+### BROWSER SESSION PERSISTENCE (MANDATORY - ALL SKILLS)
 
-Install Playwright early in onboarding before automation-heavy skills.
-When Playwright is used, it must use persistent sessions with:
-- `launchPersistentContext(userDataDir)`
+Any skill that uses browser automation MUST use persistent session mode.
+The user logs in once. The session is saved. Every subsequent run reuses the saved session.
+This applies to ALL browser tools - no exceptions.
 
-Never use regular `launch()` for onboarding automation.
+**agent-browser (Priority 1 - preferred):**
+Use `--session-name <skill-name>` on every command:
+```bash
+agent-browser --session-name <skill-name> open <url>
+agent-browser --session-name <skill-name> find ...
+```
+Sessions saved to: `~/.agent-browser/sessions/`
+To check sessions: `agent-browser state list`
+To reset a session: `agent-browser state clear <skill-name>`
+
+**Playwright (Priority 2 - fallback):**
+ALWAYS use `launchPersistentContext` - NEVER use regular `launch()`:
+```javascript
+const browser = await chromium.launchPersistentContext(
+  path.join(os.homedir(), '.openclaw', 'playwright-data', '<skill-name>'),
+  { headless: false }
+);
+```
+Or in Python (sync):
+```python
+browser = p.chromium.launch_persistent_context(
+    user_data_dir=os.path.expanduser("~/.openclaw/playwright-data/<skill-name>"),
+    headless=False,
+)
+```
+Sessions saved to: `~/.openclaw/playwright-data/<skill-name>/`
+To reset: `rm -rf ~/.openclaw/playwright-data/<skill-name>/`
+
+**OpenClaw browser (Priority 3 - last resort):**
+Uses built-in session handling automatically.
+
+**On Linux/cloud servers:**
+Add `headless=True` and `args=['--no-sandbox', '--disable-dev-shm-usage']` to Playwright.
+agent-browser also works headlessly on Linux.
+
+**Why this matters:**
+Without persistent sessions, every automation run requires a manual login.
+With persistent sessions, the user logs in once during initial setup - never again.
 
 
 ### ALREADY-INSTALLED DETECTION (MANDATORY)
