@@ -28,11 +28,11 @@ Cinematic Forge is an AI video production skill that takes a user from concept t
 
 ### 1. Teach Yourself Protocol (MANDATORY)
 
-The agent MUST know the Teach Yourself Protocol before it can learn Cinematic Forge. If the agent doesn't know TSP:
+The agent MUST know the Teach Yourself Protocol before it can learn Cinematic Forge. If the agent does not know TYP:
 
 1. Install the `teach-yourself-protocol` skill first (see its INSTALL.md)
 2. Have the agent learn it by saying "Teach yourself this" and providing the full protocol document
-3. Verify the agent knows TSP before proceeding
+3. Verify the agent knows TYP before proceeding
 
 ### 2. Required Tools
 
@@ -112,7 +112,7 @@ Say to your agent:
 
 Then provide the contents of `SKILL.md`.
 
-The agent should (following TSP):
+The agent should (following TYP):
 1. Announce it is activating the Teach Yourself Protocol
 2. Recognize this as a HIGH priority skill
 3. Store the deep file in the master files folder (it's already there from Step 2)
@@ -165,41 +165,24 @@ The Teach Yourself Protocol should handle this automatically, but in case the ag
 - Update project-state.json after EVERY completed step for session recovery
 - Send progress updates to user after each segment completes - never leave them waiting in silence
 - If user provides a reference video (Q12), analyze it using video-frames + summarize skills.
-  If those skills aren't installed, install them and use TSP to learn them.
-- Full skill reference: ~/Downloads/[MASTER_FILES_PATH]/cinematic-forge/SKILL.md
+  If those skills aren't installed, install them and use TYP to learn them.
+- Full skill reference: ~/.openclaw/skills/28-cinematic-forge/SKILL.md
 ```
 
-**Add to MEMORY.md:**
-```
-## Cinematic Forge Skill - Learned [DATE]
-- AI video production skill: concept to finished uploaded video
-- 14-question intake (one at a time), VEO 3.1 Fast video gen, ElevenLabs audio, Suno music, FFmpeg assembly
-- Stored at: ~/Downloads/[MASTER_FILES_PATH]/cinematic-forge/SKILL.md
-- Lightweight summaries in TOOLS.md (usage reference) and AGENTS.md (production rules)
-- Requires: KIE.ai API key, FFmpeg, GHL PIT or imgBB for media hosting
-- Companion skills: video-frames, summarize (for Q12 reference video analysis)
-- Priority: HIGH
-```
+### Step 3: Core file updates (mandatory)
 
-**Add to IDENTITY.md:**
-```
-## Capability: Cinematic Forge (AI Video Production)
-- I can produce complete videos from scratch using AI
-- I walk users through a structured 14-question intake, generate all visual and audio assets,
-  assemble with FFmpeg, and deliver to their media library
-- Tools: VEO 3.1 Fast, Nano Banana Pro, ElevenLabs, Suno, FFmpeg
-- Full skill reference: ~/Downloads/[MASTER_FILES_PATH]/cinematic-forge/SKILL.md
-```
+Apply the updates in `CORE_UPDATES.md`.
 
-**Note:** Replace `[MASTER_FILES_PATH]` with the actual folder name on the system (e.g., `openclaw-master-files`). Replace `[DATE]` with the current date.
-
-The agent should also scan each core file for conflicts before writing (per TSP Step 7). If there's an existing video-related entry that conflicts with Cinematic Forge, update it rather than creating a duplicate.
+Rules:
+- Update ONLY the core files listed in `CORE_UPDATES.md`.
+- Do NOT update `IDENTITY.md`, `SOUL.md`, or `USER.md` for this skill.
+- Do NOT paste large documentation into core files. Add short pointers only.
 
 ### Step 4: Verify API Access
 
-Ask your agent to verify it has the required API keys:
+Verify the required API keys are present:
 
-> "Check if you have a KIE.ai API key and can access the VEO, Nano Banana Pro, ElevenLabs, and Suno models"
+- Confirm KIE.ai key is present and you can access VEO, Nano Banana Pro, ElevenLabs, and Suno via KIE.ai
 
 The agent should check its secrets/environment files and confirm access.
 
@@ -207,10 +190,10 @@ The agent should check its secrets/environment files and confirm access.
 
 Try a quick test:
 
-> "Create a short 15-second test video of a person walking on a beach at sunset"
+- Create a short 15 second test video: a person walking on a beach at sunset
 
 The agent should:
-1. Start the 11-question intake (one at a time)
+1. Start the 14-question intake (one at a time)
 2. For a test, you can give quick answers
 3. Watch for: proper question sequencing, image generation, video generation, audio creation, FFmpeg assembly, media library upload
 
@@ -239,8 +222,8 @@ The agent should:
 - Fallback: use imgBB for hosting
 
 **Agent skips the Teach Yourself Protocol prerequisite:**
-- This is a hard requirement - Cinematic Forge references TSP concepts throughout
-- Install TSP first, then re-teach Cinematic Forge
+- This is a hard requirement - Cinematic Forge references TYP concepts throughout
+- Install TYP first, then re-teach Cinematic Forge
 
 ## Agent Model Requirements
 

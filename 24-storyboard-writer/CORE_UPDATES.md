@@ -1,24 +1,30 @@
-# Skill 24: Storyboard Writer - Core File Updates
+# Skill 24: Storyboard Writer - CORE_UPDATES
 
 ## Core .md files this skill is allowed to update
 
 - `TOOLS.md`
 - `MEMORY.md`
 
-## Update instructions (TYP-lean)
+Do NOT update any other core files for this skill (for example: `AGENTS.md`, `USER.md`, `SOUL.md`, `IDENTITY.md`, `HEARTBEAT.md`) unless the user explicitly requests it.
 
-Add a short pointer only. Do not paste full documentation into core files.
+## What to add (exact text)
 
 ### TOOLS.md
-Add a short section called `Video Skills Suite` with pointers to:
-- `~/.openclaw/skills/24-storyboard-writer/`
+Add this section:
+
+```md
+## Video Skills Suite
+
+### Storyboard Writer (Skill 24)
+- Location: `~/.openclaw/skills/24-storyboard-writer/`
+- Purpose: turn a video idea into a structured storyboard that matches model limits (Veo, Sora, etc.)
+- Use when: user asks for a storyboard, shot list, scene plan, or "turn this script into a video plan"
+```
 
 ### MEMORY.md
-Add a single pointer entry:
-- `Skill 24: Storyboard Writer` docs live at `~/.openclaw/skills/24-storyboard-writer/`
+Add this pointer:
 
-### AGENTS.md (only if listed above)
-If this skill touches AGENTS.md, add a short `Video QC` rule:
-- After producing a video file, verify it exists and is playable
-- Verify duration and resolution match the spec for the target platform
-- If the file is missing audio when it should have audio, treat as FAILED
+```md
+## Video Skills Suite
+- Storyboard Writer (Skill 24): `~/.openclaw/skills/24-storyboard-writer/`
+```

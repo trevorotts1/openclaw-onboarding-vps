@@ -1,24 +1,31 @@
-# Skill 25: Video Creator - Core File Updates
+# Skill 25: Video Creator - CORE_UPDATES
 
 ## Core .md files this skill is allowed to update
 
 - `TOOLS.md`
 - `MEMORY.md`
 
-## Update instructions (TYP-lean)
+Do NOT update any other core files for this skill unless the user explicitly requests it.
 
-Add a short pointer only. Do not paste full documentation into core files.
+## What to add (exact text)
 
 ### TOOLS.md
-Add a short section called `Video Skills Suite` with pointers to:
-- `~/.openclaw/skills/25-video-creator/`
+Add this section:
+
+```md
+## Video Skills Suite
+
+### Video Creator (Skill 25)
+- Location: `~/.openclaw/skills/25-video-creator/`
+- Purpose: generate and assemble videos (for example: text to video, image to video, multi-clip assembly)
+- Primary provider: KIE.ai (uses `KIE_API_KEY`)
+- Output: default is `~/Videos/Output/`
+```
 
 ### MEMORY.md
-Add a single pointer entry:
-- `Skill 25: Video Creator` docs live at `~/.openclaw/skills/25-video-creator/`
+Add this pointer:
 
-### AGENTS.md (only if listed above)
-If this skill touches AGENTS.md, add a short `Video QC` rule:
-- After producing a video file, verify it exists and is playable
-- Verify duration and resolution match the spec for the target platform
-- If the file is missing audio when it should have audio, treat as FAILED
+```md
+## Video Skills Suite
+- Video Creator (Skill 25): `~/.openclaw/skills/25-video-creator/`
+```

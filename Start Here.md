@@ -23,18 +23,18 @@ Without this, one bad edit can corrupt your system with no way to recover.
 
 ### ✅ STEP 3: QMD (Semantic Search Engine)
 **Handled automatically by the install script - no skill folder needed.**
-QMD is installed as a system dependency before skills 4-23 run.
+QMD is installed as a system dependency before skills 4-28 run.
 It powers the persona search in Skill 22 and the persona detection in Skill 23.
 If the install script already ran, QMD is installed. No manual step needed.
 
-### STEPS 4-23: All Remaining Skills (in numbered order)
+### STEPS 4-28: All Remaining Skills (in numbered order)
 Skills install sequentially. For each skill:
 - The agent checks if API keys are already present in your env files
 - If a key is found → proceeds automatically
 - If a key is not found → asks you to enter it, or offers to skip and remind you later
 - You can skip any skill and the agent moves to the next one automatically
 
-**Every skill from 04 through 23 requires both TYP (Step 1) and Back Yourself Up (Step 2) to be installed first.**
+**Every skill from 04 through 28 requires both TYP (Step 1) and Back Yourself Up (Step 2) to be installed first.**
 No exceptions. If you skip those two, stop and go back.
 
 ---
@@ -51,7 +51,7 @@ or what content to add - always follow the skill's files.**
 - TYP governs the storage METHOD: lean summaries and file path references in core files
 - The skill governs the CONTENT and which files it touches
 - Skill docs always take precedence over TYP when there is a conflict
-- This applies to every skill from 03 through 23
+- This applies to every skill from 03 through 28
 
 ---
 
@@ -576,7 +576,7 @@ All skill folders are located inside:
 | 25 | Caption Creator | 26-caption-creator |
 | 26 | Video Editor | 27-video-editor |
 | 27 | Cinematic Forge | 28-cinematic-forge |
-| 23 | OpenRouter Setup (MUST BE LAST, after model backup) | 12-openrouter-setup |
+| 28 | OpenRouter Setup (MUST BE LAST, after model backup) | 12-openrouter-setup |
 
 
 ---

@@ -1,24 +1,30 @@
-# Skill 26: Caption Creator - Core File Updates
+# Skill 26: Caption Creator - CORE_UPDATES
 
 ## Core .md files this skill is allowed to update
 
 - `TOOLS.md`
 - `MEMORY.md`
 
-## Update instructions (TYP-lean)
+Do NOT update any other core files for this skill unless the user explicitly requests it.
 
-Add a short pointer only. Do not paste full documentation into core files.
+## What to add (exact text)
 
 ### TOOLS.md
-Add a short section called `Video Skills Suite` with pointers to:
-- `~/.openclaw/skills/26-caption-creator/`
+Add this section:
+
+```md
+## Video Skills Suite
+
+### Caption Creator (Skill 26)
+- Location: `~/.openclaw/skills/26-caption-creator/`
+- Purpose: generate captions (SRT) and create captioned videos
+- Use when: user asks for captions, subtitles, SRT, or "burn-in captions"
+```
 
 ### MEMORY.md
-Add a single pointer entry:
-- `Skill 26: Caption Creator` docs live at `~/.openclaw/skills/26-caption-creator/`
+Add this pointer:
 
-### AGENTS.md (only if listed above)
-If this skill touches AGENTS.md, add a short `Video QC` rule:
-- After producing a video file, verify it exists and is playable
-- Verify duration and resolution match the spec for the target platform
-- If the file is missing audio when it should have audio, treat as FAILED
+```md
+## Video Skills Suite
+- Caption Creator (Skill 26): `~/.openclaw/skills/26-caption-creator/`
+```

@@ -1,4 +1,4 @@
-# Skill 28: Cinematic Forge - Core File Updates
+# Skill 28: Cinematic Forge - CORE_UPDATES
 
 ## Core .md files this skill is allowed to update
 
@@ -6,20 +6,37 @@
 - `TOOLS.md`
 - `MEMORY.md`
 
-## Update instructions (TYP-lean)
+Do NOT update any other core files for this skill unless the user explicitly requests it.
 
-Add a short pointer only. Do not paste full documentation into core files.
+## What to add (exact text)
+
+### AGENTS.md
+Add this rule:
+
+```md
+## Cinematic Forge (Skill 28) - Video Production Rules
+- Intake is 14 questions, asked one at a time
+- Track progress in a state file so the job can resume after interruptions
+- Always verify KIE.ai balance before spending credits
+- Always QC output video (file exists, duration, resolution, audio)
+```
 
 ### TOOLS.md
-Add a short section called `Video Skills Suite` with pointers to:
-- `~/.openclaw/skills/28-cinematic-forge/`
+Add this section:
+
+```md
+## Video Skills Suite
+
+### Cinematic Forge (Skill 28)
+- Location: `~/.openclaw/skills/28-cinematic-forge/`
+- Purpose: end-to-end video production pipeline (intake to finished video)
+- Provider: KIE.ai for VEO, Nano Banana Pro, voice, music
+```
 
 ### MEMORY.md
-Add a single pointer entry:
-- `Skill 28: Cinematic Forge` docs live at `~/.openclaw/skills/28-cinematic-forge/`
+Add this pointer:
 
-### AGENTS.md (only if listed above)
-If this skill touches AGENTS.md, add a short `Video QC` rule:
-- After producing a video file, verify it exists and is playable
-- Verify duration and resolution match the spec for the target platform
-- If the file is missing audio when it should have audio, treat as FAILED
+```md
+## Video Skills Suite
+- Cinematic Forge (Skill 28): `~/.openclaw/skills/28-cinematic-forge/`
+```

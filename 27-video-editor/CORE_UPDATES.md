@@ -1,4 +1,4 @@
-# Skill 27: Video Editor - Core File Updates
+# Skill 27: Video Editor - CORE_UPDATES
 
 ## Core .md files this skill is allowed to update
 
@@ -6,20 +6,38 @@
 - `TOOLS.md`
 - `MEMORY.md`
 
-## Update instructions (TYP-lean)
+Do NOT update any other core files for this skill unless the user explicitly requests it.
 
-Add a short pointer only. Do not paste full documentation into core files.
+## What to add (exact text)
+
+### AGENTS.md
+Add this rule:
+
+```md
+## Video QC Rule (Skill 27)
+When generating or editing a video:
+- Verify the output file exists on disk
+- Verify duration and resolution match the target platform spec
+- Verify audio is present when the output should contain audio
+- If any check fails, treat the run as FAILED and fix before claiming done
+```
 
 ### TOOLS.md
-Add a short section called `Video Skills Suite` with pointers to:
-- `~/.openclaw/skills/27-video-editor/`
+Add this section:
+
+```md
+## Video Skills Suite
+
+### Video Editor (Skill 27)
+- Location: `~/.openclaw/skills/27-video-editor/`
+- Purpose: cut, resize, caption, and assemble videos with repeatable scripts
+- Use when: user asks to trim a video, make reels, add overlays, add captions, or export for a platform
+```
 
 ### MEMORY.md
-Add a single pointer entry:
-- `Skill 27: Video Editor` docs live at `~/.openclaw/skills/27-video-editor/`
+Add this pointer:
 
-### AGENTS.md (only if listed above)
-If this skill touches AGENTS.md, add a short `Video QC` rule:
-- After producing a video file, verify it exists and is playable
-- Verify duration and resolution match the spec for the target platform
-- If the file is missing audio when it should have audio, treat as FAILED
+```md
+## Video Skills Suite
+- Video Editor (Skill 27): `~/.openclaw/skills/27-video-editor/`
+```
