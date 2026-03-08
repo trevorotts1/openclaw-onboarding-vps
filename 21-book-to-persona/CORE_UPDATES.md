@@ -1,70 +1,121 @@
-# CORE_UPDATES.md - Book Intelligence Pipeline
+# CORE_UPDATES.md - Book-to-Persona Skill
 
-## What Goes in Core Files
-
-Add concise summary + reference to each file listed below.
-Do NOT dump full documentation into core files.
-The summary tells what it is. The reference tells where to find the how-to.
+## Rule: Reference Only - No Full Docs in Core Files
+Add concise summaries and file paths only. Never paste full documentation into core files.
 
 ---
 
 ## AGENTS.md
 
-Add this block under a "Installed Skills" or "Capabilities" section:
+**Where:** Add a new section at the bottom of AGENTS.md titled `## Book-to-Persona Skill (Installed)`
 
+**Exact text to add:**
 ```
-## Book Intelligence Pipeline Skill (Installed)
-Converts any bestselling book PDF into a dual-purpose persona blueprint - one that coaches
-humans through challenges AND governs AI agents executing professional work across departments.
-Runs 3-phase sub-agent pipeline: Kimi K2.5 extracts methodology, DeepSeek V3.2-Speciale
-analyzes across 12 dimensions, GPT-5.3 Codex (OAuth) synthesizes 14-section blueprint.
-Output is QMD-indexed for retrieval. Fallback: if Codex fails, Kimi K2.5 takes Phase 3.
-Full documentation: ~/clawd/skills/book-to-persona/
-Persona output: [detected-master-files-path]/coaching-personas/personas/
+## Book-to-Persona Skill (Installed)
+Converts any book (PDF/EPUB/MOBI/AZW3) into a dual-purpose persona blueprint.
+40 pre-built personas already included. Pipeline runs on new books only.
+
+Pipeline:
+- Phase 1: Kimi K2.5 via direct Moonshot API (api.moonshot.ai/v1, temp 1.0) → extraction-notes.md
+- Phase 2: DeepSeek V3.2 via OpenRouter → analysis-notes.md
+- Phase 3: OpenAI Codex → persona-blueprint.md (all 14 sections)
+- Content filter fallback: OpenRouter moonshotai/kimi-k2.5
+
+Persona Reflex (DEFAULT BEHAVIOR):
+Before any professional task, run: qmd search coaching-personas "<task keywords>"
+Load returned persona's Task Mode. Execute the task through that methodology.
+Skip only if Trevor explicitly says so.
+
+Key paths:
+- Skill: ~/clawd/skills/book-to-persona/
+- Personas: ~/Downloads/openclaw-master-files/coaching-personas/personas/
+- Router: ~/clawd/skills/book-to-persona/PERSONA-ROUTER.md
+- Orchestrator: ~/clawd/projects/coaching-personas-matrix/orchestrator.py
+- QMD collection: coaching-personas (7,465 vectors)
+
+To add a new book: follow SOP in MEMORY.md under "Add New Book to Coaching Personas Matrix"
 ```
 
 ---
 
 ## TOOLS.md
 
-Add this block under model routing or skills section:
+**Where:** Add a new section under model routing titled `## Book-to-Persona - Model Routing`
 
+**Exact text to add:**
 ```
-## Book Intelligence Pipeline - Model Routing
-- Phase 1 (Extraction): moonshot/kimi-k2.5 via Moonshot direct API (MOONSHOT_API_KEY)
-- Phase 2 (Analysis): deepseek/deepseek-v3.2-speciale via OpenRouter
-- Phase 3 (Synthesis): openai-codex/gpt-5.3-codex via OpenClaw OAuth (ChatGPT subscription)
-- Phase 3 Fallback: moonshot/kimi-k2.5 if Codex fails
-- Parallelism: 7 books simultaneously, continuous pipeline (each book flows independently)
-- Storage: [detected-master-files-path]/coaching-personas/
-Full routing reference: ~/clawd/skills/book-to-persona/PIPELINE.md
+## Book-to-Persona - Model Routing
+- Phase 1: moonshot/kimi-k2.5 — MOONSHOT_API_KEY in ~/clawd/secrets/.env — endpoint: https://api.moonshot.ai/v1 — temperature MUST be 1.0
+- Phase 2: deepseek/deepseek-v3.2 via OpenRouter ONLY (OPENROUTER_API_KEY)
+- Phase 3: openai/gpt-5.2-codex via direct OpenAI API
+- Fallback (content filter): OpenRouter moonshotai/kimi-k2.5 for flagged books
+- QMD search: qmd search coaching-personas "<keywords>" — returns persona folder path
+Full pipeline reference: ~/clawd/skills/book-to-persona/PIPELINE.md
 ```
 
 ---
 
 ## MEMORY.md
 
-Add this block under active projects or installed skills:
+**Where:** Add a new entry under installed skills or at the bottom titled `## Book-to-Persona Persona Library`
 
+**Exact text to add:**
 ```
-## Book Intelligence Pipeline - Persona Library
-Skill installed at: ~/clawd/skills/book-to-persona/
-Persona output at: [detected-master-files-path]/coaching-personas/personas/
-QMD collection: coaching-personas (indexes all persona blueprints)
-To retrieve a persona at runtime: qmd query "describe [methodology/challenge]"
-To run pipeline on new book: trigger Book Intelligence Pipeline skill with PDF path
-Full QMD usage: ~/clawd/skills/book-to-persona/QMD-RETRIEVAL-GUIDE.md
+## Book-to-Persona Persona Library (Installed [DATE])
+- Skill: ~/clawd/skills/book-to-persona/
+- 40 pre-built personas: ~/Downloads/openclaw-master-files/coaching-personas/personas/
+- QMD collection: coaching-personas (7,465 vectors, 447 documents)
+- GitHub: https://github.com/trevorotts1/openclaw-onboarding (skill 21-book-to-persona)
+- Persona Reflex: query QMD before every professional task (see AGENTS.md)
+- Add new book SOP: see "Add New Book to Coaching Personas Matrix" section in this file
+```
+
+---
+
+## SOUL.md
+
+**Where:** Add under the Boundaries section
+
+**Exact text to add:**
+```
+## Persona Coaching Voice Rule (Added [DATE])
+When operating through a persona from the book-to-persona library:
+- NEVER use the author's name in the coaching voice
+- The author's name appears ONLY inside attribution-flagged direct quotes
+- Coaching Mode speaks in the methodology's voice, not the author's identity
+- Example: Do not say "As Mel Robbins says..." - say "The 5-second countdown works because..."
+```
+
+---
+
+## USER.md
+
+No update required. This skill does not change anything about how you interact with Trevor directly.
+
+---
+
+## IDENTITY.md
+
+No update required unless you are setting up a persona as your primary operating identity.
+
+---
+
+## HEARTBEAT.md
+
+**Where:** Add under Active Capabilities if this section exists, otherwise skip.
+
+**Exact text to add:**
+```
+## Persona Reflex - ACTIVE
+QMD collection coaching-personas loaded (7,465 vectors).
+Before professional tasks: qmd search coaching-personas "<task>" → load persona Task Mode.
 ```
 
 ---
 
 ## What NOT to Add to Core Files
-
-- Do NOT paste the full PIPELINE.md into AGENTS.md
-- Do NOT paste the full prompt templates into TOOLS.md
+- Do NOT paste PIPELINE.md into AGENTS.md
+- Do NOT paste prompt templates into TOOLS.md
 - Do NOT paste the 14-section blueprint format into any core file
-- Do NOT add model API keys or auth details to core files
-- Do NOT add the full book list to core files
-
-The core files get the summary (what it is, what it does) and the path (where to find the rest).
-That is all.
+- Do NOT add API keys to core files
+- Core files get: what it is, what it does, where to find details. That is all.

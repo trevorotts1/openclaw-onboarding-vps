@@ -1,5 +1,44 @@
 # Installing the AI Workforce Blueprint Skill
 
+## STEP 0 - TSP PREREQUISITE CHECK (Do This Before Anything Else)
+
+**Before installing this skill, the agent must have already learned Skill 01: Teach Yourself Protocol.**
+
+Check now:
+```
+Search AGENTS.md and MEMORY.md for: "Teach Yourself Protocol" or "TSP"
+```
+
+**If TSP IS found in your core files:** Proceed to Step 1.
+
+**If TSP is NOT found:** STOP immediately. Tell the user:
+
+> "Before we can install this skill, you need to complete Skill 01 - Teach Yourself Protocol first.
+> Download it from: https://github.com/trevorotts1/openclaw-onboarding (folder: 01-teach-yourself-protocol)
+> Tell your AI to read SKILL.md in that folder and complete the full TSP installation.
+> Come back to this skill after that is done."
+
+Do NOT proceed with this installation until TSP is confirmed installed.
+
+---
+
+## Step 1 - Activate TSP on This Skill Folder
+
+Run the Teach Yourself Protocol on this skill folder now. Read every .md file in this order:
+
+1. SKILL.md (already read if you are here)
+2. ai-workforce-blueprint-full.md (the full 66,819-character blueprint - read it completely)
+3. INSTRUCTIONS.md
+4. EXAMPLES.md
+5. CORE_UPDATES.md
+6. INSTALL.md (this file - you are reading it now)
+
+**Announce to the user after each file:** "Read [filename]. Moving to next."
+**Do not proceed to Step 2 until all 6 files are confirmed read.**
+After all reads: announce "TSP complete for AI Workforce Blueprint skill. Proceeding with installation."
+
+---
+
 ## Prerequisites
 - OpenClaw installed and running
 - A workspace folder (e.g., `~/Downloads/my-ai-workforce/` or wherever your business files live)
