@@ -158,6 +158,85 @@ uname -s
   Please run this on a Mac or a Linux machine (including cloud VPS).
   ```
 
+### CLOUD / LINUX INSTALL NOTES
+
+**Only applies if `uname -s` returned `Linux`. Skip this section entirely on macOS.**
+
+If you are running on a Linux-based cloud server (VPS, EC2, DigitalOcean, etc.), apply
+these adjustments throughout the entire onboarding. These are not extra steps - they are
+replacements for macOS-specific behavior.
+
+#### 1. Package manager - replace `brew` with `apt-get`
+Any install command in any skill that uses `brew install <package>` should be replaced with:
+```bash
+sudo apt-get update && sudo apt-get install -y <package>
+```
+If `apt-get` is not available, try `snap install <package>`.
+
+#### 2. Playwright runs headless - no visible browser window
+On a cloud server there is no display. Playwright must run in headless mode.
+Any skill that requires a first-time browser login (Google Workspace setup, agent-browser, etc.)
+will need the user to complete that login from a local machine first, then copy the session
+data to the server, OR use a headless-compatible auth flow.
+
+For Playwright persistent context on Linux:
+```javascript
+const browser = await chromium.launchPersistentContext(userDataDir, {
+  headless: true,   // always true on cloud/Linux
+  args: ['--no-sandbox', '--disable-dev-shm-usage']
+});
+```
+
+Install Playwright's Linux dependencies before any skill that uses it:
+```bash
+npx playwright install chromium
+npx playwright install-deps chromium
+```
+
+#### 3. Master files folder - use home directory, not Downloads
+`~/Downloads` may not exist on a Linux server. Use this location instead:
+```bash
+mkdir -p ~/openclaw-master-files
+```
+When Start Here.md refers to `~/Downloads/openclaw-master-files`, use `~/openclaw-master-files` on Linux.
+
+#### 4. Replace `open` command with `xdg-open`
+Any skill that uses `open <file-or-url>` to open something should use `xdg-open` on Linux.
+On a headless server, `xdg-open` will likely fail silently - that is expected. Skip those steps.
+
+#### 5. Date command format
+The date formatting command differs between macOS and Linux:
+
+macOS (BSD date):
+```bash
+date +'%B %-d at %-I-%M %p'
+```
+
+Linux (GNU date):
+```bash
+date +'%B %-d at %-I-%M %p'
+```
+GNU date supports `%-d` and `%-I` the same way. No change needed.
+
+#### 6. Shell defaults
+Linux servers often default to `bash` instead of `zsh`. All shell commands in this
+onboarding package work in both. No changes needed.
+
+#### 7. Summary - Linux substitution table
+
+| macOS | Linux replacement |
+|-------|-------------------|
+| `brew install X` | `sudo apt-get install -y X` |
+| `~/Downloads/` | `~/` (home directory) |
+| `open <file>` | `xdg-open <file>` (skip if headless) |
+| Playwright headless: false | Playwright headless: true + --no-sandbox |
+| `uname -s` → Darwin | `uname -s` → Linux |
+
+---
+
+**After reading this section, continue with the rest of the prerequisites normally.**
+**All other onboarding steps are identical on macOS and Linux.**
+
 ### 1. OpenClaw is installed and running
 
 ```bash
