@@ -3,7 +3,7 @@
 - Workspace path (Path A): use Domain-Wide Delegation flow.
 - Gmail path (Path B): use OAuth 2.0 Desktop flow.
 - Do not force Workspace-only setup for Gmail users.
-- If browser automation is used, Playwright must use `launchPersistentContext(userDataDir)`.
+- Browser tool priority: agent-browser (Vercel) → Playwright (launchPersistentContext) → OpenClaw browser. Use whichever is available, in that order.
 - Never use regular `launch()` for onboarding automation.
 
 
@@ -341,14 +341,19 @@ Look for any of these keys: `GOOGLE_EMAIL`, `GOOGLE_USERNAME`, `GOOGLE_ACCOUNT`,
 3. Wait for user confirmation
 4. Once confirmed, take over browser automation from there
 
-**Either way - use Playwright persistent context:**
+**Either way - use the active browser tool (detected in browser hierarchy above):**
+
+- If `BROWSER_TOOL="agent-browser"`: agent-browser manages session persistence automatically via its own profile storage.
+- If `BROWSER_TOOL="playwright"`: use `launchPersistentContext` with session stored at `~/.openclaw/playwright-data/google-setup/`:
 ```javascript
 const browser = await chromium.launchPersistentContext(
   path.join(os.homedir(), '.openclaw', 'playwright-data', 'google-setup'),
   { headless: false }
 );
 ```
-Session is saved - user only logs in once. Next run detects existing session automatically.
+- If `BROWSER_TOOL="openclaw"`: use OpenClaw browser tool with its built-in session handling.
+
+Session is saved regardless of tool - user only logs in once. Next run detects existing session automatically.
 
 ---
 
@@ -356,12 +361,12 @@ Session is saved - user only logs in once. Next run detects existing session aut
 
 **Check for existing session first:**
 ```bash
-# Check if Playwright session already exists
-ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "SESSION EXISTS" || echo "NO SESSION"
+# Check if a persistent browser session already exists
+ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "PLAYWRIGHT SESSION EXISTS" || true
+agent-browser get url 2>/dev/null && echo "AGENT-BROWSER SESSION EXISTS" || true
 ```
 
-If session exists: open the browser with persistent context - it may already be logged in.
-Check the current page URL. If already at console.cloud.google.com (not a login page), proceed directly to the next step without asking for credentials again.
+If a session exists for the active browser tool and the current URL is console.cloud.google.com (not a login page), proceed directly to the next step without asking for credentials again.
 
 If no session: follow the CREDENTIAL CHECK flow above.
 
@@ -1262,14 +1267,19 @@ Look for any of these keys: `GOOGLE_EMAIL`, `GOOGLE_USERNAME`, `GOOGLE_ACCOUNT`,
 3. Wait for user confirmation
 4. Once confirmed, take over browser automation from there
 
-**Either way - use Playwright persistent context:**
+**Either way - use the active browser tool (detected in browser hierarchy above):**
+
+- If `BROWSER_TOOL="agent-browser"`: agent-browser manages session persistence automatically.
+- If `BROWSER_TOOL="playwright"`: use `launchPersistentContext` with session stored at `~/.openclaw/playwright-data/google-setup/`:
 ```javascript
 const browser = await chromium.launchPersistentContext(
   path.join(os.homedir(), '.openclaw', 'playwright-data', 'google-setup'),
   { headless: false }
 );
 ```
-Session is saved - user only logs in once. Next run detects existing session automatically.
+- If `BROWSER_TOOL="openclaw"`: use OpenClaw browser tool with its built-in session handling.
+
+Session is saved regardless of tool - user only logs in once. Next run detects existing session automatically.
 
 ---
 
@@ -1279,8 +1289,9 @@ Same as Step A1. Follow the exact same steps:
 
 **Check for existing session first:**
 ```bash
-# Check if Playwright session already exists
-ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "SESSION EXISTS" || echo "NO SESSION"
+# Check if a persistent browser session already exists
+ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "PLAYWRIGHT SESSION EXISTS" || true
+agent-browser get url 2>/dev/null && echo "AGENT-BROWSER SESSION EXISTS" || true
 ```
 
 If session exists: open the browser with persistent context - it may already be logged in.
