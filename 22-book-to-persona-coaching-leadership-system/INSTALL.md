@@ -18,12 +18,12 @@ Proceed to the instructions below. Follow the TYP file storage structure.
 
 IF YOU HAVE NOT BEEN TAUGHT TYP:
 STOP IMMEDIATELY. Do not read further. Do not attempt to learn or execute
-anything in this document. Tell the user exactly this:
+anything in this document. Stop and report to the user:
 
-  "I have not been taught the Teach Yourself Protocol yet. I cannot safely
-   learn or execute these instructions until I have been taught TYP first.
-   Please share the Teach Yourself Protocol tab with me before we proceed.
-   Without TYP, I will bloat your core .md files and waste your tokens."
+  "Teach Yourself Protocol (TYP) is not installed yet. This skill cannot
+   be safely installed without TYP. Navigate to 01-teach-yourself-protocol/
+   in the onboarding package and complete that installation first.
+   Without TYP, core .md files will be bloated and tokens wasted."
 
 DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
 
@@ -81,12 +81,7 @@ Search AGENTS.md and MEMORY.md for: "Teach Yourself Protocol" or "TYP"
 
 **If TYP IS found in your core files:** Proceed to Step 1.
 
-**If TYP is NOT found:** STOP immediately. Tell the user:
-
-> "Before we can install this skill, you need to complete Skill 01 - Teach Yourself Protocol first.
-> Download it from: https://github.com/trevorotts1/openclaw-onboarding (folder: 01-teach-yourself-protocol)
-> Tell your AI to read SKILL.md in that folder and complete the full TYP installation.
-> Come back to this skill after that is done."
+**If TYP is NOT found:** Stop. Skill 01 - Teach Yourself Protocol must be installed first. Navigate to 01-teach-yourself-protocol/ in the onboarding package and complete that installation. Return here after TYP is confirmed installed.
 
 Do NOT proceed with this installation until TYP is confirmed installed.
 
@@ -111,36 +106,69 @@ After all reads: log "TYP complete for book-to-persona skill. Proceeding with in
 
 ---
 
+## Step 1b - Copy Skill to OpenClaw Skills Folder
+
+Copy this entire skill folder into the standard OpenClaw skills directory so the agent can reference it at runtime.
+
+Run:
+```bash
+mkdir -p ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system
+cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+```
+
+**Note:** If the onboarding package was extracted to a different location, replace `/tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/` with the actual path to this skill folder.
+
+Verify:
+```bash
+ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+```
+
+**Expected output:** SKILL.md, INSTALL.md, PIPELINE.md, CHECKLIST.md, CORE_UPDATES.md, GOOD-AND-BAD-EXAMPLES.md, PERSONA-ROUTER.md, QMD-RETRIEVAL-GUIDE.md, personas/, pipeline/, agent-prompts/ all present.
+
+If any files are missing, re-run the copy command above.
+
+---
+
 ## Step 2 - Check Dependencies
 
 ### QMD (Required)
 
-Run: `qmd --version`
-
-**If QMD is installed:** You will see output like `qmd 1.1.0`. Proceed to Step 3.
-
-**If QMD is NOT installed:** You will see "command not found". Install it now:
-
+**Step 1:** Check if QMD is already installed:
 ```bash
-# Install via bun (recommended - this is how it was installed on BlackCEO systems)
-bun install -g https://github.com/tobi/qmd
-
-# Verify installation
 qmd --version
 ```
 
-If bun is not installed:
-```bash
-# Install bun first
-curl -fsSL https://bun.sh/install | bash
+**If you see a version number** (like `qmd 1.1.0`): QMD is installed. Skip to the next dependency.
 
-# Then install qmd
+**If you see "command not found":** Install QMD now using this sequence:
+
+```bash
+# Attempt 1: Install via bun (recommended)
 bun install -g https://github.com/tobi/qmd
 ```
 
-QMD documentation and source: https://github.com/tobi/qmd
+If bun is not installed or the command fails:
+```bash
+# Attempt 2: Install bun first, then QMD
+curl -fsSL https://bun.sh/install | bash
+source ~/.bashrc 2>/dev/null || source ~/.zshrc 2>/dev/null
+bun install -g https://github.com/tobi/qmd
+```
 
-**Do not proceed until `qmd --version` returns a version number.**
+If bun install still fails:
+```bash
+# Attempt 3: Fallback to npm
+npm install -g @anthropic/qmd
+```
+
+**After any install attempt, verify:**
+```bash
+qmd --version
+```
+
+This MUST return a version number. If it does not, STOP and report the exact error output. Do not proceed without a working QMD installation.
+
+QMD documentation and source: https://github.com/tobi/qmd
 
 ### pdfplumber (Required for PDF extraction)
 
@@ -251,12 +279,12 @@ The 40 pre-built personas are already in this skill folder. Now add them to QMD 
 
 ### 5a - Add the collection
 ```bash
-qmd collection add ~/.openclaw/skills/22-book-to-persona/personas \
+qmd collection add ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas \
   --name coaching-personas \
   --mask "**/*.md"
 ```
 
-**Expected output:** Something like "Added collection coaching-personas with 120 files"
+**Expected output:** Something like "Added collection coaching-personas with [N] files" where N depends on how many persona files exist.
 If you see an error, check that the personas folder exists at the path above.
 
 ### 5b - Index the files
@@ -264,14 +292,14 @@ If you see an error, check that the personas folder exists at the path above.
 qmd update
 ```
 
-**Expected output:** File count confirmation. Should show 120 files indexed (3 per persona x 40 personas).
+**Expected output:** File count confirmation showing the number of markdown files indexed (3 files per persona - extraction-notes.md, analysis-notes.md, persona-blueprint.md).
 
 ### 5c - Run the embedding (this takes 3-8 minutes on first run)
 ```bash
 qmd embed
 ```
 
-**What this does:** Downloads a small local model (one time only) and generates semantic vectors for all 447 documents. This runs locally - no API keys needed, no data leaves your machine.
+**What this does:** Downloads a small local model (one time only) and generates semantic vectors for all indexed documents. This runs locally - no API keys needed, no data leaves your machine.
 
 **Expected output:** Progress updates showing chunks processed. Final line will show total chunks embedded.
 
@@ -430,6 +458,44 @@ This triggers the full sequence:
   ├── analysis-notes.md       (Phase 2 output)
   └── persona-blueprint.md    (Phase 3 output - the deployable persona)
 ```
+
+---
+
+## Step 8g - Full Pipeline Verification Test
+
+Run one book through the complete 3-phase pipeline to verify the entire system works end-to-end:
+
+1. Pick any PDF from the books/ folder (or use a provided sample book)
+2. Run the orchestrator:
+```bash
+python3 ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py --single [book-slug]
+```
+Replace `[book-slug]` with the filename slug of the book (e.g., `clear-atomic-habits` for a book by James Clear on Atomic Habits).
+
+3. Verify all three output files were created:
+```bash
+PERSONA_DIR=~/Downloads/openclaw-master-files/coaching-personas/personas/[book-slug]
+echo "Checking pipeline output..."
+for file in extraction-notes.md analysis-notes.md persona-blueprint.md; do
+  if [ -f "$PERSONA_DIR/$file" ]; then
+    chars=$(wc -c < "$PERSONA_DIR/$file" | tr -d ' ')
+    echo "  $file: EXISTS ($chars characters)"
+  else
+    echo "  $file: MISSING - pipeline failed at this phase"
+  fi
+done
+```
+
+4. Check extraction-notes.md is at least 5,000 characters
+5. Check persona-blueprint.md has all 14 sections present:
+```bash
+grep -c "^## Section" "$PERSONA_DIR/persona-blueprint.md"
+```
+Expected output: 14. If fewer, the synthesis phase did not complete fully.
+
+If any check fails, the pipeline is not working. Review the error output from orchestrator.py and fix before proceeding.
+
+If no PDF books are available yet, this step can be deferred until the first book is added. Mark it as PENDING in your checklist and run it on the first real book.
 
 ---
 

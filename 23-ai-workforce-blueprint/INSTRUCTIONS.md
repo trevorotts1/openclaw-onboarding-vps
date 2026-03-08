@@ -16,7 +16,7 @@
 6. Never overwrites or deletes anything that already exists
 
 **Use this when:**
-- You installed skill 21 (personas) after already building your workforce
+- You installed Skill 22 (personas) after already building your workforce
 - You added new departments and need them audited
 - You want to make sure nothing is missing
 - Any time you re-run the script
@@ -40,17 +40,6 @@ Your AI asks you questions and builds everything automatically.
 ### Option B - Manual Build
 You build everything yourself using the blueprint as your guide.
 Read `ai-workforce-blueprint-full.md` from start to finish.
-
-### Option C - Resume / Audit Mode
-For businesses that already started a structure.
-
-**Say this:** "Audit my AI workforce at [folder path]."
-
-**What happens:**
-- AI scans existing folders
-- Reports what exists, what is missing, what is incomplete
-- Fills gaps: missing Start Here files, missing routing logic, missing role files
-- Does NOT delete or overwrite anything you already have
 
 ---
 

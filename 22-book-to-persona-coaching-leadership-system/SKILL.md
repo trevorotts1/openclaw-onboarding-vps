@@ -18,10 +18,11 @@ Required read order:
 3. CHECKLIST.md - the 14-section persona blueprint checklist
 4. GOOD-AND-BAD-EXAMPLES.md - quality standards for persona output
 5. PERSONA-ROUTER.md - task-type to persona routing map
-6. INSTALL.md - setup and dependencies
+6. QMD-RETRIEVAL-GUIDE.md - how agents query personas at runtime
 7. CORE_UPDATES.md - what to add to your workspace files
+8. INSTALL.md - setup and dependencies
 
-Do NOT run the pipeline or add any book before completing all 7 reads.
+Do NOT run the pipeline or add any book before completing all 8 reads.
 Do NOT claim the skill is installed until CORE_UPDATES.md has been applied.
 
 # Book Intelligence Pipeline
@@ -29,7 +30,7 @@ Do NOT claim the skill is installed until CORE_UPDATES.md has been applied.
 
 **Version:** 1.0.0
 **Owner:** BlackCEO / Trevor Otts
-**Skill folder:** `~/clawd/skills/book-to-persona/`
+**Skill folder:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/`
 **Output destination:** Auto-detected master files folder (see INSTALL.md)
 
 ---
@@ -68,14 +69,15 @@ Every persona supports:
 Before running this skill for the first time, or after any update:
 
 1. Read `SKILL.md` (this file) - overview and how it works
-2. Read `INSTALL.md` - dependencies, setup, storage detection
-3. Read `PIPELINE.md` - full 3-phase pipeline technical reference
-4. Read `CORE_UPDATES.md` - what gets added to which core files
-5. Read `QMD-RETRIEVAL-GUIDE.md` - how agents query personas at runtime
-6. Read `GOOD-AND-BAD-EXAMPLES.md` - correct vs. incorrect persona builds
-7. Read `CHECKLIST.md` - phase-by-phase build checklist
+2. Read `PIPELINE.md` - the full 3-phase pipeline architecture
+3. Read `CHECKLIST.md` - the 14-section persona blueprint checklist
+4. Read `GOOD-AND-BAD-EXAMPLES.md` - quality standards for persona output
+5. Read `PERSONA-ROUTER.md` - task-type to persona routing map
+6. Read `QMD-RETRIEVAL-GUIDE.md` - how agents query personas at runtime
+7. Read `CORE_UPDATES.md` - what to add to your workspace files
+8. Read `INSTALL.md` - setup and dependencies
 
-**Do not run the pipeline until all 7 files have been read in this session.**
+**Do not run the pipeline until all 8 files have been read in this session.**
 Confirm by saying: "TYP complete - ready to run Book Intelligence Pipeline."
 
 ---
@@ -142,7 +144,7 @@ The skill will:
 
 ---
 
-## Connection to AI Workforce Blueprint (Skill 22)
+## Connection to AI Workforce Blueprint (Skill 23)
 
 These two skills are separate but work together automatically.
 
@@ -156,4 +158,4 @@ These two skills are separate but work together automatically.
 - Personas operate standalone - no department structure required
 - Same persona blueprints, same QMD search, just without dept folder wiring
 
-**Cross-reference path:** `~/.openclaw/skills/23-ai-workforce-blueprint/PERSONA-ROUTER.md`
+**Cross-reference path:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md`

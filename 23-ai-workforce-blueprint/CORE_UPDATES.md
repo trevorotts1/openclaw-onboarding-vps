@@ -88,19 +88,6 @@ No update required.
 
 ---
 
-## HEARTBEAT.md
-
-**Where:** Add under Active Projects after the workforce is built.
-
-**Exact text to add:**
-```
-## AI Workforce Structure - ACTIVE
-Workforce folder: [path]
-Departments: [list]
-Routing file: [path]/universal-sops/00-ROUTING.md
-All tasks route through 00-ROUTING.md before execution.
-```
-
 ---
 
 ## What NOT to Add to Core Files

@@ -353,7 +353,7 @@ def audit_mode(workspace, personas_installed):
     if personas_installed:
         print("\n✅ Persona wiring complete.")
     else:
-        print("\nℹ️  Install skill 21-book-to-persona and re-run to wire personas.")
+        print("\nℹ️  Install Skill 22 (book-to-persona-coaching-leadership-system) and re-run to wire personas.")
 
 
 def main():
@@ -365,7 +365,7 @@ def main():
         print("✅ Coaching Personas Matrix detected - personas will be wired to departments automatically.\n")
     else:
         print("ℹ️  Coaching Personas Matrix not detected - building clean structure without persona wiring.")
-        print("   (Install skill 21-book-to-persona later and re-run to add personas.)\n")
+        print("   (Install Skill 22 - book-to-persona-coaching-leadership-system - later and re-run to add personas.)\n")
 
     # Detect existing workspace - default to audit mode if found
     existing = detect_existing_workspace()
@@ -494,7 +494,7 @@ def main():
     if personas_installed:
         print(f"Governing personas wired: YES (governing-personas.md added to each dept, 00-START-HERE.md updated)")
     else:
-        print(f"Governing personas: NOT wired (install skill 21-book-to-persona, then re-run in audit mode)")
+        print(f"Governing personas: NOT wired (install Skill 22 - book-to-persona-coaching-leadership-system, then re-run in audit mode)")
     print(f"\nNext steps:")
     print("1. Open each 00-START-HERE.md and fill in the role description and tasks")
     print("2. Rename 01-first-task.md to match your actual first task")
@@ -502,7 +502,7 @@ def main():
     print("4. Update universal-sops/00-ROUTING.md with your specific task types")
     if personas_installed:
         print("5. Personas are wired - agents will auto-query QMD before tasks in each dept")
-    print("\nTell your AI: 'My workforce is at [path]. Read universal-sops/00-ROUTING.md first.'")
+    print(f"\nTo activate routing, read universal-sops/00-ROUTING.md in the workforce folder before executing tasks.")
 
 
 if __name__ == "__main__":

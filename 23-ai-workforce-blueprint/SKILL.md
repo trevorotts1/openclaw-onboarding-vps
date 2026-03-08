@@ -89,31 +89,31 @@ When you run this skill, your AI builds:
 ## How to Use
 
 **Option A - Automated (recommended):**
-Tell your AI: "Build my AI workforce structure. Use the blueprint."
-The AI runs `scripts/build-workforce.py` which walks you through questions and creates everything.
+When triggered, execute INSTALL.md beginning at Phase 5. Run `scripts/build-workforce.py` which walks the user through questions and creates everything.
 
 **Option B - Manual:**
-Read `ai-workforce-blueprint-full.md` and follow the step-by-step instructions to build your own structure.
+Read `ai-workforce-blueprint-full.md` and follow the step-by-step instructions to build the structure.
 
 **Option C - Resume:**
-If you already started a structure, tell your AI: "Resume my AI workforce build."
-The AI audits your existing folders and fills gaps.
+If a workforce structure already exists, run the scaffold script in audit mode. It scans existing folders and fills gaps without overwriting.
 
 ---
 
-## Connection to Coaching Personas Matrix (Skill 21)
+## Connection to Book To Persona & Coaching & Leadership System (Skill 22)
 
-These two skills are separate but work together automatically.
+**Skill 23 works independently.** If Skill 22 (Book To Persona & Coaching & Leadership System) is not installed, the workforce blueprint builds clean with no persona references. Personas are an enhancement, not a requirement. Install Skill 23 at any time, regardless of whether Skill 22 is installed.
 
-**If skill 21 (book-to-persona) is installed:**
+These two skills are separate but work together automatically when both are present.
+
+**If Skill 22 (book-to-persona) is installed:**
 - The scaffold script detects the `coaching-personas` QMD collection
 - Every department folder automatically gets a `governing-personas.md` file listing which personas govern that department
 - Every `00-START-HERE.md` gets a Governing Personas section with QMD query instructions
 - Agents in each department know exactly which persona methodology to follow
 
-**If skill 21 is NOT installed:**
+**If Skill 22 is NOT installed:**
 - Structure builds clean with no persona references
-- Install skill 21 later, then re-run the scaffold in Option C (audit mode)
+- Install Skill 22 later, then re-run the scaffold in Option C (audit mode)
 - It will detect personas and wire them in retroactively without touching existing files
 
 **Cross-reference path:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md`

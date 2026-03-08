@@ -183,7 +183,11 @@ if [ ! -d ~/.openclaw/skills/23-ai-workforce-blueprint ]; then
 fi
 ```
 
-If the skill files are already at `~/.openclaw/skills/23-ai-workforce-blueprint/`, skip this step.
+```bash
+chmod +x ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
+```
+
+If the skill files are already at `~/.openclaw/skills/23-ai-workforce-blueprint/`, skip the copy but still run the chmod.
 
 ---
 
@@ -196,6 +200,8 @@ This is where you build the actual workforce structure. You do all of this yours
 If you have not already absorbed `ai-workforce-blueprint-full.md` during Phase 1, re-read it now. You need the complete content - all naming conventions, folder structures, file templates, routing logic, and the Master Orchestrator concept.
 
 ### 5b. Gather Business Information from the User
+
+**DEFAULT SELECTION RULE:** If the user has not specified an option and you are running in autonomous mode, use Option B (Quick Setup) by default. If USER.md or MEMORY.md already contains business name, industry, and department structure, proceed directly to building without asking. Only ask for information that is genuinely missing.
 
 Ask the user these questions. Wait for answers before building anything:
 
@@ -325,24 +331,30 @@ Use Source 1 if available. Fall back to Source 2, then Source 3. Combine sources
 
 ## PHASE 6 - COACHING PERSONAS INTEGRATION CHECK
 
-Check if Skill 21 (book-to-persona / Coaching Personas) is installed:
+Check if Skill 22 (Book To Persona & Coaching & Leadership System) is installed.
 
+**How detection works - step by step:**
+
+1. Run this command to check for the QMD coaching-personas collection:
 ```bash
-# Check for QMD coaching-personas collection
-qmd status 2>/dev/null | grep -i "coaching-personas"
-
-# Check for persona skill folder
+qmd status 2>/dev/null | grep -q "coaching-personas"
+```
+2. If that returns exit code 0 (match found), personas are installed.
+3. As a fallback, also check for the persona skill folder:
+```bash
 ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/ 2>/dev/null
 ```
+4. If EITHER check succeeds, treat personas as installed.
 
-**If coaching personas ARE installed:**
+**If coaching personas ARE detected (either check succeeds):**
 - Add a `governing-personas.md` file to every department folder
 - Add a "Governing Personas" section to every `00-START-HERE.md` with QMD query instructions
 - Wire persona methodologies to department operations
 
-**If coaching personas are NOT installed:**
-- Build clean with no persona references
-- Note in the completion report: "Coaching personas not detected. If you install Skill 21 later, re-run this skill in Option C (audit mode) to wire personas in."
+**If coaching personas are NOT detected (both checks fail):**
+- This is NOT an error condition. Both paths are valid.
+- Build proceeds clean with no persona references. No errors, no warnings.
+- Note in the completion report: "Coaching personas not detected. If you install Skill 22 later, re-run this skill in Option C (audit mode) to wire personas in."
 
 ---
 
@@ -414,10 +426,7 @@ Add the `## AI Workforce Blueprint (Installed [DATE])` section with:
 - GitHub reference
 - Routing file path
 
-### 8d. HEARTBEAT.md Update (if file exists)
-Add the active project entry with workforce folder path, department list, and routing file path.
-
-### 8e. Pending Setup Rule
+### 8d. Pending Setup Rule
 Add the `## Pending Skill Setup - Check and Remind` block to AGENTS.md per CORE_UPDATES.md.
 
 **Remember:** Only add lean summaries and file path references to core files. Never paste full documentation.
@@ -467,7 +476,6 @@ Before reporting done, verify every item:
 - [ ] AGENTS.md updated per CORE_UPDATES.md
 - [ ] TOOLS.md updated per CORE_UPDATES.md
 - [ ] MEMORY.md updated per CORE_UPDATES.md
-- [ ] HEARTBEAT.md updated (if it exists)
 - [ ] Weekly auto-update cron attempted
 
 **Final announcement to user:**
@@ -479,7 +487,7 @@ Before reporting done, verify every item:
 > **Departments created:** [list]
 > **Total files created:** [count]
 > **Self-score:** [X]/10
-> **Coaching personas:** [integrated / not installed - install Skill 21 and re-run in audit mode]
+> **Coaching personas:** [integrated / not installed - install Skill 22 and re-run in audit mode]
 >
 > You can now route any task and I will check the routing file, go to the right department, find the right role, and follow the right SOP.
 >
