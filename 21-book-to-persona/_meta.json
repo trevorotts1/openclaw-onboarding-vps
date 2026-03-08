@@ -1,0 +1,18 @@
+{
+  "name": "book-to-persona",
+  "displayName": "Book Intelligence Pipeline",
+  "description": "Converts any bestselling book PDF into a dual-purpose persona blueprint — coaches humans AND governs AI agents. 3-phase pipeline: Kimi K2.5 extracts, DeepSeek V3.2-Speciale analyzes, GPT-5.3 Codex synthesizes. QMD-indexed for retrieval.",
+  "version": "1.0.0",
+  "author": "BlackCEO / Trevor Otts",
+  "requires": {
+    "bins": ["qmd", "python3"],
+    "python": ["pdfplumber"]
+  },
+  "models": {
+    "phase1": "moonshot/kimi-k2.5",
+    "phase2": "deepseek/deepseek-v3.2-speciale",
+    "phase3": "openai-codex/gpt-5.3-codex",
+    "phase3_fallback": "moonshot/kimi-k2.5"
+  },
+  "tags": ["personas", "coaching", "agent-governance", "pdf", "pipeline", "qmd"]
+}
