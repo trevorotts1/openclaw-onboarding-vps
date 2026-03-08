@@ -3,23 +3,39 @@
 
 ---
 
-## THE FIRST TWO REQUIRED INSTALLS - NON-NEGOTIABLE
+## INSTALL ORDER - FOLLOW THIS EXACTLY
 
-Before any other skill is installed, these two must be installed in this exact order:
+The install script handles dependencies automatically. Your AI agent installs skills in this order:
 
-**FIRST: Teach Yourself Protocol (TYP)**
-Located in: `01-teach-yourself-protocol/`
-This teaches the AI how to store knowledge correctly. Without this, every skill
-install will bloat your core files and waste your tokens every session. Nothing
-else can be safely installed until TYP is learned and confirmed.
+---
 
-**SECOND: Back Yourself Up Protocol**
-Located in: `02-back-yourself-up-protocol/`
-This teaches the AI how to back up config files before touching anything.
-Without this, the AI can corrupt your system with no way to recover.
+### 🔴 STEP 1 (MANDATORY FIRST): Teach Yourself Protocol (TYP)
+**Folder:** `01-teach-yourself-protocol/`
+Teaches the AI how to store knowledge correctly - lean summaries and file path references only.
+Without this, every skill install will bloat your core files and waste tokens every session.
+**Nothing else installs until TYP is confirmed.**
 
-**Every other skill (03 through 23) requires both of these to be installed first.**
-No exceptions. If you skip these two, stop and go back.
+### 🔴 STEP 2 (MANDATORY SECOND): Back Yourself Up Protocol
+**Folder:** `02-back-yourself-up-protocol/`
+Teaches the AI how to back up config files before touching anything.
+Without this, one bad edit can corrupt your system with no way to recover.
+**Nothing else installs until this is confirmed.**
+
+### ✅ STEP 3: QMD (Semantic Search Engine)
+**Handled automatically by the install script - no skill folder needed.**
+QMD is installed as a system dependency before skills 4-23 run.
+It powers the persona search in Skill 22 and the persona detection in Skill 23.
+If the install script already ran, QMD is installed. No manual step needed.
+
+### STEPS 4-23: All Remaining Skills (in numbered order)
+Skills install sequentially. For each skill:
+- The agent checks if API keys are already present in your env files
+- If a key is found → proceeds automatically
+- If a key is not found → asks you to enter it, or offers to skip and remind you later
+- You can skip any skill and the agent moves to the next one automatically
+
+**Every skill from 04 through 23 requires both TYP (Step 1) and Back Yourself Up (Step 2) to be installed first.**
+No exceptions. If you skip those two, stop and go back.
 
 ---
 
@@ -443,10 +459,11 @@ All skill folders are located inside:
 [MASTER_FILES_FOLDER]/OpenClaw Onboarding/
 ```
 
-| # | Skill | Folder Name |
-|---|-------|-------------|
-| 1 | Teach Yourself Protocol | 01-teach-yourself-protocol |
-| 2 | Back Yourself Up Protocol | 02-back-yourself-up-protocol |
+| # | Skill | Folder Name | Notes |
+|---|-------|-------------|-------|
+| 1 | Teach Yourself Protocol | 01-teach-yourself-protocol | 🔴 MANDATORY FIRST |
+| 2 | Back Yourself Up Protocol | 02-back-yourself-up-protocol | 🔴 MANDATORY SECOND |
+| — | **QMD** | *(installed by install script)* | ✅ Auto-installed before skills 3-23 |
 | 3 | Agent Browser (Vercel) - preferred browser automation | 03-agent-browser |
 | 4 | Superpowers | 04-superpowers |
 | 5 | GHL / Convert and Flow Setup | 05-ghl-setup |

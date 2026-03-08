@@ -6,9 +6,7 @@
 set -e
 
 REPO_URL="https://github.com/trevorotts1/openclaw-onboarding"
-RAW_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main"
 SKILLS_DIR="$HOME/.openclaw/skills"
-ENV_FILE="$HOME/clawd/secrets/.env"
 TEMP_DIR=$(mktemp -d)
 SUMMARY_INSTALLED=()
 SUMMARY_NEEDS_KEY=()
@@ -29,7 +27,16 @@ print_fail() { echo -e "${RED}❌${NC} $1"; }
 echo ""
 echo "╔════════════════════════════════════════════╗"
 echo "║   OpenClaw Onboarding - Master Installer   ║"
+echo "╠════════════════════════════════════════════╣"
+echo "║  Install order:                            ║"
+echo "║  1. Teach Yourself Protocol (TYP)          ║"
+echo "║  2. Back Yourself Up Protocol              ║"
+echo "║  3. QMD (semantic search engine)           ║"
+echo "║  4-23. All remaining skills in order       ║"
 echo "╚════════════════════════════════════════════╝"
+echo ""
+echo "Starting automatically. No action needed from you"
+echo "unless asked for an API key or credential."
 echo ""
 
 # ─────────────────────────────────────────────
@@ -40,7 +47,7 @@ if ! command -v openclaw &>/dev/null; then
   print_fail "OpenClaw is not installed. Install it first: https://docs.openclaw.ai"
   exit 1
 fi
-print_ok "OpenClaw found"
+print_ok "OpenClaw found: $(openclaw --version 2>/dev/null || echo 'installed')"
 
 # ─────────────────────────────────────────────
 # STEP 2: Download the repo
@@ -69,52 +76,90 @@ chmod +x "$SKILLS_DIR/scripts/"*.sh 2>/dev/null || true
 print_ok "All skills installed to $SKILLS_DIR"
 
 # ─────────────────────────────────────────────
-# STEP 4: Check and install dependencies
+# STEP 4: Check Python3
 # ─────────────────────────────────────────────
-print_step "Checking dependencies..."
-
-# Python3
+print_step "Checking Python3..."
 if command -v python3 &>/dev/null; then
-  print_ok "Python3 found"
+  print_ok "Python3 found: $(python3 --version)"
 else
-  print_warn "Python3 not found - some skills may not work"
+  print_warn "Python3 not found - Book-to-Persona pipeline will not work without it"
 fi
 
-# QMD
+# ─────────────────────────────────────────────
+# STEP 5: Install QMD (required early - used by Skills 22 and 23)
+# ─────────────────────────────────────────────
+print_step "Installing QMD (semantic search engine)..."
 if command -v qmd &>/dev/null; then
-  print_ok "QMD found ($(qmd --version 2>/dev/null | head -1))"
+  print_ok "QMD already installed: $(qmd --version 2>/dev/null | head -1)"
 else
-  print_warn "QMD not installed. Installing now..."
+  print_warn "QMD not found. Installing now..."
+  QMD_INSTALLED=false
+
+  # Try bun first
   if command -v bun &>/dev/null; then
-    bun install -g https://github.com/tobi/qmd 2>/dev/null && print_ok "QMD installed" || print_fail "QMD install failed - install manually"
-  else
-    print_warn "Installing bun first..."
+    bun install -g https://github.com/tobi/qmd 2>/dev/null && QMD_INSTALLED=true
+  fi
+
+  # Try npm if bun failed
+  if [ "$QMD_INSTALLED" = false ] && command -v npm &>/dev/null; then
+    npm install -g @anthropic/qmd 2>/dev/null && QMD_INSTALLED=true
+  fi
+
+  # Install bun if neither worked
+  if [ "$QMD_INSTALLED" = false ]; then
+    print_warn "Installing bun to get QMD..."
     curl -fsSL https://bun.sh/install | bash 2>/dev/null
     export PATH="$HOME/.bun/bin:$PATH"
-    bun install -g https://github.com/tobi/qmd 2>/dev/null && print_ok "QMD installed" || print_fail "QMD install failed"
+    bun install -g https://github.com/tobi/qmd 2>/dev/null && QMD_INSTALLED=true || true
+  fi
+
+  # Verify
+  if command -v qmd &>/dev/null; then
+    print_ok "QMD installed: $(qmd --version 2>/dev/null | head -1)"
+    SUMMARY_INSTALLED+=("QMD")
+  else
+    print_fail "QMD install failed. Install manually: bun install -g https://github.com/tobi/qmd"
+    print_warn "Continuing - Skills 22 and 23 will remind you to install QMD when needed."
   fi
 fi
 
-# Python packages
+# ─────────────────────────────────────────────
+# STEP 6: Install Python packages
+# ─────────────────────────────────────────────
+print_step "Installing Python packages..."
 for pkg in pdfplumber ebooklib html2text; do
-  python3 -c "import $pkg" 2>/dev/null && print_ok "$pkg found" || {
+  python3 -c "import $pkg" 2>/dev/null && print_ok "$pkg already installed" || {
     print_warn "Installing $pkg..."
-    pip3 install $pkg --break-system-packages -q 2>/dev/null && print_ok "$pkg installed" || print_warn "$pkg install failed"
+    pip3 install $pkg --break-system-packages -q 2>/dev/null && print_ok "$pkg installed" || \
+    pip3 install $pkg -q 2>/dev/null && print_ok "$pkg installed" || \
+    print_warn "$pkg install failed - Book-to-Persona pipeline needs this"
   }
 done
 
-# Calibre
+# Calibre (optional)
 if command -v ebook-convert &>/dev/null; then
-  print_ok "Calibre found"
+  print_ok "Calibre found (MOBI/AZW3 support enabled)"
 else
-  print_warn "Calibre not found - MOBI/AZW3 books won't work without it"
-  print_warn "Install with: brew install --cask calibre"
+  print_warn "Calibre not found - MOBI/AZW3 books won't work. Install: brew install --cask calibre"
 fi
 
 # ─────────────────────────────────────────────
-# STEP 5: API Keys
+# STEP 7: API Keys - check all env file locations
 # ─────────────────────────────────────────────
 print_step "Checking API keys..."
+echo "  Scanning all env file locations..."
+
+# All possible env file locations - checks in order, uses first found value
+ENV_LOCATIONS=(
+  "$HOME/clawd/secrets/.env"
+  "$HOME/.openclaw/.env"
+  "$HOME/.openclaw/openclaw.env"
+  "$HOME/clawd/.env"
+  "$HOME/.env"
+)
+
+# Primary env file - where we write new keys
+PRIMARY_ENV="$HOME/clawd/secrets/.env"
 
 PENDING_FILE="$HOME/.openclaw/skills/.pending-setup.md"
 
@@ -124,8 +169,8 @@ log_pending() {
   local skill="$3"
   if [ ! -f "$PENDING_FILE" ]; then
     echo "# Pending Skill Setup" > "$PENDING_FILE"
-    echo "These skills were skipped during install and are waiting for setup." >> "$PENDING_FILE"
-    echo "Your AI agent should check this file and remind you when appropriate." >> "$PENDING_FILE"
+    echo "These API keys were not found during install. Your AI agent checks this file" >> "$PENDING_FILE"
+    echo "automatically and will remind you to add them when relevant." >> "$PENDING_FILE"
     echo "" >> "$PENDING_FILE"
   fi
   cat >> "$PENDING_FILE" << ENTRY
@@ -133,7 +178,7 @@ log_pending() {
 ## $key_name
 - **Skill:** $skill
 - **What it unlocks:** $description
-- **How to add:** echo "${key_name}=YOUR_KEY_HERE" >> $ENV_FILE
+- **How to add:** echo "${key_name}=YOUR_KEY_HERE" >> $PRIMARY_ENV
 - **Status:** PENDING
 ENTRY
 }
@@ -144,80 +189,106 @@ check_or_ask_key() {
   local skill="${3:-unknown skill}"
   local existing=""
 
-  if [ -f "$ENV_FILE" ]; then
-    existing=$(grep "^${key_name}=" "$ENV_FILE" 2>/dev/null | cut -d= -f2-)
-  fi
+  # Check ALL env file locations
+  for env_path in "${ENV_LOCATIONS[@]}"; do
+    if [ -f "$env_path" ]; then
+      local val
+      val=$(grep "^${key_name}=" "$env_path" 2>/dev/null | cut -d= -f2-)
+      if [ -n "$val" ] && [ "$val" != '""' ] && [ "$val" != "''" ]; then
+        print_ok "$key_name found (in $(basename "$env_path"))"
+        existing="$val"
+        break
+      fi
+    fi
+  done
 
-  if [ -n "$existing" ] && [ "$existing" != '""' ]; then
-    print_ok "$key_name found"
+  if [ -n "$existing" ]; then
     return 0
   fi
 
   echo ""
-  print_warn "$key_name not found"
-  echo "  This key is needed for: $description"
-  read -p "  Enter $key_name (or press Enter to skip): " user_key
+  print_warn "$key_name not found in any env file"
+  echo "  Needed for: $description"
+  echo "  Skill: $skill"
+  echo ""
+  echo "  Options:"
+  echo "  [1] Enter the key now"
+  echo "  [2] Skip this key - remind me later (agent will prompt you when needed)"
+  echo "  [3] Skip permanently"
+  echo ""
+  read -p "  Choice [1/2/3] (default: 2): " key_choice
+  key_choice="${key_choice:-2}"
 
-  if [ -n "$user_key" ]; then
-    mkdir -p "$(dirname "$ENV_FILE")"
-    echo "${key_name}=${user_key}" >> "$ENV_FILE"
-    print_ok "$key_name saved"
-    return 0
-  else
-    echo ""
-    read -p "  Remind you about this later, or skip permanently? (remind/skip) [remind]: " remind_choice
-    remind_choice="${remind_choice:-remind}"
-    if [ "$remind_choice" != "skip" ]; then
-      log_pending "$key_name" "$description" "$skill"
-      print_warn "$key_name saved to pending setup - your agent will remind you"
-    else
+  case "$key_choice" in
+    1)
+      read -p "  Enter $key_name: " user_key
+      if [ -n "$user_key" ]; then
+        mkdir -p "$(dirname "$PRIMARY_ENV")"
+        echo "${key_name}=${user_key}" >> "$PRIMARY_ENV"
+        print_ok "$key_name saved to $PRIMARY_ENV"
+        return 0
+      fi
+      ;;
+    3)
       print_warn "$key_name permanently skipped"
-    fi
-    return 1
-  fi
+      SUMMARY_SKIPPED+=("$key_name")
+      return 1
+      ;;
+  esac
+
+  # Default: remind later
+  log_pending "$key_name" "$description" "$skill"
+  print_warn "$key_name added to pending - agent will remind you when needed"
+  SUMMARY_NEEDS_KEY+=("$key_name")
+  return 1
 }
 
-check_or_ask_key "MOONSHOT_API_KEY"    "Book-to-Persona Phase 1 extraction (Kimi K2.5)" "22-book-to-persona-coaching-leadership-system" && SUMMARY_INSTALLED+=("Moonshot API") || SUMMARY_NEEDS_KEY+=("MOONSHOT_API_KEY")
-check_or_ask_key "OPENROUTER_API_KEY"  "Book-to-Persona Phase 2 analysis (DeepSeek) + model fallbacks" "22-book-to-persona-coaching-leadership-system" && true || SUMMARY_NEEDS_KEY+=("OPENROUTER_API_KEY")
-check_or_ask_key "OPENAI_API_KEY"      "Book-to-Persona Phase 3 synthesis (Codex)" "22-book-to-persona-coaching-leadership-system" && true || SUMMARY_NEEDS_KEY+=("OPENAI_API_KEY")
-check_or_ask_key "GITHUB_TOKEN"        "Push new personas to GitHub repo after pipeline runs" "22-book-to-persona-coaching-leadership-system" && true || SUMMARY_NEEDS_KEY+=("GITHUB_TOKEN")
+check_or_ask_key "MOONSHOT_API_KEY"   "Book-to-Persona Phase 1 extraction (Kimi K2.5)" "22-book-to-persona-coaching-leadership-system"
+check_or_ask_key "OPENROUTER_API_KEY" "Book-to-Persona Phase 2 (DeepSeek) and model routing" "22-book-to-persona-coaching-leadership-system"
+check_or_ask_key "OPENAI_API_KEY"     "Book-to-Persona Phase 3 synthesis (Codex)" "22-book-to-persona-coaching-leadership-system"
+check_or_ask_key "GITHUB_TOKEN"       "Push new personas to GitHub after pipeline runs" "22-book-to-persona-coaching-leadership-system"
 
 # ─────────────────────────────────────────────
-# STEP 6: Set up QMD collections
+# STEP 8: Set up QMD coaching-personas collection
 # ─────────────────────────────────────────────
-print_step "Setting up QMD collections..."
+print_step "Setting up QMD persona collection..."
 
-PERSONAS_DIR="$SKILLS_DIR/22-book-to-persona/personas"
+PERSONAS_DIR="$SKILLS_DIR/22-book-to-persona-coaching-leadership-system/personas"
 if [ -d "$PERSONAS_DIR" ] && command -v qmd &>/dev/null; then
   if qmd status 2>/dev/null | grep -q "coaching-personas"; then
     print_ok "QMD coaching-personas collection already exists"
   else
-    print_warn "Adding coaching-personas to QMD..."
+    print_warn "Adding 40 pre-built personas to QMD index..."
     qmd collection add "$PERSONAS_DIR" --name coaching-personas --mask "**/*.md" 2>/dev/null
     qmd update 2>/dev/null
-    print_ok "coaching-personas indexed. Running embed (this takes 3-8 minutes)..."
+    print_ok "Persona collection added. Running embed in background (3-8 min)..."
     qmd embed 2>/dev/null &
     QMD_PID=$!
-    print_ok "QMD embed running in background (pid $QMD_PID)"
-    SUMMARY_INSTALLED+=("QMD coaching-personas collection")
+    SUMMARY_INSTALLED+=("QMD coaching-personas (40 personas, embedding in background)")
+  fi
+else
+  if ! command -v qmd &>/dev/null; then
+    print_warn "QMD not available - persona collection setup skipped"
+  elif [ ! -d "$PERSONAS_DIR" ]; then
+    print_warn "Persona folder not found at $PERSONAS_DIR - check skill 22 installed correctly"
   fi
 fi
 
 # ─────────────────────────────────────────────
-# STEP 7: Set up weekly update cron
+# STEP 9: Set up weekly update cron
 # ─────────────────────────────────────────────
-print_step "Setting up weekly Sunday 2 AM skill update cron..."
+print_step "Setting up weekly skill auto-update (Sundays 2 AM)..."
 if crontab -l 2>/dev/null | grep -q "update-skills.sh"; then
   print_ok "Weekly update cron already installed"
 else
   CRON_JOB="0 2 * * 0 $SKILLS_DIR/scripts/update-skills.sh >> $HOME/.openclaw/skills/.update-log 2>&1"
   (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
-  print_ok "Weekly update cron installed (Sundays at 2:00 AM)"
+  print_ok "Weekly update cron installed"
   SUMMARY_INSTALLED+=("Weekly auto-update cron")
 fi
 
 # Save installed version
-REMOTE_VERSION=$(grep -m1 "^## \[v" "$EXTRACTED/CHANGELOG.md" | sed 's/## \[\(v[0-9.]*\)\].*/\1/')
+REMOTE_VERSION=$(grep -m1 "^## \[v" "$EXTRACTED/CHANGELOG.md" 2>/dev/null | sed 's/## \[\(v[0-9.]*\)\].*/\1/' || echo "unknown")
 echo "$REMOTE_VERSION" > "$SKILLS_DIR/.onboarding-version"
 
 # ─────────────────────────────────────────────
@@ -234,29 +305,34 @@ echo "║              Install Complete              ║"
 echo "╚════════════════════════════════════════════╝"
 echo ""
 echo -e "${GREEN}Version installed: $REMOTE_VERSION${NC}"
-echo ""
 echo -e "${GREEN}Skills folder: $SKILLS_DIR${NC}"
 echo ""
 
+echo -e "${BLUE}Install order your AI agent will follow:${NC}"
+echo "  Step 1: Teach Yourself Protocol (TYP) - how to store knowledge"
+echo "  Step 2: Back Yourself Up Protocol - how to protect configs"
+echo "  Step 3: QMD already installed ✅"
+echo "  Steps 4-23: All remaining skills in numbered order"
+echo ""
+
 if [ -f "$PENDING_FILE" ]; then
-  echo -e "${YELLOW}Skills pending setup (your agent will remind you):${NC}"
+  echo -e "${YELLOW}⚠️  API keys pending (agent will remind you when needed):${NC}"
   grep "^## " "$PENDING_FILE" | sed 's/^## /  - /'
   echo ""
   echo -e "  Full details: $PENDING_FILE"
-  echo -e "  ${BLUE}Your agent reads this file automatically and will remind you when you are ready.${NC}"
   echo ""
 fi
 
-echo -e "${BLUE}Next step for your AI agent:${NC}"
-echo "  Tell your AI: 'Read $SKILLS_DIR/01-teach-yourself-protocol/SKILL.md and begin onboarding.'"
-echo ""
-echo "  Your AI will walk through each skill in order."
-echo "  You only need to answer when it asks for credentials or account info."
-echo ""
-
-if [ -n "$QMD_PID" ]; then
-  echo -e "${YELLOW}QMD embed still running in background (pid $QMD_PID).${NC}"
-  echo "  Personas will be searchable once it completes (3-8 min)."
-  echo "  Check: qmd status"
+if [ -n "${QMD_PID:-}" ]; then
+  echo -e "${YELLOW}QMD embedding personas in background (pid $QMD_PID). Check: qmd status${NC}"
   echo ""
 fi
+
+echo -e "${BLUE}Ready. Hand off to your AI agent:${NC}"
+echo ""
+echo "  Start onboarding by reading:"
+echo "  $SKILLS_DIR/01-teach-yourself-protocol/SKILL.md"
+echo ""
+echo "  The agent completes each skill in order. You only need to"
+echo "  provide credentials when asked. Everything else is automatic."
+echo ""
