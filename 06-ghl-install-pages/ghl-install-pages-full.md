@@ -72,7 +72,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -88,7 +88,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -880,7 +880,7 @@ WAIT: Name input field appears
 
 ACTION: Type the funnel name
 VALUE: Descriptive name aligned with the project
-       (e.g., "Soft Life Sanctuary Landing Page")
+       (e.g., "[Client Campaign Name] Landing Page")
 SELECTORS: Use SELECTORS["funnel_name_input"] chain
 
 ACTION: Click "Create"
@@ -904,7 +904,7 @@ retry_action(
 page.wait_for_timeout(1000)
 
 name_input = find_element_with_fallback(page, SELECTORS["funnel_name_input"])
-name_input.fill("Soft Life Sanctuary Landing Page")
+name_input.fill("[Client Campaign Name] Landing Page")
 
 retry_action(
     lambda: find_element_with_fallback(page, SELECTORS["create_button"]).click(),

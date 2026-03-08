@@ -81,7 +81,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -97,7 +97,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -122,9 +122,39 @@ When finished, give the user a clear summary:
 
 # Google Workspace Integration - Installation Guide
 
-This is the COMPLETE setup guide for connecting your AI agent to ALL Google Workspace services. If you completed the basic setup in Skill 12, this guide extends it to cover all 26 APIs, all 70+ scopes, Organization Policy fixes, the google-api.js script, and the GOG skill.
+This is the COMPLETE setup guide for connecting your AI agent to ALL Google Workspace services. Covers both paths:
+- **Path A (Workspace):** Google Workspace business accounts (@yourdomain.com) using a service account with Domain-Wide Delegation.
+- **Path B (Gmail):** Personal @gmail.com accounts using OAuth 2.0 Desktop credentials via GOG CLI.
 
-**Important:** This guide is for Google Workspace accounts ONLY (@yourdomain.com). If you have a personal @gmail.com account, use the GOG CLI with OAuth instead.
+If you completed the basic setup in Skill 13, this guide extends it to cover all 26 APIs, all 70+ scopes, Organization Policy fixes, the google-api.js script, and the GOG skill.
+
+---
+
+## ACCOUNT TYPE DETECTION (Run First)
+
+Before doing anything else, the agent checks which path to follow:
+
+```bash
+# Check if USER_EMAIL is already stored in environment
+echo "$USER_EMAIL"
+echo "$GOOGLE_IMPERSONATE_USER"
+echo "$GOG_DEFAULT_ACCOUNT"
+```
+
+If the email is already stored, detect account type:
+```bash
+echo "$USER_EMAIL" | grep -q "@gmail.com" && echo "PATH_B_GMAIL" || echo "PATH_A_WORKSPACE"
+```
+
+- If `@gmail.com` - proceed directly to **Section 0B (Gmail Path)** at the end of this document.
+- If custom domain - continue with **Section 1 (Workspace Path)** below.
+- If no email is stored - check `~/clawd/secrets/.env` first:
+  ```bash
+  cat ~/clawd/secrets/.env 2>/dev/null | grep -E "USER_EMAIL|IMPERSONATE|GOG_DEFAULT"
+  ```
+  If still not found, ask the user for their Google email address. That is the ONLY time to ask.
+
+**Places API note:** The agent offers to skip Places API setup. It requires a separate API key and is only needed for location search features. The agent skips it unless the user confirms they need it.
 
 ---
 
@@ -132,11 +162,11 @@ This is the COMPLETE setup guide for connecting your AI agent to ALL Google Work
 
 Before starting, make sure you have:
 
-- Google Workspace account (a business email like you@yourdomain.com - NOT a personal @gmail.com)
-- Google Workspace Super Admin access (needed for Domain-Wide Delegation)
+- Google email address (Workspace business email OR personal @gmail.com)
+- For Workspace accounts: Google Workspace Super Admin access (needed for Domain-Wide Delegation)
 - Node.js version 18 or higher installed on your computer (check with: node --version)
 - A computer with terminal access (Mac Terminal, Windows PowerShell, or Linux shell)
-- Skill 12 (Google Workspace Setup) completed, OR 30 minutes of uninterrupted time to do both
+- Skill 13 (Google Workspace Setup) completed, OR 30 minutes of uninterrupted time to do both
 - 15-30 minutes for this guide
 
 ---
@@ -505,7 +535,7 @@ Should show "running".
 
 ### Step 4: Quick Verification
 
-Ask your AI: "Can you check my Gmail inbox for the 3 most recent emails?"
+Execute: `gog gmail search 'in:inbox' --limit 3` to verify GOG is working. If it returns message data, setup is complete.
 
 If it returns email subjects and senders, GOG is working.
 
@@ -540,3 +570,107 @@ The key rule to add everywhere: Workspace accounts (@yourdomain.com) use google-
 | Places returns "API key not valid" | Wrong key type | Places uses API Key (Section 7), not Service Account |
 | Chat returns "404 - Chat app not found" | Chat App not configured | See the Google Chat note in Section 2 |
 | Browser session expired (Playwright) | Google session expires every 7-14 days | Agent pauses, asks you to re-login. Normal behavior. |
+
+---
+
+======================================================================
+## Section 0B: GMAIL PATH (Personal @gmail.com Accounts)
+======================================================================
+
+This section applies ONLY to personal @gmail.com accounts.
+Skip this entire section if the user has a Google Workspace business account.
+
+**Detection:** If the user's email ends in @gmail.com, the agent executes this path instead of Sections 1-8.
+
+### Step G1: Create a Google Cloud Project
+
+Same as Section 1. The agent creates an "OpenClaw AI" project in Google Cloud Console.
+See Section 1 for the full step-by-step. Proceed immediately after project creation.
+
+### Step G2: Enable the 6 Core APIs
+
+Same as Section 2, but only the Core APIs (items 1-6 in the Core APIs list).
+Extended APIs are optional for Gmail users. Enable only the 6 core:
+Gmail, Calendar, Drive, Sheets, Docs, People/Contacts.
+
+### Step G3: Set Up OAuth Consent Screen (External)
+
+For Gmail accounts, the consent screen must be "External" (not "Internal").
+
+1. Go to: https://console.cloud.google.com/apis/credentials/consent
+2. Select "External" as user type
+3. Click "Create"
+4. Fill in: App name = "OpenClaw AI Agent", User support email = user's Gmail, Developer contact = user's Gmail
+5. Click "Save and Continue"
+6. On Scopes page, add scopes manually:
+   ```
+   https://www.googleapis.com/auth/gmail.modify,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive,https://www.googleapis.com/auth/documents,https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/contacts.readonly
+   ```
+7. Click "Save and Continue"
+8. On Test Users page, add the user's Gmail address as a test user
+9. Click "Save and Continue" then "Back to Dashboard"
+
+The app stays in "Testing" mode. That is expected and fine for personal use.
+
+### Step G4: Create OAuth 2.0 Desktop Credentials
+
+1. Go to: https://console.cloud.google.com/apis/credentials
+2. Click "Create Credentials" then "OAuth client ID"
+3. Set application type to "Desktop app"
+4. Name it "OpenClaw Desktop Client"
+5. Click "Create"
+6. Note the Client ID and Client Secret from the dialog
+7. Click "Download JSON"
+8. Move the credentials file:
+   ```bash
+   mkdir -p ~/clawd/secrets
+   mv ~/Downloads/client_secret_*.json ~/clawd/secrets/google-oauth-credentials.json
+   chmod 600 ~/clawd/secrets/google-oauth-credentials.json
+   ```
+
+### Step G5: GOG CLI Setup (OAuth)
+
+1. Install GOG if not present:
+   ```bash
+   command -v gog >/dev/null 2>&1 || brew install steipete/tap/gogcli
+   ```
+
+2. Add the Gmail account with OAuth:
+   ```bash
+   gog auth add "$USER_EMAIL" --services gmail,calendar,drive,contacts,docs,sheets
+   ```
+   This opens a browser for the user to authorize. The agent notifies the user to click "Allow".
+   GOG captures the refresh token automatically. This only happens once.
+
+3. Verify GOG is working:
+   ```bash
+   gog auth list
+   gog gmail search 'newer_than:1d' --max 3 --account "$USER_EMAIL"
+   ```
+
+4. Store default account:
+   ```bash
+   echo "export GOG_DEFAULT_ACCOUNT=$USER_EMAIL" >> ~/clawd/secrets/.env
+   source ~/clawd/secrets/.env
+   ```
+
+### Step G6: Test and Verify
+
+```bash
+gog gmail search 'in:inbox' --limit 3 --account "$USER_EMAIL"
+gog calendar list --account "$USER_EMAIL" --max 5
+```
+
+Both commands should return data without errors.
+
+### Gmail Path Complete
+
+Report to the user:
+- Google Cloud Project created
+- 6 Core APIs enabled
+- OAuth Consent Screen configured (External, Testing mode)
+- OAuth Desktop credentials created and stored
+- GOG CLI installed and authorized
+- Default Gmail account configured
+
+The agent now has access to Gmail, Calendar, Drive, Docs, Sheets, and Contacts via OAuth.

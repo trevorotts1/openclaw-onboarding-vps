@@ -21,7 +21,7 @@ ENV_SEARCH_PATHS=(
   "$HOME/.env"
 )
 # Primary env file - where new keys get written
-PRIMARY_ENV="$HOME/clawd/secrets/.env"
+PRIMARY_ENV="$HOME/.openclaw/.env"
 
 # Colors
 GREEN='\033[0;32m'
@@ -106,6 +106,7 @@ mkdir -p "$SKILLS_DIR/scripts"
 cp "$EXTRACTED/scripts/"* "$SKILLS_DIR/scripts/" 2>/dev/null || true
 chmod +x "$SKILLS_DIR/scripts/"*.sh 2>/dev/null || true
 print_ok "$SKILL_COUNT skills installed to $SKILLS_DIR"
+cp "$EXTRACTED/Start Here.md" "$SKILLS_DIR/" 2>/dev/null || true
 
 # ─────────────────────────────────────────────
 # STEP 5: QMD (install FIRST - required by skills 22 + 23)

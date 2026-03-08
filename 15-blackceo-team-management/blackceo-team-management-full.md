@@ -72,7 +72,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -88,7 +88,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -112,7 +112,7 @@ When finished, give the user a clear summary:
 ══════════════════════════════════════════════════════════════════
 
 ══════════════════════════════════════════════════════════════════
-BLACK CEO Management Protocol - Dispatcher Sub-Agent Routing SOP
+Team Management Protocol - Dispatcher Sub-Agent Routing SOP
 
 Version: 1.0
 Created: 2026-02-25
@@ -121,14 +121,14 @@ Organization: BLACK CEO
 Applies to: Any OpenClaw deployment serving multiple operators via Telegram (or other messaging channels)
 
 
-BLACK CEO Core Team
+Team Configuration
 
 
 
 Usage Note
 When deploying this protocol for a new client:
 Copy this SOP
-Keep the BLACK CEO team IDs above as the management operators
+Keep the team member IDs above as the management operators
 Add the client's team members and their Telegram IDs to the routing table
 The client principal (e.g., the business owner) gets a client-worker designation - never assigned tasks, always served respectfully
 
@@ -181,25 +181,24 @@ Key settings explained:
 
 
 
-Step 1B: Approve BLACK CEO Telegram IDs (MANDATORY - First Thing)
+Step 1B: Approve Team Telegram IDs (MANDATORY - First Thing)
 
-Before anything else works, the 3 BLACK CEO team Telegram IDs must be in the bot's allowFrom list so they can message the AI directly.
+Before anything else works, every team member's Telegram ID must be in the bot's allowFrom list so they can message the AI directly.
 
-In ~/.openclaw/openclaw.json, add all 3 IDs to channels.telegram.allowFrom:
+In ~/.openclaw/openclaw.json, add all team IDs (collected during Step 0 intake) to channels.telegram.allowFrom:
 
-{  "channels": {    "telegram": {      "allowFrom": [        "5252140759",        "6663821679",        "6771245262"      ]    }  }}
+{  "channels": {    "telegram": {      "allowFrom": [        "[TEAM_MEMBER_1_ID]",        "[TEAM_MEMBER_2_ID]",        "[TEAM_MEMBER_3_ID]"      ]    }  }}
 
 
-Then add the client's Telegram ID(s) to the same array.
+Replace placeholders with actual Telegram IDs collected during the Step 0 intake process.
 
-Why this matters: If an ID is not in allowFrom, the bot ignores their messages completely. The AI agent should add these 3 IDs immediately on first setup - no waiting, no asking. These are always approved.
+Why this matters: If an ID is not in allowFrom, the bot ignores their messages completely. The AI agent should add all collected team IDs during setup.
 
 Automation instruction for the AI agent:
 When setting up a new client deployment using this protocol, the AI agent must:
+Run the Step 0 intake to collect all team member names, IDs, roles, and types
 Read the current channels.telegram.allowFrom array
-Ensure 5252140759, 6663821679, and 6771245262 are present
-Add any that are missing
-Add the client's Telegram ID(s)
+Add all collected team member IDs
 Back up config, validate JSON, restart gateway
 Confirm all IDs are approved before proceeding with any other setup
 
@@ -325,11 +324,11 @@ The dispatcher CAN:
 - Forward results from one worker to another person's DM when told to
 
 The dispatcher MUST:
-- Only relay when the sender explicitly asks (e.g., "send Spaulding the update from my last conversation")
+- Only relay when the sender explicitly asks (e.g., "send [team member] the update from my last conversation")
 - Tag forwarded messages: "Forwarded from [worker-label]"
 - Never auto-share between workers without being asked
 
-This means: Conversations stay separate per worker. But when Trevor says "what did we discuss with Spaulding?" or "send LeAnne the report from Spaulding's session," the dispatcher can do that because it has cross-worker read access.
+This means: Conversations stay separate per worker. But when a team member says "what did we discuss with [other member]?" or "send [person] the report from [another member]'s session," the dispatcher can do that because it has cross-worker read access.
 Outbound Isolation
 When a worker completes a task, the dispatcher sends the result ONLY to the Telegram DM of the person who requested it
 The message tool is called with target explicitly set to that sender's Telegram ID
@@ -345,8 +344,8 @@ What IS prohibited (context contamination):
 - The dispatcher forwarding information between workers without explicit instruction
 
 What is NOT prohibited (directed sends):
-- A worker or dispatcher sending a Telegram message to Trevor's ID when asked
-- A worker or dispatcher sending a Telegram message to Spaulding when asked
+- A worker or dispatcher sending a Telegram message to any team member's ID when asked
+- A worker or dispatcher sending a Telegram message to another team member when asked
 - Any team member saying "send [name] a message" - execute it immediately
 - Relaying information between team members when explicitly requested
 What This Prevents
@@ -454,7 +453,7 @@ Cost note: Each worker has its own token usage. Monitor via usage-tracker report
 
 Copy and customize for each client deployment:
 
-# WORKFLOW_AUTO.md - BLACK CEO Management Protocol (Dispatcher Routing)## Dispatcher Pattern (ACTIVE)Main session = dispatcher/router. Route all incoming messages by sender ID.## BLACK CEO Management Team (Always Present)| Sender ID | Name | Role | Worker Label | Reply To ||---|---|---|---|---|| 5252140759 | Trevor Otts | Operations Lead / AI Director | trevor-worker | 5252140759 || 6663821679 | LeAnne | Head of Marketing | leanne-worker | 6663821679 || 6771245262 | E.R. Spaulding | Chief of Operations | spaulding-worker | 6771245262 |## Client Team (Customize Per Deployment)| Sender ID | Name | Role | Worker Label | Reply To ||---|---|---|---|---|| CLIENT_ID | Client Name | Client (NOT a worker) | client-name-worker | CLIENT_ID || TEAM_ID | Team Member | Role | member-worker | TEAM_ID |## Reply Rules- Results go ONLY to requesting DM by default- Directed sends (sender says 'tell [person] X' or 'send [name] a message'): execute immediately, no confirmation needed- Context isolation: never share one worker's conversation data with another worker without being asked- Tag: 🏆 [Dispatcher] / 🔧 [worker-label]## Worker Config- Model: [primary model]- Fallbacks: [fallback 1], [fallback 2]- cleanup: keep- archiveAfterMinutes: 43200## Client Rules- [Client name] is the CLIENT - never assign tasks, serve respectfully- BLACK CEO team members are workers - they give instructions, AI executes
+# WORKFLOW_AUTO.md - Team Management Protocol (Dispatcher Routing)## Dispatcher Pattern (ACTIVE)Main session = dispatcher/router. Route all incoming messages by sender ID.## Team Members (Customize Per Deployment)| Sender ID | Name | Role | Worker Label | Reply To ||---|---|---|---|---|| [TEAM_MEMBER_1_ID] | [TEAM_MEMBER_NAME] | [ROLE] | [firstname1]-worker | [TEAM_MEMBER_1_ID] || [TEAM_MEMBER_2_ID] | [TEAM_MEMBER_NAME] | [ROLE] | [firstname2]-worker | [TEAM_MEMBER_2_ID] || [TEAM_MEMBER_3_ID] | [TEAM_MEMBER_NAME] | [ROLE] | [firstname3]-worker | [TEAM_MEMBER_3_ID] |## Client Team (Customize Per Deployment)| Sender ID | Name | Role | Worker Label | Reply To ||---|---|---|---|---|| CLIENT_ID | Client Name | Client (NOT a worker) | client-name-worker | CLIENT_ID || TEAM_ID | Team Member | Role | member-worker | TEAM_ID |## Reply Rules- Results go ONLY to requesting DM by default- Directed sends (sender says 'tell [person] X' or 'send [name] a message'): execute immediately, no confirmation needed- Context isolation: never share one worker's conversation data with another worker without being asked- Tag: 🏆 [Dispatcher] / 🔧 [worker-label]## Worker Config- Model: [primary model]- Fallbacks: [fallback 1], [fallback 2]- cleanup: keep- archiveAfterMinutes: 43200## Client Rules- [Client name] is the CLIENT - never assign tasks, serve respectfully- Team workers give instructions - AI executes their requests
 
 
 
@@ -462,7 +461,7 @@ Copy and customize for each client deployment:
 
 [ ] Copy this SOP to client's master files
 [ ] Copy WORKFLOW_AUTO.md template to client's workspace
-[ ] Add BLACK CEO team IDs (Trevor, LeAnne, Spaulding) - these never change
+[ ] Add all team member IDs collected during Step 0 intake
 [ ] Add client principal ID as client-worker (not a worker)
 [ ] Add any client team members as additional workers
 [ ] Set sub-agent model chain (primary + fallbacks with tool-call support)
@@ -488,9 +487,8 @@ The fix: Write the IDs to BOTH WORKFLOW_AUTO.md AND the core .md files.
 ### Permanent Team IDs (Always Present in Every Deployment)
 | Name | Telegram ID | Role | Worker Label |
 |------|-------------|------|-------------|
-| Trevor Otts | 5252140759 | Operations Lead / AI Director | trevor-worker |
-| LeAnne | 6663821679 | Head of Marketing | leanne-worker |
-| E.R. Spaulding | 6771245262 | Chief of Operations | spaulding-worker |
+| [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] | [firstname]-worker |
+(Fill in from TEAM_CONFIG.md during setup - add one row per team member)
 
 ### Dispatcher Rules
 - Route incoming messages by sender Telegram ID to the correct worker
@@ -508,7 +506,7 @@ The fix: Write the IDs to BOTH WORKFLOW_AUTO.md AND the core .md files.
 - WORKFLOW_AUTO.md: ~/clawd/WORKFLOW_AUTO.md (routing table with all Telegram IDs)
 - Full protocol: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
 - To send to a specific person: use message tool with target set to their Telegram ID
-- Trevor: 5252140759 | LeAnne: 6663821679 | Spaulding: 6771245262
+- All team Telegram IDs: see TEAM_CONFIG.md
 - To check a worker's conversation: sessions_history(sessionKey) or sessions_list to find the session
 - To relay between workers: dispatcher reads source worker history, summarizes, sends to target worker or target DM
 - Worker sub-agent model must support tool calls (MiniMax M2.5, Codex, Sonnet - NOT reasoning-only models)
@@ -519,10 +517,9 @@ The fix: Write the IDs to BOTH WORKFLOW_AUTO.md AND the core .md files.
 ## BLACK CEO Team Telegram IDs (Permanent)
 | Name | Telegram ID | Role |
 |------|-------------|------|
-| Trevor Otts | 5252140759 | Operations Lead |
-| LeAnne | 6663821679 | Head of Marketing |
-| E.R. Spaulding | 6771245262 | Chief of Operations |
-- These 3 IDs are ALWAYS approved in channels.telegram.allowFrom
+| [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] |
+(Fill in from TEAM_CONFIG.md during setup - add one row per team member)
+- All team IDs are approved in channels.telegram.allowFrom
 - Routing protocol: ~/clawd/WORKFLOW_AUTO.md
 - Full SOP: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
 
@@ -554,6 +551,6 @@ What it does NOT do:
 The agent should read WORKFLOW_AUTO.md when it needs to look up routing details, but the critical IDs must ALSO be in AGENTS.md and MEMORY.md so the agent always knows them.
 
 
-End of BLACK CEO Management Protocol
+End of Team Management Protocol
 
 

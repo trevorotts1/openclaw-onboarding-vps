@@ -88,7 +88,7 @@ behalf, and then your AI can do the rest.
   by itself often fails. Request both drive and documents together for reliable access.
 
 - **The service account impersonates a real user.** When accessing Workspace resources,
-  the service account acts as a specific user (like trevor@yourdomain.com). This user
+  the service account acts as a specific user (like admin@yourdomain.com). This user
   email must be specified in the configuration.
 
 - **Test after setup.** Ask the AI to check Gmail or Calendar. If it works, the setup

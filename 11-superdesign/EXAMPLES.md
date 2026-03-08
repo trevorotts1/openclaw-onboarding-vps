@@ -101,36 +101,35 @@ Pick your favorite, then refine it:
 
 ## Example 5: Hand Off to OpenClaw for Content Injection
 
-**Scenario:** You have exported your SuperDesign HTML file and style.md. Now you want OpenClaw to add your real content.
+**Scenario:** A SuperDesign HTML file and style.md have been exported. The agent now injects real content to replace placeholders.
 
-**What you say to OpenClaw (via WhatsApp, Telegram, or whatever channel you use):**
+**The agent will execute the following:**
 
-"I have a website design exported from SuperDesign. The HTML file is at ~/Desktop/my-landing-page.html and the style guide is at ~/Desktop/my-style.md. I need you to:
-- Read both files
-- Replace the placeholder headline with: 'Drop the Cape. Breathe Again.'
-- Replace the placeholder subheadline with: 'A sanctuary for professional women who are done performing strength and ready to experience rest.'
-- Change the CTA button text to 'Join the Sanctuary'
-- Replace the three benefit cards with these: 1) Monthly live breathwork sessions, 2) Private community of like-minded women, 3) On-demand wellness library
-- Keep all the existing styling exactly as it is
-- Save the final version to ~/Desktop/sanctuary-final.html"
+1. Read the exported HTML file at the specified path (e.g. ~/Desktop/my-landing-page.html)
+2. Read the style guide at the specified path (e.g. ~/Desktop/my-style.md)
+3. Replace placeholder headline with the real copy provided by the user
+4. Replace placeholder subheadline with the real copy provided by the user
+5. Update CTA button text to match the user's call-to-action
+6. Replace placeholder benefit cards with the user's actual benefit content
+7. Preserve all existing CSS and layout exactly as designed
+8. Save the final version to the output path specified (e.g. ~/Desktop/sanctuary-final.html)
 
-**What OpenClaw does:** It reads both files, makes the exact changes you requested, keeps all the CSS and layout intact, and saves the finished version.
+**What the agent does:** It reads both files, makes the exact changes requested, keeps all CSS and layout intact, and saves the finished version.
 
 
 ## Example 6: Use the style.md to Build Additional Pages
 
-**Scenario:** You designed your homepage in SuperDesign but need three more pages (About, Services, Contact) that match the same look.
+**Scenario:** The homepage was designed in SuperDesign. Three more pages (About, Services, Contact) need to be built matching the same look.
 
-**What you say to OpenClaw or Claude:**
+**The agent will execute the following:**
 
-"Here is my style.md file from SuperDesign [paste the content or provide file path]. This is my brand's design system. Now build me the following pages using these exact design rules:
-- An About page with my bio, mission statement, and credentials
-- A Services page with three service cards showing my coaching packages
-- A Contact page with a booking form placeholder and my social media links
+1. Read the style.md file from the specified path (contains all brand colors, fonts, spacing rules)
+2. Build an About page using the extracted design rules, incorporating bio, mission statement, and credentials content
+3. Build a Services page using the same design system, with three service cards for coaching packages
+4. Build a Contact page using the same design system, with a booking form placeholder and social media links
+5. Verify all pages match colors, fonts, and spacing from style.md before delivering
 
-Make sure every page matches the colors, fonts, and spacing in the style.md."
-
-**Why this works:** The style.md contains every design rule, so the AI can build pages that look like they came from the same designer - without going back to SuperDesign for each one.
+**Why this works:** The style.md contains every design rule, so the agent can build pages that look like they came from the same designer - without going back to SuperDesign for each one.
 
 
 ## Example 7: Clone Individual Components from Multiple Sites

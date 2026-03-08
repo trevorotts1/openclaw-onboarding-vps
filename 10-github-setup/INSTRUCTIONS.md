@@ -1,10 +1,4 @@
 
-## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
-- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
-- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
-- Use API-driven setup and browser-based account/token creation flows only.
-- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
-
 ╔══════════════════════════════════════════════════════════════╗
   MANDATORY TYP CHECK - READ THIS BEFORE ANYTHING ELSE
   DO NOT SKIP. DO NOT PROCEED UNTIL THIS CHECK IS COMPLETE.
@@ -74,7 +68,7 @@ The AI agent should save (commit and push) your work at these times:
 - At the end of every work session
 - After updating configuration files
 
-This should happen automatically. You should not have to ask your AI
+This should happen automatically. You should not have to let the agent
 to save your work.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

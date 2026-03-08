@@ -5,20 +5,16 @@ This document shows real examples of OpenRouter configuration and model routing 
 
 ## Example 1: First-Time Setup (Complete Walkthrough)
 
-**Scenario:** You just signed up for OpenRouter and need to configure OpenClaw from scratch.
+**Scenario:** First-time OpenRouter setup on a new OpenClaw installation.
 
-**What you say to your agent:**
-
-"I just created an OpenRouter account. My API key is sk-or-abc123xyz. Set up my models."
-
-**What the agent does:**
+**The agent will execute the following when given an OpenRouter API key (format: sk-or-...):**
 
 1. Creates a backup of your current config:
    cp ~/.openclaw/openclaw.json ~/openclaw-backup-configs/openclaw-backup-$(date +%Y-%m-%d-%H%M%S).json
 
 2. Adds the API key to the env section of your config file.
 
-3. Adds the full 18-model roster to agents.defaults.models.
+3. Adds the full 17-model roster to agents.defaults.models.
 
 4. Sets MiniMax M2.5 as the primary model with Kimi K2.5 and DeepSeek R1 Free as fallbacks.
 
@@ -110,12 +106,12 @@ This document shows real examples of OpenRouter configuration and model routing 
 
 **Phase 1 (The Check):**
 - Agent is on MiniMax M2.5 with low thinking.
-- It checks trevor@blackceo.com for new emails.
+- It checks user@yourdomain.com for new emails.
 - It checks the calendar for today's events.
 - It scans for any alerts or failed payments.
 - It produces a task list:
   1. Reply to client email about project timeline
-  2. Send Trevor the daily briefing summary
+  2. Send the daily briefing summary to the user
   3. Check on a failed Stripe payment
 
 **Phase 2 (The Dispatch):**

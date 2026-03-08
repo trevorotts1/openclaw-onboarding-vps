@@ -17,15 +17,10 @@ IF YOU HAVE BEEN TAUGHT TYP:
 Proceed to the instructions below. Follow the TYP file storage structure.
 
 IF YOU HAVE NOT BEEN TAUGHT TYP:
-STOP IMMEDIATELY. Do not read further. Do not attempt to learn or execute
-anything in this document. Tell the user exactly this:
-
-  "I have not been taught the Teach Yourself Protocol yet. I cannot safely
-   learn or execute these instructions until I have been taught TYP first.
-   Please share the Teach Yourself Protocol tab with me before we proceed.
-   Without TYP, I will bloat your core .md files and waste your tokens."
-
-DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
+NOTE: TYP is recommended. If not yet installed, continue and revisit TYP
+later if needed. You can still safely execute this skill without TYP - just
+be mindful not to dump large blocks of content into core .md files. Add only
+brief summaries and file path references to AGENTS.md, TOOLS.md, and MEMORY.md.
 
 CONFLICT RULE (applies to all skill installs):
 If this skill's SKILL.md, CORE_UPDATES.md, or any other file in this skill
@@ -77,7 +72,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -93,7 +88,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -137,36 +132,92 @@ The AI agent checks TWO places for GHL credentials:
 
 ## Autonomous Setup Execution
 
+### Pre-Action: Environment Credential Check
+
+Before prompting the user for any credentials, the agent MUST check existing
+env files first. Only ask the user if the values are not already stored.
+
+**Step 1 - Check for existing GHL credentials:**
+```bash
+# Check secrets/.env
+grep -E "GHL_API_KEY|GHL_PIT|GHL_LOCATION_ID|GOHIGHLEVEL_API_KEY" ~/clawd/secrets/.env 2>/dev/null
+
+# Check openclaw.json
+cat ~/.openclaw/openclaw.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('env',{}).get('vars',{}))" 2>/dev/null
+```
+
+**Decision tree:**
+- If BOTH GHL_API_KEY (or GHL_PIT) AND GHL_LOCATION_ID are found: skip Action 1, proceed directly to Action 2.
+- If one or both are missing: proceed to Action 1 to retrieve them.
+- If the user cannot or does not want to provide credentials: offer a skip option.
+  Tell the user: "You can skip credential setup now and add them later. GHL features
+  will not work until credentials are added, but all other setup will complete."
+
+**Skip option behavior:** If the user skips, note it in MEMORY.md and continue
+installation. Never block the entire install on missing GHL credentials.
+
+
 ### Action 1: Retrieve GHL Credentials
 
-The agent must:
-1. Navigate to the GoHighLevel/Convert and Flow dashboard (user must be logged in)
-2. Locate the Settings section (gear icon) in the left sidebar
-3. Access Business Info to retrieve the Location ID
-4. Save the Location ID value
-5. Navigate to API Keys or Integrations section
-6. Retrieve or create a Private Integration Token
-7. Save the token value
+The agent MUST first attempt to retrieve credentials automatically via API
+before asking the user to do anything manually.
+
+**Attempt 1 - Check if any credentials are partially configured and use them
+to look up missing values:**
+
+If GHL_API_KEY exists but GHL_LOCATION_ID is missing, run:
+```bash
+curl -s -X GET "https://services.leadconnectorhq.com/locations/search?limit=1" \
+  -H "Authorization: Bearer $GHL_API_KEY" \
+  -H "Version: 2021-07-28"
+```
+If this returns a valid location, extract the location ID automatically from
+the response. Save it to ~/clawd/secrets/.env as GHL_LOCATION_ID.
+
+If GHL_LOCATION_ID exists but GHL_API_KEY is missing, check if a token can
+be refreshed from any saved OAuth session in ~/.openclaw/.
+
+**Attempt 2 - If automatic retrieval fails or no credentials exist at all,
+ask the user for manual input:**
 
 Tell the user exactly this:
-  "I need your GHL Location ID and Private Integration Token. Log into your
-   GoHighLevel or Convert and Flow account, go to Settings > Business Info
-   to find your Location ID, then go to Settings > API Keys to find or create
-   your Private Integration Token. Paste both values here when ready."
+  "I checked your environment files and could not find your GHL credentials.
+   I need your GHL Location ID and Private Integration Token.
+
+   To get them:
+   1. Log into your GoHighLevel or Convert and Flow account
+   2. Go to Settings (gear icon in left sidebar) > Business Info
+   3. Copy your Location ID
+   4. Go to Settings > API Keys (or Integrations)
+   5. Copy or create your Private Integration Token
+
+   Paste both values here when ready, or type 'skip' to continue without
+   GHL credentials (you can add them later)."
+
+**If the user types 'skip':** proceed to Action 5, noting credentials are
+pending in MEMORY.md.
 
 
 ### Action 2: Configure OpenClaw with GHL Credentials
 
-The agent must:
-1. Read the file at ~/.openclaw/openclaw.json
-2. Locate or create the "env" section with "vars" subsection
-3. Add or update these exact keys:
-   - GHL_API_KEY: (set to the Private Integration Token from Action 1)
-   - GHL_LOCATION_ID: (set to the Location ID from Action 1)
-4. Write the updated configuration back to ~/.openclaw/openclaw.json
-5. Verify the file is valid JSON
+The PRIMARY credential storage location is ~/clawd/secrets/.env. This is
+where the agent reads credentials at runtime. Always write here first.
 
-Example structure to enforce:
+The agent must:
+1. Open ~/clawd/secrets/.env (create it if it does not exist)
+2. Add or update these lines:
+   ```
+   GHL_API_KEY=<Private Integration Token from Action 1>
+   GHL_LOCATION_ID=<Location ID from Action 1>
+   ```
+3. Save the file
+4. Verify the values are present:
+   ```bash
+   grep "GHL_API_KEY\|GHL_LOCATION_ID" ~/clawd/secrets/.env
+   ```
+
+SECONDARY (optional sync): If ~/.openclaw/openclaw.json already has an
+env.vars section, also add the values there for convenience:
 ```json
 {
   "env": {
@@ -177,6 +228,9 @@ Example structure to enforce:
   }
 }
 ```
+
+NOTE: ~/clawd/secrets/.env is the authoritative source. openclaw.json is
+a secondary mirror only. All runtime code should read from secrets/.env.
 
 
 ### Action 3: Verify Required Headers for All GHL API Requests

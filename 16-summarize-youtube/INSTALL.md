@@ -88,32 +88,98 @@ summarize --help >/dev/null
 ```
 
 ## Step 4
-Load keys from `.env`:
+Load keys from the first `.env` file found. Check these locations in order:
 ```bash
-set -a
-source .env
-set +a
+# Discover keys - check all known env file locations
+_discover_key() {
+  local key_name="$1"
+  for env_file in \
+    "$HOME/clawd/secrets/.env" \
+    "$HOME/.openclaw/.env" \
+    "$HOME/.config/openclaw/.env" \
+    ".env"; do
+    if [ -f "$env_file" ]; then
+      val=$(grep "^${key_name}=" "$env_file" 2>/dev/null | cut -d= -f2- | tr -d '"')
+      if [ -n "$val" ]; then
+        echo "$val"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
+OPENAI_API_KEY=$(_discover_key "OPENAI_API_KEY")
+GEMINI_API_KEY=$(_discover_key "GEMINI_API_KEY")
+export OPENAI_API_KEY GEMINI_API_KEY
 ```
 
 ## Step 5
-Verify both keys exist:
+Check which keys are available. Missing keys do not block install - the skill continues with whichever providers are available.
+
+**For OPENAI_API_KEY:**
 ```bash
-test -n "$OPENAI_API_KEY"
-test -n "$GEMINI_API_KEY"
+if [ -z "$OPENAI_API_KEY" ]; then
+  echo "OPENAI_API_KEY not found in any .env file."
+  echo "Options:"
+  echo "  1. Enter your OpenAI API key now (paste it): "
+  read -r key_input
+  if [ -n "$key_input" ]; then
+    export OPENAI_API_KEY="$key_input"
+    echo "OPENAI_API_KEY set for this session."
+  else
+    echo "Skipping OpenAI provider. Summarize will use Gemini only (if available)."
+    SKIP_OPENAI=1
+  fi
+else
+  echo "OPENAI_API_KEY found."
+fi
+```
+
+**For GEMINI_API_KEY:**
+```bash
+if [ -z "$GEMINI_API_KEY" ]; then
+  echo "GEMINI_API_KEY not found in any .env file."
+  echo "Options:"
+  echo "  1. Enter your Gemini API key now (paste it): "
+  read -r key_input
+  if [ -n "$key_input" ]; then
+    export GEMINI_API_KEY="$key_input"
+    echo "GEMINI_API_KEY set for this session."
+  else
+    echo "Skipping Gemini provider. Summarize will use OpenAI only (if available)."
+    SKIP_GEMINI=1
+  fi
+else
+  echo "GEMINI_API_KEY found."
+fi
+
+if [ "${SKIP_OPENAI:-0}" = "1" ] && [ "${SKIP_GEMINI:-0}" = "1" ]; then
+  echo "ERROR: Both providers skipped. At least one API key is required."
+  echo "Add OPENAI_API_KEY or GEMINI_API_KEY to ~/clawd/secrets/.env and re-run."
+  exit 1
+fi
 ```
 
 ## Step 6
-Run OpenAI-first test:
+Run OpenAI-first test (skip if OPENAI_API_KEY unavailable):
 ```bash
-summarize "https://youtu.be/dQw4w9WgXcQ" --youtube auto --length short
+if [ "${SKIP_OPENAI:-0}" != "1" ]; then
+  OPENAI_API_KEY="$OPENAI_API_KEY" summarize "https://youtu.be/dQw4w9WgXcQ" --youtube auto --length short
+else
+  echo "OpenAI provider skipped."
+fi
 ```
 
 ## Step 7
-If Step 6 fails, run Gemini fallback:
+If Step 6 fails or was skipped, run Gemini fallback (uses `--provider gemini` to force the Gemini backend):
 ```bash
-summarize "https://youtu.be/dQw4w9WgXcQ" --youtube auto --length short
+if [ "${SKIP_GEMINI:-0}" != "1" ]; then
+  GEMINI_API_KEY="$GEMINI_API_KEY" summarize "https://youtu.be/dQw4w9WgXcQ" --youtube auto --length short --provider gemini
+else
+  echo "Gemini provider skipped."
+fi
 ```
-Use `GEMINI_API_KEY` loaded from `.env`.
 
 ## Step 8
 Run transcript extraction test:

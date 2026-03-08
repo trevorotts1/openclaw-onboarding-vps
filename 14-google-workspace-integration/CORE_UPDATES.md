@@ -27,7 +27,7 @@ Add:
 ```
 ## Google Workspace Integration [PRIORITY: CRITICAL]
 - SA key location: configured during setup
-- Impersonation: try management@ first, then user@domain
+- Impersonation: use the primary admin email for your domain
 - GOG CLI: for personal @gmail.com accounts only
 - Places API: uses API Key, NOT service account
 - Full guide: [MASTER_FILES_FOLDER]/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
@@ -41,8 +41,8 @@ Add:
 
 ```
 ## Google Workspace Integration - Installed [DATE]
-- Full 101K char integration guide
-- 70 scopes, service account + GOG CLI + Playwright
+- Two paths: Workspace = service account + DWD; Gmail = GOG CLI OAuth
+- 70 OAuth scopes configured (Workspace path)
 - Full guide: [MASTER_FILES_FOLDER]/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
 ```
 

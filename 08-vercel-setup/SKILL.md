@@ -5,16 +5,12 @@ description: >
   where the agent asks the human questions and Executes creating an
   account, getting an API token, and verifying everything works.
 metadata:
-  author: Trevor Otts, BlackCEO
+  
   version: "1.0"
   priority: STANDARD
 ---
 
-## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
-- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
-- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
-- Use API-driven setup and browser-based account/token creation flows only.
-- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
+## SETUP METHOD: Vercel CLI (official recommended path).
 
 # Vercel Setup
 
@@ -40,7 +36,7 @@ when each step is confirmed complete.
 
 - Teach Yourself Protocol (TYP) must be learned first (skill 01)
 - Backup Protocol must be learned first (skill 02)
-- Node.js must be installed on the machine (for the Vercel CLI)
+- Requires Node.js and npm (for Vercel CLI)
 - The human needs a web browser to create their Vercel account
 - A GitHub account is recommended (makes setup easier) but not required
 

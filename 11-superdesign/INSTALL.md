@@ -41,17 +41,8 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
-   - OpenClaw Master Files
-   - OpenClaw Master Documents
-   - OpenClaw Documents
-   - openclaw-master-files
-   - openclaw master files
-   - OpenClaw Files
-   - openclaw-documents
-   - Any variation of "openclaw" + "master" or "files" or "documents"
-   Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   The canonical master files path is: ~/Downloads/openclaw-master-files/
+   If this folder does not exist, create it: mkdir -p ~/Downloads/openclaw-master-files/
 
    Save this full document content as a .md file in that folder.
 
@@ -77,7 +68,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -93,7 +84,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -164,7 +155,7 @@ Agent execution:
 3. Verify installation by executing: `superdesign --version`
 4. If "command not found" error occurs, attempt: `npx superdesign --version` as fallback
 5. Execute: `superdesign login`
-6. Wait for browser window to open and user to complete login (blocking operation - agent waits for user confirmation)
+6. Wait for browser window to open and user completes login (blocking operation - agent waits for user confirmation)
 7. After user confirms login success, execute: `superdesign --help`
 8. Verify help menu displays without authentication errors
 9. If authentication errors occur, report to user and halt
@@ -174,24 +165,23 @@ Agent execution:
 
 Agent execution:
 
-1. Instruct user to open Google Chrome
-2. Instruct user to navigate to: https://chromewebstore.google.com
-3. Instruct user to search for "Superdesign" in the search box
-4. Instruct user to locate the official SuperDesign extension and click "Add to Chrome"
-5. Instruct user to confirm the popup by clicking "Add extension"
-6. Instruct user to verify the SuperDesign icon appears in the browser toolbar
-7. If icon not visible, instruct user to click the puzzle piece icon (Extensions menu) and pin SuperDesign
-8. Confirm with user when extension installation is complete
+1. Agent opens browser and navigates to: https://chromewebstore.google.com
+2. Agent searches for "Superdesign" in the search box
+3. Agent locates the official SuperDesign extension and clicks "Add to Chrome"
+4. HUMAN ACTION REQUIRED (browser security dialog): Browser displays an "Add extension?" popup. User clicks "Add extension" to confirm. Agent waits until the user confirms completion.
+5. Agent verifies the SuperDesign icon appears in the browser toolbar
+6. If icon not visible, agent clicks the puzzle piece icon (Extensions menu) and pins SuperDesign
+7. Agent confirms extension installation is complete
 
 
 ## Part 4: Set Up the Web App Account
 
 Agent execution:
 
-1. Instruct user to open browser and navigate to: https://app.superdesign.dev
-2. Instruct user to create account using Google OAuth or email address
-3. Instruct user to verify successful login and workspace visibility
-4. Confirm with user when Web App account setup is complete
+1. Agent opens browser and navigates to: https://app.superdesign.dev
+2. HUMAN ACTION REQUIRED (account creation/auth): User creates account using Google OAuth or email address and completes login. Agent waits until the user confirms login is complete.
+3. Agent verifies successful login and workspace visibility by checking page content
+4. Agent confirms Web App account setup is complete
 
 Note: Web App provides limited free design credits per week. CLI and IDE Extension can use user's own AI API key for unlimited generation (see Part 6).
 
@@ -203,6 +193,7 @@ Agent execution:
 1. Execute: `npx skills add superdesigndev/superdesign-skill`
 2. Wait for download completion
 3. Verify installation includes CLI command definitions, standard operating procedures, agent rules, and /superdesign slash command
+   Expected output: Output confirms skill downloaded and registered, e.g. "Skill superdesign-skill installed successfully" or "Added skill: superdesign-skill". Directory ~/.agents/skills/superdesign/ should exist with SKILL.md and command definition files.
 4. If verification fails, report error and halt
 
 
@@ -212,38 +203,38 @@ Agent execution:
 
 Agent execution:
 
-1. Instruct user to open code editor (VS Code, Cursor, or Windsurf)
-2. Instruct user to press Cmd+Shift+X (Mac) or Ctrl+Shift+X (Windows/Linux) to open Extensions panel
-3. Instruct user to search for "SuperDesign"
-4. Instruct user to locate extension published by "SuperdesignDev" (official version)
-5. Instruct user to click "Install" button
-6. Confirm with user when extension installation is complete
+1. Agent attempts CLI installation first:
+   Execute: `code --install-extension superdesigndev.superdesign`
+   If "code" command not found, try: `cursor --install-extension superdesigndev.superdesign`
+2. If CLI installation succeeds, proceed to Part 6B
+3. If CLI installation fails (command not found or error), agent tells user: "Please open your code editor (VS Code, Cursor, or Windsurf), press Cmd+Shift+X (Mac) or Ctrl+Shift+X (Windows/Linux) to open Extensions, search for 'SuperDesign', locate the extension published by 'SuperdesignDev', and click Install." Agent waits until the user confirms completion.
+4. Agent verifies installation by executing: `code --list-extensions 2>/dev/null | grep -i superdesign`
+5. If verification fails, report error and continue (extension is optional)
 
 ### Part 6B: Configure Your AI API Key
 
 Agent execution:
 
-1. Instruct user to press Cmd+Shift+P (Mac) or Ctrl+Shift+P (Windows/Linux) to open Command Palette
-2. Instruct user to type: superdesign: configureApiKey
-3. Instruct user to select it and enter API key (Anthropic, OpenAI, or OpenRouter)
-4. Instruct user to open Command Palette again and type: superdesign: openSettings
-5. Instruct user to locate "AI Model Provider" setting and set to "anthropic", "openai", or "openrouter" based on key provided
-6. Confirm with user when API key configuration is complete
+1. Agent checks env files for an existing API key:
+   Execute: `grep -rE "ANTHROPIC_API_KEY|OPENAI_API_KEY|OPENROUTER_API_KEY" ~/clawd/secrets/.env 2>/dev/null | head -5`
+2. IF a key is found in env: Agent notes the provider (anthropic, openai, or openrouter) and proceeds to step 4
+3. IF no key found in env: Agent asks user: "Do you have an Anthropic, OpenAI, or OpenRouter API key to configure the SuperDesign IDE extension? This step is optional - you can skip it and use the Web App or CLI instead."
+   - IF user provides key: agent captures the key and provider, proceeds to step 4
+   - IF user skips: agent skips steps 4-5, documents that IDE extension API key is not configured, and notes user can configure later via Command Palette
+4. HUMAN ACTION REQUIRED (IDE config - requires code editor open): User opens Command Palette (Cmd+Shift+P on Mac, Ctrl+Shift+P on Windows/Linux), types "superdesign: configureApiKey", selects it, and enters the API key. Agent waits for user confirmation.
+5. HUMAN ACTION REQUIRED (IDE settings): User opens Command Palette again, types "superdesign: openSettings", locates "AI Model Provider" setting, and sets it to "anthropic", "openai", or "openrouter" based on the key provided. Agent waits for user confirmation.
+6. Agent confirms API key configuration is complete
 
 ### Part 6C: Initialize Your Project
 
 Agent execution:
 
-1. Instruct user to open project folder in code editor (or create new empty folder)
-2. Instruct user to open Command Palette (Cmd+Shift+P)
-3. Instruct user to type: superdesign: initializeProject
-4. Instruct user to press Enter
-5. Verify creation of:
-   - .superdesign/ folder
-   - CLAUDE.md file
-   - .cursor/rules/design.mdc file (if Cursor)
-   - .windsurfrules file (if Windsurf)
-6. If verification fails, report error and halt
+1. HUMAN ACTION REQUIRED (code editor): User opens a project folder in their code editor (or creates a new empty folder). Agent waits until the user confirms the folder is open.
+2. HUMAN ACTION REQUIRED (Command Palette): User opens Command Palette (Cmd+Shift+P on Mac, Ctrl+Shift+P on Windows/Linux), types "superdesign: initializeProject", and presses Enter. Agent waits until the user confirms.
+3. Agent verifies creation of expected files by executing:
+   `ls -la .superdesign/ CLAUDE.md .cursor/rules/design.mdc .windsurfrules 2>/dev/null`
+4. If none of the expected files exist: agent tells user "SuperDesign project initialization may not have completed. Please try the Command Palette step again and confirm when done."
+5. If files exist: agent confirms project initialization is complete
 
 
 ## Part 7: Create Your First Test Project
@@ -264,9 +255,8 @@ Agent execution:
 
 Agent execution:
 
-1. Locate master files folder in ~/Downloads/ (search for variations of "openclaw" + "master" or "files" or "documents")
-2. If folder not found, create: ~/Downloads/OpenClaw Master Files/
-3. Save this complete document as: ~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
+1. Execute to ensure master files folder exists: `mkdir -p ~/Downloads/openclaw-master-files/superdesign/`
+2. Save this complete document as: ~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
 4. Add to AGENTS.md (lean summary only, no full content):
 
    ## SuperDesign Web Design Skill [PRIORITY: HIGH]

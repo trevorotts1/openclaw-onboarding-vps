@@ -11,7 +11,6 @@ triggers:
   - "create my AI org chart"
   - "scaffold my AI workspace"
 version: 1.0.0
-author: trevorotts1
 ---
 
 ## MANDATORY - Teach Yourself Protocol (TYP)

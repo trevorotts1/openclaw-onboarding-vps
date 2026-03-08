@@ -5,7 +5,7 @@ description: >
   gives you access to dozens of AI models for generating images, videos, and
   audio - all through one API key and one consistent pattern.
 metadata:
-  author: Trevor Otts, BlackCEO
+  
   version: "1.0"
   priority: CRITICAL
 ---
@@ -87,8 +87,7 @@ Think of KIE.ai as a universal remote control for AI media generation.
   Download results immediately and store them locally.
 - **Nano Banana Pro is the default image model** for this workspace. Never
   use DALL-E 3. Always use KIE.ai with Nano Banana Pro unless told otherwise.
-- **The API key goes in the OpenClaw config** at ~/.openclaw/openclaw.json
-  under env.vars.KIE_API_KEY. It is also used as a Bearer token in the
-  Authorization header of every API call.
+- **The API key goes in** ~/clawd/secrets/.env as KIE_API_KEY. It is also
+  used as a Bearer token in the Authorization header of every API call.
 - **Always run the self-test** after setup: create a simple image, poll for
   the result, and verify you get a valid image URL back.

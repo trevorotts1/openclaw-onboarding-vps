@@ -6,7 +6,7 @@ description: >
   log in, navigate the page builder, paste code, save, preview, and publish
   funnel pages - all without the human needing to touch the builder themselves.
 metadata:
-  author: Trevor Otts, BlackCEO
+  
   version: "1.0"
   priority: HIGH
 ---
@@ -33,7 +33,7 @@ code into GHL so the page goes live.
 
 - Teach Yourself Protocol (TYP) must be learned first (skill 01)
 - Backup Protocol must be learned first (skill 02)
-- GHL Setup must be complete (skill 04) - the account must already exist
+- GHL Setup must be complete (skill 05) - the account must already exist
 - Playwright must be installed for browser automation
 - GHL login credentials must be stored in ~/clawd/secrets/.env
 

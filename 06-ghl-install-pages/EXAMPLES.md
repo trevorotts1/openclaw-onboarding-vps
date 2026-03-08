@@ -13,14 +13,14 @@ This document shows real examples of deploying pages into GoHighLevel (Convert a
 Agent: "Before I deploy, let me verify everything is ready:
 - HTML code: Ready (I have the SuperDesign export)
 - GHL credentials: Found in ~/clawd/secrets/.env
-- Target account: BlackCEO sub-account
+- Target account: [Client Sub-Account]
 - Browser session: Launching Playwright with persistent context..."
 
 **Step 2 - Log in and navigate:**
-Agent: "Logged into Convert and Flow. Verified I am in the correct sub-account (BlackCEO). Navigating to Sites, then Funnels..."
+Agent: "Logged into Convert and Flow. Verified I am in the correct sub-account ([Client Name]). Navigating to Sites, then Funnels..."
 
 **Step 3 - Create the funnel:**
-Agent: "Creating new funnel: 'Soft Life Sanctuary Landing Page'
+Agent: "Creating new funnel: '[Client Campaign Name] Landing Page'
 - Selected Blank Funnel template
 - Entered funnel name
 - Clicked Create
@@ -57,7 +57,7 @@ Screenshots saved for your review."
 ```
 DEPLOYMENT REPORT
 Date: March 1
-Account: BlackCEO
+Account: [Client Name]
 Type: New Funnel (Single Page)
 
 PAGES DEPLOYED:
@@ -127,7 +127,7 @@ Deploying page 4 of 4: Thank You
 ```
 DEPLOYMENT REPORT
 Date: March 1
-Account: BlackCEO
+Account: [Client Name]
 Type: Multi-Page Funnel
 
 PAGES DEPLOYED:
@@ -189,7 +189,7 @@ Agent: "2FA completed. I am now on the dashboard. Continuing with the deployment
 Agent: "Updating existing page (not creating a new one).
 
 1. Navigating to Sites - Funnels
-2. Found funnel: 'Soft Life Sanctuary Landing Page'
+2. Found funnel: '[Client Campaign Name] Landing Page'
 3. Clicking on step: Landing Page
 4. Builder loaded with existing content
 5. Clicking on the code element

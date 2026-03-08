@@ -72,7 +72,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -88,7 +88,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -114,7 +114,7 @@ When finished, give the user a clear summary:
 ══════════════════════════════════════════════════════════════════
 # Google Workspace Integration - Complete Setup Guide
 
-**By BlackCEO**
+****
 **Last Updated: February 22, 2026**
 
 ---
@@ -1454,8 +1454,8 @@ The gog CLI has a known bug with Gmail scope negotiation that returns
 ### When to Use Which Tool
 | Account Type | Tool | Example |
 |-------------|------|---------|
-| @yourdomain.com | google-api.js | trevor@blackceo.com |
-| @gmail.com | GOG CLI | trevelynotts@gmail.com |
+| @yourdomain.com | google-api.js | user@yourdomain.com |
+| @gmail.com | GOG CLI | user@gmail.com |
 
 ### Command Reference
 
@@ -1856,7 +1856,7 @@ You should see "running" in the output.
 
 ### Step 4: Quick Verification
 
-Ask your AI agent to run a simple test:
+Run this simple test:
 
 "Can you check my Gmail inbox for the 3 most recent emails?"
 

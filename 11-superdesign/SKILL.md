@@ -5,7 +5,7 @@ description: >
   designs and exports real code. Use before building any website or UI so the
   result looks professional instead of generic.
 metadata:
-  author: Trevor Otts, BlackCEO
+  
   version: "1.0"
   priority: HIGH
 ---

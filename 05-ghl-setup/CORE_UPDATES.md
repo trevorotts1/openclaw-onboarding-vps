@@ -5,6 +5,24 @@ Do not update files marked NO UPDATE NEEDED.
 
 ---
 
+## CREDENTIAL STORAGE - AUTHORITATIVE RULE
+
+PRIMARY credential storage: ~/clawd/secrets/.env
+  - GHL_API_KEY (Private Integration Token)
+  - GHL_LOCATION_ID
+
+SECONDARY (optional mirror): ~/.openclaw/openclaw.json under env.vars
+  - Only sync here if the section already exists
+  - secrets/.env is always the source of truth
+
+All runtime code, API calls, and skill references must read from
+~/clawd/secrets/.env. Do NOT create confusion by referencing openclaw.json
+as the primary store.
+
+---
+
+---
+
 ## AGENTS.md - UPDATE REQUIRED
 
 Add:

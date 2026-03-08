@@ -6,7 +6,7 @@ This skill teaches your AI agent how to connect to your Google Workspace account
 
 It uses a "Service Account" (think of it as a robot employee with its own ID badge) combined with "Domain-Wide Delegation" (security clearance you grant through your Google admin panel). Once set up, your AI agent can access Google services silently in the background, 24/7, without you ever clicking "Allow" in a browser.
 
-This guide is for Google Workspace business accounts only (like you@yourdomain.com). If you have a personal @gmail.com account, this is the wrong guide.
+This guide covers both Google Workspace business accounts (like you@yourdomain.com) and personal Gmail accounts (@gmail.com). Workspace users follow the Service Account path. Gmail users: the agent detects your account type and routes to the OAuth path automatically. See the Gmail path in INSTALL.md for details.
 
 ## When to Use This Skill
 

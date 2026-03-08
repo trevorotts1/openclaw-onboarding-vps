@@ -188,6 +188,6 @@ No. The AI agent does all the technical work. You just answer questions and prov
 
 ## Credits
 
-Built by Trevor Otts and the BlackCEO team.
+Built by the OpenClaw community.
 
 Powered by [OpenClaw](https://openclaw.ai) - the open-source AI assistant platform.

@@ -48,17 +48,8 @@ files it touches. When in doubt: skill docs win.
 WHEN AGENT LEARNS THIS DOCUMENT, AGENT FOLLOWS THIS STRUCTURE:
 
 1. AGENT SAVES FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Agent locates the OpenClaw master files folder in ~/Downloads/. Folder may be named:
-   - OpenClaw Master Files
-   - OpenClaw Master Documents
-   - OpenClaw Documents
-   - openclaw-master-files
-   - openclaw master files
-   - OpenClaw Files
-   - openclaw-documents
-   - Any variation of "openclaw" + "master" or "files" or "documents"
-   Agent searches case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, agent creates: ~/Downloads/OpenClaw Master Files/
+   The canonical master files path is: ~/Downloads/openclaw-master-files/
+   If this folder does not exist, agent creates it: mkdir -p ~/Downloads/openclaw-master-files/
 
    Agent saves this full document content as a .md file in that folder.
 
@@ -162,46 +153,48 @@ OpenClaw has built-in support for OpenRouter. Agent does NOT need to set up a se
 
 ### STEP 1: AGENT CHECKS FOR EXISTING OPENROUTER API KEY
 
-Agent checks environment first:
+Agent checks environment and config files for an existing key:
 
 ```bash
+# Check environment variable
 echo $OPENROUTER_API_KEY
+
+# Check secrets env file
+grep "OPENROUTER_API_KEY" ~/clawd/secrets/.env 2>/dev/null
+
+# Check existing openclaw config
+grep "OPENROUTER_API_KEY" ~/.openclaw/openclaw.json 2>/dev/null
 ```
 
-IF API key is found in environment:
-- Agent uses this key for all subsequent steps
+IF API key is found in any location:
+- Agent captures the key value for use in STEP 5
 - Agent skips to STEP 4 (backup config)
 
-IF API key is NOT found in environment:
-- Agent requests API key from requester
-- Agent asks requester to provide the OpenRouter API key (format: sk-or-...)
-- Agent waits for requester to provide the key
-- Agent stores key in memory for use in STEP 4
+IF API key is NOT found anywhere:
+- Agent asks requester: "No OpenRouter API key found. Do you have an OpenRouter account and API key (format: sk-or-...)? If not, I can configure the model definitions now and you can add the API key later."
+- IF requester provides a key: Agent captures it and proceeds to STEP 4
+- IF requester wants to skip: Agent sets key as PENDING, skips STEP 5 (API key insertion), proceeds with STEP 4 and STEP 6 (model config only). Agent notes in completion report that API key must be added before models will work.
 
 
 ### STEP 2: AGENT CREATES OPENROUTER ACCOUNT (if needed)
 
-IF requester does not have an OpenRouter account:
-- Agent instructs requester to navigate to https://openrouter.ai
-- Agent instructs requester to click "Sign Up" or "Log In" in the top right corner
-- Agent instructs requester to create account using Google, GitHub, or email
-- Agent waits for requester to confirm account creation
+IF requester does not have an OpenRouter account and wants to set one up now:
+- Agent tells requester: "Navigate to https://openrouter.ai, click 'Sign Up' or 'Log In' in the top right corner, and create an account using Google, GitHub, or email. Let me know when your account is created."
+- HUMAN ACTION REQUIRED (account auth): Requester creates account and confirms
+- Agent proceeds to STEP 3
 
-IF requester already has an OpenRouter account:
+IF requester already has an OpenRouter account, or API key was found in STEP 1:
 - Agent skips this step
 
 
 ### STEP 3: AGENT OBTAINS OPENROUTER API KEY (if needed)
 
-IF agent does not yet have an API key:
-- Agent instructs requester to navigate to https://openrouter.ai/keys
-- Agent instructs requester to click "Create Key" button
-- Agent instructs requester to name the key "OpenClaw"
-- Agent instructs requester to copy the key (format: sk-or-...)
-- Agent instructs requester to provide the key to agent
-- Agent waits for requester to provide the key
+IF agent does not yet have an API key and requester wants to provide one now:
+- Agent tells requester: "Navigate to https://openrouter.ai/keys, click 'Create Key', name the key 'OpenClaw', copy the key (format: sk-or-...), and share it here."
+- HUMAN ACTION REQUIRED (key creation): Requester creates and provides the key
+- Agent captures the key and proceeds to STEP 4
 
-IF agent already has an API key:
+IF agent already has an API key, or requester chose to skip:
 - Agent skips this step
 
 
@@ -213,16 +206,18 @@ Agent creates backup folder:
 mkdir -p ~/openclaw-backup-configs
 ```
 
-Agent backs up current config:
+Agent backs up current config and captures the backup filename:
 
 ```bash
-cp ~/.openclaw/openclaw.json ~/openclaw-backup-configs/openclaw-backup-$(date +'%B %-d at %-I-%M %p').json
+BACKUP_FILE="openclaw-backup-$(date +'%B %-d at %-I-%M %p').json"
+cp ~/.openclaw/openclaw.json ~/openclaw-backup-configs/"$BACKUP_FILE"
+echo "Backup saved as: $BACKUP_FILE"
 ```
 
 Agent verifies backup exists and is not empty:
 
 ```bash
-ls -la ~/openclaw-backup-configs/
+ls -la ~/openclaw-backup-configs/"$BACKUP_FILE"
 ```
 
 IF backup file size is 0 or backup does not exist:
@@ -272,7 +267,7 @@ IF key is not found in config:
 - Agent reports error to requester
 - Agent restores backup:
   ```bash
-  cp ~/openclaw-backup-configs/openclaw-backup-LATEST.json ~/.openclaw/openclaw.json
+  cp ~/openclaw-backup-configs/"$BACKUP_FILE" ~/.openclaw/openclaw.json
   ```
 - Agent does NOT proceed
 
@@ -416,32 +411,40 @@ Agent adds this configuration:
 }
 ```
 
-Agent uses jq to safely merge this configuration into the existing config file:
+Agent uses jq to ADDITIVELY MERGE new models into the existing config (preserving any existing models):
 
 ```bash
-jq '.agents.defaults.model.primary = "openrouter/minimax/minimax-m2.5" | 
-    .agents.defaults.model.fallbacks = ["openrouter/moonshotai/kimi-k2.5", "openrouter/deepseek/deepseek-r1-0528:free"] |
-    .agents.defaults.thinkingDefault = "medium" |
-    .agents.defaults.models = {
-      "openrouter/anthropic/claude-opus-4.6": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/anthropic/claude-sonnet-4.6": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/anthropic/claude-haiku-4.5": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/google/gemini-3.1-pro-preview": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/google/gemini-3-flash-preview": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/openai/gpt-5.2-codex": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/openai/gpt-5-mini": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/openai/gpt-5-nano": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/moonshotai/kimi-k2.5": {"params": {"temperature": 1.0}},
-      "openrouter/minimax/minimax-m2.5": {"params": {"temperature": 0.3, "reasoning": {"effort": "high"}}},
-      "openrouter/mistralai/mistral-small-creative": {"params": {"temperature": 0.3}},
-      "openrouter/qwen/qwen3.5-plus-02-15": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/z-ai/glm-5": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/deepseek/deepseek-v3.2": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/deepseek/deepseek-v3.2-speciale": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/deepseek/deepseek-r1-0528:free": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
-      "openrouter/perplexity/sonar-pro-search": {"params": {"temperature": 0.3}}
-    }' ~/.openclaw/openclaw.json > ~/.openclaw/openclaw.json.tmp && mv ~/.openclaw/openclaw.json.tmp ~/.openclaw/openclaw.json
+# Define the new models as a separate JSON block
+NEW_MODELS='{
+  "openrouter/anthropic/claude-opus-4.6": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/anthropic/claude-sonnet-4.6": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/anthropic/claude-haiku-4.5": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/google/gemini-3.1-pro-preview": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/google/gemini-3-flash-preview": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/openai/gpt-5.2-codex": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/openai/gpt-5-mini": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/openai/gpt-5-nano": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/moonshotai/kimi-k2.5": {"params": {"temperature": 1.0}},
+  "openrouter/minimax/minimax-m2.5": {"params": {"temperature": 0.3, "reasoning": {"effort": "high"}}},
+  "openrouter/mistralai/mistral-small-creative": {"params": {"temperature": 0.3}},
+  "openrouter/qwen/qwen3.5-plus-02-15": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/z-ai/glm-5": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/deepseek/deepseek-v3.2": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/deepseek/deepseek-v3.2-speciale": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/deepseek/deepseek-r1-0528:free": {"params": {"temperature": 0.3, "reasoning": {"effort": "medium"}}},
+  "openrouter/perplexity/sonar-pro-search": {"params": {"temperature": 0.3}}
+}'
+
+# Additive merge: existing models are preserved, new models are added/updated
+jq --argjson new "$NEW_MODELS" '
+  .agents.defaults.model.primary = "openrouter/minimax/minimax-m2.5" |
+  .agents.defaults.model.fallbacks = ["openrouter/moonshotai/kimi-k2.5", "openrouter/deepseek/deepseek-r1-0528:free"] |
+  .agents.defaults.thinkingDefault = "medium" |
+  .agents.defaults.models = ((.agents.defaults.models // {}) * $new)
+' ~/.openclaw/openclaw.json > ~/.openclaw/openclaw.json.tmp && mv ~/.openclaw/openclaw.json.tmp ~/.openclaw/openclaw.json
 ```
+
+NOTE: The `* $new` operator merges new models INTO existing models. Any pre-existing models that are NOT in the new set remain untouched. Any models that exist in both are updated to the new config.
 
 Agent verifies models were added:
 
@@ -454,7 +457,7 @@ IF models are not found in config:
 - Agent reports error to requester
 - Agent restores backup:
   ```bash
-  cp ~/openclaw-backup-configs/openclaw-backup-LATEST.json ~/.openclaw/openclaw.json
+  cp ~/openclaw-backup-configs/"$BACKUP_FILE" ~/.openclaw/openclaw.json
   ```
 - Agent does NOT proceed
 
@@ -470,6 +473,8 @@ Agent validates config syntax:
 openclaw doctor
 ```
 
+Expected output on success: All checks show green/pass status (e.g. "Config: OK", "Models: OK", "Gateway: OK"). No red/fail lines. If warnings appear (yellow) but no errors (red), config is valid.
+
 IF validation PASSES (no errors):
 - Agent continues to STEP 8
 
@@ -478,7 +483,7 @@ IF validation FAILS:
 - Agent reports validation error to requester
 - Agent restores backup:
   ```bash
-  cp ~/openclaw-backup-configs/openclaw-backup-LATEST.json ~/.openclaw/openclaw.json
+  cp ~/openclaw-backup-configs/"$BACKUP_FILE" ~/.openclaw/openclaw.json
   ```
 - Agent does NOT proceed
 
@@ -499,6 +504,8 @@ Agent verifies gateway is running:
 openclaw gateway status
 ```
 
+Expected output on success: Status shows "running" or "active" with a PID number and listening port (e.g. "Gateway is running (PID: 12345) on port 3578"). Any response other than "running"/"active" indicates a problem.
+
 IF gateway is running:
 - Agent continues to STEP 9
 
@@ -513,13 +520,13 @@ IF gateway is not running:
 Agent locates or creates master files folder:
 
 ```bash
-mkdir -p ~/Downloads/OpenClaw\ Master\ Files/openrouter-setup/
+mkdir -p ~/Downloads/openclaw-master-files/openrouter-setup/
 ```
 
 Agent saves this full document to:
 
 ```bash
-~/Downloads/OpenClaw\ Master\ Files/openrouter-setup/openrouter-setup-instructions.md
+~/Downloads/openclaw-master-files/openrouter-setup/openrouter-setup-instructions.md
 ```
 
 Agent creates summary for AGENTS.md:
@@ -532,18 +539,18 @@ Key rules:
 - MiniMax M2.5 is the daily workhorse (cheap + tools + high thinking).
 - Opus is the specialist (complex strategy, writing, client-facing).
 - Perplexity is the research model (all fact-checking and web search).
-Full details: See ~/Downloads/OpenClaw Master Files/openrouter-setup/openrouter-setup-instructions.md
+Full details: See ~/Downloads/openclaw-master-files/openrouter-setup/openrouter-setup-instructions.md
 ```
 
 Agent creates summary for TOOLS.md:
 
 ```
 ## OpenRouter Model Configuration
-18 models configured via OpenRouter. Primary: MiniMax M2.5.
+17 models configured via OpenRouter. Primary: MiniMax M2.5.
 Temperature: 0.3 for all models, 1.0 for Kimi K2.5 only.
 Config file: ~/.openclaw/openclaw.json
 Always back up before editing. Always validate with openclaw doctor after.
-Full reference: ~/Downloads/OpenClaw Master Files/openrouter-setup/openrouter-setup-instructions.md
+Full reference: ~/Downloads/openclaw-master-files/openrouter-setup/openrouter-setup-instructions.md
 ```
 
 Agent adds these summaries to AGENTS.md and TOOLS.md respectively (agent does NOT paste full document content).
@@ -560,10 +567,10 @@ Actions completed:
 1. ✓ Verified or obtained OpenRouter API key
 2. ✓ Backed up config to ~/openclaw-backup-configs/
 3. ✓ Added OPENROUTER_API_KEY to ~/.openclaw/openclaw.json
-4. ✓ Configured 18 models in agents.defaults.models
+4. ✓ Configured 17 models in agents.defaults.models
 5. ✓ Validated config with openclaw doctor
 6. ✓ Restarted openclaw gateway
-7. ✓ Saved full documentation to ~/Downloads/OpenClaw Master Files/openrouter-setup/
+7. ✓ Saved full documentation to ~/Downloads/openclaw-master-files/openrouter-setup/
 8. ✓ Added summaries to AGENTS.md and TOOLS.md
 
 Primary model: openrouter/minimax/minimax-m2.5

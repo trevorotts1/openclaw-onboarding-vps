@@ -213,13 +213,13 @@ The lesson: ALWAYS include the Version header. Every time. No exceptions.
 
 Here is how a conversation between a user and an AI agent with GHL access should look:
 
-**User:** "Send a text to LeAnne Dolce saying the meeting is rescheduled to 3pm."
+**User:** "Send a text to Jane Smith saying the meeting is rescheduled to 3pm."
 
 **AI Agent's process:**
 
 1. Search for the contact:
 ```
-GET /contacts/search?query=LeAnne Dolce
+GET /contacts/search?query=Jane Smith
 ```
 
 2. Find the contact ID from the response.
@@ -229,11 +229,11 @@ GET /contacts/search?query=LeAnne Dolce
 POST /conversations/messages
 Body: {
   "type": "SMS",
-  "contactId": "aoDwlb2aG4VHVWMGWcBS",
-  "message": "Hi LeAnne, the meeting has been rescheduled to 3pm. Please let me know if that works for you."
+  "contactId": "CONTACT_ID_HERE",
+  "message": "Hi Jane, the meeting has been rescheduled to 3pm. Please let me know if that works for you."
 }
 ```
 
-4. Confirm to the user: "Done. SMS sent to LeAnne Dolce at her number on file. Message ID: msg_xyz123."
+4. Confirm to the user: "Done. SMS sent to Jane Smith at her number on file. Message ID: msg_xyz123."
 
 The AI agent should never ask the user for the contact's phone number or email if it is already in GHL. It should search for the contact and use the information that is already there.

@@ -1,11 +1,4 @@
 
-## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
-- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
-- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
-- Use API-driven setup and browser-based account/token creation flows only.
-- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
-
-
 ╔══════════════════════════════════════════════════════════════╗
   MANDATORY TYP CHECK - READ THIS BEFORE ANYTHING ELSE
   DO NOT SKIP. DO NOT PROCEED UNTIL THIS CHECK IS COMPLETE.
@@ -79,7 +72,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -95,7 +88,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -138,7 +131,7 @@ ASK THE HUMAN:
 
 IF YES:
   ASK: "What's your GitHub username?"
-  THEN ASK: "Do you have a Personal Access Token (PAT) with full permissions?"
+  THEN ASK: "Do you have a Personal Access Token (PAT)?"
   
   → If they have a token: Ask them to share it, then skip to STEP 5
   → If no token: Skip to STEP 3 (Token Creation)
@@ -194,35 +187,19 @@ WHEN THEY CONFIRM:
 TELL THEM:
 "Fill in these settings:
   1. Note: Type 'OpenClaw Agent'
-  2. Expiration: Select 'No expiration'
-  3. Scopes: We need to select ALL scopes for full access. I'll guide you..."
+  2. Expiration: Select '90 days' (you will rotate the token when it expires)
+  3. Scopes: Check these three boxes (least-privilege for standard use):"
 
 GUIDE THROUGH SCOPES:
 TELL THEM:
-"Check ALL of these boxes. I'll list them - just confirm as you go:
+"Check these boxes:
 
   ☐ repo (Full control of private repositories)
+  ☐ read:org (Read org and team membership)
   ☐ workflow (Update GitHub Action workflows)
-  ☐ write:packages
-  ☐ delete:packages
-  ☐ admin:org
-  ☐ admin:public_key
-  ☐ admin:repo_hook
-  ☐ admin:org_hook
-  ☐ gist
-  ☐ notifications
-  ☐ user
-  ☐ delete_repo
-  ☐ write:discussion
-  ☐ admin:enterprise
-  ☐ audit_log
-  ☐ codespace
-  ☐ copilot
-  ☐ project
-  ☐ admin:gpg_key
-  ☐ admin:ssh_signing_key
 
-Did you check all of them?"
+Only add more scopes later if a specific feature requires them.
+Over-permissioned tokens are a security risk."
 
 WHEN THEY CONFIRM:
 TELL THEM:
@@ -276,7 +253,7 @@ WHEN YOU HAVE THE TOKEN AND USERNAME:
    ## GitHub
    - Token stored in secrets.env as GITHUB_TOKEN
    - Username: <their_username>
-   - All scopes enabled for full access
+   - Scopes: repo, read:org, workflow (least-privilege)
    - Used for: Version control, backups, deployments
    
    ### Git Rules

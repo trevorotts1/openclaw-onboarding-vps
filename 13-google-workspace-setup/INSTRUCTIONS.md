@@ -24,7 +24,7 @@ Once the Google Workspace setup is complete, your AI assistant can:
 - **Read and update spreadsheets** through Google Sheets
 - **Look up contacts** through the People API
 
-All of this happens automatically. You just ask your AI in plain English, and it uses the service account you set up to do the work.
+All of this happens automatically. The agent accepts plain English requests and uses the service account you set up to do the work.
 
 ---
 
@@ -75,7 +75,7 @@ You do not need to use any special commands. Just talk to your AI like you would
 
 ## How Authentication Works (Behind the Scenes)
 
-You do not need to do anything for authentication after the initial setup. Here is what happens when you ask your AI to check your email:
+You do not need to do anything for authentication after the initial setup. Here is what happens when the agent checks your email:
 
 1. Your AI reads the JSON key file you set up during installation
 2. It creates a signed "permission slip" (called a JWT) saying "I am the OpenClaw-assistant service account and I need to act as you@yourcompany.com"
@@ -100,7 +100,7 @@ Your AI uses DIFFERENT methods for different types of email accounts:
 | Business email (Google Workspace) | you@yourcompany.com | Service Account (set up in INSTALL.md) |
 | Personal Gmail | you@gmail.com | GOG CLI (different tool, see Skill 13) |
 
-**Do not mix these up.** If you ask your AI to check your @gmail.com account, it needs to use a different method than the one set up here. The service account method only works for Google Workspace (business) accounts.
+**Do not mix these up.** The agent routes @gmail.com accounts through GOG CLI (OAuth), which requires a different setup from this skill. The service account method only works for Google Workspace (business) accounts.
 
 ### When Things Stop Working
 

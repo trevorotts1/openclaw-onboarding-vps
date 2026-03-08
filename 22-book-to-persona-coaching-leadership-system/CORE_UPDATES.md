@@ -77,7 +77,7 @@ Full QMD guide: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system
 - Skill: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 - Pre-built personas (see qmd status -c coaching-personas for count): ~/Downloads/openclaw-master-files/coaching-personas/personas/
 - QMD collection: coaching-personas [run: qmd status -c coaching-personas to get current counts]
-- GitHub: https://github.com/trevorotts1/openclaw-onboarding (skill 22-book-to-persona)
+- Source: Available at your onboarding package repo.
 - Persona Reflex: query QMD before every professional task (see AGENTS.md)
 - Add new book SOP: see "Add New Book to Coaching Personas Matrix" section in this file
 ```

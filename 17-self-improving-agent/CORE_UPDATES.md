@@ -1,8 +1,10 @@
 # CORE_UPDATES - Self-Improving Agent
 
-## Rule
+## Rule: TYP-Lean Format
 Apply updates only to relevant core files for this skill.
-Do not update unrelated core files.
+Add concise summaries and file paths only. Never paste full documentation into core files.
+
+---
 
 ## Relevant (update allowed)
 - AGENTS.md
@@ -11,22 +13,26 @@ Do not update unrelated core files.
 
 ## Optional (only if explicitly needed)
 - SOUL.md
+- USER.md (update only when this skill needs user preferences or user-specific routing)
 
 ## Non-relevant (do not edit)
-- USER.md
 - IDENTITY.md
 - HEARTBEAT.md
 
+---
+
 ## Suggested snippets
-### AGENTS.md
-- Add a short rule that this skill must pass TYP before execution.
-- Add skill-specific trigger/use statement.
 
-### TOOLS.md
-- Add only tool commands/endpoints this skill needs.
+### [ADD TO AGENTS.md]
+- This skill requires TYP to be confirmed installed before execution.
+- Trigger: agent learns from mistakes, logs corrections, queries learnings before major tasks.
+- Full reference: ~/Downloads/openclaw-master-files/17-self-improving-agent-full.md
 
-### MEMORY.md
-- Add only persistent facts and constraints learned from this skill.
+### [ADD TO TOOLS.md]
+- Add only tool commands or endpoints this skill uses (e.g., learnings file path, CLI hooks).
+- Full reference: ~/Downloads/openclaw-master-files/17-self-improving-agent-full.md
 
-### USER.md
-- Update only when this skill needs user preferences or user-specific routing.
+### [ADD TO MEMORY.md]
+- Log: self-improving-agent skill installed.
+- Persistent constraints: check .learnings/ before major tasks; log corrections immediately.
+- Full reference: ~/Downloads/openclaw-master-files/17-self-improving-agent-full.md

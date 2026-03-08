@@ -63,7 +63,7 @@ Full reference: ~/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-bluepr
 - Skill: ~/.openclaw/skills/23-ai-workforce-blueprint/
 - Workspace built at: [fill in path after build]
 - Departments: [fill in after build]
-- GitHub: https://github.com/trevorotts1/openclaw-onboarding (skill 23-ai-workforce-blueprint)
+- Source: Available at your onboarding package repo.
 - Routing file: [workspace]/universal-sops/00-ROUTING.md
 - Full blueprint: ~/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
 ```

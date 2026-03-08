@@ -19,6 +19,22 @@ This keeps everyone's conversations separate and private.
 
 ---
 
+## Reading Team Configuration
+
+The agent reads team data from two sources on each deployment:
+
+**Primary source (boot-persistent):**
+- AGENTS.md - contains team IDs and roles, read every session at boot
+- MEMORY.md - contains team IDs, read every session at boot
+
+**Secondary source (routing details):**
+- ~/clawd/WORKFLOW_AUTO.md - routing table with full details, read when needed
+- ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md - master team data, read when updating or onboarding
+
+When in doubt about who belongs to what role, read TEAM_CONFIG.md. It is the source of truth for team membership.
+
+---
+
 ## Key Roles
 
 There are four types of roles in this system:
@@ -29,21 +45,20 @@ There are four types of roles in this system:
 - It has FULL VISIBILITY across all workers - it can read any worker's history
 - It NEVER does the actual work itself - it delegates to workers
 
-### Management (BLACK CEO Team)
-- Trevor Otts (5252140759) - Operations Lead / AI Director
-- LeAnne (6663821679) - Head of Marketing
-- E.R. Spaulding (6771245262) - Chief of Operations
+### Management / Worker Team Members
+- Configured during setup using the intake process in INSTALL.md Step 0
+- Their Telegram IDs and roles are stored in TEAM_CONFIG.md and AGENTS.md
 - These team members give instructions and the AI executes
-- Their IDs are ALWAYS present in every deployment
+- Marked as "Worker" type in TEAM_CONFIG.md
 
-### Team Workers
+### Team Workers (Additional Staff)
 - Additional team members added for specific client deployments
 - They can send tasks and receive results through their own dedicated worker
 
 ### Client
-- The client (business owner) is NEVER assigned tasks
+- The client (business owner or principal) is NEVER assigned tasks
 - The AI serves them respectfully - executes what they ask, reports results
-- Marked in the routing table as "Client (NOT a worker)"
+- Marked in the routing table and TEAM_CONFIG.md as "Client (NOT a worker)"
 
 ---
 
@@ -53,7 +68,7 @@ There are four types of roles in this system:
 
 1. **Dispatcher receives the message** from Telegram
 2. **Dispatcher identifies the sender** by checking the Telegram user ID in the message metadata
-3. **Dispatcher looks up the routing table** in WORKFLOW_AUTO.md to find the correct worker label
+3. **Dispatcher looks up the routing table** in WORKFLOW_AUTO.md (or AGENTS.md) to find the correct worker label
 
 ### If the Worker Already Exists and Is Active
 
@@ -152,7 +167,7 @@ The dispatcher (main session) has FULL visibility across ALL workers. It CAN:
 - Forward results from one worker to another person's DM when told to
 
 The dispatcher MUST:
-- Only relay when the sender explicitly asks (for example: "send Spaulding the update from my last conversation")
+- Only relay when the sender explicitly asks (for example: "send [team member] the update from my last conversation")
 - Tag forwarded messages: "Forwarded from [worker-label]"
 - Never auto-share between workers without being asked
 
@@ -233,6 +248,20 @@ Each worker has its own token usage. Monitor costs via usage-tracker reports. Fo
 
 ---
 
+## Adding a New Team Member
+
+When a new person needs to be added to the system:
+
+1. Collect their name, Telegram ID, role, and type (Worker or Client)
+2. Add their ID to channels.telegram.allowFrom in openclaw.json
+3. Add a row to ~/clawd/WORKFLOW_AUTO.md
+4. Add them to ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+5. Add them to the team table in AGENTS.md and MEMORY.md
+6. Back up config, validate JSON, restart gateway
+7. Test: have them send a message to the bot and confirm they get a dedicated worker
+
+---
+
 ## Troubleshooting
 
 | Problem | Likely Cause | Fix |
@@ -243,3 +272,4 @@ Each worker has its own token usage. Monitor costs via usage-tracker reports. Fo
 | "Model does not support tool calls" | Using a reasoning-only model | Switch to MiniMax M2.5, Codex, or Sonnet |
 | Messages bleeding between workers | Dispatcher not checking sender ID | Verify the routing table is complete and accurate |
 | Slow responses | Workers overloaded | Increase maxConcurrent or use faster models |
+| Unknown sender arrives | ID not in TEAM_CONFIG.md | Check TEAM_CONFIG.md, add if authorized, or ask sender who they are |

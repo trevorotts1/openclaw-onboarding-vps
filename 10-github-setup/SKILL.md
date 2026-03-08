@@ -5,16 +5,12 @@ description: >
   GitHub account, generating a Personal Access Token, configuring Git on their
   machine, and storing credentials securely.
 metadata:
-  author: Trevor Otts, BlackCEO
+  
   version: "1.0"
   priority: HIGH
 ---
 
-## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
-- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
-- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
-- Use API-driven setup and browser-based account/token creation flows only.
-- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
+## SETUP METHOD: GitHub API + GitHub CLI (gh) where available.
 
 # GitHub and Git Setup
 
@@ -37,7 +33,9 @@ have never used GitHub before.
 
 1. Checking if the user already has a GitHub account
 2. Executing account creation at github.com (step by step)
-3. Creating a Personal Access Token (PAT) with full permissions
+3. Creating a Personal Access Token (PAT) with least-privilege scopes
+   - Minimum scopes: `repo`, `read:org`, `workflow`
+   - Recommended expiration: 90 days (rotate when expired)
    - The token starts with "ghp_" and is about 40 characters long
    - It is only shown once, so the user must copy it immediately
 4. Configuring Git on their machine (user.name, user.email, credential helper)
@@ -70,9 +68,11 @@ Read them in this order:
 
 - The Personal Access Token (PAT) is the most important piece. Without it, the
   agent cannot interact with GitHub on the user's behalf.
-- When creating the PAT, select ALL scopes (full permissions). This avoids
-  having to create a new token later when you need a permission you skipped.
-- Set expiration to "No expiration" so it does not suddenly stop working.
+- When creating the PAT, select at minimum: `repo`, `read:org`, `workflow`.
+  Add additional scopes only when a specific need arises. Over-permissioned
+  tokens are a security risk and should be avoided.
+- Set expiration to 90 days. Rotate when expired. This limits exposure if
+  the token is ever compromised.
 - The token is only shown ONCE after creation. If the user loses it, they must
   delete that token and create a new one. There is no way to see it again.
 - Git config commands (user.name, user.email, credential.helper) only need to

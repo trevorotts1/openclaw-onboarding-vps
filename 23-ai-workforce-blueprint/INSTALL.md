@@ -89,12 +89,7 @@ Search AGENTS.md and MEMORY.md for: "Teach Yourself Protocol" or "TYP"
 
 **If TYP IS found:** Proceed to Phase 1.
 
-**If TYP is NOT found:** STOP. Tell the user:
-
-> "Before I can install this skill, Skill 01 - Teach Yourself Protocol needs to be installed first.
-> Download it from: https://github.com/trevorotts1/openclaw-onboarding (folder: 01-teach-yourself-protocol)
-> Once you have it, I will read that SKILL.md and complete the full TYP installation.
-> Then I will come back to this skill."
+**If TYP is NOT found:** STOP. The agent will check if the package is present at `~/.openclaw/skills/01-teach-yourself-protocol/`. If missing, notify the operator to complete Skill 01 first before returning to this skill.
 
 Do NOT proceed until TYP is confirmed installed.
 
@@ -441,13 +436,30 @@ Add the `## Pending Skill Setup - Check and Remind` block to AGENTS.md per CORE_
 
 ## PHASE 9 - WEEKLY AUTO-UPDATE SETUP
 
-Set up automatic skill updates from GitHub:
+Set up automatic skill updates. The setup script is included in the onboarding package:
 
 ```bash
 mkdir -p ~/.openclaw/skills/scripts
-curl -s https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/setup-weekly-update.sh -o ~/.openclaw/skills/scripts/setup-weekly-update.sh
-chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
-bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
+
+# Use the setup script from the onboarding package if available
+SETUP_SCRIPT=""
+for candidate in \
+  "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
+  "$HOME/.openclaw/skills/scripts/setup-weekly-update.sh"; do
+  if [ -f "$candidate" ]; then
+    SETUP_SCRIPT="$candidate"
+    break
+  fi
+done
+
+if [ -n "$SETUP_SCRIPT" ]; then
+  cp "$SETUP_SCRIPT" ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
+else
+  echo "Setup script not found in onboarding package. Skipping weekly auto-update setup."
+  echo "Note this in the completion report and set up manually when the script is available."
+fi
 ```
 
 **Verify:**
@@ -455,9 +467,9 @@ bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
 crontab -l | grep update-skills
 ```
 
-This installs a cron that runs every Sunday at 2:00 AM - checks GitHub, applies updates to installed skills, sends a notification with the changelog. Runs automatically. User never has to touch it.
+This installs a cron that runs every Sunday at 2:00 AM - checks for skill updates, applies them to installed skills, sends a notification with the changelog. Runs automatically. User never has to touch it.
 
-If the curl fails (no internet, URL changed, etc.), skip this step and note it in the completion report.
+If the script is not found, skip this step and note it in the completion report.
 
 ---
 

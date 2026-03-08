@@ -1,10 +1,4 @@
 
-## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
-- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
-- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
-- Use API-driven setup and browser-based account/token creation flows only.
-- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
-
 ╔══════════════════════════════════════════════════════════════╗
   MANDATORY TYP CHECK - READ THIS BEFORE ANYTHING ELSE
   DO NOT SKIP. DO NOT PROCEED UNTIL THIS CHECK IS COMPLETE.
@@ -59,7 +53,7 @@ USER: "No."
 AI: "Let's create your GitHub account. Go to https://github.com and click
 'Sign up' in the top right corner. First, enter your email address."
 
-USER: "I used trevor@example.com"
+USER: "I used user@example.com"
 
 AI: "Now create a strong password. Done?"
 
@@ -68,7 +62,7 @@ USER: "Yes."
 AI: "Choose a username. This will be visible publicly, so pick something
 professional."
 
-USER: "I chose blackceo-dev"
+USER: "I chose your-username"
 
 AI: "Complete the verification puzzle, then check your inbox for a
 verification email from GitHub. Click the link to verify. Are you logged
@@ -79,10 +73,10 @@ USER: "Yes, I can see the dashboard."
 AI: "Now we need to create a Personal Access Token. Go to:
 https://github.com/settings/tokens
 Click 'Generate new token' then 'Generate new token (classic)'.
-For the Note, type 'OpenClaw Agent'. For Expiration, select 'No expiration'.
-Then check ALL the scope boxes I am about to list..."
+For the Note, type 'OpenClaw Agent'. For Expiration, select '90 days'.
+Check these scopes: repo, read:org, workflow."
 
-[AI walks through all the scope checkboxes]
+[AI walks the user through the scope checkboxes]
 
 AI: "Click 'Generate token' at the bottom. COPY THE TOKEN NOW - it will
 only be shown once! It starts with 'ghp_' and is about 40 characters.
@@ -94,7 +88,7 @@ AI: "I have saved your token. Let me configure Git and run a test..."
 
 [AI runs git config commands and verification]
 
-AI: "GitHub is all set up! I can see your account: blackceo-dev. I can now
+AI: "GitHub is all set up! I can see your account: your-username. I can now
 back up your code, track changes, and deploy websites. Would you like me
 to back up any projects right now?"
 
@@ -129,13 +123,13 @@ Step 5: Create a private repository on GitHub and push
   gh repo create my-website --private --source=. --push
 
 Expected output:
-  Created repository blackceo-dev/my-website on GitHub
-  https://github.com/blackceo-dev/my-website
+  Created repository your-username/my-website on GitHub
+  https://github.com/your-username/my-website
   Branch 'main' set up to track remote branch 'main'.
 
 AI tells the user:
 "Done! Your website is now backed up at:
-https://github.com/blackceo-dev/my-website
+https://github.com/your-username/my-website
 It is private, so only you can see it. I will keep it updated whenever
 we make changes."
 
@@ -168,7 +162,7 @@ Step 4: Push to GitHub
 
 Expected output:
   Enumerating objects: 7, done.
-  To https://github.com/blackceo-dev/my-website.git
+  To https://github.com/your-username/my-website.git
      abc1234..def5678  main -> main
 
 The user does not see any of this - it happens automatically in the
@@ -183,7 +177,7 @@ curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
   "https://api.github.com/user" | jq '.login'
 
 Expected output:
-"blackceo-dev"
+"your-username"
 
 This confirms your token is working.
 

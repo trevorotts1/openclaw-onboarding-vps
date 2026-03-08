@@ -134,13 +134,9 @@ use their path everywhere. Do not rename their folder.
 
 ### 4. Download and extract the onboarding package
 
-Download the onboarding ZIP from the GitHub repository:
+Download the onboarding ZIP and extract it into the master files folder, inside a subfolder called `OpenClaw Onboarding`:
 
-```bash
-curl -L https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip -o /tmp/onboarding.zip
-```
-
-**Extract it into the master files folder, inside a subfolder called `OpenClaw Onboarding`:**
+> **Install command:** See your instructor or onboarding package README for the latest install URL.
 
 ```bash
 unzip /tmp/onboarding.zip -d /tmp/onboarding-temp/
@@ -169,6 +165,10 @@ Replace `[MASTER_FILES_FOLDER]` with the actual path from step 3.
         EXAMPLES.md
         CORE_UPDATES.md
         back-yourself-up-protocol.skill
+    03-agent-browser/
+        SKILL.md
+        INSTALL.md
+        CORE_UPDATES.md
     04-superpowers/
         SKILL.md
         INSTALL.md
@@ -253,18 +253,77 @@ Replace `[MASTER_FILES_FOLDER]` with the actual path from step 3.
         EXAMPLES.md
         CORE_UPDATES.md
         blackceo-team-management.skill
-
-    Each skill folder also includes:
-        [skill-name]-full.md (complete, verbatim tab content)
+    16-summarize-youtube/
+        SKILL.md
+        INSTALL.md
+        CORE_UPDATES.md
+        summarize-youtube.skill
+    17-self-improving-agent/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        self-improving-agent-full.md
+        self-improving-agent.skill
+        upstream-original/
+    18-proactive-agent/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        proactive-agent-full.md
+        proactive-agent.skill
+        upstream-original/
+    19-humanizer/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        humanizer-full.md
+        humanizer.skill
+        upstream-original/
+    20-youtube-watcher/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        youtube-watcher-full.md
+        youtube-watcher.skill
+        upstream-original/
+    21-tavily-search/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        tavily-search-full.md
+        tavily-search.skill
+        upstream-original/
+    22-book-to-persona-coaching-leadership-system/
+        SKILL.md
+        INSTALL.md
+        CORE_UPDATES.md
+        PIPELINE.md
+        QMD-RETRIEVAL-GUIDE.md
+        PERSONA-ROUTER.md
+        personas/
+        pipeline/
+    23-ai-workforce-blueprint/
+        SKILL.md
+        INSTALL.md
+        CORE_UPDATES.md
+        ai-workforce-blueprint.skill
 ```
 
-**Every skill folder must contain all 7 files.** If any skill folder is missing or any
-file is missing inside a folder, stop and tell the user. Do not proceed with incomplete files.
+**Each skill folder contains some combination of SKILL.md, INSTALL.md, INSTRUCTIONS.md, EXAMPLES.md, CORE_UPDATES.md.** Some skills also include a `[skill-name]-full.md`, a `.skill` package file, an `upstream-original/` subfolder, or additional reference documents. File count varies by skill. If SKILL.md or INSTALL.md is missing from a folder, stop and tell the user before proceeding.
 
 **Naming rules:**
-- Folder names are lowercase with hyphens, prefixed with their install number (01 through 14)
-- The .skill file matches the folder name without the number prefix
-- The 6 .md files are always named exactly: SKILL.md, INSTALL.md, INSTRUCTIONS.md, EXAMPLES.md, CORE_UPDATES.md, [skill-name]-full.md
+- Folder names are lowercase with hyphens, prefixed with their install number (01 through 23)
+- The .skill file (when present) matches the folder name without the number prefix
 - Do NOT rename any folder or file. Use the names exactly as listed above.
 
 
@@ -332,11 +391,9 @@ Every skill folder contains these files. Read them in this exact order:
 |-------|------|---------|
 | 1st | **SKILL.md** | Read this FIRST. Understand what this skill is, what it does, and when it triggers. Do not proceed until you understand the skill's purpose. |
 | 2nd | **INSTALL.md** | Read this SECOND. Step-by-step installation and configuration. Follow every step exactly. Do not skip verification steps. |
-| 3rd | **INSTRUCTIONS.md** | Read this THIRD. Detailed instructions on how to actually use the skill after it is installed. This is your operating manual. |
-| 4th | **EXAMPLES.md** | Read this FOURTH. Real examples showing the skill in action. Study these so you understand what correct usage looks like. |
-| 5th | **[skill-name]-full.md** | Read this FIFTH. This is the complete, verbatim tab content. It is the full source of truth for how the skill works. |
-| 6th | **CORE_UPDATES.md** | Read this SIXTH. This file tells you exactly which workspace files (AGENTS.md, TOOLS.md, MEMORY.md, IDENTITY.md, USER.md, SOUL.md, HEARTBEAT.md) need updating and gives you the exact text to add. Only update the files listed. Do not update files that are not listed. Do not add more than what is written. |
-| 7th | **[skill-name].skill** | Install this LAST. This is the skill package. Install it with: openclaw skill install [skill-name].skill |
+| 3rd | **Full guide doc(s)** (if present) | Read any additional guide documents that exist in the folder: INSTRUCTIONS.md, EXAMPLES.md, [skill-name]-full.md, PIPELINE.md, upstream-original/ files, etc. Not every skill has all of these - read whatever is present. |
+| 4th | **CORE_UPDATES.md** | Read this LAST before installing. This file tells you exactly which workspace files (AGENTS.md, TOOLS.md, MEMORY.md, IDENTITY.md, USER.md, SOUL.md, HEARTBEAT.md) need updating and gives you the exact text to add. Only update the files listed. Do not update files that are not listed. Do not add more than what is written. |
+| Final | **[skill-name].skill** | Install this after reading all docs. This is the skill package. Install it with: openclaw skill install [skill-name].skill (only if a .skill file exists in this folder) |
 
 ### For Each Skill, Follow This Process
 
@@ -344,14 +401,12 @@ Every skill folder contains these files. Read them in this exact order:
 2. Read SKILL.md completely - understand what the skill is
 3. Read INSTALL.md completely - build a mental checklist of everything it requires
 4. Execute the INSTALL.md steps one by one - do not skip any step
-5. Read INSTRUCTIONS.md completely - learn how to use the skill
-6. Read EXAMPLES.md completely - study the real examples
-7. Read [skill-name]-full.md completely - this is the full tab content and source of truth
-8. Read CORE_UPDATES.md - update ONLY the workspace files it specifies, with ONLY the text it provides
-9. Install the .skill package file
-10. Verify the skill is working
-11. **Tell the user:** "Skill [number] of 14 installed. [Skill name] is complete. Moving to skill [next number]."
-12. Then and only then move to the next skill
+5. Read all full guide docs that exist in this folder (INSTRUCTIONS.md, EXAMPLES.md, [skill-name]-full.md, PIPELINE.md, upstream-original/ files, etc.) - read whatever is present
+6. Read CORE_UPDATES.md - update ONLY the workspace files it specifies, with ONLY the text it provides
+7. Install the .skill package file (if one exists in this folder)
+8. Verify the skill is working
+9. **Tell the user:** "Skill [number] of 23 installed. [Skill name] is complete. Moving to skill [next number]."
+10. Then and only then move to the next skill
 
 ### What CORE_UPDATES.md Does
 
@@ -377,8 +432,8 @@ If any step in a skill's installation fails:
 1. Tell the user exactly what failed, which step failed, and the exact error.
 2. Try at least one alternative fix before deciding final status.
 3. Classify the skill:
-   - CORE skills: 01 Teach Yourself Protocol, 02 Back Yourself Up Protocol, 03 Superpowers
-   - OPTIONAL skills: all platform/API-dependent skills (GHL, Vercel, Context7, GitHub, Google, KIE, etc.)
+   - CORE skills: 01 Teach Yourself Protocol, 02 Back Yourself Up Protocol, 03 Agent Browser
+   - OPTIONAL skills: all platform/API-dependent skills (Superpowers, GHL, Vercel, Context7, GitHub, Google, KIE, etc.)
 4. If a CORE skill fails, STOP onboarding and request what is needed.
 5. If an OPTIONAL skill fails due to missing API key, missing account, or user says they do not use that system:
    - mark skill status as SKIPPED
@@ -489,17 +544,9 @@ All skill folders are located inside:
 
 ---
 
-## DISTRIBUTION FILES (Outside the Skill Folder)
+## PACKAGE FILE LISTING
 
-When you distribute a skill to someone who has a fresh OpenClaw install and no skills yet,
-they need a way to get started. These three companion files bridge that gap. They sit
-alongside the .skill package and tell the human what to do and tell the AI how to set up.
-
-| File | Who Reads It | Purpose |
-|------|-------------|---------|
-| **AI_SETUP_INSTRUCTIONS.md** | The human | Human reads this to understand what to download and what to paste to their AI agent. This is the starting point for someone who has never installed a skill before. |
-| **FOR_OPENCLAW_AI.md** | The AI agent | AI reads this during first-time setup to check tools, install dependencies, and configure. Written for the AI, not the human. |
-| **FINAL_INSTRUCTIONS.md** | The AI agent | Complete end-to-end workflow showing full usage with a real example. The AI studies this to understand how the skill works in practice. |
+> **See README.md for the complete list of files included in this onboarding package.**
 
 ---
 
@@ -525,9 +572,33 @@ alongside the .skill package and tell the human what to do and tell the AI how t
 - Do NOT create a duplicate master files folder if one already exists
 - ALWAYS back up config files before editing them
 - ALWAYS use human-readable dates on all backup filenames: date +'%B %-d at %-I-%M %p'
-- ALWAYS read .md files in the order specified (SKILL, INSTALL, INSTRUCTIONS, EXAMPLES, CORE_UPDATES)
+- ALWAYS read .md files in this order: SKILL.md → INSTALL.md → all full guide docs present (INSTRUCTIONS.md, EXAMPLES.md, [skill-name]-full.md, upstream-original/ files, etc.) → CORE_UPDATES.md
 - ALWAYS confirm to the user after each skill is installed before moving on
 - If anything fails, report exact failure and classify as CORE stop or OPTIONAL skip
+
+---
+
+## IMPORTED SKILLS (16-23) - AUTHORITATIVE INSTALL RULES
+
+Skills 16 through 23 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, QMD-RETRIEVAL-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
+
+**The file-read order for ALL imported skills is the same as for all skills:**
+1. Read `SKILL.md` first
+2. Read `INSTALL.md` second
+3. Read all full guide docs present in the folder (INSTRUCTIONS.md, EXAMPLES.md, [skill-name]-full.md, PIPELINE.md, upstream-original/ files, etc.)
+4. Read `CORE_UPDATES.md` last before installing
+
+**Conflict rule:** If TYP wrapper instructions conflict with a skill's own `SKILL.md` or `CORE_UPDATES.md`, follow the skill's files. TYP governs storage method; the skill governs content.
+
+**Mandatory TYP file-read rule:**
+1. Discover every `.md` file in the skill folder (including all subfolders).
+2. Read every `.md` file with no exceptions.
+3. Report discovered count and read count.
+4. If counts do not match, stop and mark install as failed.
+
+**Core file update rule:**
+- Apply only the updates listed in that skill's `CORE_UPDATES.md`.
+- Do not edit workspace files that CORE_UPDATES.md does not list for that skill.
 
 ---
 
@@ -545,6 +616,22 @@ The install script has already downloaded all skills to disk. Your job is to ins
 
 ---
 
+## FINAL STEP - SET UP WEEKLY AUTO-UPDATE (Agent Runs This)
+
+After all 23 skills are installed, run this as the final step.
+The agent executes these commands - the human does nothing.
+
+> **Install script URL:** See your instructor or onboarding package README for the latest auto-update script URL.
+
+Verify the cron job installed:
+```bash
+crontab -l | grep update-skills
+```
+
+This sets up a cron job that runs every Sunday at 2:00 AM. It checks for new skill versions, downloads and applies updates to installed skills only, and sends a Telegram notification with what changed. It runs automatically every week. No human action needed after this point.
+
+---
+
 ## WHEN ONBOARDING IS COMPLETE
 
 When every skill on the list above is installed and verified, tell the user:
@@ -556,104 +643,4 @@ When every skill on the list above is installed and verified, tell the user:
 
 ---
 
-This file is part of the OpenClaw Onboarding system built by Trevor Otts.
-Do not modify this file without Trevor's explicit permission.
-
-
----
-
-## NEW SKILLS ADDED (MARCH 3, 2026)
-
-The onboarding package now includes:
-
-- `17-self-improving-agent/`
-- `18-proactive-agent/`
-
-Both folders follow the 7-file onboarding standard and also preserve all upstream files under `upstream-original/`.
-
-Install order after core skills:
-1. 17-self-improving-agent
-2. 18-proactive-agent
-
-Before installing either skill, execute Teach Yourself Protocol on that skill folder and read:
-- `SKILL.md`
-- `[skill-name]-full.md`
-- all `.md` files in `upstream-original/`
-
-
-## Imported Skills Pack (16-18) - install sequence
-These are imported/recreated skills preserved from upstream with TYP wrapper files.
-
-Order:
-1. 17-self-improving-agent
-2. 18-proactive-agent
-3. 19-humanizer
-
-For each imported skill:
-- Run Teach Yourself Protocol on that folder
-- Read `SKILL.md`
-- Read `[skill-name]-full.md`
-- Read all docs in `upstream-original/`
-- Install to `~/.openclaw/skills/<slug>/`
-
-
-## Imported Skills Pack (16-19) - install sequence
-
-Order:
-1. 17-self-improving-agent
-2. 18-proactive-agent
-3. 19-humanizer
-4. 20-youtube-watcher
-
-For each imported skill: run Teach Yourself Protocol, read SKILL.md, read full file, then upstream-original docs, then install.
-
-
-## Imported Skill Enforcement Rule
-For every imported skill (16+), this is mandatory:
-1. Run Teach Yourself Protocol first
-2. Read all upstream markdown files
-3. Apply only relevant core file updates listed in that skill's CORE_UPDATES.md
-4. Do not edit non-relevant core files
-
-
-## Imported Skills Pack (16-20) - install sequence
-
-Order:
-1. 17-self-improving-agent
-2. 18-proactive-agent
-3. 19-humanizer
-4. 20-youtube-watcher
-5. 21-tavily-search
-
-Conflict rule:
-- If generic TYP wrapper instructions conflict with a skill set's own docs, follow the skill's `SKILL.md` and `CORE_UPDATES.md`.
-
-
-## Mandatory TYP file-read rule for all imported skills
-Before installing any imported skill:
-1. Discover every `.md` file in that skill folder (all subfolders).
-2. Read every `.md` file with no exceptions.
-3. Report discovered count and read count.
-4. If counts do not match, stop and mark install as failed.
-
-
-## Final Step - Set Up Weekly Auto-Update (Agent Runs This)
-
-After all skills are installed, run this as the final step.
-The agent executes these commands - the human does nothing:
-
-```bash
-mkdir -p ~/.openclaw/skills/scripts
-curl -s https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/setup-weekly-update.sh -o ~/.openclaw/skills/scripts/setup-weekly-update.sh
-chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
-bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
-```
-
-Verify it installed:
-```bash
-crontab -l | grep update-skills
-```
-
-This sets up a cron job that runs every Sunday at 2:00 AM.
-It checks GitHub for new skill versions, downloads and applies updates to installed skills only, and sends a Telegram notification with what changed.
-It runs automatically every week. No human action needed after this point.
+This file is part of the OpenClaw Onboarding system.

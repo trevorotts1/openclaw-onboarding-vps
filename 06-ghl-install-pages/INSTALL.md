@@ -17,15 +17,10 @@ IF YOU HAVE BEEN TAUGHT TYP:
 Proceed to the instructions below. Follow the TYP file storage structure.
 
 IF YOU HAVE NOT BEEN TAUGHT TYP:
-STOP IMMEDIATELY. Do not read further. Do not attempt to learn or execute
-anything in this document. Tell the user exactly this:
-
-  "I have not been taught the Teach Yourself Protocol yet. I cannot safely
-   learn or execute these instructions until I have been taught TYP first.
-   Please share the Teach Yourself Protocol tab with me before we proceed.
-   Without TYP, I will bloat your core .md files and waste your tokens."
-
-DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
+NOTE: TYP is recommended. If not yet installed, continue and revisit TYP
+later if needed. You can still safely execute this skill without TYP - just
+be mindful not to dump large blocks of content into core .md files. Add only
+brief summaries and file path references to AGENTS.md, TOOLS.md, and MEMORY.md.
 
 CONFLICT RULE (applies to all skill installs):
 If this skill's SKILL.md, CORE_UPDATES.md, or any other file in this skill
@@ -77,7 +72,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -93,7 +88,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -169,7 +164,26 @@ Expected output: "Playwright installed successfully" printed to stdout.
 
 GHL login credentials must NEVER be hardcoded in scripts or saved in code repositories.
 
-Store credentials in the workspace secrets file:
+**ALWAYS check for existing credentials before asking the user:**
+
+```bash
+# Check if GHL_EMAIL and GHL_PASSWORD already exist
+grep -E "GHL_EMAIL|GHL_PASSWORD" ~/clawd/secrets/.env 2>/dev/null
+```
+
+**Decision tree:**
+- If BOTH GHL_EMAIL and GHL_PASSWORD are found: skip to Step 3. No need to prompt.
+- If one or both are missing: follow the steps below to add them.
+- If the account uses SSO or the user does not want to store credentials: use the
+  persistent browser session approach (user logs in once, session is reused). Note
+  this in MEMORY.md and skip credential storage.
+- If the user wants to skip: offer that option. Tell them: "You can skip storing
+  login credentials now. I will open a browser window and you can log in manually.
+  Your session will be saved so you only need to log in once."
+
+**NEVER block the install on missing credentials. Always offer a skip option.**
+
+If credentials need to be added, store them in the workspace secrets file:
 ```bash
 nano ~/clawd/secrets/.env
 ```

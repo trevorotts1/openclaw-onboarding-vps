@@ -25,7 +25,7 @@ Important: 90% of the time you want "Funnels." Only use "Websites" if the user s
 1. Click the "+ New Funnel" button (usually in the top-right area of the page)
 2. A popup will appear with options. You will see choices like: Blank Funnel, AI, From Templates
 3. Click "Blank Funnel" - always choose Blank because you have your own code
-4. A name field will appear. Type a descriptive funnel name that matches the project (for example, "Soft Life Sanctuary Landing Page")
+4. A name field will appear. Type a descriptive funnel name that matches the project (for example, "[Client Campaign Name] Landing Page")
 5. Click "Create"
 6. Wait for the funnel workspace screen to load. This may take 3-5 seconds.
 7. CRITICAL: Copy and save the URL from your browser's address bar. You will need this URL later when deploying multiple pages. This is called the "funnel workspace URL."
@@ -229,3 +229,63 @@ NEXT STEPS:
 ```
 
 Always include this report. Do not skip it. The user needs to know exactly what was done.
+
+
+## Verification Commands (Run These Before Reporting)
+
+After saving each page, run the following verification steps and include the
+results in your report. Do not report "Pass" without running these commands.
+
+**Step 1 - Confirm page is saved (check builder save state):**
+After clicking Save, verify the save confirmation appeared (button flash or
+"Saved" notification in the top toolbar). If no confirmation appeared, click
+Save again and wait for acknowledgment before proceeding.
+
+**Step 2 - Check page URL is accessible (after publishing only):**
+```bash
+curl -s -o /dev/null -w "%{http_code}" "https://[your-domain]/[page-path]"
+```
+Expected output: `200`
+Anything other than 200 means the page is not loading correctly.
+
+**Step 3 - Check that the page loads with content (after publishing):**
+```bash
+curl -s "https://[your-domain]/[page-path]" | grep -c "<div\|<section\|<html"
+```
+Expected output: A number greater than 0 (e.g., `15`)
+Output of 0 means the page returned an empty body - code was not saved correctly.
+
+**Step 4 - Desktop render check via Playwright screenshot:**
+After previewing in the browser, take a screenshot and verify:
+- The visible screenshot shows actual page content (not a blank white page)
+- The screenshot dimensions match the target viewport (e.g., 1440x900)
+- Run this inline check:
+```python
+# After taking screenshot:
+from PIL import Image
+img = Image.open("preview_desktop.png")
+width, height = img.size
+print(f"Screenshot size: {width}x{height}")
+# Expected: width >= 1440, height >= 900
+```
+
+**Step 5 - Mobile layout quick check:**
+Resize the preview browser to 375px wide. Verify:
+- No horizontal scrollbar appears
+- Text is readable without zooming
+- Buttons are at least 44px tall (tap-friendly)
+
+**What to include in your report for each check:**
+- The command you ran (or the action you took)
+- The actual output or result you observed
+- Pass or Fail based on expected vs. actual
+- If Fail: what you did to fix it
+
+Example of a properly filled-in verification section:
+```
+VERIFICATION COMMANDS RUN:
+- HTTP status check: curl returned 200 (PASS)
+- Content check: curl found 23 HTML elements (PASS)
+- Screenshot size: 1440x900 confirmed (PASS)
+- Mobile scroll: No horizontal overflow at 375px (PASS)
+```

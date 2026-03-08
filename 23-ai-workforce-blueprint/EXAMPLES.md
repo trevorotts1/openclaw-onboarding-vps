@@ -3,7 +3,7 @@
 ## Example: Good Department Structure
 
 ```
-blackceo-workforce/
+example-workforce/
   sales-dept/
     lead-generation/
       00-START-HERE.md

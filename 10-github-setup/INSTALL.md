@@ -1,9 +1,3 @@
-## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
-- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
-- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
-- Use API-driven setup and browser-based account/token creation flows only.
-- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
-
 ╔══════════════════════════════════════════════════════════════╗
   MANDATORY TYP CHECK - READ THIS BEFORE ANYTHING ELSE
   DO NOT SKIP. DO NOT PROCEED UNTIL THIS CHECK IS COMPLETE.
@@ -86,7 +80,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -102,7 +96,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -130,156 +124,186 @@ GITHUB SETUP - INSTALLATION GUIDE
 ══════════════════════════════════════════════════════════════════
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 1: CHECK FOR EXISTING GITHUB ACCOUNT
+STEP 0: LOCATE SECRETS FILE (MULTI-ENV CHECK)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. Check ~/clawd/secrets/.env for GITHUB_TOKEN or GH_TOKEN. If found, also
-   check for GITHUB_USERNAME.
+Before doing anything else, identify where secrets are stored on this machine.
+Run this check and store the result in $SECRETS_FILE for use in later steps:
+
+  SECRETS_FILE=""
+  for f in ~/clawd/secrets/.env ~/.openclaw/.env ~/.env ~/secrets/.env; do
+    if [ -f "$f" ]; then SECRETS_FILE="$f"; break; fi
+  done
+  if [ -z "$SECRETS_FILE" ]; then
+    SECRETS_FILE=~/clawd/secrets/.env
+    mkdir -p ~/clawd/secrets
+  fi
+  echo "Secrets file: $SECRETS_FILE"
+
+Use $SECRETS_FILE for all read/write operations in subsequent steps.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1: CHECK FOR EXISTING GITHUB TOKEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Check $SECRETS_FILE for GITHUB_TOKEN or GH_TOKEN. Also check for
+   GITHUB_USERNAME.
 
 2. If both token and username exist, skip to Step 5 (Verify Everything Works).
 
-3. If token exists but no username, extract username via:
+3. If token exists but no username, extract via:
    curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
      "https://api.github.com/user" | jq -r '.login'
-   If successful, skip to Step 4 (Store the Token and Username).
+   If successful, skip to Step 4 (Store Credentials).
 
-4. If no token found, ask the user:
-   "Do you already have a GitHub account? If yes, what is your username?
-    Do you have a Personal Access Token (PAT) with full permissions?"
-
-5. If user has an account and token: skip to Step 4.
-   If user has an account but no token: skip to Step 3.
-   If user has no account: proceed to Step 2.
+4. If no token found:
+   - Request the token from the user once (see Step 3).
+   - While waiting for the token, proceed immediately with all non-token
+     setup tasks: git config, credential helper, jq/git dependency checks.
+   - Mark token-dependent steps as PENDING and complete them when the
+     token is received.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 2: CREATE GITHUB ACCOUNT
+STEP 2: CREATE GITHUB ACCOUNT (if the user has none)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. Navigate to https://github.com using browser automation.
+If user does not have a GitHub account:
 
-2. Click "Sign up".
+1. Direct them to https://github.com and instruct them to click "Sign up".
 
-3. Enter user's email address when prompted. Request email from user if
-   not already known. Store it for git config in Step 3.
+2. Ask for their intended email address and store it for git config (Step 3).
 
-4. Create a strong password when prompted. Request from user or generate one.
+3. Instruct them to complete the signup form (email, password, username,
+   verification puzzle).
 
-5. Enter a professional username when prompted. Request from user if no
-   preference.
+4. Instruct them to check their inbox and click the GitHub verification email.
 
-6. Complete the verification puzzle.
-
-7. Instruct user to check their email inbox for GitHub verification email
-   and click the verification link.
-
-8. Verify the dashboard loads after email verification.
+5. Confirm they can see the GitHub dashboard before proceeding.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STEP 3: CREATE A PERSONAL ACCESS TOKEN (PAT)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. Navigate to https://github.com/settings/tokens using browser automation.
+Instruct the user to:
 
-2. Click "Generate new token", then click "Generate new token (classic)".
+1. Go to: https://github.com/settings/tokens
 
-3. Enter "OpenClaw Agent" in the Note field.
+2. Click "Generate new token" then "Generate new token (classic)".
 
-4. Select "No expiration" for Expiration.
+3. Fill in:
+   - Note: OpenClaw Agent
+   - Expiration: 90 days (recommended - rotate when expired)
 
-5. Check ALL of these permission boxes:
-   - repo
-   - workflow
-   - write:packages
-   - delete:packages
-   - admin:org
-   - admin:public_key
-   - admin:repo_hook
-   - admin:org_hook
-   - gist
-   - notifications
-   - user
-   - delete_repo
-   - write:discussion
-   - admin:enterprise
-   - audit_log
-   - codespace
-   - copilot
-   - project
-   - admin:gpg_key
-   - admin:ssh_signing_key
+4. Check these permission scopes (minimum required):
+   - repo            (full repository access)
+   - read:org        (read org and team membership)
+   - workflow        (update GitHub Actions workflows)
 
-6. Click "Generate token".
+   Only add additional scopes if a specific feature requires them.
+   Over-permissioned tokens are a security risk.
 
-7. Retrieve the generated token from the page (starts with "ghp_"). Store
-   it immediately - it is only displayed once.
+5. Click "Generate token" at the bottom.
 
-8. If the page is closed before copying, navigate back to the tokens page,
-   delete that token, and repeat this step.
+6. IMPORTANT: Copy the token immediately. It starts with "ghp_" and is
+   shown only once. If the page is closed before copying, that token must
+   be deleted and a new one created.
+
+7. Paste the token here.
+
+NON-BLOCKING: While waiting for the user to create the token, proceed with
+Step 4 (git config, credential helper). Mark token storage as PENDING.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 4: CONFIGURE GIT AND STORE CREDENTIALS
+STEP 4: CONFIGURE GIT AND CREDENTIAL HELPER
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. Ask the user: "What name should appear on your code commits?" (usually
-   their full name).
+These steps do NOT require the token. Execute them immediately.
 
-2. Run:
+1. Ask the user: "What name should appear on your code commits?"
+   (Typically their full name.)
+
+   Run:
    git config --global user.name "USER_PROVIDED_NAME"
 
-3. Ask the user: "What email should be associated with your commits?" (use
-   the same email as their GitHub account).
+2. Ask the user: "What email should be associated with your commits?"
+   (Use the same email as their GitHub account.)
 
-4. Run:
+   Run:
    git config --global user.email "USER_PROVIDED_EMAIL"
 
-5. Run:
+3. Configure credential helper and default branch:
    git config --global credential.helper store
    git config --global init.defaultBranch main
 
-6. Save to secrets.env file (or ~/clawd/secrets/.env):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 5: STORE TOKEN AND USERNAME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Once the token is received:
+
+1. Retrieve the GitHub username via API:
+   curl -s -H "Authorization: Bearer <TOKEN>" \
+     "https://api.github.com/user" | jq -r '.login'
+
+2. Write to $SECRETS_FILE:
    GITHUB_TOKEN=<retrieved-token>
    GITHUB_USERNAME=<github-username>
 
-7. Update AGENTS.md - add this section:
-   ## GitHub
-   - Token stored in secrets.env as GITHUB_TOKEN
-   - Username: <github-username>
-   - All scopes enabled for full access
-   - Used for: Version control, backups, deployments
+3. Verify both lines are present:
+   grep "GITHUB_TOKEN\|GITHUB_USERNAME" "$SECRETS_FILE"
 
-   ### Git Rules
-   - Commit after completing any logical unit of work
-   - Commit before making risky changes
-   - Push at the end of every work session
-   - NEVER commit secrets or tokens
-
-8. Update TOOLS.md - add this section:
-   ## Git and GitHub
-   - Token: $GITHUB_TOKEN
-   - Username: $GITHUB_USERNAME
-   - API: https://api.github.com
-
-   Common commands:
-   - git status        (check what has changed)
-   - git add .         (prepare all changes for saving)
-   - git commit -m ""  (save changes with a message)
-   - git push          (upload changes to GitHub)
-   - git pull          (download latest changes from GitHub)
+4. Export to current shell:
+   export GITHUB_TOKEN=<retrieved-token>
+   export GITHUB_USERNAME=<github-username>
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STEP 5: VERIFY EVERYTHING WORKS
+STEP 6: UPDATE CORE DOCUMENTATION FILES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. Run:
-   curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-     "https://api.github.com/user" | jq '.login'
+Follow CORE_UPDATES.md for exact text to add. Update:
+- AGENTS.md - lean GitHub section + file path reference
+- TOOLS.md - lean Git/GitHub commands + file path reference
+- MEMORY.md - setup timestamp + file path reference
 
-2. Verify output matches the expected GitHub username.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 7: DETERMINISTIC VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-3. If error occurs, check:
-   - Token saved correctly in secrets.env
-   - Token starts with "ghp_"
-   - Token has not been revoked or deleted from GitHub
+Run each check and confirm the expected output exactly.
+
+CHECK 1: Git configuration
+  git config --list | grep -E "user\.|credential\.|init\."
+
+  Expected output (all four lines must be present):
+  user.name=<the name provided by user>
+  user.email=<the email provided by user>
+  credential.helper=store
+  init.defaultbranch=main
+
+CHECK 2: Credential helper
+  git config --global credential.helper
+
+  Expected output:
+  store
+
+CHECK 3: GitHub API test
+  curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+    "https://api.github.com/user" | jq -r '.login'
+
+  Expected output:
+  <the user's GitHub username as a plain string, no quotes, no null>
+
+  If output is "null" or an error message: the token is invalid.
+  Delete it from GitHub, create a new one, and repeat Step 3.
+
+CHECK 4 (if gh CLI is available): GitHub CLI authentication
+  gh auth status
+
+  Expected output includes:
+  Logged in to github.com as <username>
+  Token scopes: repo, read:org, workflow (minimum)
+
+ALL FOUR CHECKS MUST PASS before declaring setup complete.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SETUP CHECKLIST
@@ -287,19 +311,25 @@ SETUP CHECKLIST
 
 Before telling the user that setup is complete, verify ALL of these:
 
-[ ] GitHub account created (or confirmed existing)
-[ ] Personal Access Token created with all scopes
-[ ] Token saved to secrets.env as GITHUB_TOKEN
-[ ] Username saved to secrets.env as GITHUB_USERNAME
-[ ] Git user.name configured
-[ ] Git user.email configured
-[ ] Git credential.helper set to store
-[ ] Git default branch set to main
-[ ] AGENTS.md updated with GitHub section
-[ ] TOOLS.md updated with Git/GitHub section
-[ ] Verification test passed - can see username via API
+[ ] Secrets file location determined ($SECRETS_FILE)
+[ ] GitHub account confirmed (existing or created)
+[ ] PAT created with at minimum: repo, read:org, workflow scopes
+[ ] PAT expiration set to 90 days
+[ ] Token saved to $SECRETS_FILE as GITHUB_TOKEN
+[ ] Username saved to $SECRETS_FILE as GITHUB_USERNAME
+[ ] git config user.name set
+[ ] git config user.email set
+[ ] git config credential.helper set to store
+[ ] git config init.defaultBranch set to main
+[ ] AGENTS.md updated
+[ ] TOOLS.md updated
+[ ] MEMORY.md updated
+[ ] CHECK 1: git config --list shows all four expected values
+[ ] CHECK 2: credential.helper returns "store"
+[ ] CHECK 3: API call returns the correct username (not null)
+[ ] CHECK 4: gh auth status (if gh CLI available)
 
-DO NOT tell the user setup is complete until the verification test passes.
+DO NOT tell the user setup is complete until the verification checks pass.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 POST-SETUP CAPABILITIES
@@ -307,5 +337,4 @@ POST-SETUP CAPABILITIES
 
 Tell the user:
 "GitHub is all set up! I can now back up your code, track changes, and
-deploy websites for you. Would you like me to back up any projects
-right now?"
+deploy websites for you. Would you like me to back up any projects now?"

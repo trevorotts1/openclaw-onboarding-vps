@@ -29,7 +29,7 @@ Do NOT claim the skill is installed until CORE_UPDATES.md has been applied.
 ## Bestselling Book to Coaching Framework and AI Leadership Guidance
 
 **Version:** 1.0.0
-**Owner:** BlackCEO / Trevor Otts
+**Owner:** [Your Name / Organization]
 **Skill folder:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/`
 **Output destination:** Auto-detected master files folder (see INSTALL.md)
 

@@ -392,7 +392,7 @@ openclaw-master-files/
 
 Naming is not optional styling. It is the routing logic. Embedded in the name of everything is its purpose. If you name something outside of its purpose, you will cause it to be misunderstood and misused.
 
-> 📣 **Trevor Says**
+> 📣 **Operator Note**
 > "Embedded in the name of everything is its purpose. If you name something outside of its purpose, you will first cause that thing to be misunderstood and as a result you will cause it to be misused."
 
 ### The Numbering System
@@ -1347,4 +1347,4 @@ Build it once. Build it right. Everything else scales from here.
 ---
 
 *The AI Workforce Blueprint*
-*By Trevor Otts, BlackCEO School of AI*
+* School of AI*

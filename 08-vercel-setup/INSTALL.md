@@ -1,9 +1,3 @@
-## 🔴 API-ONLY EXECUTION LOCK (SOVEREIGN)
-- For this onboarding package, do NOT use service CLIs for GitHub, Vercel, or Context7.
-- Do NOT use `gh`, `vercel`, or any Context7 CLI command for setup/auth.
-- Use API-driven setup and browser-based account/token creation flows only.
-- The only onboarding skill allowed to rely on CLI-specific service commands is Superdesign.
-
 ╔══════════════════════════════════════════════════════════════╗
   MANDATORY TYP CHECK - READ THIS BEFORE ANYTHING ELSE
   DO NOT SKIP. DO NOT PROCEED UNTIL THIS CHECK IS COMPLETE.
@@ -80,7 +74,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -96,7 +90,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -124,7 +118,8 @@ VERCEL SETUP - AGENT EXECUTION GUIDE
 ══════════════════════════════════════════════════════════════════
 
 This guide enables an AI agent to autonomously set up Vercel account access,
-generate API tokens, and configure OpenClaw for website deployment.
+generate API tokens, install the Vercel CLI, and configure OpenClaw for
+website deployment.
 
 Vercel is a website hosting service where the agent deploys (publishes)
 websites so they are live on the internet.
@@ -133,189 +128,169 @@ websites so they are live on the internet.
 AGENT EXECUTION FLOW
 ══════════════════════════════════════════════════════════════════
 
+STEP 0: DEPENDENCY CHECK
+
+Agent action - run before anything else:
+
+1. Check that jq is available:
+   if ! command -v jq &>/dev/null; then
+     echo "Installing jq..."
+     brew install jq 2>/dev/null || sudo apt-get install -y jq 2>/dev/null
+   fi
+
+2. Check that Node.js and npm are available:
+   node --version && npm --version
+   - If not found: instruct user to install Node.js from https://nodejs.org
+     and halt until confirmed.
+
+3. Check that curl is available:
+   curl --version
+   - If not found: install via system package manager.
+
 STEP 1: CHECK FOR EXISTING VERCEL ACCOUNT AND TOKEN
 
 Agent action:
-1. Check environment variables for existing VERCEL_TOKEN:
-   - Read ~/.openclaw/openclaw.json for VERCEL_TOKEN
-   - Read ~/clawd/secrets/.env for VERCEL_TOKEN
-   - Read $VERCEL_TOKEN environment variable
+1. Check environment variables for existing VERCEL_TOKEN across all known
+   secrets locations:
 
-2. If VERCEL_TOKEN found and valid:
+   SECRETS_FILE=""
+   for f in ~/clawd/secrets/.env ~/.openclaw/.env ~/.env ~/secrets/.env; do
+     if [ -f "$f" ]; then SECRETS_FILE="$f"; break; fi
+   done
+
+   Also check: ~/.openclaw/openclaw.json and the $VERCEL_TOKEN env var.
+
+2. If VERCEL_TOKEN found:
    - Verify token via API call:
      curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-       "https://api.vercel.com/v2/user" | jq '.user.username'
-   - If successful, report: "Vercel token found and verified. Skipping setup."
+       "https://api.vercel.com/v2/user" | jq -r '.user.username'
+   - If the username is returned (not null/error), report:
+     "Vercel token found and verified. Username: <username>. Skipping setup."
    - HALT execution. Setup complete.
 
-3. If VERCEL_TOKEN not found or invalid:
-   - Proceed to Step 2
+3. If VERCEL_TOKEN not found or API call fails:
+   - Proceed to Step 2.
 
-STEP 2: REQUEST VERCEL ACCOUNT STATUS FROM USER
-
-Agent action:
-1. Query user: "Do you already have a Vercel account?"
-   - If YES: Proceed to Step 3A (Existing Account)
-   - If NO: Proceed to Step 3B (New Account)
-
-STEP 3A: EXISTING VERCEL ACCOUNT FLOW
+STEP 2: INSTALL VERCEL CLI
 
 Agent action:
-1. Query user: "Are you currently logged into Vercel in your browser?"
+1. Install the Vercel CLI globally:
+   npm i -g vercel
 
-2. If NO:
-   - Instruct user: "Please open https://vercel.com in your browser and log in"
-   - Wait for user confirmation: "I have logged in"
+2. If permission error:
+   sudo npm i -g vercel
 
-3. If YES or after user confirms login:
-   - Proceed to Step 4 (API Token Creation)
+3. Verify:
+   vercel --version
 
-STEP 3B: NEW VERCEL ACCOUNT FLOW
+4. If installation fails, report the error and halt. CLI is required.
+
+STEP 3: GUIDE USER TO CREATE VERCEL ACCOUNT (if needed)
 
 Agent action:
-1. Open browser to https://vercel.com/signup
+1. Instruct the user:
+   "To continue, you need a Vercel account. If you do not have one yet,
+    please go to https://vercel.com/signup and create one now.
+    Recommended: click 'Continue with GitHub' to link your repositories.
+    Once you see the Vercel dashboard, you are ready for the next step."
 
-2. Instruct user:
-   "I am opening Vercel signup. You will see options to sign up with GitHub,
-    GitLab, Bitbucket, or Email. Choose the option that works best for you.
-    If you have a GitHub account, use 'Continue with GitHub' (recommended).
-    Otherwise, use 'Continue with Email'. Complete the signup process and
-    confirm when you reach the Vercel dashboard."
-
-3. Wait for user confirmation: "I have completed signup and see the dashboard"
-
-4. Proceed to Step 4 (API Token Creation)
+2. Do not wait for a conversational reply. Proceed directly to Step 4
+   (token creation). The user will complete account creation in parallel.
 
 STEP 4: CREATE VERCEL API TOKEN
 
 Agent action:
 1. Instruct user:
-   "I will now guide you to create an API token. Open this URL in your browser:
-    https://vercel.com/account/tokens
-    
-    You should see a 'Create' or 'Create Token' button. Click it.
-    
-    Fill in these settings:
+   "Go to: https://vercel.com/account/tokens
+
+    Click 'Create' or 'Create Token' and fill in:
     - Token Name: OpenClaw Agent
     - Scope: Full Account
     - Expiration: No Expiration
-    
-    Click 'Create Token'. The token will appear once - copy it immediately."
 
-2. Query user: "Please paste the API token you just created"
+    Click 'Create Token'. The token will appear once only - copy it
+    immediately and paste it here."
 
-3. Receive token from user input
+2. Receive token from user input.
 
-4. Validate token format (should be ~24 character alphanumeric string):
-   - If invalid format: "Token format appears incorrect. Please verify and try again."
-   - Return to Step 4, query 2
-
-5. Verify token via API call:
+3. Validate the token by calling the API (do NOT rely on character count
+   or format guessing):
    curl -s -H "Authorization: Bearer <TOKEN>" \
-     "https://api.vercel.com/v2/user" | jq '.user.username'
+     "https://api.vercel.com/v2/user" | jq -r '.user.username'
 
-6. If verification fails:
-   - Report: "Token verification failed. Please check the token and try again."
-   - Return to Step 4, query 2
+4. If the API returns a username (non-null, no error):
+   - Token is valid. Proceed to Step 5.
 
-7. If verification succeeds:
-   - Capture username from API response
-   - Proceed to Step 5 (Token Storage)
+5. If the API returns an error or null:
+   - Report: "Token validation failed. The token may have been copied
+     incorrectly. Please return to https://vercel.com/account/tokens,
+     delete that token, create a new one, and paste it here."
+   - Return to Step 4, query 2.
 
 STEP 5: STORE TOKEN IN ENVIRONMENT
 
 Agent action:
-1. Check if secrets.env exists at ~/clawd/secrets/.env
-   - If not found: Create file at ~/clawd/secrets/.env
+1. Locate or create secrets file using multi-env check:
+   SECRETS_FILE=""
+   for f in ~/clawd/secrets/.env ~/.openclaw/.env ~/.env ~/secrets/.env; do
+     if [ -f "$f" ]; then SECRETS_FILE="$f"; break; fi
+   done
+   if [ -z "$SECRETS_FILE" ]; then
+     SECRETS_FILE=~/clawd/secrets/.env
+     mkdir -p ~/clawd/secrets
+   fi
 
-2. Add or update line in secrets.env:
+2. Add or update the token line:
    VERCEL_TOKEN=<TOKEN>
 
-3. Verify file was written correctly:
-   - Read file and confirm VERCEL_TOKEN line present
+3. Verify the line was written:
+   grep "VERCEL_TOKEN" "$SECRETS_FILE"
 
-4. Export token to current shell session:
+4. Export to current shell session:
    export VERCEL_TOKEN=<TOKEN>
-
-5. Proceed to Step 6 (Core File Updates)
 
 STEP 6: UPDATE CORE DOCUMENTATION FILES
 
-Agent action:
-1. Update AGENTS.md:
-   - Add section:
-     ## Vercel
-     - Token stored in secrets.env as VERCEL_TOKEN
-     - Used for: Website deployments, hosting, serverless functions
-     - Dashboard: https://vercel.com/dashboard
+Agent action - follow CORE_UPDATES.md for exact text:
+1. Update AGENTS.md with Vercel section (lean summary + path reference).
+2. Update TOOLS.md with Vercel CLI and API section.
+3. Update MEMORY.md with setup timestamp.
 
-2. Update TOOLS.md:
-   - Add section:
-     ## Vercel CLI and API
-     - Token: $VERCEL_TOKEN (in secrets.env)
-     - CLI: vercel (install with: npm i -g vercel)
-     - API Base: https://api.vercel.com
-     - Deploy: vercel --prod
-     - List projects: vercel ls
-
-3. Verify both files were updated correctly
-
-4. Proceed to Step 7 (Optional CLI Installation)
-
-STEP 7: OPTIONAL - INSTALL VERCEL CLI
+STEP 7: FINAL VERIFICATION
 
 Agent action:
-1. Query user: "Would you like me to install the Vercel CLI? (yes/no)"
-   - If NO: Skip to Step 8 (Verification)
-   - If YES: Proceed with installation
-
-2. Execute terminal command:
-   npm i -g vercel
-
-3. If permission error occurs:
-   - Execute with sudo:
-     sudo npm i -g vercel
-
-4. Verify installation:
-   vercel --version
-
-5. If version output received:
-   - Report: "Vercel CLI installed successfully: <version>"
-   - Proceed to Step 8
-
-6. If installation fails:
-   - Report error to user
-   - Proceed to Step 8 (Verification will still work via API)
-
-STEP 8: FINAL VERIFICATION
-
-Agent action:
-1. Execute verification API call:
+1. Run the verification API call:
    curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-     "https://api.vercel.com/v2/user" | jq '.user.username'
+     "https://api.vercel.com/v2/user" | jq -r '.user.username'
 
-2. If successful:
-   - Capture username from response
-   - Report: "✅ Vercel setup complete! Username: <username>"
-   - Proceed to Step 9 (Completion Report)
+2. Expected output: the user's Vercel username as a plain string.
+   Example: "your-vercel-username"
 
-3. If verification fails:
-   - Report: "❌ Verification failed. Token may be invalid or expired."
-   - Query user: "Would you like to create a new token and try again? (yes/no)"
-   - If YES: Return to Step 4
-   - If NO: Report setup incomplete and halt
+3. Also verify CLI authentication:
+   vercel whoami
 
-STEP 9: COMPLETION REPORT
+   Expected output: the same username.
+
+4. If both checks pass:
+   - Report: "Vercel setup complete! Username: <username>"
+   - Proceed to Step 8.
+
+5. If either check fails:
+   - Report the specific error and retry from Step 4.
+
+STEP 8: COMPLETION REPORT
 
 Agent action:
 1. Generate completion checklist:
-   ✅ Vercel account verified (or created)
-   ✅ API token created with Full Account scope
-   ✅ Token saved to secrets.env as VERCEL_TOKEN
-   ✅ AGENTS.md updated with Vercel section
-   ✅ TOOLS.md updated with Vercel section
-   ✅ Vercel CLI installed (if requested)
-   ✅ Verification test passed - username: <username>
+   [x] jq and Node.js/npm dependencies verified
+   [x] Vercel CLI installed and verified
+   [x] Vercel API token created with Full Account scope
+   [x] Token validated via API (not format-guessing)
+   [x] Token saved to secrets file
+   [x] AGENTS.md updated
+   [x] TOOLS.md updated
+   [x] MEMORY.md updated
+   [x] Final verification passed - username: <username>
 
 2. Report to user:
    "Vercel setup is complete! I can now deploy websites for you anytime.
@@ -329,28 +304,31 @@ AGENT EXECUTION CHECKLIST
 
 Before reporting completion, agent must verify ALL items:
 
-[ ] Environment checked for existing VERCEL_TOKEN
-[ ] User account status confirmed (existing or new)
-[ ] Vercel account access verified (logged in or created)
+[ ] jq installed and available
+[ ] Node.js and npm verified
+[ ] Vercel CLI installed (vercel --version returns output)
+[ ] Existing VERCEL_TOKEN checked across all secrets locations
+[ ] User directed to account creation page (if needed)
 [ ] API token created with Full Account scope
-[ ] Token validated via API call
-[ ] Token saved to secrets.env as VERCEL_TOKEN
+[ ] Token validated via API call (not character count)
+[ ] Token saved to secrets file
 [ ] AGENTS.md updated with Vercel section
 [ ] TOOLS.md updated with Vercel section
-[ ] Vercel CLI installed (if user requested)
-[ ] Final verification test passed - username retrieved successfully
+[ ] MEMORY.md updated
+[ ] Final API verification passed - username retrieved
+[ ] CLI verification passed - vercel whoami returns username
 
-DO NOT report setup complete until verification test passes and all checklist items are confirmed.
+DO NOT report setup complete until both verification checks pass and
+all checklist items are confirmed.
 
 ══════════════════════════════════════════════════════════════════
 AGENT CAPABILITIES AFTER SETUP
 ══════════════════════════════════════════════════════════════════
 
 Once Vercel setup is complete, agent can autonomously:
-- Deploy websites to Vercel (make them live on the internet)
-- Create new projects via API
-- Manage custom domains (like www.yourbusiness.com)
-- Set environment variables (configuration for websites)
-- Create preview deployments (test websites before going live)
+- Deploy websites to Vercel using the CLI (vercel --prod)
+- Create and manage projects via CLI and API
+- Manage custom domains
+- Set environment variables (vercel env add)
+- Create preview deployments for testing
 - Query project status and deployment history
-- Manage team members and permissions (if Full Account scope)

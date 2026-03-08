@@ -241,16 +241,33 @@ mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/personas
 This skill requires three model connections. Check each one:
 
 ### Kimi K2.5 (Phase 1)
-Check OpenClaw config for `moonshot` provider with `MOONSHOT_API_KEY`:
+Check for `MOONSHOT_API_KEY` across all known env file locations:
 ```bash
-grep "MOONSHOT_API_KEY" ~/clawd/secrets/.env
+_find_key() {
+  local key_name="$1"
+  for env_file in \
+    "$HOME/clawd/secrets/.env" \
+    "$HOME/.openclaw/.env" \
+    "$HOME/.config/openclaw/.env"; do
+    if [ -f "$env_file" ]; then
+      val=$(grep "^${key_name}=" "$env_file" 2>/dev/null | cut -d= -f2- | tr -d '"')
+      if [ -n "$val" ]; then
+        echo "Found $key_name in $env_file"
+        return 0
+      fi
+    fi
+  done
+  echo "$key_name not found in any env file"
+  return 1
+}
+_find_key "MOONSHOT_API_KEY"
 ```
-Should return a key. If missing, add your Moonshot API key to `~/clawd/secrets/.env`.
+If missing, add your Moonshot API key to `~/clawd/secrets/.env`.
 
 ### DeepSeek V3.2-Speciale (Phase 2)
-Routes via OpenRouter. Check:
+Routes via OpenRouter. Check across all known env files:
 ```bash
-grep "OPENROUTER_API_KEY" ~/clawd/secrets/.env
+_find_key "OPENROUTER_API_KEY"
 ```
 
 ### GPT-5.3 Codex (Phase 3)
@@ -323,12 +340,25 @@ Run this command now - the agent executes it autonomously:
 bash ~/.openclaw/skills/scripts/update-skills.sh --setup-cron
 ```
 
-If the setup script does not exist yet, run:
+If the setup script does not exist yet, check the onboarding package:
 ```bash
 mkdir -p ~/.openclaw/skills/scripts
-curl -s https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/setup-weekly-update.sh -o ~/.openclaw/skills/scripts/setup-weekly-update.sh
-chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
-bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
+SETUP_SCRIPT=""
+for candidate in \
+  "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
+  "$HOME/.openclaw/skills/scripts/setup-weekly-update.sh"; do
+  if [ -f "$candidate" ]; then
+    SETUP_SCRIPT="$candidate"
+    break
+  fi
+done
+if [ -n "$SETUP_SCRIPT" ]; then
+  cp "$SETUP_SCRIPT" ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
+else
+  echo "Setup script not found in onboarding package. Skip and note in completion report."
+fi
 ```
 
 **What this does:** Installs a cron job that runs every Sunday at 2:00 AM. Checks GitHub for new skill versions, downloads updates, applies them to installed skills only, sends a Telegram notification with what changed.
@@ -337,7 +367,7 @@ bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
 ```bash
 crontab -l | grep update-skills
 ```
-Should show: `0 2 * * 0 /Users/[you]/.openclaw/skills/scripts/update-skills.sh`
+Should show: `0 2 * * 0 $HOME/.openclaw/skills/scripts/update-skills.sh`
 
 ---
 

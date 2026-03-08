@@ -78,7 +78,59 @@ TYP must be completed first.
    `mkdir -p ~/.openclaw/skills/self-improving-agent`
 2. Copy upstream skill files into target:
    `cp -R ./upstream-original/. ~/.openclaw/skills/self-improving-agent/`
-3. Verify:
+3. Verify files exist:
    - `~/.openclaw/skills/self-improving-agent/SKILL.md` exists
 4. Apply only relevant core file updates from CORE_UPDATES.md
 5. Do not modify non-relevant core files
+
+## Verification - Smoke Test
+
+After install, run this smoke test to confirm the skill is functional:
+
+```bash
+echo "--- Self-Improving Agent Smoke Test ---"
+
+# 1. Check SKILL.md is present and non-empty
+SKILL_FILE=~/.openclaw/skills/self-improving-agent/SKILL.md
+if [ -s "$SKILL_FILE" ]; then
+  echo "PASS: SKILL.md present ($(wc -c < "$SKILL_FILE" | tr -d ' ') bytes)"
+else
+  echo "FAIL: SKILL.md missing or empty at $SKILL_FILE"
+fi
+
+# 2. Check learnings directory is writable
+LEARNINGS_DIR=~/.openclaw/skills/self-improving-agent/.learnings
+mkdir -p "$LEARNINGS_DIR"
+TEST_FILE="$LEARNINGS_DIR/.smoke-test-$(date +%s)"
+if touch "$TEST_FILE" 2>/dev/null; then
+  rm -f "$TEST_FILE"
+  echo "PASS: .learnings/ directory is writable"
+else
+  echo "FAIL: Cannot write to $LEARNINGS_DIR"
+fi
+
+# 3. Confirm skill folder contains expected files
+REQUIRED_FILES="SKILL.md INSTALL.md CORE_UPDATES.md"
+for f in $REQUIRED_FILES; do
+  if [ -f "$HOME/.openclaw/skills/self-improving-agent/$f" ]; then
+    echo "PASS: $f present"
+  else
+    echo "FAIL: $f missing"
+  fi
+done
+
+echo "--- Smoke test complete ---"
+```
+
+**Expected output (all lines should show PASS):**
+```
+--- Self-Improving Agent Smoke Test ---
+PASS: SKILL.md present (XXXX bytes)
+PASS: .learnings/ directory is writable
+PASS: SKILL.md present
+PASS: INSTALL.md present
+PASS: CORE_UPDATES.md present
+--- Smoke test complete ---
+```
+
+If any line shows FAIL, re-run the copy command in step 2 and recheck the path.

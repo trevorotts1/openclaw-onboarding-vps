@@ -22,14 +22,17 @@ IF TYP TRAINING CONFIRMED:
 Proceed to agent execution steps below. Follow TYP file storage structure.
 
 IF TYP TRAINING NOT FOUND:
-HALT EXECUTION. Do not proceed. Request TYP training from user with message:
+Proceed with caution using default TYP rules:
+- Save full documentation to ~/Downloads/OpenClaw Master Files/ (create if needed)
+- Add only brief summaries and file path references to core .md files
+- Never paste full content into AGENTS.md, TOOLS.md, or MEMORY.md
 
-  "I have not been taught the Teach Yourself Protocol yet. I cannot safely
-   execute these instructions until I have been taught TYP first.
-   Please share the Teach Yourself Protocol documentation with me before we proceed.
-   Without TYP, I will bloat your core .md files and waste your tokens."
+Optionally inform the user:
+  "TYP documentation was not found in my core files. Proceeding with
+   standard TYP rules. If you have a TYP document, sharing it will help
+   me follow your specific file storage preferences."
 
-DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
+Continue to the instructions below regardless of TYP status.
 
 CONFLICT RULE (applies to all skill installs):
 If this skill's SKILL.md, CORE_UPDATES.md, or any other file in this skill
@@ -136,10 +139,12 @@ STEP 1: CHECK FOR EXISTING CONTEXT7 ACCOUNT AND API KEY
 
 Agent must execute:
 
-1a. Check environment for existing Context7 API key:
-    - Read $CONTEXT7_API_KEY from environment
-    - If key exists and starts with "ctx7sk-": Skip to Step 4 (Verify Key)
-    - If key does not exist: Proceed to 1b
+1a. Check for existing Context7 API key in this order:
+    - Check $CONTEXT7_API_KEY environment variable
+    - If not set, read ~/clawd/secrets/.env and look for CONTEXT7_API_KEY
+    - If not found there, read ~/.openclaw/.env and look for CONTEXT7_API_KEY
+    - If key found in any location and starts with "ctx7sk-": Skip to Step 4 (Verify Key)
+    - If key not found anywhere: Proceed to 1b
 
 1b. Request Context7 API key from user:
     - Ask user: "Do you already have a Context7 account and API key?"
@@ -172,13 +177,13 @@ Agent must execute:
     - Wait for email input field to appear
     - Request email address from user
     - Type email into field
-    - Request password from user
-    - Type password into field
-    - Click "Sign Up" or "Create Account" button
+    - STOP - do NOT request or type the password. Instruct user:
+      "Please type your password and click Sign Up. I will wait."
+    - Wait for user to confirm they have completed signup
     - Wait for verification email prompt
     - Request user to check inbox and click verification link
     - Wait for user to confirm verification complete
-    - Request user to log in to Context7
+    - Instruct user to log in to Context7 (user enters credentials directly)
     - Wait for dashboard to load
 
 2e. Verify Context7 dashboard is visible:
@@ -214,7 +219,8 @@ Agent must execute:
 
 4a. Verify key format:
     - Confirm key starts with "ctx7sk-"
-    - Confirm key length is approximately 36 characters
+    - Confirm key matches UUID pattern: ctx7sk-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+      (prefix "ctx7sk-" followed by 8-4-4-4-12 hex character groups, total ~43 characters)
     - If format is incorrect: Request user to verify key and try again
 
 4b. Store API key in environment:
@@ -262,23 +268,28 @@ Agent must execute:
 
     - Save MEMORY.md
 
-STEP 5: VERIFY CONTEXT7 API KEY WORKS (OPTIONAL)
+STEP 5: VERIFY CONTEXT7 API KEY WORKS (MANDATORY)
 
-Agent may execute optional verification:
+Agent must execute this step. Do not skip.
 
-5a. Execute verification command:
+5a. Reload environment so newly written key is available:
+    - Run: source ~/clawd/secrets/.env 2>/dev/null || source ~/.openclaw/.env 2>/dev/null || true
+
+5b. Execute verification command:
     - Run: curl -s -H "Authorization: Bearer $CONTEXT7_API_KEY" \
              "https://api.context7.com/v1/search?q=react" | jq '.results[0].name'
     - Wait for response
 
-5b. Verify response:
-    - If response shows library name (e.g., "facebook/react"): Success
-    - If response shows error: Troubleshoot:
-      * Verify API key was saved correctly to secrets.env
-      * Verify key starts with "ctx7sk-"
-      * Verify internet connection is working
-      * Request user to verify key is correct
-      * Try verification again
+5c. Verify response:
+    - Expected success: Response shows a library name in quotes, e.g. "facebook/react"
+      This confirms the key is valid and the API is reachable.
+    - If response shows null, empty, or an error object: TROUBLESHOOT before proceeding:
+      * Confirm API key was saved correctly to ~/clawd/secrets/.env
+      * Confirm key starts with "ctx7sk-"
+      * Confirm internet connection is working
+      * Re-run source command from 5a and retry verification
+      * If still failing, ask user to verify the key is correct in their Context7 dashboard
+    - Do NOT proceed to Step 6 until verification passes.
 
 STEP 6: REPORT COMPLETION
 
@@ -292,7 +303,7 @@ Agent must execute:
     [ ] AGENTS.md updated with Context7 section
     [ ] TOOLS.md updated with Context7 section
     [ ] MEMORY.md updated with Context7 reminder
-    [ ] Verification test passed (if executed)
+    [ ] Verification test passed (MANDATORY - must show library name in response)
 
 6b. Verify all checklist items complete:
     - Go through each item

@@ -1,7 +1,7 @@
 The Teach Yourself Protocol
 OpenClaw Standard Operating Procedure
 Version: 1.1
-Author: Trevor Otts, BlackCEO
+Author: 
 Purpose: A standardized protocol for how OpenClaw agents learn, store, and reference new knowledge without bloating their core workspace files.
 
 1. What Is the Teach Yourself Protocol?
@@ -588,7 +588,7 @@ Core files: USER.md (user preference), TOOLS.md (meeting setup tool reference)
 Priority: HIGH (used whenever scheduling meetings)
 Agent action: 
 Updates USER.md: "Zoom personal meeting ID: trevorszoom.com"
-Updates TOOLS.md meeting section: "Use Trevor's personal Zoom link: trevorszoom.com for all meeting invites"
+Updates TOOLS.md meeting section: "Use your standard Zoom link for all meeting invites"
 Confirms: "Got it. Your Zoom personal meeting ID is trevorszoom.com. Added to USER.md and TOOLS.md. Tagged HIGH priority since I'll use this for every meeting setup."
 Example B: Massive Knowledge - API (Full Layer 1 + 2 + 3)
 User says: "Train yourself on this KIE.ai API documentation" [provides full docs]

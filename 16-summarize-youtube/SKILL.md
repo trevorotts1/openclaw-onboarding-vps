@@ -2,7 +2,7 @@
 name: summarize-youtube
 description: Install and configure summarize CLI for YouTube transcript extraction and summaries. Use when setting up YouTube transcript and summary capabilities in OpenClaw.
 metadata:
-  author: Trevor Otts, BlackCEO
+  
   version: "1.0"
   priority: HIGH
 ---

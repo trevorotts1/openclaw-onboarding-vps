@@ -79,7 +79,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -91,18 +91,18 @@ If a step says do X, do X. Not Y. Not a better version of X. X.
 RULE 3: OPENROUTER CONFIG - ABSOLUTE ZERO TOLERANCE FOR DEVIATIONS
 This is where agents most commonly go off-script. This will not happen.
 
-YOU MAY ONLY ADD OR CHANGE WHAT TREVOR EXPLICITLY TOLD YOU TO ADD OR CHANGE.
+YOU MAY ONLY ADD OR CHANGE WHAT THE USER EXPLICITLY TOLD YOU TO ADD OR CHANGE.
 
 SPECIFICALLY:
 - Do NOT add any model that is not explicitly listed in this document
-- Do NOT remove any model that Trevor did not tell you to remove
-- Do NOT change any temperature, reasoning, or parameter that Trevor did not specify
+- Do NOT remove any model that the user did not tell you to remove
+- Do NOT change any temperature, reasoning, or parameter that the user did not specify
 - Do NOT change any API key - copy it exactly character for character
 - Do NOT reorganize the config structure
 - Do NOT rename any model entry
 - Do NOT add comments or extra fields to the JSON
 - Do NOT "clean up" or "optimize" the config file
-- The config file is Trevor's property. You have ZERO authority to edit anything
+- The config file is the user's property. You have ZERO authority to edit anything
   beyond exactly what this document specifies.
 
 IF ANYTHING IS UNCLEAR: STOP AND ASK. Do not guess. Do not assume.
@@ -113,7 +113,7 @@ Before making any change to ~/.openclaw/openclaw.json:
 1. Run the full backup procedure from the Backup Protocol tab
 2. Verify the backup exists and is not empty
 3. Only then make the change
-If the backup fails, STOP. Do not edit. Tell Trevor.
+If the backup fails, STOP. Do not edit. Tell the user.
 
 RULE 5: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -1238,7 +1238,7 @@ If Validation Fails
 RESTORE THE BACKUP IMMEDIATELY:
 
 
-cp ~/openclaw-backup-configs/openclaw-backup-LATEST.json ~/.openclaw/openclaw.json
+LATEST_BACKUP="$(ls -t ~/openclaw-backup-configs/openclaw-backup-*.json | head -1)" && cp "$LATEST_BACKUP" ~/.openclaw/openclaw.json
 openclaw gateway restart
 
 

@@ -81,7 +81,7 @@ RULE 1: READ EVERYTHING BEFORE YOU TOUCH ANYTHING
 Read this entire document from top to bottom before executing a single step.
 Do not start executing while still reading. Finish reading first. Then start.
 
-RULE 2: DO NOT CHANGE TREVOR'S INTENT
+RULE 2: DO NOT CHANGE THE OPERATOR'S INTENT
 These instructions say exactly what to do. Execute them exactly as written.
 - Do NOT reinterpret steps
 - Do NOT "improve" the instructions
@@ -97,7 +97,7 @@ RULE 3: NEVER MODIFY THESE WITHOUT PERMISSION
 - Model names - use the exact names specified, spelling matters
 - File paths - use the exact paths specified
 If you are unsure whether something should be changed, the answer is NO.
-Ask Trevor first. Do not guess. Do not assume.
+Ask the operator. Do not guess. Do not assume.
 
 RULE 4: BUILD YOUR CHECKLIST BEFORE EXECUTING
 Before you run a single command or make a single change, create a numbered
@@ -166,25 +166,18 @@ STEP 3: GENERATE API KEY
 STEP 4: ADD API KEY TO OPENCLAW
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-14. Check ~/clawd/secrets/.env for KIE_API_KEY. If not found, request from user.
+14. Check ~/clawd/secrets/.env for KIE_API_KEY. If found, skip to Step 6.
+    If not found, request the API key from user.
 
-15. Read ~/.openclaw/openclaw.json. Locate or create the "env" > "vars" section. Add:
+15. Open ~/clawd/secrets/.env (create the file if it does not exist).
+    Add this line at the end:
 
-    "KIE_API_KEY": "<the API key value>"
+    KIE_API_KEY=paste-your-actual-api-key-here
 
-    The result should include:
+    Replace "paste-your-actual-api-key-here" with the actual key value.
+    Save the file.
 
-    {
-      "env": {
-        "vars": {
-          "KIE_API_KEY": "paste-your-actual-api-key-here"
-        }
-      }
-    }
-
-16. Write the updated config back to ~/.openclaw/openclaw.json.
-
-17. Run:
+16. Run:
 
     openclaw gateway restart
 
@@ -202,9 +195,13 @@ STEP 5: SET UP WEBHOOK (OPTIONAL)
 STEP 6: VERIFY SETUP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-TEST 1: Verify API key is loaded.
+TEST 1: Reload environment and verify API key is loaded.
 
-21. Run:
+21. First, reload the environment so the newly written key is available:
+
+    source ~/clawd/secrets/.env 2>/dev/null || source ~/.openclaw/.env 2>/dev/null || true
+
+22. Run:
 
     echo $KIE_API_KEY | head -c 10
 
@@ -213,7 +210,7 @@ TEST 1: Verify API key is loaded.
 
 TEST 2: Check credit balance.
 
-22. Run:
+23. Run:
 
     curl -s -H "Authorization: Bearer $KIE_API_KEY" \
       "https://api.kie.ai/api/v1/chat/credit"
@@ -223,7 +220,7 @@ TEST 2: Check credit balance.
 
 TEST 3: Generate a test image.
 
-23. Run:
+24. Run:
 
     curl -s -X POST "https://api.kie.ai/api/v1/jobs/createTask" \
       -H "Authorization: Bearer $KIE_API_KEY" \
@@ -241,7 +238,7 @@ TEST 3: Generate a test image.
 
 TEST 4: Verify test image completed.
 
-24. Wait 10-15 seconds. Run (replace YOUR_TASK_ID with the taskId from Test 3):
+25. Wait 10-15 seconds. Run (replace YOUR_TASK_ID with the taskId from Test 3):
 
     curl -s "https://api.kie.ai/api/v1/jobs/recordInfo?taskId=YOUR_TASK_ID" \
       -H "Authorization: Bearer $KIE_API_KEY"
@@ -257,7 +254,7 @@ Before telling the user that setup is complete, verify ALL of these:
 [ ] KIE.ai account created
 [ ] Credits added to the account
 [ ] API key generated and copied
-[ ] API key saved to ~/.openclaw/openclaw.json under env.vars.KIE_API_KEY
+[ ] API key saved to ~/clawd/secrets/.env as KIE_API_KEY
 [ ] OpenClaw gateway restarted
 [ ] Test 1 passed - API key shows up in the environment
 [ ] Test 2 passed - credit balance returns successfully
@@ -272,7 +269,7 @@ WHAT TO ADD TO YOUR CORE FILES
 
 [ADD TO AGENTS.md]
 ## KIE.ai - Image and Video Generation
-- API Key stored in openclaw.json as env.vars.KIE_API_KEY
+- API Key stored in ~/clawd/secrets/.env as KIE_API_KEY
 - ALWAYS use KIE.ai for image generation. NEVER use DALL-E 3.
 - Primary image model: nano-banana-pro
 - Primary video model: veo3_fast (VEO 3.1 Fast)
@@ -280,7 +277,7 @@ WHAT TO ADD TO YOUR CORE FILES
 
 [ADD TO TOOLS.md]
 ## KIE.ai API
-- API Key: $KIE_API_KEY
+- API Key: $KIE_API_KEY (in ~/clawd/secrets/.env)
 - Base URL: https://api.kie.ai
 - Image Generation: POST /api/v1/jobs/createTask (model: nano-banana-pro)
 - Video Generation: POST /api/v1/veo/generate

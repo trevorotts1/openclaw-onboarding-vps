@@ -4,26 +4,22 @@ Real examples showing the Google Workspace integration in action, including comm
 
 ---
 
-## Example 1: Quick Setup (Let Your AI Do It)
+## Example 1: Automated Setup (Agent-Driven)
 
-Instead of following all the manual steps, copy this prompt and send it to your AI:
+The agent handles the full setup autonomously. When triggered, it:
 
-```
-Set up Google Workspace integration for me. I need you to:
-1. Use Playwright browser automation with launchPersistentContext and store session data in ~/.openclaw/playwright-data/
-2. Help me create a GCP (Google Cloud Platform) project
-3. Enable the required APIs for Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Forms, Keep, Admin, Analytics, Tag Manager, Search Console, YouTube, Places, and Looker Studio
-4. Create a service account with domain-wide delegation
-5. Generate and download the service account JSON key
-6. Set GOOGLE_SA_KEY_FILE and GOOGLE_IMPERSONATE_USER
-7. Install and configure the GOG skill using the JSON key
-8. Test every service in Section 12
+1. Detects account type: Workspace (service account path) or Gmail (OAuth path)
+2. Uses Playwright with `launchPersistentContext` (session stored at `~/.openclaw/playwright-data/`)
+3. Creates a GCP project
+4. Enables all required APIs (Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Forms, Keep, Admin, Analytics, Tag Manager, Search Console, YouTube, Places, Looker Studio)
+5. Creates a service account with domain-wide delegation (Workspace path)
+   OR creates OAuth Desktop credentials (Gmail path)
+6. Downloads and secures the JSON key or OAuth credentials file
+7. Sets `GOOGLE_SA_KEY_FILE` and `GOOGLE_IMPERSONATE_USER` (Workspace) or `GOG_DEFAULT_ACCOUNT` (Gmail)
+8. Installs and configures the GOG skill
+9. Tests every service
 
-Walk me through each step. Ask me for any information you need.
-My Google Workspace email is: trevor@blackceo.com
-```
-
-Your AI will guide you through each step one at a time.
+The agent pauses only for browser login (first time), missing API keys, or 2FA codes. Everything else executes continuously without interruption.
 
 ---
 
@@ -45,7 +41,7 @@ node google-api.js gmail unread --limit 3 --pretty
       "from": "sarah@company.com",
       "subject": "Q3 Budget Review",
       "date": "2026-02-28T14:15:00Z",
-      "snippet": "Hi Trevor, here are the Q3 numbers..."
+      "snippet": "Hi, here are the Q3 numbers..."
     },
     {
       "id": "19c7b6a2d4e1f3b8",
@@ -167,7 +163,7 @@ node google-api.js contacts search "Pam Perry" --pretty
 **Command line:**
 
 ```bash
-node google-api.js gmail send --to "sarah@company.com" --subject "Meeting Reschedule" --body "Hi Sarah, I need to move our meeting from Tuesday to Wednesday at the same time. Does that work? Thanks, Trevor"
+node google-api.js gmail send --to "sarah@company.com" --subject "Meeting Reschedule" --body "Hi Sarah, I need to move our meeting from Tuesday to Wednesday at the same time. Does that work? Thanks,"
 ```
 
 **Expected output:**
@@ -332,7 +328,7 @@ Here is what a typical conversation looks like after setup:
 
 1. Subject: "Event Venue Options"
    Date: Wednesday at 3:15 PM
-   Preview: "Hi Trevor, I found 3 great venues for the April event..."
+   Preview: "Hi, I found 3 great venues for the April event..."
 
 2. Subject: "RE: Speaker Lineup"
    Date: Monday at 10:42 AM
@@ -348,7 +344,7 @@ From: Pam Perry (pam@company.com)
 Date: Wednesday, February 26, 2026 at 3:15 PM
 Subject: Event Venue Options
 
-Hi Trevor,
+Hi,
 
 I found 3 great venues for the April event:
 
@@ -377,7 +373,7 @@ I cannot access your Gmail. You may need to reconfigure the credentials.
 **Correct approach (self-correction):**
 
 ```
-AI: I got a 401 error using GOG CLI for trevor@blackceo.com.
+AI: I got a 401 error using GOG CLI for user@yourdomain.com.
 That is a Workspace account - I should be using google-api.js,
 not GOG. Let me switch tools and try again.
 

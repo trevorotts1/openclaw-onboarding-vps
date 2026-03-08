@@ -4,7 +4,7 @@ description: >
   Setup for Context7 - a real-time documentation lookup tool that lets your AI
   agent pull current library and API docs instead of guessing from old training data.
 metadata:
-  author: Trevor Otts, BlackCEO
+  
   version: "1.0"
   priority: HIGH
 ---

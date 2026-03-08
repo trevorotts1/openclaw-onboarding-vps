@@ -114,7 +114,7 @@ When finished, give the requester a clear summary:
 
 # BlackCEO Team Management - Agent Installation Protocol
 
-This protocol configures the BlackCEO dispatcher system so the AI agent can serve multiple team members simultaneously through Telegram without message mixing between senders.
+This protocol configures the dispatcher system so the AI agent can serve multiple team members simultaneously through Telegram without message mixing between senders.
 
 ---
 
@@ -128,9 +128,9 @@ Target state: AI agent operates as a dispatcher that assigns each sender a dedic
 
 ## Prerequisites
 
-- All 13 prior OpenClaw skills installed and functional
-- Active Telegram bot connected to OpenClaw
-- Telegram user IDs for each team member (numeric format: 5252140759)
+- All 14 prior OpenClaw skills installed and functional
+- An active Telegram bot connected to OpenClaw
+- Telegram user IDs for each team member (numeric format: e.g., 1234567890)
 - Write access to ~/.openclaw/openclaw.json
 
 ---
@@ -140,19 +140,65 @@ Target state: AI agent operates as a dispatcher that assigns each sender a dedic
 Before starting, create this checklist and confirm completion after each step:
 
 ```
+[ ] Step 0: Team Member Intake (collect all team data before touching config)
 [ ] Step 1: Back up ~/.openclaw/openclaw.json
 [ ] Step 2: Configure sub-agent settings in openclaw.json
 [ ] Step 3: Add Telegram IDs to channels.telegram.allowFrom
-[ ] Step 4: Create WORKFLOW_AUTO.md routing table
-[ ] Step 5: Add team IDs to AGENTS.md
-[ ] Step 6: Add team IDs to TOOLS.md
-[ ] Step 7: Add team IDs to MEMORY.md
-[ ] Step 8: Validate JSON syntax
-[ ] Step 9: Restart OpenClaw gateway
-[ ] Step 10: Verify gateway is running
-[ ] Step 11: Test routing with each team member
-[ ] Step 12: Confirm message isolation between senders
+[ ] Step 4: Generate TEAM_CONFIG.md with collected team data
+[ ] Step 5: Create WORKFLOW_AUTO.md routing table
+[ ] Step 6: Add team IDs to AGENTS.md
+[ ] Step 7: Add team IDs to TOOLS.md
+[ ] Step 8: Add team IDs to MEMORY.md
+[ ] Step 9: Validate JSON syntax
+[ ] Step 10: Restart OpenClaw gateway
+[ ] Step 11: Verify gateway is running
+[ ] Step 12: Test routing with each team member
+[ ] Step 13: Confirm message isolation between senders
 ```
+
+---
+
+## Step 0: Team Member Intake
+
+**Before touching any config file, collect all team data.**
+
+Ask the operator:
+
+```
+"How many team members will use this system? (Enter a number between 2 and 20)"
+```
+
+Then, for EACH team member, ask these four questions:
+
+```
+TEAM MEMBER SETUP
+
+For team member [#]:
+
+1. Name:
+   "What is this person's full name?"
+   [collect from operator]
+
+2. Telegram ID:
+   "What is their Telegram user ID? (This is a number like 1234567890.
+    They can find it by messaging @userinfobot on Telegram.)"
+   [collect from operator]
+
+3. Role:
+   "What is their role or title? (e.g., CEO, Head of Marketing, Operations Manager)"
+   [collect from operator]
+
+4. Type:
+   "Are they a team member who gives instructions to the AI (Worker),
+    or a client who the AI serves (Client)?"
+   [collect from operator - answer: Worker or Client]
+```
+
+Worker label is auto-generated from the first name, lowercase, with "-worker" appended.
+Example: "Alice Johnson" → worker label = "alice-worker"
+Example: "Bob Smith" → worker label = "bob-worker"
+
+Collect all team member data before proceeding to Step 1.
 
 ---
 
@@ -220,34 +266,68 @@ Save file.
 
 ## Step 3: Add Telegram IDs to Allowlist
 
-In the same configuration file, locate the "channels" section. Add each team member's Telegram ID to allowFrom array.
+In the same configuration file, locate the "channels" section. Add each team member's Telegram ID to the allowFrom array using the IDs collected in Step 0.
 
 ```json
 {
   "channels": {
     "telegram": {
       "allowFrom": [
-        "5252140759",
-        "6663821679",
-        "6771245262"
+        "[TEAM_MEMBER_1_ID]",
+        "[TEAM_MEMBER_2_ID]",
+        "[TEAM_MEMBER_3_ID]"
       ]
     }
   }
 }
 ```
 
-Permanent BLACK CEO team IDs (always included):
-- 5252140759 - Trevor Otts (Operations Lead / AI Director)
-- 6663821679 - LeAnne (Head of Marketing)
-- 6771245262 - E.R. Spaulding (Chief of Operations)
+Replace [TEAM_MEMBER_N_ID] with the actual numeric Telegram IDs collected during Step 0.
 
-Add additional team members or client IDs to the same array as needed.
+Add all team members and clients to the same array. If a person's ID is not in this list, the bot will ignore their messages completely.
 
 Save file.
 
 ---
 
-## Step 4: Create Routing Table
+## Step 4: Generate TEAM_CONFIG.md
+
+Create a TEAM_CONFIG.md file that records all team member data collected in Step 0.
+Save it at: ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+
+Execute:
+```bash
+mkdir -p ~/.openclaw/skills/15-blackceo-team-management
+nano ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+```
+
+Paste and fill in with the actual team data collected in Step 0:
+
+```markdown
+# TEAM_CONFIG.md - Team Member Configuration
+# Generated during skill 15 setup
+# Update this file when team membership changes
+
+## Team Members
+
+| Name | Telegram ID | Role | Type | Worker Label |
+|------|-------------|------|------|--------------|
+| [Name 1] | [ID 1] | [Role 1] | Worker | [firstname1]-worker |
+| [Name 2] | [ID 2] | [Role 2] | Worker | [firstname2]-worker |
+| [Name 3] | [ID 3] | [Role 3] | Client | [firstname3]-worker |
+
+## Notes
+- Worker: Team member who gives instructions. The AI executes their requests.
+- Client: Business owner or client being served. The AI never assigns them tasks.
+- Worker labels are auto-generated: first name, lowercase, + "-worker"
+- Add new team members here AND to openclaw.json allowFrom AND to WORKFLOW_AUTO.md
+```
+
+Replace all placeholder brackets with real data from Step 0. Save file.
+
+---
+
+## Step 5: Create Routing Table
 
 Create WORKFLOW_AUTO.md in ~/clawd/ to define dispatcher routing.
 
@@ -256,25 +336,20 @@ Execute:
 nano ~/clawd/WORKFLOW_AUTO.md
 ```
 
-Paste and customize:
+Paste and customize using the data from TEAM_CONFIG.md:
 
 ```markdown
-# WORKFLOW_AUTO.md - BLACK CEO Management Protocol (Dispatcher Routing)
+# WORKFLOW_AUTO.md - Team Management Protocol (Dispatcher Routing)
 
 ## Dispatcher Pattern (ACTIVE)
 Main session = dispatcher/router. Route all incoming messages by sender ID.
 
-## BLACK CEO Management Team (Always Present)
+## Team Members
 | Sender ID | Name | Role | Worker Label | Reply To |
 |---|---|---|---|---|
-| 5252140759 | Trevor Otts | Operations Lead / AI Director | trevor-worker | 5252140759 |
-| 6663821679 | LeAnne | Head of Marketing | leanne-worker | 6663821679 |
-| 6771245262 | E.R. Spaulding | Chief of Operations | spaulding-worker | 6771245262 |
-
-## Client Team (Customize Per Deployment)
-| Sender ID | Name | Role | Worker Label | Reply To |
-|---|---|---|---|---|
-| CLIENT_ID | Client Name | Client (NOT a worker) | client-name-worker | CLIENT_ID |
+| [TEAM_MEMBER_ID] | [TEAM_MEMBER_NAME] | [ROLE] | [firstname]-worker | [TEAM_MEMBER_ID] |
+| [TEAM_MEMBER_ID] | [TEAM_MEMBER_NAME] | [ROLE] | [firstname]-worker | [TEAM_MEMBER_ID] |
+| [CLIENT_ID] | [CLIENT_NAME] | Client (NOT a worker) | [firstname]-worker | [CLIENT_ID] |
 
 ## Reply Rules
 - Results go ONLY to requesting DM
@@ -289,29 +364,29 @@ Main session = dispatcher/router. Route all incoming messages by sender ID.
 
 ## Client Rules
 - [Client name] is the CLIENT - never assign tasks, serve respectfully
-- BLACK CEO team members are workers - they give instructions, AI executes
+- Team workers give instructions - AI executes their requests
 ```
 
-Save file.
+Replace all placeholder brackets with the real data from TEAM_CONFIG.md. Save file.
 
 ---
 
-## Step 5: Add Team IDs to AGENTS.md
+## Step 6: Add Team IDs to AGENTS.md
 
-Open ~/clawd/AGENTS.md and add this section:
+Open ~/clawd/AGENTS.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
 
 ```markdown
-## BLACK CEO Team - Telegram Routing (Dispatcher Protocol)
+## Team Management - Telegram Routing (Dispatcher Protocol)
 - Protocol doc: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
 - Routing table: ~/clawd/WORKFLOW_AUTO.md
+- Team config: ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
 - Architecture: Main session = dispatcher. Each person gets a dedicated worker sub-agent.
 
-### Permanent Team IDs (Always Present in Every Deployment)
+### Team Members (from TEAM_CONFIG.md)
 | Name | Telegram ID | Role | Worker Label |
 |------|-------------|------|-------------|
-| Trevor Otts | 5252140759 | Operations Lead / AI Director | trevor-worker |
-| LeAnne | 6663821679 | Head of Marketing | leanne-worker |
-| E.R. Spaulding | 6771245262 | Chief of Operations | spaulding-worker |
+| [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] | [firstname]-worker |
+| [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] | [firstname]-worker |
 
 ### Dispatcher Rules
 - Route incoming messages by sender Telegram ID to the correct worker
@@ -326,16 +401,17 @@ Save file.
 
 ---
 
-## Step 6: Add Team IDs to TOOLS.md
+## Step 7: Add Team IDs to TOOLS.md
 
-Open ~/clawd/TOOLS.md and add this section:
+Open ~/clawd/TOOLS.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
 
 ```markdown
-## BLACK CEO Dispatcher - Message Routing
+## Team Dispatcher - Message Routing
 - WORKFLOW_AUTO.md: ~/clawd/WORKFLOW_AUTO.md (routing table with all Telegram IDs)
+- Team config: ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
 - Full protocol: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
 - To send to a specific person: use message tool with target set to their Telegram ID
-- Trevor: 5252140759 | LeAnne: 6663821679 | Spaulding: 6771245262
+- All team Telegram IDs: see TEAM_CONFIG.md
 - Worker sub-agent model must support tool calls (MiniMax M2.5, Codex, Sonnet - NOT reasoning-only models)
 ```
 
@@ -343,26 +419,26 @@ Save file.
 
 ---
 
-## Step 7: Add Team IDs to MEMORY.md
+## Step 8: Add Team IDs to MEMORY.md
 
-Open ~/clawd/MEMORY.md and add this section:
+Open ~/clawd/MEMORY.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
 
 ```markdown
-## BLACK CEO Team Telegram IDs (Permanent)
+## Team Telegram IDs (Dispatcher Protocol)
 | Name | Telegram ID | Role |
 |------|-------------|------|
-| Trevor Otts | 5252140759 | Operations Lead |
-| LeAnne | 6663821679 | Head of Marketing |
-| E.R. Spaulding | 6771245262 | Chief of Operations |
-- These 3 IDs are ALWAYS approved in channels.telegram.allowFrom
+| [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] |
+| [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] |
+- All IDs are approved in channels.telegram.allowFrom
 - Routing protocol: ~/clawd/WORKFLOW_AUTO.md
+- Full team config: ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
 ```
 
 Save file.
 
 ---
 
-## Step 8: Validate JSON Syntax
+## Step 9: Validate JSON Syntax
 
 Execute:
 ```bash
@@ -374,7 +450,7 @@ If error message appears: JSON contains syntax error. Fix before continuing.
 
 ---
 
-## Step 9: Restart OpenClaw Gateway
+## Step 10: Restart OpenClaw Gateway
 
 Execute:
 ```bash
@@ -385,7 +461,7 @@ Wait 10 seconds for restart to complete.
 
 ---
 
-## Step 10: Verify Gateway Running
+## Step 11: Verify Gateway Running
 
 Execute:
 ```bash
@@ -397,18 +473,15 @@ If output shows "stopped" or error: Investigate and resolve before proceeding.
 
 ---
 
-## Step 11: Test Routing
+## Step 12: Test Routing
 
-Send a test message from each team member's Telegram account to the bot:
-- Trevor Otts (5252140759): Send test message
-- LeAnne (6663821679): Send test message
-- E.R. Spaulding (6771245262): Send test message
+Send a test message from each team member's Telegram account to the bot.
 
 Observe: Dispatcher creates dedicated worker for each sender.
 
 ---
 
-## Step 12: Verify Message Isolation
+## Step 13: Verify Message Isolation
 
 Confirm:
 - Each sender receives response ONLY in their own DM
@@ -424,7 +497,7 @@ When making configuration changes for client deployments:
 
 1. **Always announce** the intended change to the operator in plain language before making it
 2. **Always back up** the current config before editing (Step 1 above)
-3. **Always validate** the JSON after editing (Step 8 above)
+3. **Always validate** the JSON after editing (Step 9 above)
 4. **Always get explicit permission** from the operator before writing changes
 5. **Never guess** about config fields - look them up in the OpenClaw docs first
 6. If backup fails, STOP. Do not edit.
@@ -437,11 +510,13 @@ When making configuration changes for client deployments:
 Use this checklist when setting up this protocol for a new client:
 
 ```
+[ ] Run Step 0 intake - collect all team member names, IDs, roles, types
 [ ] Copy this SOP to client's master files
 [ ] Copy WORKFLOW_AUTO.md template to client's workspace
-[ ] Add BLACK CEO team IDs (Trevor, LeAnne, Spaulding) - these never change
-[ ] Add client principal ID as client-worker (not a worker)
-[ ] Add any client team members as additional workers
+[ ] Generate TEAM_CONFIG.md with client's actual team data
+[ ] Add all collected IDs to channels.telegram.allowFrom
+[ ] Mark client principals as "Client (NOT a worker)" in routing table
+[ ] Add any additional team members as workers
 [ ] Set sub-agent model chain (primary + fallbacks with tool-call support)
 [ ] Set archiveAfterMinutes: 43200 (30 days)
 [ ] Back up config, validate JSON, restart gateway

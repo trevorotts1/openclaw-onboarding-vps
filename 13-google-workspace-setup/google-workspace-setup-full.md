@@ -135,7 +135,7 @@ Then tell your AI:
 
 ✅ Test the Connection
 
-Ask your AI:
+Run this next:
 
 > "Check my Gmail for unread messages"
 

@@ -4,29 +4,21 @@ Real examples showing the Google Workspace setup in action, from the setup proce
 
 ---
 
-## Example 1: Telling Your AI to Set Everything Up For You
+## Example 1: Automated Setup (Agent-Driven)
 
-Instead of doing all the manual steps yourself, you can copy and paste this prompt to your AI and let it guide you:
+The agent handles the full setup autonomously. When triggered, it:
 
-**What you type:**
+1. Detects the account type (Workspace or Gmail)
+2. Creates a GCP project
+3. Enables the required APIs (Gmail, Calendar, Drive, Docs, Sheets)
+4. Creates a service account with domain-wide delegation
+5. Downloads and secures the JSON key
+6. Configures OpenClaw environment variables
+7. Tests the connection
 
-```
-Set up Google Workspace integration for me. I need you to:
+The agent proceeds continuously. It pauses only if it needs a browser login, a missing API key, or a 2FA code only the user can provide.
 
-1. Help me create a GCP (Google Cloud Platform) project
-2. Enable the necessary APIs (Gmail, Calendar, Drive, Docs, Sheets)
-3. Create a service account with domain-wide delegation
-4. Generate and download the service account JSON key
-5. Configure OpenClaw to use the service account
-6. Test the connection
-
-Walk me through each step. Ask me for any information you need.
-My Google Workspace email is: trevor@blackceo.com
-```
-
-**What your AI does:**
-
-Your AI will walk you through each step one at a time, telling you exactly what to click and where. It will ask you to confirm when each step is done before moving to the next one. If you get stuck, it will help you troubleshoot.
+**Expected outcome:** When complete, the agent reports which services are live and what was configured.
 
 ---
 
@@ -135,7 +127,7 @@ Found 4 files matching "quarterly report":
 
 ```
 Send an email to sarah@company.com with the subject "Meeting Reschedule" and say:
-Hi Sarah, I need to move our meeting from Tuesday to Wednesday at the same time. Does that work for you? Thanks, Trevor
+Hi Sarah, I need to move our meeting from Tuesday to Wednesday at the same time. Does that work for you? Thanks,
 ```
 
 **What your AI does:**
@@ -146,7 +138,7 @@ Email sent successfully!
 To: sarah@company.com
 Subject: Meeting Reschedule
 Body: Hi Sarah, I need to move our meeting from Tuesday to Wednesday
-at the same time. Does that work for you? Thanks, Trevor
+at the same time. Does that work for you? Thanks,
 
 Message ID: 19c7b789ef2d56f0
 ```
@@ -193,7 +185,7 @@ echo $GCP_IMPERSONATE_USER
 ```
 openclaw-ai-123456
 OpenClaw-assistant@openclaw-ai-123456.iam.gserviceaccount.com
-trevor@blackceo.com
+user@yourdomain.com
 ```
 
 If any of these come back blank, the environment variable is not set. Go back to INSTALL.md Step 8 and add it to your ~/.zshrc file.

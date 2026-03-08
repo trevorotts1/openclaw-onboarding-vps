@@ -1,4 +1,4 @@
-# Skill 14: BlackCEO Team Management
+# Skill 15: BlackCEO Team Management
 
 ## What This Skill Is About
 
@@ -6,7 +6,7 @@ This skill sets up a system where multiple people can send messages to the same 
 
 Think of it like a receptionist at a front desk. When Person A calls, the receptionist routes them to Assistant A. When Person B calls, they get routed to Assistant B. Each assistant only sees their own conversation. The receptionist (dispatcher) can see everything, but the assistants stay separate.
 
-This is the BlackCEO team management protocol - built for Trevor's team but designed to be copied and customized for any client deployment.
+This is the team management protocol - built as a configurable template that works for any client deployment, any team size, any set of people.
 
 ## When to Use This Skill
 
@@ -47,7 +47,7 @@ This is the BlackCEO team management protocol - built for Trevor's team but desi
 
 ## Prerequisites
 
-- All previous 13 onboarding skills must be installed
+- All previous 14 onboarding skills must be installed
 - An active Telegram bot connected to OpenClaw
 - Telegram user IDs for every team member and client who will use the bot
 - The Teach Yourself Protocol (TYP) must be learned first
@@ -56,7 +56,7 @@ This is the BlackCEO team management protocol - built for Trevor's team but desi
 
 1. **The main session is the dispatcher, not a worker.** It receives all incoming messages, looks up the sender's Telegram ID, and routes the task to the correct worker sub-agent. It does not do the work itself.
 
-2. **Three BlackCEO team IDs are always present in every deployment.** Trevor Otts (5252140759), LeAnne (6663821679), and E.R. Spaulding (6771245262). These must be in the Telegram allowFrom list before anything else works.
+2. **Configure any team size (2-20 members).** During setup, the agent collects each team member's name, Telegram ID, role, and contact method. This data is stored in TEAM_CONFIG.md and the routing table. There are no hardcoded IDs - every deployment starts from a fresh intake.
 
 3. **Workers stay alive between tasks.** When you spawn a worker with cleanup: keep, it stays active even after finishing a task. The next message from that same person goes to the existing worker instead of spawning a new one. Workers only archive after 30 days of inactivity.
 
