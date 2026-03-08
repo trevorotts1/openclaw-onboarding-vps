@@ -2,7 +2,28 @@
 
 ## The 3 Options
 
-### Option A - Full Automated Build (Recommended for first-timers)
+### Option C - Audit / Resume Mode (Default for returning users)
+**This is the default.** If you already have a workforce folder, run this every time.
+
+**Say this:** "Audit my AI workforce." or just run the script again.
+
+**What the script does automatically:**
+1. Scans for an existing workforce folder
+2. If found, asks: "Run in audit mode? (Y/n)" - default is YES
+3. Scans every dept folder for missing files
+4. Adds anything missing: good-examples.md, bad-examples.md, tools.md
+5. Checks if Coaching Personas are installed - if yes, adds `governing-personas.md` to each dept and updates every `00-START-HERE.md` with a Governing Personas section
+6. Never overwrites or deletes anything that already exists
+
+**Use this when:**
+- You installed skill 21 (personas) after already building your workforce
+- You added new departments and need them audited
+- You want to make sure nothing is missing
+- Any time you re-run the script
+
+---
+
+### Option A - Full Automated Build (For brand-new workforces)
 Your AI asks you questions and builds everything automatically.
 
 **Say this:** "Build my AI workforce. Use Option A."

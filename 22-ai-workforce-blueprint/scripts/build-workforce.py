@@ -262,6 +262,100 @@ def build_governing_personas_content(dept_key, for_file=False):
     return '\n'.join(lines)
 
 
+def detect_existing_workspace():
+    """Scan common locations for an existing workforce folder."""
+    common_paths = [
+        os.path.expanduser("~/Downloads/my-ai-workforce"),
+        os.path.expanduser("~/Downloads/ai-workforce"),
+        os.path.expanduser("~/Downloads/openclaw-master-files/ai-workforce"),
+        os.path.expanduser("~/clawd/workforce"),
+    ]
+    for path in common_paths:
+        if os.path.isdir(path) and any(d.endswith(DEPT_SUFFIX) for d in os.listdir(path)):
+            return path
+    return None
+
+
+def audit_mode(workspace, personas_installed):
+    """Option C - scan existing workspace, fill gaps, wire personas if available."""
+    print(f"\n=== AUDIT MODE - Scanning {workspace} ===\n")
+    added = []
+    updated = []
+
+    for item in os.listdir(workspace):
+        dept_path = os.path.join(workspace, item)
+        if not os.path.isdir(dept_path) or not item.endswith(DEPT_SUFFIX):
+            continue
+
+        dept_key = item.replace(DEPT_SUFFIX, "")
+        print(f"[{item}]")
+
+        # Wire personas if installed and governing-personas.md missing
+        if personas_installed:
+            gp_file = os.path.join(dept_path, "governing-personas.md")
+            if not os.path.exists(gp_file):
+                persona_file_content = build_governing_personas_content(dept_key=dept_key, for_file=True)
+                if persona_file_content:
+                    create_file(
+                        gp_file,
+                        GOVERNING_PERSONAS_FILE.format(
+                            dept_title=dept_key.title(),
+                            persona_entries=persona_file_content
+                        )
+                    )
+                    added.append(f"{item}/governing-personas.md")
+
+        # Scan role folders
+        for role in os.listdir(dept_path):
+            role_path = os.path.join(dept_path, role)
+            if not os.path.isdir(role_path):
+                continue
+
+            role_title = role.replace('-', ' ').title()
+            dept_name = f"{dept_key.title()} Department"
+
+            # Add missing files
+            for fname, template, kwargs in [
+                ("good-examples.md", GOOD_EXAMPLES_TEMPLATE, {"role_title": role_title}),
+                ("bad-examples.md", BAD_EXAMPLES_TEMPLATE, {"role_title": role_title}),
+                ("tools.md", TOOLS_TEMPLATE, {"role_title": role_title}),
+            ]:
+                fpath = os.path.join(role_path, fname)
+                if not os.path.exists(fpath):
+                    create_file(fpath, template.format(**kwargs))
+                    added.append(f"{item}/{role}/{fname}")
+
+            # Add Governing Personas section to 00-START-HERE.md if missing
+            if personas_installed:
+                start_here = os.path.join(role_path, "00-START-HERE.md")
+                if os.path.exists(start_here):
+                    with open(start_here, 'r') as f:
+                        content = f.read()
+                    if "Governing Personas" not in content:
+                        persona_lines = build_governing_personas_content(dept_key=dept_key, for_file=False)
+                        if persona_lines:
+                            gov_section = GOVERNING_PERSONAS_SECTION.format(persona_list=persona_lines)
+                            with open(start_here, 'a') as f:
+                                f.write(f"\n{gov_section}")
+                            updated.append(f"{item}/{role}/00-START-HERE.md")
+
+    print(f"\n=== AUDIT COMPLETE ===")
+    if added:
+        print(f"\nAdded {len(added)} missing files:")
+        for f in added:
+            print(f"  + {f}")
+    if updated:
+        print(f"\nUpdated {len(updated)} existing files:")
+        for f in updated:
+            print(f"  ~ {f}")
+    if not added and not updated:
+        print("\nEverything looks good - no gaps found.")
+    if personas_installed:
+        print("\n✅ Persona wiring complete.")
+    else:
+        print("\nℹ️  Install skill 21-book-to-persona and re-run to wire personas.")
+
+
 def main():
     print("\n=== AI Workforce Blueprint - Scaffold Builder ===\n")
 
@@ -271,7 +365,16 @@ def main():
         print("✅ Coaching Personas Matrix detected - personas will be wired to departments automatically.\n")
     else:
         print("ℹ️  Coaching Personas Matrix not detected - building clean structure without persona wiring.")
-        print("   (Install skill 21-book-to-persona later and re-run in Option C to add personas.)\n")
+        print("   (Install skill 21-book-to-persona later and re-run to add personas.)\n")
+
+    # Detect existing workspace - default to audit mode if found
+    existing = detect_existing_workspace()
+    if existing:
+        print(f"📁 Existing workforce found at: {existing}")
+        run_audit = input("Run in audit mode? Scans for gaps, adds missing files, wires personas. (Y/n): ").strip().lower()
+        if run_audit != 'n':
+            audit_mode(existing, personas_installed)
+            return
 
     workspace = ask("Where should I build the workforce folder? (full path)",
                     os.path.expanduser("~/Downloads/my-ai-workforce"))
