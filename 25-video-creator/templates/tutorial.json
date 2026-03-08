@@ -1,0 +1,29 @@
+{
+  "title": "Python Basics: Variables",
+  "instructor": "Jane Smith",
+  "sections": [
+    {
+      "heading": "What are Variables?",
+      "content": "Variables are containers for storing data values. Think of them as labeled boxes.",
+      "visual": "animated_diagram",
+      "duration": 30
+    },
+    {
+      "heading": "Creating Variables",
+      "code": "x = 5\nname = 'John'\nprice = 19.99",
+      "duration": 45
+    },
+    {
+      "heading": "Variable Types",
+      "content": "Python automatically detects types: integers, floats, strings, and booleans.",
+      "duration": 60
+    },
+    {
+      "heading": "Best Practices",
+      "content": "Use descriptive names: 'customer_name' is better than 'x'",
+      "duration": 30
+    }
+  ],
+  "music": "calm",
+  "outro": "Subscribe for more Python tutorials!"
+}

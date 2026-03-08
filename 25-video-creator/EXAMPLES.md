@@ -1,0 +1,530 @@
+# Video Creator Skill - Examples
+
+Real-world usage examples and use cases.
+
+## Table of Contents
+
+1. [Quick Examples](#quick-examples)
+2. [Marketing Videos](#marketing-videos)
+3. [Social Media Content](#social-media-content)
+4. [Educational Content](#educational-content)
+5. [Product Demonstrations](#product-demonstrations)
+6. [Podcast Clips](#podcast-clips)
+7. [AI Avatar Videos](#ai-avatar-videos)
+8. [Batch Processing](#batch-processing)
+
+---
+
+## Quick Examples
+
+### Example 1: Simple Text-to-Video
+
+Create a 5-second video from a text description:
+
+```bash
+python scripts/text_to_video.py "A peaceful Japanese garden with cherry blossoms" \
+  --duration 5 \
+  --output garden.mp4
+```
+
+### Example 2: Multi-Clip Montage
+
+Combine vacation clips with music:
+
+```bash
+python scripts/multi_clip_assembly.py \
+  vacation/day1.mp4 \
+  vacation/day2.mp4 \
+  vacation/day3.mp4 \
+  --transition fade \
+  --music upbeat \
+  --output vacation_montage.mp4
+```
+
+### Example 3: Product Highlight
+
+Using the product showcase template:
+
+```bash
+# Create product data file
+cat > product_data.json << 'EOF'
+{
+  "product_name": "EcoBottle Pro",
+  "tagline": "Stay Hydrated, Save the Planet",
+  "images": ["photos/bottle1.jpg", "photos/bottle2.jpg", "photos/bottle3.jpg"],
+  "features": [
+    "24hr Cold / 12hr Hot",
+    "BPA-Free Stainless Steel",
+    "Lifetime Warranty"
+  ],
+  "price": "$29.99",
+  "call_to_action": "Order Now at ecobottle.com",
+  "music": "upbeat",
+  "duration": 30
+}
+EOF
+
+# Generate video
+python scripts/template_video.py product_showcase --data product_data.json
+```
+
+---
+
+## Marketing Videos
+
+### Product Launch Video
+
+Create a professional product launch video:
+
+```bash
+# Step 1: Generate intro clip
+python scripts/text_to_video.py \
+  "Cinematic shot of sleek smartphone rotating on black background, studio lighting" \
+  --duration 3 --style cinematic --output intro.mp4
+
+# Step 2: Generate feature clips
+python scripts/text_to_video.py "Close-up of smartphone camera lens capturing vibrant colors" \
+  --duration 2 --output feature1.mp4
+
+python scripts/text_to_video.py "Hand holding smartphone displaying beautiful interface" \
+  --duration 2 --output feature2.mp4
+
+# Step 3: Generate outro
+python scripts/text_to_video.py "Product logo reveal with dramatic lighting" \
+  --duration 2 --output outro.mp4
+
+# Step 4: Assemble with transitions and music
+python scripts/multi_clip_assembly.py \
+  intro.mp4 feature1.mp4 feature2.mp4 outro.mp4 \
+  --transition zoom_in \
+  --music epic \
+  --output product_launch.mp4
+```
+
+### Promotional Social Video
+
+```bash
+python scripts/template_video.py social_post --data << 'EOF'
+{
+  "platform": "instagram",
+  "headline": "Summer Sale!",
+  "subheadline": "Up to 50% Off Everything",
+  "background": "videos/summer_bg.mp4",
+  "text_animations": ["bounce", "slide", "fade"],
+  "duration": 15,
+  "music": "upbeat",
+  "cta": "Shop Now →"
+}
+EOF
+```
+
+---
+
+## Social Media Content
+
+### Instagram Reels / TikTok
+
+Create vertical short-form content:
+
+```bash
+# Image to video with motion
+python scripts/image_to_video.py photo.jpg \
+  --motion ken_burns \
+  --duration 5 \
+  --resolution 1080x1920 \
+  --output reel.mp4
+
+# Add trending audio
+python scripts/add_music.py reel.mp4 \
+  --music audio/trending.mp3 \
+  --output reel_final.mp4
+```
+
+### YouTube Shorts
+
+```bash
+# Create from script
+python scripts/script_to_video.py shorts_script.txt \
+  --format vertical \
+  --output shorts.mp4
+```
+
+Script format (`shorts_script.txt`):
+```
+SCENE 1: [Bold text "3 Tips for Better Sleep" on gradient background]
+TEXT: 3 Tips for Better Sleep
+DURATION: 2s
+BGM: calm
+
+SCENE 2: [Dark bedroom with soft lighting]
+TEXT: 1. Keep it cool (65°F)
+VOICEOVER: First, keep your bedroom cool around 65 degrees
+DURATION: 3s
+
+SCENE 3: [Person putting phone away]
+TEXT: 2. No screens 1hr before bed
+VOICEOVER: Second, avoid screens one hour before bedtime
+DURATION: 3s
+
+SCENE 4: [Peaceful meditation scene]
+TEXT: 3. Try meditation
+VOICEOVER: And third, practice meditation to calm your mind
+DURATION: 3s
+
+SCENE 5: [Subscribe animation]
+TEXT: Subscribe for more tips!
+DURATION: 2s
+```
+
+### LinkedIn Professional Content
+
+```bash
+python scripts/template_video.py social_post --data << 'EOF'
+{
+  "platform": "linkedin",
+  "headline": "5 Leadership Lessons",
+  "bullet_points": [
+    "Lead by example",
+    "Communicate clearly",
+    "Empower your team",
+    "Embrace failure",
+    "Never stop learning"
+  ],
+  "style": "corporate",
+  "duration": 45,
+  "music": "corporate"
+}
+EOF
+```
+
+---
+
+## Educational Content
+
+### Tutorial Video
+
+```bash
+python scripts/template_video.py tutorial --data << 'EOF'
+{
+  "title": "Python Basics: Variables",
+  "instructor": "Jane Smith",
+  "sections": [
+    {
+      "heading": "What are Variables?",
+      "content": "Variables are containers for storing data values.",
+      "visual": "animated_diagram",
+      "duration": 30
+    },
+    {
+      "heading": "Creating Variables",
+      "code": "x = 5\nname = 'John'",
+      "duration": 45
+    },
+    {
+      "heading": "Variable Types",
+      "content": "Python has int, float, string, and bool types",
+      "duration": 60
+    }
+  ],
+  "music": "calm"
+}
+EOF
+```
+
+### Online Course Promo
+
+```bash
+# Generate course preview clips
+for i in {1..5}; do
+  python scripts/text_to_video.py "Scene $i from course: animated educational content" \
+    --duration 3 --output course_clip_$i.mp4
+done
+
+# Assemble with voiceover
+python scripts/multi_clip_assembly.py course_clip_*.mp4 \
+  --transition slide \
+  --voiceover narration/course_intro.mp3 \
+  --music calm \
+  --output course_preview.mp4
+```
+
+---
+
+## Product Demonstrations
+
+### App Demo Video
+
+```bash
+# Create screen recording montage
+python scripts/multi_clip_assembly.py \
+  demos/onboarding.mp4 \
+  demos/dashboard.mp4 \
+  demos/features.mp4 \
+  --transition fade \
+  --text "Easy Setup|Powerful Dashboard|Rich Features" \
+  --music corporate \
+  --output app_demo.mp4
+```
+
+### Physical Product Demo
+
+```bash
+# Generate product showcase from images
+python scripts/template_video.py product_showcase --data << 'EOF'
+{
+  "product_name": "Smart Home Hub",
+  "images": [
+    "product/angle1.jpg",
+    "product/angle2.jpg",
+    "product/in_use.jpg",
+    "product/app_interface.jpg"
+  ],
+  "voiceover_script": "Meet the Smart Home Hub...",
+  "features": [
+    "Voice Control",
+    "Automated Routines",
+    "Energy Monitoring",
+    "Works with 500+ Devices"
+  ],
+  "duration": 60
+}
+EOF
+```
+
+---
+
+## Podcast Clips
+
+### Audiogram for Social Media
+
+```bash
+python scripts/template_video.py podcast_clip --data << 'EOF'
+{
+  "audio_file": "podcast/episode45_clip.mp3",
+  "quote_text": "The key to success is consistency, not intensity.",
+  "speaker": "Guest Name",
+  "podcast_name": "The Business Show",
+  "episode": 45,
+  "visualizer_style": "waveform",
+  "background": "gradient_blue",
+  "duration": 30
+}
+EOF
+```
+
+### Full Episode with Chapters
+
+```bash
+python scripts/script_to_video.py podcast_script.txt --chapters
+```
+
+Script with chapters:
+```
+CHAPTER: Introduction
+SCENE 1: [Show logo animation]
+AUDIO: podcast/intro.mp3
+DURATION: 15s
+
+CHAPTER: Main Topic
+SCENE 2: [Display chapter title card]
+TEXT: Marketing Strategies 2024
+AUDIO: podcast/segment1.mp3
+DURATION: 600s
+VISUAL: animated_waveform
+
+CHAPTER: Key Takeaways
+SCENE 3: [Bullet points appearing]
+AUDIO: podcast/outro.mp3
+DURATION: 60s
+```
+
+---
+
+## AI Avatar Videos
+
+### Presenter-Style Video
+
+```bash
+python scripts/avatar_video.py \
+  --script presentation.txt \
+  --avatar professional_female_1 \
+  --background office_blur \
+  --output training_video.mp4
+```
+
+Presentation script (`presentation.txt`):
+```
+Hello team, welcome to this quarter's sales training.
+
+[SLIDE: Sales Targets Chart]
+This quarter we're focusing on three key areas.
+
+[SLIDE: Customer Retention]
+First, customer retention. It's 5x cheaper to keep existing customers.
+
+[SLIDE: Upselling]
+Second, strategic upselling to increase average order value.
+
+Thank you for your attention!
+```
+
+### Personalized Sales Videos
+
+```bash
+# Batch create personalized videos
+for customer in customers/*.csv; do
+  python scripts/avatar_video.py \
+    --script templates/sales_pitch.txt \
+    --variables "$customer" \
+    --output "personalized/$(basename $customer .csv).mp4"
+done
+```
+
+---
+
+## Batch Processing
+
+### Process Multiple Scripts
+
+```bash
+#!/bin/bash
+# batch_create.sh
+
+INPUT_DIR="scripts/"
+OUTPUT_DIR="output/"
+
+for script in "$INPUT_DIR"/*.txt; do
+  filename=$(basename "$script" .txt)
+  echo "Processing: $filename"
+  
+  python scripts/script_to_video.py "$script" \
+    --output "$OUTPUT_DIR/$filename.mp4" \
+    --quality web \
+    --template social_post
+done
+
+echo "Batch processing complete!"
+```
+
+### Generate Thumbnails for All Videos
+
+```bash
+for video in output/*.mp4; do
+  python scripts/generate_thumbnail.py "$video" \
+    --timestamp 00:00:03 \
+    --text "$(basename $video .mp4)" \
+    --output "thumbnails/$(basename $video .mp4).jpg"
+done
+```
+
+### Repurpose Content for Multiple Platforms
+
+```bash
+VIDEO="master_content.mp4"
+
+# YouTube version (16:9, high quality)
+python scripts/convert.py "$VIDEO" \
+  --resolution 1920x1080 \
+  --quality high \
+  --output youtube_version.mp4
+
+# Instagram (1:1 square)
+python scripts/convert.py "$VIDEO" \
+  --resolution 1080x1080 \
+  --crop center \
+  --output instagram_version.mp4
+
+# TikTok/Reels (9:16 vertical)
+python scripts/convert.py "$VIDEO" \
+  --resolution 1080x1920 \
+  --crop smart \
+  --output tiktok_version.mp4
+
+# Twitter/X (2:1)
+python scripts/convert.py "$VIDEO" \
+  --resolution 1280x640 \
+  --output twitter_version.mp4
+```
+
+---
+
+## Advanced Workflows
+
+### A/B Testing Different Intros
+
+```bash
+# Create 3 versions of intro
+for i in {1..3}; do
+  python scripts/text_to_video.py "Version $i: Product intro variation" \
+    --style "variation_$i" \
+    --output "ab_test/intro_v$i.mp4"
+  
+  # Combine with common content
+  python scripts/multi_clip_assembly.py \
+    "ab_test/intro_v$i.mp4" \
+    content/main_message.mp4 \
+    --output "ab_test/final_v$i.mp4"
+done
+```
+
+### Automated Weekly Content
+
+```bash
+#!/bin/bash
+# weekly_content.sh - Run every Monday
+
+WEEK=$(date +%U)
+YEAR=$(date +%Y)
+
+# Generate weekly roundup
+python scripts/template_video.py weekly_roundup --data << EOF
+{
+  "week": "$WEEK",
+  "year": "$YEAR",
+  "highlights": $(cat data/weekly_highlights.json),
+  "music": "upbeat"
+}
+EOF
+
+# Post to social media (requires social skill)
+# !social post --video output/weekly_$WEEK.mp4 --platforms twitter,linkedin
+```
+
+---
+
+## Tips & Best Practices
+
+1. **Start Small**: Test with 5-10 second clips before creating full videos
+2. **Use Templates**: Templates ensure consistency across your brand
+3. **Preview First**: Use `--preview` flag to check before final export
+4. **Organize Assets**: Keep images, audio, and scripts in structured folders
+5. **Batch Similar Tasks**: Group operations to save time
+6. **Quality vs Speed**: Use `--quality web` for drafts, `--quality cinema` for final
+7. **Audio Matters**: Good audio improves engagement more than perfect visuals
+8. **Keep It Short**: Social videos perform best under 60 seconds
+
+---
+
+## Troubleshooting Examples
+
+### Fix Audio Sync
+
+```bash
+python scripts/fix_sync.py video.mp4 --offset -0.5 --output fixed.mp4
+```
+
+### Extract and Recombine
+
+```bash
+# Extract audio
+python scripts/extract_audio.py video.mp4 --output audio.wav
+
+# Edit audio externally, then recombine
+python scripts/combine.py video.mp4 edited_audio.wav --output final.mp4
+```
+
+### Convert Format
+
+```bash
+python scripts/convert.py video.mov --format mp4 --codec h264 --output video.mp4
+```

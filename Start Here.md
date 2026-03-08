@@ -317,12 +317,44 @@ Replace `[MASTER_FILES_FOLDER]` with the actual path from step 3.
         INSTALL.md
         CORE_UPDATES.md
         ai-workforce-blueprint.skill
+    24-storyboard-writer/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        storyboard-writer.skill
+    25-video-creator/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        video-creator.skill
+    26-caption-creator/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        caption-creator.skill
+    27-video-editor/
+        SKILL.md
+        INSTALL.md
+        INSTRUCTIONS.md
+        EXAMPLES.md
+        CORE_UPDATES.md
+        video-editor.skill
+    28-cinematic-forge/
+        SKILL.md
+        INSTALL.md
+        README.md
 ```
 
 **Each skill folder contains some combination of SKILL.md, INSTALL.md, INSTRUCTIONS.md, EXAMPLES.md, CORE_UPDATES.md.** Some skills also include a `[skill-name]-full.md`, a `.skill` package file, an `upstream-original/` subfolder, or additional reference documents. File count varies by skill. If SKILL.md or INSTALL.md is missing from a folder, stop and tell the user before proceeding.
 
 **Naming rules:**
-- Folder names are lowercase with hyphens, prefixed with their install number (01 through 23)
+- Folder names are lowercase with hyphens, prefixed with their install number (01 through 28)
 - The .skill file (when present) matches the folder name without the number prefix
 - Do NOT rename any folder or file. Use the names exactly as listed above.
 
@@ -405,7 +437,7 @@ Every skill folder contains these files. Read them in this exact order:
 6. Read CORE_UPDATES.md - update ONLY the workspace files it specifies, with ONLY the text it provides
 7. Install the .skill package file (if one exists in this folder)
 8. Verify the skill is working
-9. **Tell the user:** "Skill [number] of 23 installed. [Skill name] is complete. Moving to skill [next number]."
+9. **Tell the user:** "Skill [number] of 28 installed. [Skill name] is complete. Moving to skill [next number]."
 10. Then and only then move to the next skill
 
 ### What CORE_UPDATES.md Does
@@ -518,15 +550,15 @@ All skill folders are located inside:
 |---|-------|-------------|-------|
 | 1 | Teach Yourself Protocol | 01-teach-yourself-protocol | 🔴 MANDATORY FIRST |
 | 2 | Back Yourself Up Protocol | 02-back-yourself-up-protocol | 🔴 MANDATORY SECOND |
-| — | **QMD** | *(installed by install script)* | ✅ Auto-installed before skills 3-23 |
+| — | **QMD** | *(installed by install script)* | ✅ Auto-installed before skills 3-28 |
 | 3 | Agent Browser (Vercel) - preferred browser automation | 03-agent-browser |
 | 4 | Superpowers | 04-superpowers |
 | 5 | GHL / Convert and Flow Setup | 05-ghl-setup |
 | 6 | GHL / Convert and Flow - Install Pages | 06-ghl-install-pages |
 | 7 | KIE Setup and HTTP Structure | 07-kie-setup |
-| 8 | Vercel Setup (API/browser path only) | 08-vercel-setup |
-| 9 | Context7 Setup (API/browser path only) | 09-context7 |
-| 10 | GitHub / Git Setup (API/browser path only) | 10-github-setup |
+| 8 | Vercel Setup (Vercel CLI) | 08-vercel-setup |
+| 9 | Context7 Setup (API/browser) | 09-context7 |
+| 10 | GitHub / Git Setup (gh CLI + API) | 10-github-setup |
 | 11 | SuperDesign Instructions Setup | 11-superdesign |
 | 12 | Google Workspace Setup (branch: Workspace vs Gmail) | 13-google-workspace-setup |
 | 13 | Google Workspace Integration | 14-google-workspace-integration |
@@ -539,6 +571,11 @@ All skill folders are located inside:
 | 20 | Tavily Search | 21-tavily-search |
 | 21 | Book To Persona & Coaching & Leadership System | 22-book-to-persona-coaching-leadership-system |
 | 22 | AI Workforce Blueprint | 23-ai-workforce-blueprint |
+| 23 | Storyboard Writer | 24-storyboard-writer |
+| 24 | Video Creator | 25-video-creator |
+| 25 | Caption Creator | 26-caption-creator |
+| 26 | Video Editor | 27-video-editor |
+| 27 | Cinematic Forge | 28-cinematic-forge |
 | 23 | OpenRouter Setup (MUST BE LAST, after model backup) | 12-openrouter-setup |
 
 
@@ -558,9 +595,10 @@ All skill folders are located inside:
 - TYP governs storage method. The skill governs content and which files it touches.
 - Do NOT change any API keys, terminal commands, or config values from what is written
 - Do NOT add steps that are not in the instructions
-- Do NOT use service CLIs for GitHub, Vercel, or Context7 during onboarding
-- Use API and browser setup paths for GitHub, Vercel, and Context7
-- Only Superdesign is allowed to rely on CLI-specific service commands
+- GitHub setup uses GitHub CLI (gh) and GitHub API as needed
+- Vercel setup uses Vercel CLI (official recommended path)
+- Context7 setup uses API and browser setup (no Context7 CLI required)
+- Superdesign may use its CLI install command as documented
 - Do NOT skip verification steps
 - Do NOT tell the user a skill is installed until you have verified it works
 - Do NOT bloat AGENTS.md, TOOLS.md, or MEMORY.md with full documentation
@@ -578,9 +616,9 @@ All skill folders are located inside:
 
 ---
 
-## IMPORTED SKILLS (16-23) - AUTHORITATIVE INSTALL RULES
+## IMPORTED SKILLS (16-28) - AUTHORITATIVE INSTALL RULES
 
-Skills 16 through 23 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, QMD-RETRIEVAL-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
+Skills 16 through 28 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, QMD-RETRIEVAL-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
 
 **The file-read order for ALL imported skills is the same as for all skills:**
 1. Read `SKILL.md` first
@@ -608,7 +646,7 @@ Skills 16 through 23 are imported or recreated skills. Many preserve upstream so
 
 The install script has already downloaded all skills to disk. Your job is to install them in order, one by one, automatically.
 
-- Install Skill 01 → confirm it worked → install Skill 02 → confirm → continue through all 23
+- Install Skill 01 → confirm it worked → install Skill 02 → confirm → continue through all 28
 - Only pause when you need something the user must provide (API key not in any env file, 2FA code, first-time browser login)
 - When you need a key: ask clearly, wait for answer, then continue
 - When a skill is optional and the user wants to skip: mark SKIPPED, move to next - do not stop the whole install
@@ -618,7 +656,7 @@ The install script has already downloaded all skills to disk. Your job is to ins
 
 ## FINAL STEP - SET UP WEEKLY AUTO-UPDATE (Agent Runs This)
 
-After all 23 skills are installed, run this as the final step.
+After all 28 skills are installed, run this as the final step.
 The agent executes these commands - the human does nothing.
 
 > **Install script URL:** See your instructor or onboarding package README for the latest auto-update script URL.
@@ -635,7 +673,7 @@ This sets up a cron job that runs every Sunday at 2:00 AM. It checks for new ski
 ## WHEN ONBOARDING IS COMPLETE
 
 When every skill on the list above is installed and verified, tell the user:
-1. Everything that was installed (all 23 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
+1. Everything that was installed (all 28 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
 2. Everything that was added to each workspace file (AGENTS.md, TOOLS.md, MEMORY.md, etc.)
 3. Which workspace files were updated and which were not touched
 4. Where the full documentation for each skill is saved (the master files folder path)

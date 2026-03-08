@@ -1,0 +1,12 @@
+{
+  "audio_file": "assets/podcast_episode_45_clip.mp3",
+  "quote_text": "The key to success isn't working harder, it's working smarter and knowing when to delegate.",
+  "speaker": "Guest Name",
+  "podcast_name": "The Business Show",
+  "episode": 45,
+  "timestamp": "12:34",
+  "visualizer_style": "waveform",
+  "background": "gradient_dark",
+  "logo": "assets/podcast_logo.png",
+  "duration": 30
+}

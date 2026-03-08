@@ -1,0 +1,11 @@
+{
+  "platform": "instagram",
+  "headline": "Summer Sale!",
+  "subheadline": "Up to 50% Off Everything\nThis Weekend Only",
+  "background": "assets/summer_bg.jpg",
+  "text_animations": ["bounce", "slide", "fade"],
+  "duration": 15,
+  "music": "upbeat",
+  "cta": "Shop Now →",
+  "hashtags": ["#SummerSale", "#Deal", "#ShopNow"]
+}

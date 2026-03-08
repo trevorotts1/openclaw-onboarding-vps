@@ -1,0 +1,19 @@
+{
+  "product_name": "EcoBottle Pro",
+  "tagline": "Stay Hydrated, Save the Planet",
+  "images": [
+    "assets/bottle1.jpg",
+    "assets/bottle2.jpg",
+    "assets/bottle3.jpg"
+  ],
+  "features": [
+    "24hr Cold / 12hr Hot",
+    "BPA-Free Stainless Steel",
+    "Lifetime Warranty",
+    "1% to Ocean Cleanup"
+  ],
+  "price": "$29.99",
+  "call_to_action": "Order Now at ecobottle.com",
+  "music": "upbeat",
+  "duration": 30
+}
