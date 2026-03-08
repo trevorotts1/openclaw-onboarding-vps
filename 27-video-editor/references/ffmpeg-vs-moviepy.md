@@ -23,7 +23,7 @@ resize.sh --input video.mp4 --platform tiktok --output tiktok.mp4
 
 ### MoviePy - Add animated title:
 ```bash
-python3 text-overlay.py --input video.mp4 --text "NEW TRAINING" --position top --start 0 --duration 3 --output titled.mp4
+python3 scripts/text-overlay.py --input video.mp4 --text "NEW TRAINING" --position top --start 0 --duration 3 --output titled.mp4
 ```
 
 ## Performance Note

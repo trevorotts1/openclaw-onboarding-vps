@@ -3,7 +3,7 @@
 All examples assume you are inside the skill folder:
 
 ```bash
-cd 27-video-editor
+cd video-editor
 ```
 
 If you installed the skill into OpenClaw, the scripts live at:

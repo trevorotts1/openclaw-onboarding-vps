@@ -39,6 +39,44 @@ No exceptions. If you skip those two, stop and go back.
 
 ---
 
+
+---
+
+## WEEKLY SKILL UPDATE CHECK
+
+Once the onboarding package is installed, your agent should check for updates **every Sunday**.
+
+**GitHub repo:** `https://github.com/trevorotts1/openclaw-onboarding`
+
+### What to check
+
+```bash
+# From wherever the onboarding package is installed:
+cd ~/.openclaw/onboarding   # or wherever the package lives
+git fetch origin
+git log HEAD..origin/main --oneline --name-only 2>/dev/null || \
+  echo "No git history - check GitHub directly"
+```
+
+### Weekly check workflow
+
+1. Pull the latest from `main`:
+   ```bash
+   git pull origin main
+   ```
+2. Compare CHANGELOGs for any skill folder that changed.
+3. For each updated skill:
+   - Re-run TYP on the updated SKILL.md
+   - Re-apply CORE_UPDATES.md if it changed
+   - Rebuild the `.skill` archive if scripts changed
+4. Notify Trevor via Telegram: "3 skills updated this week: [list]. Re-learned. No action needed."
+
+### If git is not available
+
+Check `https://github.com/trevorotts1/openclaw-onboarding/commits/main` directly and compare the install date against recent commit dates.
+
+---
+
 ## TYP CONFLICT RULE - UNIVERSAL (applies to every skill)
 
 Every skill in this package uses the Teach Yourself Protocol. But skills have their
@@ -577,6 +615,7 @@ All skill folders are located inside:
 | 26 | Video Editor | 27-video-editor |
 | 27 | Cinematic Forge | 28-cinematic-forge |
 | 28 | OpenRouter Setup (MUST BE LAST, after model backup) | 12-openrouter-setup |
+| 29 | GHL / Convert and Flow API v2 | 29-ghl-convert-and-flow |
 
 
 ---

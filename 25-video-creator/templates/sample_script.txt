@@ -1,5 +1,5 @@
 SCENE 1: [Animated logo reveal on dark background]
-TEXT: BlackCEO Presents
+TEXT: [Your Brand Here]
 DURATION: 3s
 TRANSITION: fade
 

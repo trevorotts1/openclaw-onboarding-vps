@@ -9,7 +9,7 @@ This guide explains how to use the scripts in this skill to create social clips 
 3. Go into the skill folder.
 
 ```bash
-cd 27-video-editor
+cd video-editor
 ```
 
 4. Make the scripts executable (one-time).

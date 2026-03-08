@@ -7,7 +7,6 @@ Before you run any commands in this skill:
 1. Open Terminal.
 2. Go into the skill folder:
    ```bash
-   cd /tmp/openclaw-onboarding/25-video-creator
    ```
 3. Discover every Markdown file in this skill folder (including subfolders):
    ```bash
@@ -106,11 +105,10 @@ MoviePy v2 removed `moviepy.editor`, so you must pin MoviePy to v1.
 
 1. In Terminal, run:
    ```bash
-   cd /tmp/openclaw-onboarding
-   openclaw skill install 25-video-creator/video-creator.skill
+   openclaw skill install video-creator.skill
    ```
 2. After install, the skill should exist at:
-   - `$HOME/.openclaw/skills/25-video-creator/`
+   - `$HOME/.openclaw/skills/video-creator/`
 
 ### Option B (manual): Unzip
 
@@ -120,11 +118,10 @@ MoviePy v2 removed `moviepy.editor`, so you must pin MoviePy to v1.
    ```
 2. Unzip the skill:
    ```bash
-   unzip -o /tmp/openclaw-onboarding/25-video-creator/video-creator.skill -d "$HOME/.openclaw/skills"
    ```
 3. Make scripts executable:
    ```bash
-   chmod +x "$HOME/.openclaw/skills/25-video-creator/scripts"/*.py
+   chmod +x "$HOME/.openclaw/skills/video-creator/scripts"/*.py
    ```
 
 ---
@@ -158,7 +155,7 @@ You can use this skill without any API keys by using the `mock` or `local` provi
 
 1. Go into the installed skill folder:
    ```bash
-   cd "$HOME/.openclaw/skills/25-video-creator"
+   cd "$HOME/.openclaw/skills/video-creator"
    ```
 2. Run the installation test:
    ```bash
@@ -171,7 +168,7 @@ You can use this skill without any API keys by using the `mock` or `local` provi
 
 1. Remove the skill folder:
    ```bash
-   rm -rf "$HOME/.openclaw/skills/25-video-creator"
+   rm -rf "$HOME/.openclaw/skills/video-creator"
    ```
 2. (Optional) Remove the virtual environment you created:
    ```bash

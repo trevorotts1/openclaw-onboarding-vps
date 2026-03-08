@@ -465,21 +465,6 @@ WEEK=$(date +%U)
 YEAR=$(date +%Y)
 
 # Generate weekly roundup
-python scripts/template_video.py weekly_roundup --data << EOF
-{
-  "week": "$WEEK",
-  "year": "$YEAR",
-  "highlights": $(cat data/weekly_highlights.json),
-  "music": "upbeat"
-}
-EOF
-
-# Post to social media (requires social skill)
-# !social post --video output/weekly_$WEEK.mp4 --platforms twitter,linkedin
-```
-
----
-
 ## Tips & Best Practices
 
 1. **Start Small**: Test with 5-10 second clips before creating full videos

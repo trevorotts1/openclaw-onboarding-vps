@@ -109,21 +109,7 @@ Options: `--transition` (fade/slide_left/slide_right/slide_up/slide_down/wipe/zo
 
 ---
 
-## Memory File Updates Required
-
-### Update TOOLS.md
-```markdown
-### Video Creator
-- **Purpose:** Generate videos from text/scripts/images
-- **Location:** ~/.openclaw/skills/video-creator/
-- **Key Scripts:** text_to_video.py, script_to_video.py, image_to_video.py, add_music.py, multi_clip_assembly.py
-- **Dependencies:** moviepy, opencv-python, requests, pillow
-- **AI Providers:** KIE.AI (Veo, Sora, Kling, etc.)
-- **Templates:** product_showcase, social_post, tutorial, testimonial, podcast_clip
-```
-
-### Update MEMORY.md
-```markdown
+Apply the core file updates from `CORE_UPDATES.md`.
 ## Video Creator Skill
 - Installed at: ~/.openclaw/skills/video-creator/
 - Full reference: ~/.openclaw/skills/video-creator/SKILL.md

@@ -35,7 +35,7 @@ Scripts live in `scripts/`.
 1. Install dependencies (see `INSTALL.md`).
 2. Go into the skill folder:
    ```bash
-   cd "$HOME/.openclaw/skills/25-video-creator"
+   cd "$HOME/.openclaw/skills/video-creator"
    ```
 3. Generate a test video without any API keys:
    ```bash

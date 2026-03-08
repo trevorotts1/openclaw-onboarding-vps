@@ -25,7 +25,7 @@ Your goal is to transform a talking-head video into a professionally edited vide
 ### STEP 1: Install Tools (If Needed)
 
 ```bash
-pip install yt-dlp moviepy scenedetect video2x opencv-python
+pip install yt-dlp moviepy scenedetect opencv-python
 ```
 
 Verify:
@@ -266,41 +266,6 @@ Use MoviePy for crossfades if needed for smoother flow.
 
 ---
 
-### STEP 13: UPLOAD TO TELEGRAM & REQUEST FEEDBACK
-
-**Upload with this message:**
-
----
-
-🎬 **Your professionally edited video is ready!**
-
-I've transformed your talking-head video into a professional production. Here's what I did:
-
-✅ **Analyzed your transcript** to understand key themes  
-✅ **Extracted your voice** as continuous voiceover  
-✅ **Created strategic B-roll** matching your content  
-✅ **Professional structure:**
-   - **Beginning:** You visible (intro/hook)
-   - **Sections 1 & 2:** B-roll with your voiceover
-   - **Middle:** You visible (key transition)
-   - **End:** You visible (closing/call-to-action)
-
-**You're visible at 3 strategic points (~25% of video)**  
-**B-roll fills the rest (~75% of video)**  
-**Looks professionally produced with continuous voiceover**
-
-[ATTACH VIDEO FILE]
-
-**Does this structure work for you?**
-- Want me to adjust where you appear?
-- Different B-roll style?
-- Longer/shorter person segments?
-- Or approve this version?
-
-Let me know what to change!
-
----
-
 ## KEY PRINCIPLES FOR PROFESSIONAL LOOK
 
 ### 1. Continuous Voiceover
@@ -419,11 +384,6 @@ whisper voiceover.aac --model medium --output_format json --output_dir /tmp
 
 # 8. Resize for platform
 ~/.openclaw/skills/video-editor/scripts/resize.sh --input captioned.mp4 --platform tiktok --output final.mp4
-
-# 9. Upload to Telegram with feedback request
-```
-
----
 
 ## REMEMBER THE STRUCTURE
 
