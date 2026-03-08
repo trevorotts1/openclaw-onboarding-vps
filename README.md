@@ -2,7 +2,7 @@
 
 **The complete skill package for setting up a fully operational OpenClaw AI assistant.**
 
-15 skills. Installed in order. Each one teaches your AI agent how to use a different tool or service - from backing up your files to generating images to managing a team through Telegram.
+22 skills. Installed in order. Each one teaches your AI agent how to use a different tool or service - from backing up your files to generating images, managing a team, building an AI workforce, and creating coaching personas from books.
 
 ---
 
