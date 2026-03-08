@@ -332,7 +332,7 @@ Check if Skill 21 (book-to-persona / Coaching Personas) is installed:
 qmd status 2>/dev/null | grep -i "coaching-personas"
 
 # Check for persona skill folder
-ls ~/.openclaw/skills/22-book-to-persona/ 2>/dev/null
+ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/ 2>/dev/null
 ```
 
 **If coaching personas ARE installed:**

@@ -1,5 +1,5 @@
 ---
-name: book-to-persona
+name: book-to-persona-coaching-leadership-system
 description: >
   Converts any bestselling book PDF into a dual-purpose persona blueprint — one that coaches
   humans through personal and professional challenges AND governs AI agents executing professional

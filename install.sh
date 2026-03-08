@@ -177,10 +177,10 @@ check_or_ask_key() {
   fi
 }
 
-check_or_ask_key "MOONSHOT_API_KEY"    "Book-to-Persona Phase 1 extraction (Kimi K2.5)" "22-book-to-persona" && SUMMARY_INSTALLED+=("Moonshot API") || SUMMARY_NEEDS_KEY+=("MOONSHOT_API_KEY")
-check_or_ask_key "OPENROUTER_API_KEY"  "Book-to-Persona Phase 2 analysis (DeepSeek) + model fallbacks" "22-book-to-persona" && true || SUMMARY_NEEDS_KEY+=("OPENROUTER_API_KEY")
-check_or_ask_key "OPENAI_API_KEY"      "Book-to-Persona Phase 3 synthesis (Codex)" "22-book-to-persona" && true || SUMMARY_NEEDS_KEY+=("OPENAI_API_KEY")
-check_or_ask_key "GITHUB_TOKEN"        "Push new personas to GitHub repo after pipeline runs" "22-book-to-persona" && true || SUMMARY_NEEDS_KEY+=("GITHUB_TOKEN")
+check_or_ask_key "MOONSHOT_API_KEY"    "Book-to-Persona Phase 1 extraction (Kimi K2.5)" "22-book-to-persona-coaching-leadership-system" && SUMMARY_INSTALLED+=("Moonshot API") || SUMMARY_NEEDS_KEY+=("MOONSHOT_API_KEY")
+check_or_ask_key "OPENROUTER_API_KEY"  "Book-to-Persona Phase 2 analysis (DeepSeek) + model fallbacks" "22-book-to-persona-coaching-leadership-system" && true || SUMMARY_NEEDS_KEY+=("OPENROUTER_API_KEY")
+check_or_ask_key "OPENAI_API_KEY"      "Book-to-Persona Phase 3 synthesis (Codex)" "22-book-to-persona-coaching-leadership-system" && true || SUMMARY_NEEDS_KEY+=("OPENAI_API_KEY")
+check_or_ask_key "GITHUB_TOKEN"        "Push new personas to GitHub repo after pipeline runs" "22-book-to-persona-coaching-leadership-system" && true || SUMMARY_NEEDS_KEY+=("GITHUB_TOKEN")
 
 # ─────────────────────────────────────────────
 # STEP 6: Set up QMD collections

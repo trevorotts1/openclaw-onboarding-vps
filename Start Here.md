@@ -465,7 +465,7 @@ All skill folders are located inside:
 | 18 | Humanizer | 19-humanizer |
 | 19 | YouTube Watcher | 20-youtube-watcher |
 | 20 | Tavily Search | 21-tavily-search |
-| 21 | Book-to-Persona | 22-book-to-persona |
+| 21 | Book To Persona & Coaching & Leadership System | 22-book-to-persona-coaching-leadership-system |
 | 22 | AI Workforce Blueprint | 23-ai-workforce-blueprint |
 | 23 | OpenRouter Setup (MUST BE LAST, after model backup) | 12-openrouter-setup |
 

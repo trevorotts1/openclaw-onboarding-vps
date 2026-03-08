@@ -4,6 +4,14 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## [v1.6.0] - March 8, 2026
+
+### Changed
+- **Skill 22 renamed**: "book-to-persona" → "Book To Persona & Coaching & Leadership System" per Trevor
+- **Skill 23 confirmed**: "AI Workforce Blueprint" name confirmed
+
+---
+
 ## [v1.5.0] - March 7, 2026
 
 ### Added
@@ -11,7 +19,7 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ### Changed
 - **Renumbered skills 03 and up** to insert Agent Browser as Skill 03.
-  - Example mapping: 03-superpowers -> 04-superpowers, 12-google-workspace-setup -> 13-google-workspace-setup, 21-book-to-persona -> 22-book-to-persona, 22-ai-workforce-blueprint -> 23-ai-workforce-blueprint.
+  - Example mapping: 03-superpowers -> 04-superpowers, 12-google-workspace-setup -> 13-google-workspace-setup, 21-book-to-persona -> 22-book-to-persona-coaching-leadership-system, 22-ai-workforce-blueprint -> 23-ai-workforce-blueprint.
 - **All INSTALL.md files rewritten to be agent-executable** (autonomous execution). Removed "say to your AI" style instructions.
 - **Google Workspace Setup**: major expansion and hardening
   - Added Gmail-only OAuth path (separate from Workspace service account path)
@@ -21,7 +29,7 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 - **BlackCEO Team Management**: clarified isolation rules
   - Isolation means context and data isolation only
   - Communication is allowed when explicitly directed
-- **Book-to-Persona**: fixed step numbering and added pipeline execution test step
+- **Book To Persona & Coaching & Leadership System**: fixed step numbering and added pipeline execution test step
 - **AI Workforce Blueprint**: rewrote INSTALL.md into a real multi-phase autonomous execution flow
 
 ---
@@ -30,7 +38,7 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ### Added
 - **Skill 22 - AI Workforce Blueprint**: Build the folder and file system that turns your AI into a trained workforce. Creates department folders, role folders, Start Here files, routing logic, and SOPs. Includes automated scaffold script (Option A), manual build guide (Option B), and resume/audit mode (Option C). Full 66,819-character blueprint document included.
-- **Skill 21 - Book-to-Persona**: Convert any book (PDF, EPUB, MOBI, AZW3) into a dual-purpose persona blueprint. 40 pre-built personas from bestselling books already included - no pipeline required for existing books. 3-phase pipeline: Kimi extract → DeepSeek analyze → Codex synthesize. PERSONA-ROUTER.md maps task types to personas and department folders. QMD integration for instant semantic search across all 447 persona documents (7,465 vectors).
+- **Skill 21 - Book To Persona & Coaching & Leadership System**: Convert any book (PDF, EPUB, MOBI, AZW3) into a dual-purpose persona blueprint. 40 pre-built personas from bestselling books already included - no pipeline required for existing books. 3-phase pipeline: Kimi extract → DeepSeek analyze → Codex synthesize. PERSONA-ROUTER.md maps task types to personas and department folders. QMD integration for instant semantic search across all 447 persona documents (7,465 vectors).
 - **Skill 20 - Tavily Search**: AI-optimized web search via Tavily API for deep research tasks.
 
 ---

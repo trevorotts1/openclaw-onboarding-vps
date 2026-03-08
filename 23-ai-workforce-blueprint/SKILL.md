@@ -116,4 +116,4 @@ These two skills are separate but work together automatically.
 - Install skill 21 later, then re-run the scaffold in Option C (audit mode)
 - It will detect personas and wire them in retroactively without touching existing files
 
-**Cross-reference path:** `~/.openclaw/skills/22-book-to-persona/PERSONA-ROUTER.md`
+**Cross-reference path:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md`
