@@ -42,6 +42,300 @@ No exceptions. If you skip those two, stop and go back.
 
 ---
 
+---
+
+---
+
+## 🔴 SKILL INSTALLATION PROTOCOL (MANDATORY FOR EACH SKILL)
+
+**For EVERY skill folder (01 through 29), you MUST follow this exact sequence. NO EXCEPTIONS. NO SHORTCUTS.**
+
+### ZERO TOLERANCE SHORTCUTS
+The following are FORBIDDEN and will cause installation failures:
+- "I'll read that later" = **WRONG.** Read it NOW.
+- "This looks similar to..." = **WRONG.** Read every file completely.
+- "I can skip this step" = **WRONG.** Follow every step exactly.
+- "Close enough" = **WRONG.** Verify every requirement is met.
+- "The user probably wants..." = **WRONG.** Do not change intent. Follow instructions exactly.
+
+### STEP 1: TEACH YOURSELF PROTOCOL (TYP) - MANDATORY
+**Before touching ANYTHING in a skill folder:**
+1. Announce: "Installing [skill-name]. Activating Teach Yourself Protocol."
+2. Find ALL .md files in the skill folder (including subfolders)
+3. Read SKILL.md completely
+4. Read CORE_UPDATES.md completely
+5. Read INSTALL.md completely
+6. Read INSTRUCTIONS.md if present
+7. Read any other .md files found
+8. **VERIFICATION:** List every .md file you found and confirm you read it
+
+### STEP 2: NO ACTION BEFORE COMPREHENSION
+**Forbidden actions (DO NOT DO THESE):**
+- Do NOT run install commands before reading ALL docs
+- Do NOT assume you know what the skill does based on folder name
+- Do NOT skip reading files because they "look similar" to other skills
+- Do NOT execute shell commands from SKILL.md until you've read ALL files
+- Do NOT create files or modify config before understanding the full scope
+- Do NOT say "I understand" without listing what you learned
+
+### STEP 3: FOLLOW THE CHECKLIST
+Every skill has a specific install sequence. Follow it exactly:
+- If INSTALL.md says "Step 1, Step 2, Step 3" → do them in that order
+- If SKILL.md has prerequisites → verify they're met before proceeding
+- If CORE_UPDATES.md lists files to update → update ALL of them
+- If the skill requires API keys → prompt for them or skip with reminder
+- **VERIFICATION:** After each step, explicitly state "Step X complete"
+
+### STEP 4: VERIFY BEFORE CONFIRMING DONE
+**Before saying a skill is "installed" or "complete":**
+- [ ] Re-read the skill's success criteria from SKILL.md
+- [ ] Verify all files were created/modified as specified
+- [ ] Verify all API keys/credentials are properly stored
+- [ ] Run any verification commands specified in the skill docs
+- [ ] Confirm TYP was applied (core files updated with lightweight summary)
+- [ ] Explicitly state: "[Skill-name] installation verified complete"
+
+### STEP 5: NO GLOBAL "DONE" UNTIL ALL 29 ARE DONE
+- Do NOT say "onboarding complete" after finishing one skill
+- Do NOT skip skills because they "seem optional"
+- Install skills 01-29 in order, confirm each one individually
+- Only after skill 29 is verified complete → remove ONBOARDING PENDING flag
+- Only after skill 29 is verified complete → write ONBOARDING COMPLETE to MEMORY.md
+
+---
+
+---
+
+## 🔴 GATEWAY RESTART PROTOCOL - NEVER TRIGGER AUTONOMOUSLY
+
+**Discipline Rule:** During any skill installation, you may encounter instructions to restart the OpenClaw gateway.
+
+**YOU ARE FORBIDDEN from triggering gateway restarts yourself.**
+
+### Correct Process
+When a gateway restart is needed:
+1. **STOP** - Do NOT execute the restart command
+2. **NOTIFY** the user: "This installation requires an OpenClaw gateway restart to complete."
+3. **ASK** one of these questions:
+   - "Would you like me to trigger the gateway restart for you?"
+   - "Or would you prefer to initiate the restart yourself?"
+4. **WAIT** for explicit user confirmation before proceeding
+
+### Forbidden Actions
+- Do NOT run `openclaw gateway restart` without explicit user permission
+- Do NOT say "I'll restart the gateway now" without asking first
+- Do NOT assume the user wants the restart
+- Do NOT restart as part of an "autonomous" workflow
+
+### Why This Matters
+Gateway restarts interrupt active sessions and can kill running processes. The user must control when this happens.
+
+---
+
+---
+
+## 🔴 COMPLETE ALL DEPENDENCIES - NO PARTIAL INSTALLS
+
+**Every skill may have multiple dependencies, sub-installs, and configuration steps.**
+
+### You MUST Complete Everything Listed
+When reading a skill's .md files:
+- If INSTALL.md lists 5 steps → do ALL 5 steps
+- If SKILL.md mentions 3 dependencies → install ALL 3
+- If CORE_UPDATES.md says update 4 files → update ALL 4
+- If there are sub-tasks (A, B, C) → complete ALL sub-tasks
+
+### The Only Way to Know: Read ALL .md Files
+Dependencies are often scattered across multiple files:
+- SKILL.md might mention prerequisites
+- INSTALL.md might list command sequences
+- INSTRUCTIONS.md might detail configuration steps
+- README.md might have additional setup notes
+
+**VERIFICATION:** Before declaring a skill complete, scan back through ALL .md files and verify you did everything mentioned.
+
+### Forbidden Actions
+- Do NOT stop after the "main" install if there are additional steps
+- Do NOT skip "optional" components that are actually required
+- Do NOT assume "that part probably isn't important"
+- Do NOT say "the core functionality works" when configuration is incomplete
+
+---
+
+---
+
+## 🔴 OPENROUTER RULE - NEVER CHANGE PRIMARY MODEL
+
+**When installing OpenRouter (Skill 12) or any skill that mentions OpenRouter:**
+
+### YOU ARE FORBIDDEN from changing the user's primary model.
+
+**Correct Process:**
+1. Install OpenRouter CLI/tooling as specified
+2. Configure API keys
+3. **STOP** - Do NOT change any model settings
+4. **INFORM** the user: "OpenRouter is installed. Your primary model remains unchanged."
+5. **OFFER** (if they ask): "If you'd like to switch to an OpenRouter model, I can help you do that."
+
+### Forbidden Actions
+- Do NOT change the user's default model to an OpenRouter model
+- Do NOT modify model configuration files
+- Do NOT assume "they probably want OpenRouter now"
+- Do NOT switch models "just to test"
+
+### Why This Matters
+Changing someone's primary model without permission breaks their workflow. Model selection is a user decision, not an installation side effect.
+
+---
+
+---
+
+## 🔴 MAIN ORCHESTRATOR ONLY - SPECIFIC SKILLS
+
+**The following skills MUST be installed by the main orchestrator agent, NEVER by sub-agents:**
+
+| Skill | Folder | Reason |
+|-------|--------|--------|
+| AI Workforce Blueprint | `23-ai-workforce-blueprint/` | Complex multi-step setup requiring user interaction |
+| Book-to-Persona Coaching System | `22-book-to-persona-coaching-leadership-system/` | High-stakes configuration, user must be present |
+
+### Process for These Skills
+1. Main orchestrator reads ALL .md files
+2. Main orchestrator pauses and notifies: "This skill requires user interaction. I'll handle this directly."
+3. Main orchestrator proceeds with install steps
+4. Sub-agents are NEVER spawned for these skills
+
+### Forbidden Actions
+- Do NOT spawn sub-agents to install these skills
+- Do NOT delegate these skills to background processes
+- Do NOT skip user interaction steps
+
+---
+
+---
+
+## 🔴 GOOGLE WORKSPACE - SAVE FOR LAST
+
+**Skill 13/14 (Google Workspace Setup/Integration) MUST be installed LAST.**
+
+### Why Last?
+- Most complex skill with multiple auth flows
+- Requires user presence for OAuth consent screens
+- May require browser interaction
+- Can have extended configuration steps
+- Other skills should be stable before tackling this
+
+### Install Order
+Skills 01-12 → Skills 15-22 → Skill 23 (AI Workforce) → Skill 24-29 → **THEN Google Workspace**
+
+If user wants to skip Google Workspace initially, that's acceptable. Log a reminder and continue.
+
+---
+
+---
+
+## 🔴 ONBOARDING FLOW PROTECTION - NOTIFY BEFORE QUESTIONS
+
+**For skills that require user configuration (especially AI Workforce Blueprint):**
+
+### Correct Process
+1. Install the skill files/read the skill
+2. **NOTIFY** (do NOT ask questions yet):
+   > "The AI Workforce Blueprint has been installed. Let me know when you're ready for me to set up your company's back office, right?"
+3. **WAIT** for user to explicitly respond
+4. **THEN** begin asking configuration questions
+
+### Forbidden Actions
+- Do NOT start asking configuration questions immediately after install
+- Do NOT assume user wants to configure right now
+- Do NOT skip the notification step
+- Do NOT barrage user with questions without permission
+
+### Why This Matters
+Users need control over when configuration happens. They may want to review documentation first or finish something else.
+
+---
+
+---
+
+## 🔴 MASTER FILES FOLDER DISCIPLINE
+
+**Before creating ANY folders for skill storage:**
+
+### Step 1: Check for Existing Folders
+Search for existing master file folders:
+- `~/Downloads/openclaw-master-files/`
+- `~/Downloads/OpenClaw Master Files/`
+- `~/Downloads/master-documents/`
+- `~/Documents/openclaw-master-files/`
+- Any folder containing both "openclaw" AND "master" in the name
+
+### Step 2: Use Existing or Create
+- **If found:** Use that folder. Create skill subfolders inside it.
+- **If not found:** Create `~/Downloads/openclaw-master-files/`
+
+### Step 3: Create Skill Subfolders Inside
+All skill content goes inside the master files folder:
+```
+~/Downloads/openclaw-master-files/
+├── 03-agent-browser/
+├── 04-superpowers/
+├── 05-ghl-setup/
+└── [skill-content-here]
+```
+
+### Forbidden Actions
+- Do NOT create skill folders at random locations
+- Do NOT create duplicate master file folders
+- Do NOT scatter skill content across different parent directories
+- Do NOT ignore existing folder structure
+
+---
+
+---
+
+## 🔴 CORE.MD FILES - PROTECT AT ALL COSTS
+
+**The following are the ONLY core.md files. All other files are deep files.**
+
+| Core File | Purpose | Location |
+|-----------|---------|----------|
+| AGENTS.md | Behavior rules, operating doctrine | `~/clawd/AGENTS.md` |
+| MEMORY.md | Persistent state, project status | `~/clawd/MEMORY.md` |
+| TOOLS.md | Tool setup, API credentials | `~/clawd/TOOLS.md` |
+| USER.md | User preferences, context | `~/clawd/USER.md` |
+| IDENTITY.md | Agent identity, persona | `~/clawd/IDENTITY.md` |
+| SOUL.md | Core values, philosophy | `~/clawd/SOUL.md` |
+| HEARTBEAT.md | Current priorities, active tasks | `~/clawd/HEARTBEAT.md` |
+
+### TYP Storage Rules
+- **Core files:** 10-25 line summaries ONLY, with pointers to deep files
+- **Deep files:** Complete, unabridged content in `~/Downloads/openclaw-master-files/`
+
+### TYP Conflict Resolution
+| Scenario | Rule |
+|----------|------|
+| Skill asks for core file update → **matches TYP** | Follow TYP (lean summary + deep file) |
+| Skill asks for core file update → **conflicts with TYP** | **Skill wins** - follow skill's specific instructions |
+| Skill is silent on storage method | Default to TYP |
+
+### Forbidden Actions
+- Do NOT dump full content into core files (causes bloat)
+- Do NOT create orphan deep files with no core file reference
+- Do NOT duplicate content between core and deep files
+- Do NOT add new "core files" to the list above
+
+### Verification
+After every skill install, verify:
+- [ ] Core files have lightweight summaries only (10-25 lines)
+- [ ] Deep files have complete content
+- [ ] Core files reference deep files with correct paths
+- [ ] No bloat added to AGENTS.md, MEMORY.md, TOOLS.md, USER.md, IDENTITY.md, SOUL.md, or HEARTBEAT.md
+
+---
+
+---
+
 ## WEEKLY SKILL UPDATE CHECK
 
 Once the onboarding package is installed, your agent should check for updates **every Sunday**.

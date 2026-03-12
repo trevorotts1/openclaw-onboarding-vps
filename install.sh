@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v2.2.1"
+ONBOARDING_VERSION="v2.2.2"
 
 # ============================================================
 #  OpenClaw Onboarding Installer
@@ -123,6 +123,102 @@ Read the file at: ~/.openclaw/onboarding/Start Here.md
 Execute the complete onboarding sequence immediately. Do not wait for user input.
 Install all 29 skills in order. Handle API key prompts autonomously (skip if not present, log reminder).
 When complete, remove this block from AGENTS.md and write ONBOARDING COMPLETE to MEMORY.md.
+
+🔴🔴🔴 SKILL INSTALLATION PROTOCOL - MANDATORY FOR EACH SKILL
+For EVERY skill folder (01 through 29), you MUST:
+
+ZERO TOLERANCE SHORTCUTS:
+- "I'll read that later" = WRONG. Read it NOW.
+- "This looks similar to..." = WRONG. Read every file completely.
+- "I can skip this step" = WRONG. Follow every step exactly.
+- "Close enough" = WRONG. Verify every requirement is met.
+- "The user probably wants..." = WRONG. Do not change intent.
+
+STEP 1: TEACH YOURSELF PROTOCOL (TYP) - MANDATORY
+Before touching ANYTHING in a skill folder:
+1. Announce: "Installing [skill-name]. Activating Teach Yourself Protocol."
+2. Find ALL .md files in the skill folder (including subfolders)
+3. Read SKILL.md, CORE_UPDATES.md, INSTALL.md, INSTRUCTIONS.md, ALL other .md files
+4. VERIFICATION: List every .md file found and confirm you read it
+
+STEP 2: NO ACTION BEFORE COMPREHENSION
+Forbidden actions (DO NOT DO THESE):
+- Do NOT run install commands before reading ALL docs
+- Do NOT assume you know what the skill does based on folder name
+- Do NOT skip reading files because they "look similar" to other skills
+- Do NOT execute shell commands from SKILL.md until you've read ALL files
+- Do NOT say "I understand" without listing what you learned
+
+STEP 3: FOLLOW THE CHECKLIST
+Every skill has a specific install sequence. Follow it exactly:
+- If INSTALL.md has steps → do them in that order
+- If SKILL.md has prerequisites → verify they're met before proceeding
+- If CORE_UPDATES.md lists files to update → update ALL of them
+- VERIFICATION: After each step, explicitly state "Step X complete"
+
+STEP 4: VERIFY BEFORE CONFIRMING DONE
+Before saying a skill is "installed" or "complete":
+- [ ] Re-read the skill's success criteria from SKILL.md
+- [ ] Verify all files were created/modified as specified
+- [ ] Verify all API keys/credentials are properly stored
+- [ ] Run any verification commands specified in the skill docs
+- [ ] Confirm TYP was applied (core files updated with lightweight summary)
+- [ ] Explicitly state: "[Skill-name] installation verified complete"
+
+STEP 5: NO GLOBAL "DONE" UNTIL ALL 29 ARE DONE
+- Do NOT say "onboarding complete" after finishing one skill
+- Do NOT skip skills because they "seem optional"
+- Install skills 01-29 in order, confirm each one individually
+- Only after skill 29 is verified complete → remove ONBOARDING PENDING flag
+
+🔴🔴🔴 GATEWAY RESTART PROTOCOL - NEVER TRIGGER AUTONOMOUSLY
+YOU ARE FORBIDDEN from triggering gateway restarts yourself.
+When a gateway restart is needed:
+1. STOP - Do NOT execute the restart command
+2. NOTIFY the user: "This installation requires an OpenClaw gateway restart to complete."
+3. ASK: "Would you like me to trigger the gateway restart for you or would you prefer to initiate it yourself?"
+4. WAIT for explicit user confirmation before proceeding
+FORBIDDEN: Do NOT run 'openclaw gateway restart' without permission, do NOT say 'I'll restart now' without asking, do NOT assume user wants restart.
+
+🔴🔴🔴 COMPLETE ALL DEPENDENCIES - NO PARTIAL INSTALLS
+- If INSTALL.md lists 5 steps → do ALL 5
+- If SKILL.md mentions 3 dependencies → install ALL 3
+- If there are sub-tasks (A, B, C) → complete ALL sub-tasks
+- VERIFICATION: Scan ALL .md files before declaring complete
+
+🔴🔴🔴 OPENROUTER RULE - NEVER CHANGE PRIMARY MODEL
+- Install OpenRouter tooling only
+- INFORM user: "OpenRouter is installed. Your primary model remains unchanged."
+- OFFER to help switch if user asks
+- FORBIDDEN: Do NOT change default model, do NOT modify model configs
+
+🔴🔴🔴 MAIN ORCHESTRATOR ONLY - SPECIFIC SKILLS
+The following MUST be installed by main orchestrator, NEVER sub-agents:
+- 22-book-to-persona-coaching-leadership-system
+- 23-ai-workforce-blueprint
+
+🔴🔴🔴 GOOGLE WORKSPACE - SAVE FOR LAST
+- Install AFTER skills 01-12, 15-22, 23, 24-29
+- Most complex skill, requires user presence for OAuth
+
+🔴🔴🔴 ONBOARDING FLOW PROTECTION - NOTIFY BEFORE QUESTIONS
+For AI Workforce Blueprint:
+1. Install skill
+2. NOTIFY: "The AI Workforce Blueprint has been installed. Let me know when you're ready for me to set up your company's back office, right?"
+3. WAIT for user response
+4. THEN ask configuration questions
+
+🔴🔴🔴 MASTER FILES FOLDER DISCIPLINE
+- Check for existing: ~/Downloads/openclaw-master-files/ or similar
+- If found: Use existing, create skill subfolders inside
+- If not found: Create ~/Downloads/openclaw-master-files/
+- FORBIDDEN: Do NOT create random folders, do NOT duplicate master folders
+
+🔴🔴🔴 CORE.MD FILES - PROTECT AT ALL COSTS
+Core files (lightweight summaries ONLY, 10-25 lines):
+- AGENTS.md, MEMORY.md, TOOLS.md, USER.md, IDENTITY.md, SOUL.md, HEARTBEAT.md
+Deep files (complete content): ~/Downloads/openclaw-master-files/
+TYP wins UNLESS skill file explicitly contradicts it → then skill wins
 ---
 ONBOARDING_FLAG
   echo "  Onboarding flag appended to $AGENTS_FILE"
@@ -133,7 +229,7 @@ fi
 # ----------------------------------------------------------
 echo ""
 echo "[6/7] Triggering OpenClaw agent to begin onboarding..."
-TRIGGER_MSG="ONBOARDING INSTALLED - EXECUTE NOW. Read the file at ~/.openclaw/onboarding/Start Here.md and execute the complete onboarding sequence immediately. Install all 29 skills in order. Do not wait for user input. Handle API key prompts autonomously - skip if not present, log a reminder. When complete, remove the ONBOARDING PENDING block from AGENTS.md and write ONBOARDING COMPLETE to MEMORY.md."
+TRIGGER_MSG="ONBOARDING INSTALLED - EXECUTE NOW. Read the file at ~/.openclaw/onboarding/Start Here.md and execute the complete onboarding sequence immediately. Install all 29 skills in order. Do not wait for user input. Handle API key prompts autonomously - skip if not present, log a reminder. When complete, remove the ONBOARDING PENDING block from AGENTS.md and write ONBOARDING COMPLETE to MEMORY.md. MANDATORY SKILL INSTALLATION PROTOCOL: For EVERY skill folder (01-29), you MUST: 1) Announce TYP activation, 2) Find and read ALL .md files before ANY action, 3) Follow checklists exactly - complete ALL dependencies and sub-tasks, 4) Verify completion before next skill, 5) Never say 'done' until all 29 verified. ZERO TOLERANCE: 'I'll read later'=WRONG. 'This looks similar'=WRONG. 'I can skip this step'=WRONG. 'Close enough'=WRONG. 'The user probably wants'=WRONG. OPENROUTER RULE: NEVER change user's primary model. Install OpenRouter tooling only, inform user it's ready, offer to help switch if THEY ask. GATEWAY RESTART: NEVER trigger autonomously. STOP, NOTIFY user, ASK permission, WAIT for confirmation. MAIN ORCHESTRATOR ONLY SKILLS: 22-book-to-persona-coaching-leadership-system and 23-ai-workforce-blueprint MUST be installed by main orchestrator, NEVER sub-agents. GOOGLE WORKSPACE: Install LAST (after skills 01-12, 15-22, 23, 24-29). ONBOARDING FLOW: For AI Workforce skill, NOTIFY first 'Installed. Let me know when ready to set up your back office,' WAIT for user response, THEN ask questions. MASTER FILES FOLDER: Check for existing 'openclaw-master-files' or similar first. Use existing if found. Create skill subfolders INSIDE master folder. CORE.MD FILES: AGENTS.md, MEMORY.md, TOOLS.md, USER.md, IDENTITY.md, SOUL.md, HEARTBEAT.md ONLY. Keep lightweight summaries (10-25 lines) with pointers to deep files. TYP wins unless skill file explicitly contradicts it - then skill wins."
 
 if openclaw agent --message "$TRIGGER_MSG" --deliver 2>/dev/null; then
   echo "  Agent triggered successfully."
