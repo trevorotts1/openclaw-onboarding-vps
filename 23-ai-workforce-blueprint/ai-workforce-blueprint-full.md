@@ -1,8 +1,8 @@
 # The AI Workforce Blueprint
-> **Version 10 - March 6, 2026 at 4:36 PM** | Options A/B/C + Resume Mode + Master Orchestrator + Routing Decision Tree
+> **Version 11 - March 13, 2026** | 3-Option Flow + Interview-Style Questions + Context Awareness + Telegram Formatting
 
-**Version:** V2
-**Last updated:** March 6 at 11-56 AM
+**Version:** V2.1
+**Last updated:** March 13 at 8-15 AM
 
 ## How to Build the Folder System That Powers Your AI Workforce
 
@@ -73,6 +73,54 @@ Your folder structure is that office building. If the folders are messy, the off
 > - You can hand work off and walk away.
 > - You can scale to multiple departments without losing quality.
 > - The AI improves because the knowledge base grows over time.
+
+---
+
+## The 3-Option Build Flow
+
+When you trigger this skill, you have 3 options. Choose the one that fits your situation.
+
+### Option A - Full Automated Build 🚀 (Recommended)
+
+**Best for:** First-time setup, new businesses, reorganizing
+
+**What happens:**
+1. I show you 10 pre-built departments
+2. You choose: Keep all / Keep some / Add custom / Start fresh
+3. I interview you with example-driven questions
+4. I build everything automatically
+
+**Pre-built departments:**
+
+• marketing-dept - Content, ads, social media, email campaigns
+• sales-dept - Converting leads to customers
+• billing-dept - Invoicing, payments, financial tracking
+• customer-support-dept - Helping existing clients
+• operations-dept - Day-to-day business running
+• creative-dept - Graphics, video, content creation
+• hr-people-dept - Team management, hiring
+• legal-compliance-dept - Contracts, regulations
+• it-tech-dept - Software, websites, infrastructure
+• master-orchestrator-dept - Routes all work (always included)
+
+### Option B - Manual Build 🛠️
+
+**Best for:** Hands-on users who want full control
+
+**What happens:**
+- You read this entire blueprint
+- You build everything yourself
+- You have complete control
+
+### Option C - Audit / Resume Mode 🔍
+
+**Best for:** Returning users, adding personas later
+
+**What happens:**
+- I scan your existing workforce folder
+- I add missing files
+- I wire personas if Skill 22 is installed
+- I never overwrite existing content
 
 ---
 
@@ -483,15 +531,79 @@ This file sits at the top level of each department folder, before any role subfo
 
 For each department, the AI must ask at least **7 questions** so it can generate the Department Overview, the role Start Here files, and the knowledge base files correctly.
 
-These are the minimum questions to include:
+**Interview-Style Question Format:**
+Each question should include an example answer. This helps the user understand what kind of information you're looking for. Questions should be conversational and warm.
 
-1. What is the purpose of this department?
-2. What roles exist inside this department?
-3. What does each role do day to day?
-4. What does this department receive from other departments and what does it hand off to other departments?
-5. What is the tech stack for this department (tools and logins used daily)?
-6. What are the KPIs for this department (goals, targets, definition of success)?
-7. What are the most common tasks this department performs that need SOPs (list the top 10)?
+**Before asking, check existing context:**
+- MEMORY.md for business info
+- USER.md for preferences and tools
+- AGENTS.md for known integrations
+- HEARTBEAT.md for active projects
+- IDENTITY.md for business context
+
+Skip any question where the answer is already known from these files.
+
+#### The 7 Required Questions (With Examples)
+
+**1. What is the purpose of this department?**
+   - Example: "The Sales department converts leads into paying customers through calls, demos, and proposals"
+   - Example: "The Marketing department generates awareness and brings new leads into the business"
+
+**2. What roles exist inside this department?**
+   - Example: "Appointment Setter, Closer, Account Manager"
+   - Example: "Content Writer, Social Media Manager, Ads Specialist"
+   - Example: "Just one person - a generalist who does everything"
+
+**3. What does each role do day to day?**
+   - Example: "The Appointment Setter makes 50-80 calls per day, books 3-5 appointments"
+   - Example: "The Content Writer writes blog posts, emails, and social media content"
+
+**4. What does this department receive from other departments and what does it hand off to other departments?**
+   - Example: "Receives qualified leads from Marketing, hands closed deals to Operations"
+   - Example: "Receives content requests from Sales, hands finished content to everyone"
+
+**5. What is the tech stack for this department (tools and logins used daily)?**
+   - Example: "GoHighLevel for CRM, Slack for communication, Google Calendar for scheduling"
+   - Example: "Canva for design, Buffer for social posting, Google Drive for storage"
+
+**6. What are the KPIs for this department (goals, targets, definition of success)?**
+   - Example: "Sales: 3-5 appointments booked per day, 75% show rate, $50k monthly revenue"
+   - Example: "Marketing: 10,000 impressions per week, 50 new leads per month"
+
+**7. What are the most common tasks this department performs that need SOPs (list the top 10)?**
+   - Example: "1. Booking appointments 2. Handling objections 3. Following up 4. Updating CRM..."
+   - Example: "1. Writing blog posts 2. Scheduling social media 3. Running ad campaigns..."
+
+#### Context-Aware Question Flow
+
+The AI should ask questions in this priority order:
+
+1. **Check context files first** - If USER.md says the business uses GoHighLevel, don't ask "What tools do you use?" - you already know.
+
+2. **Ask high-level questions first:**
+   - "What is your business name?" (Example: BlackCEO, Acme Coaching)
+   - "In one sentence, what does your business do?" (Example: I help coaches book more clients)
+
+3. **Ask team structure:**
+   - "What is your current team size?" (Example: Just me, 2-5 people, 10+ people)
+
+4. **Ask about existing materials:**
+   - "Do you have existing SOPs, checklists, or training materials?" (Example: Yes in Google Docs / No starting fresh / Some scattered)
+
+5. **Ask about current challenges:**
+   - "What is your biggest challenge right now?" (Example: Following up with leads, creating content, managing invoices)
+
+6. **Then ask the 7 department-specific questions** for each selected department
+
+#### Skip Known Information
+
+If the AI already knows something, it should say so and skip the question:
+
+✓ Good: "I see from your USER.md that your business is BlackCEO - I'll use that."
+
+✓ Good: "I see you already use GoHighLevel and Slack - I'll include those in the tech stack."
+
+✗ Bad: Asking "What is your business name?" when it was already in USER.md
 
 ---
 
@@ -841,6 +953,41 @@ openclaw-master-files/
 ```
 
 Any department or role can reference these files. "No matter what you are doing, follow these brand guidelines." That is a universal SOP.
+
+---
+
+## Telegram-Friendly Output Format
+
+All messages from this skill use Telegram-friendly formatting:
+
+✓ **No markdown tables** - Tables do not render well on mobile  
+✓ **No code blocks** - Use simple text descriptions instead  
+✓ **Short lines with bullets** - Use • or - for lists  
+✓ **Emojis for visual breaks** - 🚀 📋 ✅ 🔍 etc.  
+
+**Example of good Telegram formatting:**
+
+```
+📁 PRE-BUILT DEPARTMENTS AVAILABLE:
+
+• marketing-dept - Content, ads, social media
+• sales-dept - Converting leads to customers
+• billing-dept - Invoicing and payments
+
+✓ Selected 3 departments
+```
+
+**Instead of tables, use:**
+
+```
+📊 DEPARTMENTS:
+
+• Marketing - handles content and ads
+• Sales - converts leads to customers  
+• Support - helps existing clients
+```
+
+This makes the output easy to read on mobile devices.
 
 ---
 

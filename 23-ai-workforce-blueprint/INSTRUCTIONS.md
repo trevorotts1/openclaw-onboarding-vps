@@ -2,44 +2,77 @@
 
 ## The 3 Options
 
-### Option C - Audit / Resume Mode (Default for returning users)
-**This is the default.** If you already have a workforce folder, run this every time.
+When you trigger this skill, you will see 3 options. Choose the one that fits your situation:
 
-**Say this:** "Audit my AI workforce." or just run the script again.
+---
 
-**What the script does automatically:**
-1. Scans for an existing workforce folder
-2. If found, asks: "Run in audit mode? (Y/n)" - default is YES
-3. Scans every dept folder for missing files
-4. Adds anything missing: good-examples.md, bad-examples.md, tools.md
-5. Checks if Coaching Personas are installed - if yes, adds `governing-personas.md` to each dept and updates every `00-START-HERE.md` with a Governing Personas section
-6. Never overwrites or deletes anything that already exists
+### Option A - Full Automated Build 🚀 (Recommended)
+
+**Best for:** First-time setup, new businesses, or reorganizing
+
+**What happens:**
+1. I show you 10 pre-built departments you can choose from
+2. You decide: Keep all / Keep some / Add custom / Start from scratch
+3. I interview you about your business (with examples for each question)
+4. I build all folders and files automatically based on your answers
+
+**Pre-built departments available:**
+
+• marketing-dept - Content, ads, social media, email campaigns
+• sales-dept - Converting leads to customers
+• billing-dept - Invoicing, payments, financial tracking
+• customer-support-dept - Helping existing clients
+• operations-dept - Day-to-day business running
+• creative-dept - Graphics, video, content creation
+• hr-people-dept - Team management, hiring
+• legal-compliance-dept - Contracts, regulations
+• it-tech-dept - Software, websites, infrastructure
+• master-orchestrator-dept - Routes all work (always included)
+
+**Interview questions include:**
+- What is your business name?
+- In one sentence, what does your business do?
+- What is your current team size?
+- What are the main tools your business uses?
+- What is your biggest challenge right now?
+- Do you have existing SOPs or training materials?
+
+Each question includes examples so you know what kind of answer to give.
+
+**To choose this option:** Say "Build my AI workforce - Option A"
+
+---
+
+### Option B - Manual Build 🛠️
+
+**Best for:** Hands-on users who want full control
+
+**What happens:**
+- You read ai-workforce-blueprint-full.md
+- You build everything yourself following the blueprint
+- You have complete control over every detail
+
+**To choose this option:** Say "Build my AI workforce - Option B"
+
+---
+
+### Option C - Audit / Resume Mode 🔍
+
+**Best for:** Returning users, adding personas later, checking for gaps
+
+**What happens:**
+1. I scan your existing workforce folder
+2. I add any missing files (good-examples.md, bad-examples.md, tools.md)
+3. If Coaching Personas are installed, I wire them to all departments
+4. I never overwrite or delete anything existing
 
 **Use this when:**
-- You installed Skill 22 (personas) after already building your workforce
+- You installed Skill 22 (personas) after building your workforce
 - You added new departments and need them audited
 - You want to make sure nothing is missing
 - Any time you re-run the script
 
----
-
-### Option A - Full Automated Build (For brand-new workforces)
-Your AI asks you questions and builds everything automatically.
-
-**Say this:** "Build my AI workforce. Use Option A."
-
-**What happens:**
-1. AI asks: What is the name of your business?
-2. AI asks: What are your departments? (Use the starter list in the blueprint if unsure)
-3. AI asks: What roles exist in each department?
-4. AI asks: What are the top 3-7 tasks each role performs?
-5. AI asks: What tools does each role use?
-6. AI creates all folders, Start Here files, routing file, and starter SOPs
-7. AI shows you the complete folder tree when done
-
-### Option B - Manual Build
-You build everything yourself using the blueprint as your guide.
-Read `ai-workforce-blueprint-full.md` from start to finish.
+**To choose this option:** Say "Audit my AI workforce" or "Build my AI workforce - Option C"
 
 ---
 
@@ -83,3 +116,59 @@ Without a routing file, the AI guesses. With a routing file, the AI always goes 
 - You can walk away and the AI keeps working
 - Adding a new task means adding one .md file, not re-explaining everything
 - New team members (human or AI) can onboard themselves by reading the folders
+
+## Interview-Style Questions (Option A)
+
+When you choose Option A, I will ask questions interview-style. This means:
+
+✓ Each question includes an example answer
+✓ I check what I already know about you before asking
+✓ Questions are conversational, not robotic
+
+**Example question format:**
+
+Q: What is your business name?  
+Example: Acme Coaching, BlackCEO, Otts Consulting  
+[Your answer]: _____
+
+Q: What are the main tools your business uses?  
+Example: GoHighLevel, Slack, Google Workspace, QuickBooks  
+[Your answer]: _____
+
+This makes it easy to answer - you see exactly what kind of information I am looking for.
+
+## Context Awareness
+
+Before asking questions, I check:
+- Your MEMORY.md for business info
+- Your USER.md for preferences
+- Your AGENTS.md for known tools
+- Your IDENTITY.md for context
+
+If I already know something (like your business name), I will use that info and skip the question.
+
+## Telegram-Friendly Output
+
+All messages from this skill use Telegram-friendly formatting:
+
+✓ No markdown tables  
+✓ No code blocks  
+✓ Short lines with bullets (• or -)  
+✓ Emojis for visual breaks  
+
+This makes it easy to read on mobile devices.
+
+---
+
+## Quick Start Guide
+
+**New user?** → Option A  
+**Want full control?** → Option B  
+**Already built something?** → Option C  
+
+Run the script:  
+```bash
+python3 scripts/build-workforce.py
+```
+
+Or tell me: "Start AI workforce blueprint"

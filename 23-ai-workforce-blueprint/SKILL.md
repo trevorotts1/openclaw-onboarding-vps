@@ -10,7 +10,11 @@ triggers:
   - "build department structure"
   - "create my AI org chart"
   - "scaffold my AI workspace"
-version: 1.0.0
+  - "start AI workforce blueprint"
+  - "build my back office"
+  - "build my company"
+  - "create my AI company structure"
+version: 1.1.0
 ---
 
 ## MANDATORY - Teach Yourself Protocol (TYP)
@@ -19,7 +23,7 @@ version: 1.0.0
 
 Required read order:
 1. SKILL.md (this file)
-2. ai-workforce-blueprint-full.md - the complete 66,819-character blueprint document
+2. ai-workforce-blueprint-full.md - the complete blueprint document
 3. INSTRUCTIONS.md - build options A, B, and C explained
 4. EXAMPLES.md - good and bad department/role structure examples
 5. INSTALL.md - setup and dependencies
@@ -46,7 +50,7 @@ When you run this skill, your AI builds:
 
 ```
 [your-workspace]/
-  sales-dept/
+  marketing-dept/
     [role-folder]/
       00-START-HERE.md
       01-[how-to-file].md
@@ -54,7 +58,7 @@ When you run this skill, your AI builds:
       good-examples.md
       bad-examples.md
       tools.md
-  marketing-dept/
+  sales-dept/
     [role-folder]/
       ...
   ops-dept/
@@ -72,6 +76,46 @@ When you run this skill, your AI builds:
 - User says "build my departments" or "scaffold my workspace"
 - User is starting a new business or reorganizing an existing one
 - User wants their AI to stop forgetting and start operating consistently
+- User says "start AI workforce blueprint" or "build my back office"
+- User says "build my company" or "create my AI company structure"
+
+## The 3-Option Flow (New)
+
+When triggered, the skill now presents 3 clear options:
+
+**Option A - Full Automated Build** 🚀
+- AI interviews you about your business
+- AI builds everything automatically based on your answers
+- Most personalized results
+- Best for: First-time setup
+
+**Option B - Manual Build** 🛠️
+- You build everything yourself using the blueprint
+- Read ai-workforce-blueprint-full.md for step-by-step guidance
+- Best for: Hands-on users who want full control
+
+**Option C - Audit / Resume Mode** 🔍
+- Scans existing workforce folder
+- Adds missing files, wires personas if available
+- Never overwrites existing content
+- Best for: Returning users, adding personas later
+
+## Pre-Built Departments Available
+
+The skill comes with 10 pre-configured departments:
+
+• **marketing-dept** - Content, ads, social media, email campaigns
+• **sales-dept** - Converting leads to customers
+• **billing-dept** - Invoicing, payments, financial tracking
+• **customer-support-dept** - Helping existing clients
+• **operations-dept** - Day-to-day business running
+• **creative-dept** - Graphics, video, content creation
+• **hr-people-dept** - Team management, hiring
+• **legal-compliance-dept** - Contracts, regulations
+• **it-tech-dept** - Software, websites, infrastructure
+• **master-orchestrator-dept** - Routes all work (always included)
+
+You choose: Keep all / Keep some + remove others / Keep all + add custom / Start from scratch
 
 ## Files in This Skill
 
@@ -82,7 +126,7 @@ When you run this skill, your AI builds:
 | INSTRUCTIONS.md | Step-by-step walkthrough of the build process |
 | EXAMPLES.md | Real examples of good department/role structures |
 | CORE_UPDATES.md | What to add to your core memory files after install |
-| ai-workforce-blueprint-full.md | The complete 66,819-character blueprint document |
+| ai-workforce-blueprint-full.md | The complete blueprint document |
 | scripts/build-workforce.py | Automated scaffold script - creates all folders and starter files |
 
 ## How to Use

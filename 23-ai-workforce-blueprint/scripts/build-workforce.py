@@ -9,8 +9,23 @@ Run: python3 build-workforce.py
 import os
 import sys
 import subprocess
+import json
 
 DEPT_SUFFIX = "-dept"
+
+# Pre-built departments with descriptions
+PREBUILT_DEPARTMENTS = {
+    "marketing": "Content, ads, social media, email campaigns",
+    "sales": "Converting leads to customers",
+    "billing": "Invoicing, payments, financial tracking",
+    "customer-support": "Helping existing clients",
+    "operations": "Day-to-day business running",
+    "creative": "Graphics, video, content creation",
+    "hr-people": "Team management, hiring",
+    "legal-compliance": "Contracts, regulations",
+    "it-tech": "Software, websites, infrastructure",
+    "master-orchestrator": "Routes all work (always included)",
+}
 
 # Department → Governing Personas mapping
 # Personas listed in priority order (most relevant first)
@@ -59,6 +74,9 @@ DEPT_PERSONAS = {
     "finance": [
         ("michalowicz-profit-first", "Cash flow, profit first, financial discipline"),
     ],
+    "billing": [
+        ("michalowicz-profit-first", "Cash flow, profit first, financial discipline"),
+    ],
     "coaching": [
         ("robbins-five-second-rule", "Confidence, 5-second action, overcoming hesitation"),
         ("robbins-let-them-theory", "Control release, boundaries, letting go"),
@@ -75,6 +93,12 @@ DEPT_PERSONAS = {
         ("grenny-crucial-conversations", "Difficult conversations, de-escalation"),
         ("voss-never-split-difference", "Tactical empathy, listening, resolution"),
     ],
+    "customer-support": [
+        ("tawwab-set-boundaries-find-peace", "Boundaries, self-respect, healthy limits"),
+        ("brown-atlas-of-heart", "Emotional vocabulary, empathy, human connection"),
+        ("grenny-crucial-conversations", "Difficult conversations, de-escalation"),
+        ("voss-never-split-difference", "Tactical empathy, listening, resolution"),
+    ],
     "creative": [
         ("miller-building-storybrand-2", "Storytelling, narrative clarity, brand voice"),
         ("godin-this-is-marketing", "Creativity in service of an audience"),
@@ -86,6 +110,30 @@ DEPT_PERSONAS = {
         ("tawwab-set-boundaries-find-peace", "Boundaries, healthy workplace dynamics"),
         ("brown-atlas-of-heart", "Emotional intelligence, team culture"),
         ("grenny-crucial-conversations", "Performance conversations, feedback"),
+    ],
+    "hr-people": [
+        ("obama-becoming", "Identity, resilience, becoming"),
+        ("tawwab-set-boundaries-find-peace", "Boundaries, healthy workplace dynamics"),
+        ("brown-atlas-of-heart", "Emotional intelligence, team culture"),
+        ("grenny-crucial-conversations", "Performance conversations, feedback"),
+    ],
+    "legal": [
+        ("grenny-crucial-conversations", "Difficult negotiations, high-stakes discussions"),
+    ],
+    "legal-compliance": [
+        ("grenny-crucial-conversations", "Difficult negotiations, high-stakes discussions"),
+    ],
+    "it": [
+        ("clear-atomic-habits", "Systematic thinking, process improvement"),
+        ("forte-building-second-brain", "Knowledge management, documentation"),
+    ],
+    "it-tech": [
+        ("clear-atomic-habits", "Systematic thinking, process improvement"),
+        ("forte-building-second-brain", "Knowledge management, documentation"),
+    ],
+    "master-orchestrator": [
+        ("collins-good-to-great", "Strategic thinking, disciplined execution"),
+        ("sinek-start-with-why", "Purpose-driven decision making"),
     ],
 }
 
@@ -211,6 +259,55 @@ If the task does not match any category above:
 """
 
 
+def telegram_print(message):
+    """Print in Telegram-friendly format - no tables, short lines, bullets."""
+    print(message)
+
+
+def show_options():
+    """Present the 3 options to the user."""
+    telegram_print("""
+🎯 AI WORKFORCE BLUEPRINT - Choose Your Path
+
+I will help you build the folder and file system that turns your AI into a trained workforce.
+
+📋 OPTION A - Full Automated Build (Recommended)
+   • I interview you about your business
+   • I build everything automatically based on your answers
+   • Most personalized results
+   • Best for: First-time setup
+
+🛠️ OPTION B - Manual Build
+   • You build everything yourself using the blueprint
+   • Read ai-workforce-blueprint-full.md for guidance
+   • Best for: Hands-on users who want full control
+
+🔍 OPTION C - Audit / Resume Mode
+   • I scan your existing workforce folder
+   • Add missing files, wire personas if available
+   • Never overwrites existing content
+   • Best for: Returning users, adding personas later
+""")
+
+
+def show_prebuilt_departments():
+    """Show the pre-built departments available."""
+    telegram_print("""
+📁 PRE-BUILT DEPARTMENTS AVAILABLE:
+
+• marketing-dept - Content, ads, social media, email campaigns
+• sales-dept - Converting leads to customers
+• billing-dept - Invoicing, payments, financial tracking
+• customer-support-dept - Helping existing clients
+• operations-dept - Day-to-day business running
+• creative-dept - Graphics, video, content creation
+• hr-people-dept - Team management, hiring
+• legal-compliance-dept - Contracts, regulations
+• it-tech-dept - Software, websites, infrastructure
+• master-orchestrator-dept - Routes all work (always included)
+""")
+
+
 def check_personas_installed():
     """Check if coaching-personas QMD collection exists on this machine."""
     try:
@@ -221,6 +318,177 @@ def check_personas_installed():
         return "coaching-personas" in result.stdout
     except Exception:
         return False
+
+
+def load_existing_context():
+    """Load existing context from memory files to avoid asking known questions."""
+    context = {
+        "business_name": None,
+        "departments": [],
+        "tools": [],
+        "industry": None,
+    }
+    
+    # Check common context file locations
+    context_files = [
+        os.path.expanduser("~/clawd/MEMORY.md"),
+        os.path.expanduser("~/clawd/USER.md"),
+        os.path.expanduser("~/clawd/AGENTS.md"),
+        os.path.expanduser("~/clawd/HEARTBEAT.md"),
+        os.path.expanduser("~/clawd/IDENTITY.md"),
+    ]
+    
+    for file_path in context_files:
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, 'r') as f:
+                    content = f.read()
+                    # Look for business name patterns
+                    if "blackceo" in content.lower() or "BlackCEO" in content:
+                        context["business_name"] = "BlackCEO"
+                        context["industry"] = "coaching/consulting"
+                    # Look for known tools
+                    if "GoHighLevel" in content or "GHL" in content:
+                        context["tools"].append("GoHighLevel")
+                    if "Slack" in content:
+                        context["tools"].append("Slack")
+                    if "Google" in content:
+                        context["tools"].append("Google Workspace")
+            except Exception:
+                pass
+    
+    return context
+
+
+def ask_interview_style(question, example=None, default=None, context_value=None):
+    """Ask a question in interview style with examples."""
+    # If we already know the answer from context, skip the question
+    if context_value:
+        telegram_print(f"✓ Using known info: {context_value}")
+        return context_value
+    
+    if example:
+        full_question = f"{question}\n   Example: {example}"
+    else:
+        full_question = question
+    
+    if default:
+        answer = input(f"{full_question}\n   [Default: {default}]: ").strip()
+        return answer if answer else default
+    return input(f"{full_question}: ").strip()
+
+
+def get_department_selection():
+    """Ask user which departments they want to use."""
+    telegram_print("""
+🎯 DEPARTMENT SELECTION
+
+You can:
+• Keep all pre-built departments
+• Keep some + remove others
+• Keep all + add custom departments
+• Start from scratch with custom departments only
+""")
+    
+    options = [
+        "Keep all pre-built departments",
+        "Keep some + remove others",
+        "Keep all + add custom departments",
+        "Start from scratch (custom only)"
+    ]
+    
+    telegram_print("\nChoose an option:")
+    for i, opt in enumerate(options, 1):
+        telegram_print(f"  {i}. {opt}")
+    
+    choice = input("\nEnter 1-4: ").strip()
+    
+    if choice == "1":
+        return list(PREBUILT_DEPARTMENTS.keys())
+    elif choice == "2":
+        telegram_print("\n📋 Available departments:")
+        for dept, desc in PREBUILT_DEPARTMENTS.items():
+            telegram_print(f"  • {dept} - {desc}")
+        remove = input("\nWhich departments should I REMOVE? (comma-separated): ").strip()
+        removed = [d.strip() for d in remove.split(",") if d.strip()]
+        return [d for d in PREBUILT_DEPARTMENTS.keys() if d not in removed]
+    elif choice == "3":
+        custom = input("\nWhat custom departments do you want to add? (comma-separated): ").strip()
+        custom_list = [d.strip() for d in custom.split(",") if d.strip()]
+        return list(PREBUILT_DEPARTMENTS.keys()) + custom_list
+    elif choice == "4":
+        custom = input("\nWhat custom departments do you want to create? (comma-separated): ").strip()
+        return [d.strip() for d in custom.split(",") if d.strip()]
+    else:
+        telegram_print("Invalid choice. Using all pre-built departments.")
+        return list(PREBUILT_DEPARTMENTS.keys())
+
+
+def interview_user(context):
+    """Conduct interview-style questions with examples."""
+    telegram_print("\n" + "="*50)
+    telegram_print("🎤 INTERVIEW TIME - Let's understand your business")
+    telegram_print("="*50)
+    
+    # Question 1: Business name
+    business_name = ask_interview_style(
+        "What is your business name?",
+        example: "Acme Coaching, BlackCEO, Otts Consulting",
+        default=context.get("business_name", "My Business"),
+        context_value=context.get("business_name")
+    )
+    
+    telegram_print("\n" + "-"*30)
+    
+    # Question 2: What does your business do?
+    business_purpose = ask_interview_style(
+        "In one sentence, what does your business do?",
+        example: "I help coaches book more clients through better marketing"
+    )
+    
+    telegram_print("\n" + "-"*30)
+    
+    # Question 3: Current team size
+    team_size = ask_interview_style(
+        "What is your current team size?",
+        example: "Just me, 2-5 people, 10-20 people, 50+ people",
+        default="Just me"
+    )
+    
+    telegram_print("\n" + "-"*30)
+    
+    # Question 4: Main tools
+    tools_answer = ask_interview_style(
+        "What are the main tools your business uses?",
+        example: "GoHighLevel, Slack, Google Workspace, QuickBooks, Calendly",
+        default=", ".join(context.get("tools", [])) if context.get("tools") else None
+    )
+    tools = [t.strip() for t in tools_answer.split(",") if t.strip()]
+    
+    telegram_print("\n" + "-"*30)
+    
+    # Question 5: Biggest challenge
+    challenge = ask_interview_style(
+        "What is your biggest challenge right now?",
+        example: "Following up with leads, creating content, managing invoices"
+    )
+    
+    telegram_print("\n" + "-"*30)
+    
+    # Question 6: Existing SOPs
+    has_sops = ask_interview_style(
+        "Do you have existing SOPs, checklists, or training materials?",
+        example: "Yes, in Google Docs / No, starting from scratch / Some, but scattered"
+    )
+    
+    return {
+        "business_name": business_name,
+        "business_purpose": business_purpose,
+        "team_size": team_size,
+        "tools": tools,
+        "challenge": challenge,
+        "has_sops": has_sops,
+    }
 
 
 def create_file(path, content):
@@ -278,7 +546,7 @@ def detect_existing_workspace():
 
 def audit_mode(workspace, personas_installed):
     """Option C - scan existing workspace, fill gaps, wire personas if available."""
-    print(f"\n=== AUDIT MODE - Scanning {workspace} ===\n")
+    telegram_print(f"\n🔍 AUDIT MODE - Scanning {workspace}\n")
     added = []
     updated = []
 
@@ -339,81 +607,86 @@ def audit_mode(workspace, personas_installed):
                                 f.write(f"\n{gov_section}")
                             updated.append(f"{item}/{role}/00-START-HERE.md")
 
-    print(f"\n=== AUDIT COMPLETE ===")
+    telegram_print("\n" + "="*50)
+    telegram_print("✅ AUDIT COMPLETE")
+    telegram_print("="*50)
     if added:
-        print(f"\nAdded {len(added)} missing files:")
+        telegram_print(f"\n📁 Added {len(added)} missing files:")
         for f in added:
-            print(f"  + {f}")
+            telegram_print(f"  + {f}")
     if updated:
-        print(f"\nUpdated {len(updated)} existing files:")
+        telegram_print(f"\n📝 Updated {len(updated)} existing files:")
         for f in updated:
-            print(f"  ~ {f}")
+            telegram_print(f"  ~ {f}")
     if not added and not updated:
-        print("\nEverything looks good - no gaps found.")
+        telegram_print("\n✓ Everything looks good - no gaps found.")
     if personas_installed:
-        print("\n✅ Persona wiring complete.")
+        telegram_print("\n✅ Persona wiring complete.")
     else:
-        print("\nℹ️  Install Skill 22 (book-to-persona-coaching-leadership-system) and re-run to wire personas.")
+        telegram_print("\nℹ️ Install Skill 22 and re-run to wire personas.")
 
 
-def main():
-    print("\n=== AI Workforce Blueprint - Scaffold Builder ===\n")
-
-    # Check for personas
-    personas_installed = check_personas_installed()
-    if personas_installed:
-        print("✅ Coaching Personas Matrix detected - personas will be wired to departments automatically.\n")
-    else:
-        print("ℹ️  Coaching Personas Matrix not detected - building clean structure without persona wiring.")
-        print("   (Install Skill 22 - book-to-persona-coaching-leadership-system - later and re-run to add personas.)\n")
-
-    # Detect existing workspace - default to audit mode if found
-    existing = detect_existing_workspace()
-    if existing:
-        print(f"📁 Existing workforce found at: {existing}")
-        run_audit = input("Run in audit mode? Scans for gaps, adds missing files, wires personas. (Y/n): ").strip().lower()
-        if run_audit != 'n':
-            audit_mode(existing, personas_installed)
-            return
-
-    workspace = ask("Where should I build the workforce folder? (full path)",
-                    os.path.expanduser("~/Downloads/my-ai-workforce"))
+def build_workforce_automated(context, interview_data, departments):
+    """Option A - Build workforce based on interview answers."""
+    workspace = ask_interview_style(
+        "Where should I build your workforce folder?",
+        example: "~/Downloads/my-ai-workforce",
+        default="~/Downloads/my-ai-workforce"
+    )
     workspace = os.path.expanduser(workspace)
-
-    business_name = ask("What is your business name?", "My Business")
-
-    print("\nWhat departments does your business need?")
-    print("Common options: sales, marketing, operations, finance, coaching, leadership, creative, support, hr")
-    print("(Press Enter after each. Type 'done' when finished.)\n")
-
-    departments = []
-    while True:
-        dept = input("Department name (or 'done'): ").strip().lower()
-        if dept == 'done' or dept == '':
-            break
-        if dept:
-            departments.append(dept)
-
-    if not departments:
-        departments = ['sales', 'marketing', 'operations', 'finance']
-        print(f"Using defaults: {departments}")
-
+    
+    business_name = interview_data.get("business_name", "My Business")
+    
+    telegram_print("\n" + "="*50)
+    telegram_print(f"🏗️ BUILDING WORKFORCE FOR: {business_name}")
+    telegram_print("="*50)
+    
+    personas_installed = check_personas_installed()
+    
+    # Get roles for each department
     dept_roles = {}
     for dept in departments:
-        print(f"\nWhat roles exist in {dept.upper()}?")
-        print("(Press Enter after each. Type 'done' when finished.)\n")
-        roles = []
-        while True:
-            role = input(f"  Role in {dept} (or 'done'): ").strip().lower().replace(' ', '-')
-            if role == 'done' or role == '':
-                break
-            if role:
-                roles.append(role)
-        if not roles:
-            roles = ['general']
+        if dept == "master-orchestrator":
+            continue  # No roles for master orchestrator
+            
+        telegram_print(f"\n📋 Let's define roles for {dept}-dept:")
+        telegram_print("   Example roles:")
+        
+        # Show example roles based on department type
+        examples = {
+            "marketing": "content-creator, social-media-manager, ads-specialist",
+            "sales": "appointment-setter, closer, account-manager",
+            "billing": "invoice-specialist, collections, payment-processor",
+            "customer-support": "support-agent, onboarding-specialist",
+            "operations": "project-manager, systems-admin, process-analyst",
+            "creative": "graphic-designer, video-producer, copywriter",
+            "hr-people": "recruiter, onboarding-coordinator, hr-manager",
+            "legal-compliance": "contract-specialist, compliance-officer",
+            "it-tech": "developer, sysadmin, helpdesk",
+        }
+        
+        example_roles = examples.get(dept, "generalist, specialist")
+        telegram_print(f"   • {example_roles}")
+        
+        roles_input = input(f"\n   What roles exist in {dept}? (comma-separated, or 'skip' for defaults): ").strip()
+        
+        if roles_input.lower() == 'skip' or not roles_input:
+            # Use smart defaults based on department
+            if dept == "marketing":
+                roles = ['content-creator', 'social-media-manager']
+            elif dept == "sales":
+                roles = ['appointment-setter', 'closer']
+            elif dept == "operations":
+                roles = ['project-manager']
+            else:
+                roles = ['general']
+        else:
+            roles = [r.strip().lower().replace(' ', '-') for r in roles_input.split(",") if r.strip()]
+        
         dept_roles[dept] = roles
-
-    print(f"\n=== Building workforce at {workspace} ===\n")
+        telegram_print(f"   ✓ Added roles: {', '.join(roles)}")
+    
+    telegram_print(f"\n🔨 Creating folders and files at {workspace}...")
     os.makedirs(workspace, exist_ok=True)
 
     routing_sections = []
@@ -421,14 +694,25 @@ def main():
     for dept in departments:
         dept_folder = os.path.join(workspace, f"{dept}{DEPT_SUFFIX}")
         os.makedirs(dept_folder, exist_ok=True)
-        print(f"\n[{dept.upper()}-DEPT]")
+        telegram_print(f"\n📁 [{dept.upper()}-DEPT]")
+
+        # Master orchestrator is special - no roles, just files
+        if dept == "master-orchestrator":
+            create_file(
+                os.path.join(dept_folder, "00-Master-Orchestrator-Start-Here.md"),
+                "# Master Orchestrator - Start Here\n\nThis is the Big Boss department.\n\n## What It Does\n- Receives ALL incoming work\n- Decides which department handles each task\n- Routes work to the right place\n- Tracks completion\n- Creates missing SOPs when needed\n\n## Rules\n- All departments report back here\n- If unsure where something goes, decide based on end goal\n- If a department has no training, create the missing how-to file\n"
+            )
+            create_file(
+                os.path.join(dept_folder, "01-How-to-Route-Work.md"),
+                "# How to Route Work to Departments\n\n## Decision Tree\n1. Read the incoming task\n2. Identify keywords and intent\n3. Match to department based on task type\n4. Send to the right department/role/file\n\n## Routing Map\n- Marketing tasks → marketing-dept/\n- Sales tasks → sales-dept/\n- Billing tasks → billing-dept/\n- Support tasks → customer-support-dept/\n- Operations tasks → operations-dept/\n"
+            )
+            continue
 
         # Build governing personas content if installed
         persona_lines = None
         if personas_installed:
             persona_lines = build_governing_personas_content(dept_key=dept, for_file=False)
             if persona_lines:
-                # Create governing-personas.md for the department
                 persona_file_content = build_governing_personas_content(dept_key=dept, for_file=True)
                 create_file(
                     os.path.join(dept_folder, "governing-personas.md"),
@@ -442,7 +726,7 @@ def main():
         routing_lines.append(f"- [describe task type] → {dept}{DEPT_SUFFIX}/[role]/")
         routing_sections.append('\n'.join(routing_lines))
 
-        for role in dept_roles[dept]:
+        for role in dept_roles.get(dept, ['general']):
             role_folder = os.path.join(dept_folder, role)
             os.makedirs(role_folder, exist_ok=True)
 
@@ -488,21 +772,89 @@ def main():
     create_file(os.path.join(universal_sops, "00-ROUTING.md"), routing_content)
     create_file(os.path.join(universal_sops, "tools.md"), "# Universal Tools\n\n[Tools used across all departments]\n")
 
-    print(f"\n=== BUILD COMPLETE ===")
-    print(f"\nWorkforce folder: {workspace}")
-    print(f"Departments built: {', '.join([d + '-dept' for d in departments])}")
+    telegram_print("\n" + "="*50)
+    telegram_print("✅ BUILD COMPLETE")
+    telegram_print("="*50)
+    telegram_print(f"\n📁 Workforce folder: {workspace}")
+    telegram_print(f"📊 Departments built: {len(departments)}")
     if personas_installed:
-        print(f"Governing personas wired: YES (governing-personas.md added to each dept, 00-START-HERE.md updated)")
+        telegram_print(f"✅ Governing personas wired to all departments")
+    telegram_print(f"\n🎯 Next steps:")
+    telegram_print("  1. Open each 00-START-HERE.md and fill in role details")
+    telegram_print("  2. Rename 01-first-task.md to match your actual tasks")
+    telegram_print("  3. Add your tools to each tools.md")
+    telegram_print("  4. Update universal-sops/00-ROUTING.md with your task types")
+
+
+def main():
+    telegram_print("\n" + "="*50)
+    telegram_print("🚀 AI WORKFORCE BLUEPRINT - Scaffold Builder")
+    telegram_print("="*50)
+
+    # Check for personas
+    personas_installed = check_personas_installed()
+    if personas_installed:
+        telegram_print("\n✅ Coaching Personas Matrix detected - personas will be wired automatically.")
     else:
-        print(f"Governing personas: NOT wired (install Skill 22 - book-to-persona-coaching-leadership-system, then re-run in audit mode)")
-    print(f"\nNext steps:")
-    print("1. Open each 00-START-HERE.md and fill in the role description and tasks")
-    print("2. Rename 01-first-task.md to match your actual first task")
-    print("3. Add your real tools to each tools.md")
-    print("4. Update universal-sops/00-ROUTING.md with your specific task types")
-    if personas_installed:
-        print("5. Personas are wired - agents will auto-query QMD before tasks in each dept")
-    print(f"\nTo activate routing, read universal-sops/00-ROUTING.md in the workforce folder before executing tasks.")
+        telegram_print("\nℹ️ Coaching Personas Matrix not detected - building clean structure.")
+        telegram_print("   (Install Skill 22 later and re-run to add personas.)")
+
+    # Check for existing workspace
+    existing = detect_existing_workspace()
+    if existing:
+        telegram_print(f"\n📁 Existing workforce found at: {existing}")
+        run_audit = input("\nRun in audit mode? Adds missing files, wires personas. (Y/n): ").strip().lower()
+        if run_audit != 'n':
+            audit_mode(existing, personas_installed)
+            return
+
+    # Present options
+    show_options()
+    
+    choice = input("\nEnter your choice (A/B/C): ").strip().upper()
+    
+    if choice == "B":
+        telegram_print("\n📖 MANUAL BUILD SELECTED")
+        telegram_print("\nPlease read ai-workforce-blueprint-full.md for step-by-step instructions.")
+        telegram_print("Come back and run this script again when you are ready for Option A or C.")
+        return
+    
+    elif choice == "C":
+        telegram_print("\n🔍 AUDIT MODE SELECTED")
+        workspace = input("Enter path to your workforce folder: ").strip()
+        workspace = os.path.expanduser(workspace)
+        if os.path.isdir(workspace):
+            audit_mode(workspace, personas_installed)
+        else:
+            telegram_print(f"❌ Folder not found: {workspace}")
+        return
+    
+    else:  # Default to Option A
+        telegram_print("\n🚀 FULL AUTOMATED BUILD SELECTED")
+        
+        # Show pre-built departments
+        show_prebuilt_departments()
+        
+        # Load existing context to avoid asking known questions
+        telegram_print("\n📋 Loading your existing context...")
+        context = load_existing_context()
+        if context.get("business_name"):
+            telegram_print(f"✓ Found business info: {context['business_name']}")
+        
+        # Get department selection
+        departments = get_department_selection()
+        
+        # Always include master orchestrator
+        if "master-orchestrator" not in departments:
+            departments.append("master-orchestrator")
+        
+        telegram_print(f"\n✓ Selected {len(departments)} departments")
+        
+        # Conduct interview
+        interview_data = interview_user(context)
+        
+        # Build the workforce
+        build_workforce_automated(context, interview_data, departments)
 
 
 if __name__ == "__main__":
