@@ -2,7 +2,7 @@
 """
 AI Workforce Blueprint - Scaffold Builder
 Creates the full department/role folder structure with starter files.
-Auto-detects Coaching Personas Matrix and wires governing personas per department.
+Auto-detects Coaching Personas Matrix and wires governing personas per department AND per role.
 Run: python3 build-workforce.py
 """
 
@@ -46,6 +46,7 @@ DEPT_PERSONAS = {
         ("wiebe-copy-hackers", "Value proposition, website copy, conversion optimization"),
         ("cialdini-influence", "Persuasion psychology, social proof, reciprocity"),
         ("charvet-words-change-minds", "Language patterns, NLP, communication styles"),
+        ("kane-hook-point", "Attention, hooks, getting noticed"),
     ],
     "leadership": [
         ("sinek-start-with-why", "Why-driven leadership, purpose, inspiring action"),
@@ -76,6 +77,7 @@ DEPT_PERSONAS = {
     ],
     "billing": [
         ("michalowicz-profit-first", "Cash flow, profit first, financial discipline"),
+        ("voss-never-split-difference", "Negotiating payment terms, handling billing disputes"),
     ],
     "coaching": [
         ("robbins-five-second-rule", "Confidence, 5-second action, overcoming hesitation"),
@@ -86,6 +88,8 @@ DEPT_PERSONAS = {
         ("pink-drive", "Motivation, intrinsic drive, autonomy mastery purpose"),
         ("attwood-passion-test", "Passion, life purpose, alignment"),
         ("grenny-crucial-conversations", "High-stakes conversations, safety, mutual purpose"),
+        ("tawwab-set-boundaries-find-peace", "Boundaries, self-respect, healthy limits"),
+        ("brown-atlas-of-heart", "Emotional vocabulary, empathy, human connection"),
     ],
     "support": [
         ("tawwab-set-boundaries-find-peace", "Boundaries, self-respect, healthy limits"),
@@ -110,31 +114,495 @@ DEPT_PERSONAS = {
         ("tawwab-set-boundaries-find-peace", "Boundaries, healthy workplace dynamics"),
         ("brown-atlas-of-heart", "Emotional intelligence, team culture"),
         ("grenny-crucial-conversations", "Performance conversations, feedback"),
+        ("pink-drive", "Motivation, intrinsic drive, autonomy mastery purpose"),
     ],
     "hr-people": [
         ("obama-becoming", "Identity, resilience, becoming"),
         ("tawwab-set-boundaries-find-peace", "Boundaries, healthy workplace dynamics"),
         ("brown-atlas-of-heart", "Emotional intelligence, team culture"),
         ("grenny-crucial-conversations", "Performance conversations, feedback"),
+        ("pink-drive", "Motivation, intrinsic drive, autonomy mastery purpose"),
     ],
     "legal": [
         ("grenny-crucial-conversations", "Difficult negotiations, high-stakes discussions"),
+        ("voss-never-split-difference", "Negotiation tactics for legal discussions"),
     ],
     "legal-compliance": [
         ("grenny-crucial-conversations", "Difficult negotiations, high-stakes discussions"),
+        ("voss-never-split-difference", "Negotiation tactics for legal discussions"),
     ],
     "it": [
         ("clear-atomic-habits", "Systematic thinking, process improvement"),
         ("forte-building-second-brain", "Knowledge management, documentation"),
+        ("forte-para-method", "PARA organization for technical docs"),
     ],
     "it-tech": [
         ("clear-atomic-habits", "Systematic thinking, process improvement"),
         ("forte-building-second-brain", "Knowledge management, documentation"),
+        ("forte-para-method", "PARA organization for technical docs"),
     ],
     "master-orchestrator": [
         ("collins-good-to-great", "Strategic thinking, disciplined execution"),
         ("sinek-start-with-why", "Purpose-driven decision making"),
+        ("clear-atomic-habits", "Systems thinking for operations"),
     ],
+}
+
+# Role-specific persona mappings
+# More specific than department-level - narrows down for particular roles
+ROLE_PERSONAS = {
+    # Marketing roles
+    "content-creator": [
+        ("miller-building-storybrand-2", "Brand messaging and customer story"),
+        ("bly-copywriters-handbook", "Copywriting craft and conversion"),
+        ("godin-this-is-marketing", "Permission marketing and audience service"),
+        ("kane-hook-point", "Hooks and attention for content"),
+    ],
+    "social-media-manager": [
+        ("kane-hook-point", "Attention and hooks for social"),
+        ("godin-this-is-marketing", "Building audience and permission"),
+        ("miller-building-storybrand-2", "Consistent brand messaging"),
+    ],
+    "ads-specialist": [
+        ("wiebe-copy-hackers", "Value propositions and conversion optimization"),
+        ("cialdini-influence", "Persuasion psychology for ads"),
+        ("bly-copywriters-handbook", "Ad copy that converts"),
+        ("kane-hook-point", "Stopping the scroll with hooks"),
+    ],
+    "email-marketing-specialist": [
+        ("bly-copywriters-handbook", "Email copywriting craft"),
+        ("wiebe-copy-hackers", "Subject lines and open rates"),
+        ("cialdini-influence", "Persuasion sequences"),
+    ],
+    # Sales roles
+    "appointment-setter": [
+        ("rackham-spin-selling", "Discovery and consultative selling"),
+        ("jones-exactly-what-to-say", "Magic words for setting appointments"),
+        ("pink-to-sell-is-human", "Moving people to action"),
+        ("kane-hook-point", "Getting attention in outreach"),
+    ],
+    "closer": [
+        ("voss-never-split-difference", "Negotiation and objection handling"),
+        ("hormozi-100m-offers", "Offer design and value stacking"),
+        ("jones-exactly-what-to-say", "Closing language and magic words"),
+        ("priestley-oversubscribed", "Creating demand and scarcity"),
+    ],
+    "account-manager": [
+        ("grenny-crucial-conversations", "High-stakes client conversations"),
+        ("pink-to-sell-is-human", "Moving people and relationship selling"),
+        ("voss-never-split-difference", "Handling difficult client situations"),
+        ("tawwab-set-boundaries-find-peace", "Setting healthy client boundaries"),
+    ],
+    "sdr": [
+        ("jones-exactly-what-to-say", "Cold outreach scripts"),
+        ("kane-hook-point", "Hooks that get responses"),
+        ("rackham-spin-selling", "Discovery questioning"),
+    ],
+    "sales-development-rep": [
+        ("jones-exactly-what-to-say", "Cold outreach scripts"),
+        ("kane-hook-point", "Hooks that get responses"),
+        ("rackham-spin-selling", "Discovery questioning"),
+    ],
+    # Support roles
+    "support-agent": [
+        ("tawwab-set-boundaries-find-peace", "Boundaries in customer interactions"),
+        ("brown-atlas-of-heart", "Emotional vocabulary and empathy"),
+        ("voss-never-split-difference", "Tactical empathy and listening"),
+        ("grenny-crucial-conversations", "De-escalation techniques"),
+    ],
+    "customer-success-manager": [
+        ("grenny-crucial-conversations", "High-stakes retention conversations"),
+        ("voss-never-split-difference", "Negotiating renewals"),
+        ("brown-atlas-of-heart", "Deep client empathy"),
+    ],
+    "onboarding-specialist": [
+        ("pink-drive", "Motivating new users to take action"),
+        ("clear-atomic-habits", "Building product usage habits"),
+        ("miller-building-storybrand-2", "Making customer the hero"),
+    ],
+    # Operations roles
+    "project-manager": [
+        ("clear-atomic-habits", "Systems and behavior change"),
+        ("moran-12-week-year", "Execution sprints and accountability"),
+        ("forte-para-method", "Organization and folder structure"),
+        ("grenny-crucial-conversations", "Managing stakeholder conversations"),
+    ],
+    "operations-manager": [
+        ("clear-atomic-habits", "Systems and behavior change"),
+        ("moran-12-week-year", "Execution sprints and accountability"),
+        ("duhigg-power-of-habit", "Organizational habit loops"),
+        ("collins-good-to-great", "Disciplined execution"),
+    ],
+    "systems-admin": [
+        ("clear-atomic-habits", "Systematic thinking"),
+        ("forte-building-second-brain", "Documentation systems"),
+        ("forte-para-method", "PARA organization"),
+    ],
+    "process-analyst": [
+        ("clear-atomic-habits", "Behavior change analysis"),
+        ("duhigg-power-of-habit", "Habit loop optimization"),
+        ("forte-para-method", "Process organization"),
+    ],
+    # Creative roles
+    "graphic-designer": [
+        ("miller-building-storybrand-2", "Visual storytelling and brand voice"),
+        ("kane-hook-point", "Visual hooks and attention"),
+        ("godin-this-is-marketing", "Design in service of audience"),
+    ],
+    "video-producer": [
+        ("kane-hook-point", "Hooks and attention for video"),
+        ("miller-building-storybrand-2", "Storytelling and narrative"),
+        ("godin-this-is-marketing", "Video in service of audience"),
+    ],
+    "copywriter": [
+        ("bly-copywriters-handbook", "Copy craft and headlines"),
+        ("wiebe-copy-hackers", "Value propositions and conversion copy"),
+        ("miller-building-storybrand-2", "Brand storytelling"),
+    ],
+    # HR roles
+    "recruiter": [
+        ("grenny-crucial-conversations", "Difficult hiring conversations"),
+        ("obama-becoming", "Identity and resilience in candidates"),
+        ("jones-exactly-what-to-say", "Candidate outreach language"),
+    ],
+    "hr-manager": [
+        ("grenny-crucial-conversations", "Performance conversations"),
+        ("tawwab-set-boundaries-find-peace", "Workplace boundaries"),
+        ("pink-drive", "Employee motivation strategies"),
+    ],
+    "onboarding-coordinator": [
+        ("pink-drive", "Motivating new hires"),
+        ("clear-atomic-habits", "Building onboarding habits"),
+        ("brown-atlas-of-heart", "Emotional welcome and connection"),
+    ],
+    # Leadership roles
+    "team-lead": [
+        ("sinek-start-with-why", "Why-driven leadership"),
+        ("grenny-crucial-conversations", "Performance conversations"),
+        ("grover-relentless", "Elite performance standards"),
+    ],
+    "ceo": [
+        ("collins-good-to-great", "Building great companies"),
+        ("sinek-start-with-why", "Purpose-driven leadership"),
+        ("grover-relentless", "Relentless execution"),
+        ("hormozi-100m-offers", "Offer and revenue strategy"),
+    ],
+    "founder": [
+        ("collins-good-to-great", "Building great companies"),
+        ("sinek-start-with-why", "Purpose-driven leadership"),
+        ("samit-disrupt-yourself", "Innovation and disruption"),
+        ("hormozi-100m-offers", "Offer creation"),
+    ],
+    # Finance roles
+    "bookkeeper": [
+        ("michalowicz-profit-first", "Cash flow discipline"),
+        ("forte-para-method", "Financial document organization"),
+    ],
+    "accountant": [
+        ("michalowicz-profit-first", "Profit-first accounting"),
+        ("clear-atomic-habits", "Systematic financial processes"),
+    ],
+    "collections-specialist": [
+        ("voss-never-split-difference", "Negotiating payments"),
+        ("tawwab-set-boundaries-find-peace", "Firm but respectful boundaries"),
+    ],
+    # IT roles
+    "developer": [
+        ("clear-atomic-habits", "Systematic problem solving"),
+        ("forte-building-second-brain", "Technical documentation"),
+        ("forte-para-method", "Code organization"),
+    ],
+    "sysadmin": [
+        ("clear-atomic-habits", "Systematic infrastructure management"),
+        ("duhigg-power-of-habit", "Maintenance habit loops"),
+    ],
+    "helpdesk": [
+        ("voss-never-split-difference", "Technical empathy"),
+        ("brown-atlas-of-heart", "Patient support"),
+        ("grenny-crucial-conversations", "Difficult technical conversations"),
+    ],
+    # Default - uses department personas
+    "general": [],
+    "generalist": [],
+}
+
+# Persona "When to Use" guidance - for the governing-personas.md template
+PERSONA_USAGE_GUIDANCE = {
+    "voss-never-split-difference": {
+        "use_when": [
+            "Negotiating with prospects or clients",
+            "Handling objections during sales calls",
+            "Difficult conversations with team members",
+            "Resolving conflicts or disputes",
+            "Getting to 'That's Right' in conversations",
+            "De-escalating tense situations",
+        ],
+        "key_techniques": ["Mirroring", "Labeling", "Calibrated Questions", "Tactical Empathy"],
+    },
+    "hormozi-100m-offers": {
+        "use_when": [
+            "Designing offers that can't be compared",
+            "Pricing strategies and value stacking",
+            "Creating scarcity and urgency",
+            "Risk reversal and guarantees",
+            "Premium positioning",
+            "Offer upgrades and iterations",
+        ],
+        "key_techniques": ["Grand Slam Offer", "Value Equation", "Scarcity/Urgency", "Risk Reversal"],
+    },
+    "jones-exactly-what-to-say": {
+        "use_when": [
+            "Need exact words for outreach",
+            "Closing language that works",
+            "Cold calling scripts",
+            "Handling specific objections word-for-word",
+            "Magic words for any situation",
+            "Scripts that feel natural",
+        ],
+        "key_techniques": ["Magic Words", "Phrases that Work", "Exact Scripts"],
+    },
+    "rackham-spin-selling": {
+        "use_when": [
+            "Discovery calls with prospects",
+            "Consultative selling approach",
+            "Needs analysis and problem exploration",
+            "Large B2B sales cycles",
+            "Uncovering implicit needs",
+            "Turning needs into solutions",
+        ],
+        "key_techniques": ["Situation Questions", "Problem Questions", "Implication Questions", "Need-Payoff Questions"],
+    },
+    "miller-building-storybrand-2": {
+        "use_when": [
+            "Clarifying brand messaging",
+            "Making customer the hero",
+            "Website copy and homepage messaging",
+            "Email marketing narratives",
+            "Content that connects",
+            "Story-driven marketing",
+        ],
+        "key_techniques": ["SB7 Framework", "Customer as Hero", "Clarity Filter"],
+    },
+    "bly-copywriters-handbook": {
+        "use_when": [
+            "Writing headlines that grab attention",
+            "Direct response copywriting",
+            "Sales letters and landing pages",
+            "Email subject lines",
+            "Conversion-focused copy",
+            "Writing with authority",
+        ],
+        "key_techniques": ["4-U Headlines", "AIDA Formula", "Copywriting Rules"],
+    },
+    "cialdini-influence": {
+        "use_when": [
+            "Understanding persuasion psychology",
+            "Using social proof effectively",
+            "Creating reciprocity",
+            "Authority positioning",
+            "Scarcity and commitment",
+            "Liking and consistency",
+        ],
+        "key_techniques": ["6 Principles of Influence", "Social Proof", "Reciprocity", "Commitment"],
+    },
+    "sinek-start-with-why": {
+        "use_when": [
+            "Leadership and vision setting",
+            "Inspiring team members",
+            "Purpose-driven messaging",
+            "Organizational culture",
+            "Mission statements",
+            "Why-driven decisions",
+        ],
+        "key_techniques": ["Golden Circle", "Start with Why", "Purpose First"],
+    },
+    "clear-atomic-habits": {
+        "use_when": [
+            "Building new habits",
+            "Breaking bad habits",
+            "Systems over goals",
+            "Environment design",
+            "Behavior change",
+            "1% improvements",
+        ],
+        "key_techniques": ["4 Laws of Behavior Change", "Habit Stacking", "Environment Design", "Identity Change"],
+    },
+    "grenny-crucial-conversations": {
+        "use_when": [
+            "High-stakes conversations",
+            "Emotional or risky topics",
+            "Performance feedback",
+            "Difficult team discussions",
+            "When stakes are high and opinions differ",
+            "Creating psychological safety",
+        ],
+        "key_techniques": ["STATE Path", "Mutual Purpose", "CRIB Skills", "Contrasting"],
+    },
+    "tawwab-set-boundaries-find-peace": {
+        "use_when": [
+            "Setting healthy boundaries",
+            "Dealing with boundary violations",
+            "Client boundary management",
+            "Work-life balance",
+            "Difficult family dynamics",
+            "Protecting your peace",
+        ],
+        "key_techniques": ["6 Types of Boundaries", "Boundary Setting Scripts", "Consequences"],
+    },
+    "forte-para-method": {
+        "use_when": [
+            "Organizing files and folders",
+            "Project management",
+            "Information management",
+            "Digital organization",
+            "Knowledge systems",
+            "Workspace setup",
+        ],
+        "key_techniques": ["PARA System", "Projects/Areas/Resources/Archives"],
+    },
+    "priestley-oversubscribed": {
+        "use_when": [
+            "Creating demand",
+            "Positioning as sought-after",
+            "Campaign-based marketing",
+            "Waiting lists and launches",
+            "Signaling value",
+            "Market positioning",
+        ],
+        "key_techniques": ["Campaign Driven Enterprise", "Oversubscribed Strategy", "Market Makers"],
+    },
+    "kane-hook-point": {
+        "use_when": [
+            "Getting attention quickly",
+            "Social media content",
+            "Video hooks",
+            "Breaking through noise",
+            "First impressions",
+            "Content that stops the scroll",
+        ],
+        "key_techniques": ["Hook Point Formula", "Attention Metrics", "Pattern Interrupts"],
+    },
+    "pink-to-sell-is-human": {
+        "use_when": [
+            "Understanding modern selling",
+            "Moving people to action",
+            "Attunement and perspective-taking",
+            "Buoyancy and resilience",
+            "Clarity through contrast",
+            "Service-oriented selling",
+        ],
+        "key_techniques": ["Attunement", "Buoyancy", "Clarity", "Pixar Pitch"],
+    },
+    "wiebe-copy-hackers": {
+        "use_when": [
+            "Website optimization",
+            "Value proposition writing",
+            "Conversion copywriting",
+            "User research for copy",
+            "Messaging hierarchy",
+            "Copy testing",
+        ],
+        "key_techniques": ["Value Proposition Canvas", "Messaging Hierarchy", "Copy Optimization"],
+    },
+    "godin-this-is-marketing": {
+        "use_when": [
+            "Permission marketing",
+            "Building tribes",
+            "Marketing as service",
+            "Niche selection",
+            "Product-market fit",
+            "Being seen",
+        ],
+        "key_techniques": ["Permission Marketing", "Smallest Viable Market", "Marketing as Service"],
+    },
+    "collins-good-to-great": {
+        "use_when": [
+            "Strategic planning",
+            "Building great organizations",
+            "Leadership development",
+            "Disciplined execution",
+            "Hedgehog concept",
+            "Level 5 leadership",
+        ],
+        "key_techniques": ["Hedgehog Concept", "Level 5 Leadership", "Flywheel Effect"],
+    },
+    "moran-12-week-year": {
+        "use_when": [
+            "Goal execution",
+            "Sprint-based planning",
+            "Accountability systems",
+            "Shortening business cycles",
+            "Weekly execution score",
+            "Tactical weekly planning",
+        ],
+        "key_techniques": ["12-Week Cycles", "Weekly Score", "Execution System"],
+    },
+    "brown-atlas-of-heart": {
+        "use_when": [
+            "Emotional intelligence",
+            "Vulnerability in leadership",
+            "Empathy and connection",
+            "Team culture",
+            "Difficult emotions",
+            "Human-centered work",
+        ],
+        "key_techniques": ["Emotional Literacy", "Vulnerability", "Empathy Skills"],
+    },
+    "michalowicz-profit-first": {
+        "use_when": [
+            "Cash flow management",
+            "Profit allocation",
+            "Financial discipline",
+            "Small business finance",
+            "Bank account architecture",
+            "Sustainable profitability",
+        ],
+        "key_techniques": ["Profit First Formula", "Bank Account System", "Allocation Percentages"],
+    },
+    "pink-drive": {
+        "use_when": [
+            "Understanding motivation",
+            "Autonomy in teams",
+            "Mastery development",
+            "Purpose-driven work",
+            "Intrinsic motivation",
+            "Employee engagement",
+        ],
+        "key_techniques": ["Autonomy", "Mastery", "Purpose"],
+    },
+    "robbins-five-second-rule": {
+        "use_when": [
+            "Overcoming hesitation",
+            "Building confidence",
+            "Taking immediate action",
+            "Breaking procrastination",
+            "Courage in moments",
+            "Behavior change triggers",
+        ],
+        "key_techniques": ["5-4-3-2-1 Countdown", "Activation Energy", "Confidence Through Action"],
+    },
+    "goggins-cant-hurt-me": {
+        "use_when": [
+            "Mental toughness",
+            "Pushing through limits",
+            "Callousing the mind",
+            "Extreme discipline",
+            "Suffering as growth",
+            "Accountability mirror",
+        ],
+        "key_techniques": ["40% Rule", "Accountability Mirror", "Calloused Mind"],
+    },
+    "charvet-words-change-minds": {
+        "use_when": [
+            "Language patterns",
+            "NLP techniques",
+            "Communication styles",
+            "Influencing through language",
+            "Motivation direction",
+            "Meta programs",
+        ],
+        "key_techniques": ["Toward/Away From", "Options/Procedures", "Meta Programs"],
+    },
 }
 
 START_HERE_TEMPLATE = """# {role_title} - Start Here
@@ -162,35 +630,20 @@ START_HERE_TEMPLATE = """# {role_title} - Start Here
 """
 
 GOVERNING_PERSONAS_SECTION = """## Governing Personas
-This department is governed by the following coaching personas.
-Before executing work in this role, query QMD to load the relevant persona's Task Mode.
+
+This role draws from multiple coaching personas. Choose based on the specific task and context.
 
 {persona_list}
 
-**How to query:** `qmd search "<task description>" -c coaching-personas`
-**Full persona map:** See PERSONA-ROUTER.md in the book-to-persona skill folder
-
-"""
-
-GOVERNING_PERSONAS_FILE = """# Governing Personas - {dept_title} Department
-
-The following coaching personas govern how agents in this department think, communicate, and execute work.
-Before any task, query QMD to load the relevant persona's Task Mode.
-
-## How to Use
+**How to find the right persona for your task:**
 ```bash
 qmd search "<describe your task>" -c coaching-personas
 ```
-Load the returned persona's **Task Mode** section. Execute through that methodology.
 
-## Personas for This Department
+This searches the coaching personas collection and returns the best match. Load that persona's Task Mode and execute through that methodology.
 
-{persona_entries}
+**For detailed guidance:** See `governing-personas.md` in this folder for decision trees on when to use which persona.
 
-## Cross-Reference
-- Full routing map: See PERSONA-ROUTER.md in the book-to-persona skill
-- QMD collection: coaching-personas
-- To query a specific persona: `qmd get qmd://coaching-personas/[persona-folder]/persona-blueprint.md`
 """
 
 GOOD_EXAMPLES_TEMPLATE = """# Good Examples - {role_title}
@@ -433,7 +886,7 @@ def interview_user(context):
     # Question 1: Business name
     business_name = ask_interview_style(
         "What is your business name?",
-        example: "Acme Coaching, BlackCEO, Otts Consulting",
+        example="Acme Coaching, BlackCEO, Otts Consulting",
         default=context.get("business_name", "My Business"),
         context_value=context.get("business_name")
     )
@@ -443,7 +896,7 @@ def interview_user(context):
     # Question 2: What does your business do?
     business_purpose = ask_interview_style(
         "In one sentence, what does your business do?",
-        example: "I help coaches book more clients through better marketing"
+        example="I help coaches book more clients through better marketing"
     )
     
     telegram_print("\n" + "-"*30)
@@ -451,7 +904,7 @@ def interview_user(context):
     # Question 3: Current team size
     team_size = ask_interview_style(
         "What is your current team size?",
-        example: "Just me, 2-5 people, 10-20 people, 50+ people",
+        example="Just me, 2-5 people, 10-20 people, 50+ people",
         default="Just me"
     )
     
@@ -460,7 +913,7 @@ def interview_user(context):
     # Question 4: Main tools
     tools_answer = ask_interview_style(
         "What are the main tools your business uses?",
-        example: "GoHighLevel, Slack, Google Workspace, QuickBooks, Calendly",
+        example="GoHighLevel, Slack, Google Workspace, QuickBooks, Calendly",
         default=", ".join(context.get("tools", [])) if context.get("tools") else None
     )
     tools = [t.strip() for t in tools_answer.split(",") if t.strip()]
@@ -470,7 +923,7 @@ def interview_user(context):
     # Question 5: Biggest challenge
     challenge = ask_interview_style(
         "What is your biggest challenge right now?",
-        example: "Following up with leads, creating content, managing invoices"
+        example="Following up with leads, creating content, managing invoices"
     )
     
     telegram_print("\n" + "-"*30)
@@ -478,7 +931,7 @@ def interview_user(context):
     # Question 6: Existing SOPs
     has_sops = ask_interview_style(
         "Do you have existing SOPs, checklists, or training materials?",
-        example: "Yes, in Google Docs / No, starting from scratch / Some, but scattered"
+        example="Yes, in Google Docs / No, starting from scratch / Some, but scattered"
     )
     
     return {
@@ -521,13 +974,13 @@ def build_governing_personas_content(dept_key, for_file=False):
         entries = []
         for folder, description in personas:
             entries.append(f"### {folder}\n**Focus:** {description}\n**Query:** `qmd search \"{description.lower()}\" -c coaching-personas`\n")
-        return '\n'.join(entries)
+        return '\n'.join(entries), personas
 
     # For 00-START-HERE.md section
     lines = []
     for folder, description in personas:
         lines.append(f"- **{folder}**: {description}")
-    return '\n'.join(lines)
+    return '\n'.join(lines), personas
 
 
 def detect_existing_workspace():
@@ -542,76 +995,6 @@ def detect_existing_workspace():
         if os.path.isdir(path) and any(d.endswith(DEPT_SUFFIX) for d in os.listdir(path)):
             return path
     return None
-
-
-ROLE_PERSONAS = {
-    # Marketing roles
-    "content-creator": [
-        ("miller-building-storybrand-2", "Brand messaging and customer story"),
-        ("bly-copywriters-handbook", "Copywriting craft and conversion"),
-        ("godin-this-is-marketing", "Permission marketing and audience service"),
-    ],
-    "social-media-manager": [
-        ("kane-hook-point", "Attention and hooks for social"),
-        ("godin-this-is-marketing", "Building audience and permission"),
-    ],
-    "ads-specialist": [
-        ("wiebe-copy-hackers", "Value propositions and conversion optimization"),
-        ("cialdini-influence", "Persuasion psychology for ads"),
-    ],
-    # Sales roles
-    "appointment-setter": [
-        ("rackham-spin-selling", "Discovery and consultative selling"),
-        ("jones-exactly-what-to-say", "Magic words for setting appointments"),
-    ],
-    "closer": [
-        ("voss-never-split-difference", "Negotiation and objection handling"),
-        ("hormozi-100m-offers", "Offer design and value stacking"),
-        ("jones-exactly-what-to-say", "Closing language and magic words"),
-    ],
-    "account-manager": [
-        ("grenny-crucial-conversations", "High-stakes client conversations"),
-        ("pink-to-sell-is-human", "Moving people and relationship selling"),
-    ],
-    # Support roles
-    "support-agent": [
-        ("tawwab-set-boundaries-find-peace", "Boundaries in customer interactions"),
-        ("brown-atlas-of-heart", "Emotional vocabulary and empathy"),
-        ("voss-never-split-difference", "Tactical empathy and listening"),
-    ],
-    # Operations roles
-    "project-manager": [
-        ("clear-atomic-habits", "Systems and behavior change"),
-        ("moran-12-week-year", "Execution sprints and accountability"),
-        ("forte-para-method", "Organization and folder structure"),
-    ],
-    # Creative roles
-    "graphic-designer": [
-        ("miller-building-storybrand-2", "Visual storytelling and brand voice"),
-        ("kane-hook-point", "Visual hooks and attention"),
-    ],
-    "video-producer": [
-        ("kane-hook-point", "Hooks and attention for video"),
-        ("miller-building-storybrand-2", "Storytelling and narrative"),
-    ],
-    "copywriter": [
-        ("bly-copywriters-handbook", "Copy craft and headlines"),
-        ("wiebe-copy-hackers", "Value propositions and conversion copy"),
-    ],
-    # HR roles
-    "recruiter": [
-        ("grenny-crucial-conversations", "Difficult hiring conversations"),
-        ("obama-becoming", "Identity and resilience in candidates"),
-    ],
-    # Leadership roles
-    "team-lead": [
-        ("sinek-start-with-why", "Why-driven leadership"),
-        ("grenny-crucial-conversations", "Performance conversations"),
-    ],
-    # Default - uses department personas
-    "general": [],
-    "generalist": [],
-}
 
 
 def build_role_personas_content(role_key, dept_key, for_file=False):
@@ -633,10 +1016,105 @@ def build_role_personas_content(role_key, dept_key, for_file=False):
         return None, None
 
     if for_file:
-        entries = []
+        # Build the full governing-personas.md content with "When to Use Which Persona"
+        sections = []
+        sections.append("# Governing Personas - {role_name}\n".format(role_name=role_key.replace('_', ' ').title()))
+        sections.append("This role can draw from the following coaching personas.")
+        sections.append("Choose based on the specific task and context.\n")
+        
+        sections.append("## Available Personas\n")
         for folder, description in personas:
-            entries.append(f"### {folder}\n**Focus:** {description}\n**Query:** `qmd search \"{description.lower()}\" -c coaching-personas`\n")
-        return '\n'.join(entries), personas
+            sections.append(f"- **{folder}** - {description}")
+        sections.append("")
+        
+        sections.append("## When to Use Which Persona\n")
+        
+        for folder, description in personas:
+            guidance = PERSONA_USAGE_GUIDANCE.get(folder, {})
+            use_when = guidance.get("use_when", ["Tasks related to " + description])
+            
+            # Get clean persona name for display
+            persona_name = folder.split('-')[0].title()
+            if 'hormozi' in folder:
+                persona_name = "Hormozi"
+            elif 'voss' in folder:
+                persona_name = "Voss"
+            elif 'jones' in folder:
+                persona_name = "Jones"
+            elif 'rackham' in folder:
+                persona_name = "Rackham"
+            elif 'miller' in folder:
+                persona_name = "Miller"
+            elif 'bly' in folder:
+                persona_name = "Bly"
+            elif 'cialdini' in folder:
+                persona_name = "Cialdini"
+            elif 'sinek' in folder:
+                persona_name = "Sinek"
+            elif 'clear' in folder:
+                persona_name = "Clear"
+            elif 'grenny' in folder:
+                persona_name = "Grenny"
+            elif 'tawwab' in folder:
+                persona_name = "Tawwab"
+            elif 'forte' in folder:
+                persona_name = "Forte"
+            elif 'priestley' in folder:
+                persona_name = "Priestley"
+            elif 'kane' in folder:
+                persona_name = "Kane"
+            elif 'pink' in folder:
+                if 'sell' in folder:
+                    persona_name = "Pink (Sales)"
+                elif 'drive' in folder:
+                    persona_name = "Pink (Drive)"
+                else:
+                    persona_name = "Pink"
+            elif 'wiebe' in folder:
+                persona_name = "Wiebe"
+            elif 'godin' in folder:
+                persona_name = "Godin"
+            elif 'collins' in folder:
+                persona_name = "Collins"
+            elif 'moran' in folder:
+                persona_name = "Moran"
+            elif 'brown' in folder:
+                persona_name = "Brown"
+            elif 'michalowicz' in folder:
+                persona_name = "Michalowicz"
+            elif 'robbins' in folder:
+                persona_name = "Robbins"
+            elif 'goggins' in folder:
+                persona_name = "Goggins"
+            elif 'charvet' in folder:
+                persona_name = "Charvet"
+            elif 'obama' in folder:
+                persona_name = "Obama"
+            elif 'jakes' in folder:
+                persona_name = "Jakes"
+            elif 'sharma' in folder:
+                persona_name = "Sharma"
+            elif 'samit' in folder:
+                persona_name = "Samit"
+            elif 'lakhiani' in folder:
+                persona_name = "Lakhiani"
+            elif 'grover' in folder:
+                persona_name = "Grover"
+            elif 'attwood' in folder:
+                persona_name = "Attwood"
+            
+            sections.append(f"Use **{persona_name}** when:")
+            for use_case in use_when[:3]:  # Top 3 use cases
+                sections.append(f"- {use_case}")
+            sections.append("")
+        
+        sections.append("## How to Query")
+        sections.append("```")
+        sections.append('qmd search "<describe your task>" -c coaching-personas')
+        sections.append("```")
+        sections.append("")
+        
+        return '\n'.join(sections), personas
 
     # For 00-START-HERE.md section
     lines = []
@@ -686,15 +1164,9 @@ def audit_mode(workspace, personas_installed):
         if personas_installed:
             gp_file = os.path.join(dept_path, "governing-personas.md")
             if not os.path.exists(gp_file):
-                persona_file_content = build_governing_personas_content(dept_key=dept_key, for_file=True)
+                persona_file_content, _ = build_governing_personas_content(dept_key=dept_key, for_file=True)
                 if persona_file_content:
-                    create_file(
-                        gp_file,
-                        GOVERNING_PERSONAS_FILE.format(
-                            dept_title=dept_key.title(),
-                            persona_entries=persona_file_content
-                        )
-                    )
+                    create_file(gp_file, persona_file_content)
                     added.append(f"{item}/governing-personas.md")
 
         # Scan role folders
@@ -724,30 +1196,40 @@ def audit_mode(workspace, personas_installed):
                 if not os.path.exists(role_gp_file):
                     role_persona_content, _ = build_role_personas_content(role_key, dept_key, for_file=True)
                     if role_persona_content:
-                        create_file(
-                            role_gp_file,
-                            GOVERNING_PERSONAS_FILE.format(
-                                dept_title=f"{role_title} (Role in {dept_key.title()})",
-                                persona_entries=role_persona_content
-                            )
-                        )
+                        create_file(role_gp_file, role_persona_content)
                         added.append(f"{item}/{role}/governing-personas.md")
 
-            # Add Governing Personas section to 00-START-HERE.md if missing
+            # Add/update Governing Personas section to 00-START-HERE.md if personas installed
             if personas_installed:
                 start_here = os.path.join(role_path, "00-START-HERE.md")
                 if os.path.exists(start_here):
                     with open(start_here, 'r') as f:
                         content = f.read()
-                    if "Governing Personas" not in content:
+                    
+                    # Check if old or new governing personas section exists
+                    if "Governing Personas" not in content or "Multiple personas govern this role" not in content:
                         # Use role-specific personas if available, fall back to dept
                         persona_lines, _ = build_role_personas_content(role_key, dept_key, for_file=False)
                         if not persona_lines:
-                            persona_lines = build_governing_personas_content(dept_key=dept_key, for_file=False)
+                            persona_lines, _ = build_governing_personas_content(dept_key=dept_key, for_file=False)
+                        
                         if persona_lines:
                             gov_section = GOVERNING_PERSONAS_SECTION.format(persona_list=persona_lines)
-                            with open(start_here, 'a') as f:
-                                f.write(f"\n{gov_section}")
+                            
+                            # If old section exists, replace it; otherwise append
+                            if "Governing Personas" in content:
+                                # Find and replace old section
+                                import re
+                                pattern = r'## Governing Personas.*?(?=\n## |\Z)'
+                                content = re.sub(pattern, gov_section.strip(), content, flags=re.DOTALL)
+                                with open(start_here, 'w') as f:
+                                    f.write(content)
+                            else:
+                                # Append new section before "Where to Find Examples"
+                                content = content.replace("## Where to Find Examples", gov_section + "## Where to Find Examples")
+                                with open(start_here, 'w') as f:
+                                    f.write(content)
+                            
                             updated.append(f"{item}/{role}/00-START-HERE.md")
 
     telegram_print("\n" + "="*50)
@@ -775,7 +1257,7 @@ def build_workforce_automated(context, interview_data, departments):
     """Option A - Build workforce based on interview answers."""
     workspace = ask_interview_style(
         "Where should I build your workforce folder?",
-        example: "~/Downloads/my-ai-workforce",
+        example="~/Downloads/my-ai-workforce",
         default="~/Downloads/my-ai-workforce"
     )
     workspace = os.path.expanduser(workspace)
@@ -800,10 +1282,10 @@ def build_workforce_automated(context, interview_data, departments):
         # Show example roles based on department type
         examples = {
             "marketing": "content-creator, social-media-manager, ads-specialist",
-            "sales": "appointment-setter, closer, account-manager",
+            "sales": "appointment-setter, closer, account-manager, sdr",
             "billing": "invoice-specialist, collections, payment-processor",
-            "customer-support": "support-agent, onboarding-specialist",
-            "operations": "project-manager, systems-admin, process-analyst",
+            "customer-support": "support-agent, onboarding-specialist, customer-success-manager",
+            "operations": "project-manager, systems-admin, process-analyst, operations-manager",
             "creative": "graphic-designer, video-producer, copywriter",
             "hr-people": "recruiter, onboarding-coordinator, hr-manager",
             "legal-compliance": "contract-specialist, compliance-officer",
@@ -823,6 +1305,8 @@ def build_workforce_automated(context, interview_data, departments):
                 roles = ['appointment-setter', 'closer']
             elif dept == "operations":
                 roles = ['project-manager']
+            elif dept == "customer-support":
+                roles = ['support-agent']
             else:
                 roles = ['general']
         else:
@@ -854,17 +1338,15 @@ def build_workforce_automated(context, interview_data, departments):
             continue
 
         # Build governing personas content if installed
-        persona_lines = None
+        dept_persona_lines = None
+        dept_persona_file_content = None
         if personas_installed:
-            persona_lines = build_governing_personas_content(dept_key=dept, for_file=False)
-            if persona_lines:
-                persona_file_content = build_governing_personas_content(dept_key=dept, for_file=True)
+            dept_persona_lines, _ = build_governing_personas_content(dept_key=dept, for_file=False)
+            if dept_persona_lines:
+                dept_persona_file_content, _ = build_governing_personas_content(dept_key=dept, for_file=True)
                 create_file(
                     os.path.join(dept_folder, "governing-personas.md"),
-                    GOVERNING_PERSONAS_FILE.format(
-                        dept_title=dept.title(),
-                        persona_entries=persona_file_content or "[No personas mapped for this department yet]"
-                    )
+                    dept_persona_file_content or "# Governing Personas\n\n[No personas mapped for this department yet]\n"
                 )
 
         routing_lines = [f"## {dept.title()} Tasks"]
@@ -883,31 +1365,26 @@ def build_workforce_automated(context, interview_data, departments):
             role_persona_lines = None
             role_persona_file_content = None
             if personas_installed:
-                # Try to get role-specific personas, fall back to dept personas
+                # Try to get role-specific personas
                 role_persona_lines, _ = build_role_personas_content(role_key, dept, for_file=False)
                 role_persona_file_content, _ = build_role_personas_content(role_key, dept, for_file=True)
                 
                 # Fall back to department personas if no role-specific mapping
                 if not role_persona_lines:
-                    role_persona_lines = persona_lines
-                if not role_persona_file_content:
-                    role_persona_file_content = build_governing_personas_content(dept_key=dept, for_file=True)
+                    role_persona_lines = dept_persona_lines
+
+            # Create ROLE-LEVEL governing-personas.md with new template
+            if personas_installed and role_persona_file_content:
+                create_file(
+                    os.path.join(role_folder, "governing-personas.md"),
+                    role_persona_file_content
+                )
 
             # Build governing personas section for START-HERE if personas installed
             if personas_installed and role_persona_lines:
                 gov_section = GOVERNING_PERSONAS_SECTION.format(persona_list=role_persona_lines)
             else:
                 gov_section = ""
-
-            # Create ROLE-LEVEL governing-personas.md
-            if personas_installed and role_persona_file_content:
-                create_file(
-                    os.path.join(role_folder, "governing-personas.md"),
-                    GOVERNING_PERSONAS_FILE.format(
-                        dept_title=f"{role_title} (Role in {dept.title()})",
-                        persona_entries=role_persona_file_content or "[No personas mapped for this role yet]"
-                    )
-                )
 
             create_file(
                 os.path.join(role_folder, "00-START-HERE.md"),
