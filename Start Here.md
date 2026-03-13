@@ -23,9 +23,14 @@ Without this, one bad edit can corrupt your system with no way to recover.
 
 ### ✅ STEP 3: QMD (Semantic Search Engine)
 **Handled automatically by the install script - no skill folder needed.**
-QMD is installed as a system dependency before skills 4-29 run.
+QMD is installed as a system dependency during Step 3 of install.sh.
 It powers the persona search in Skill 22 and the persona detection in Skill 23.
-If the install script already ran, QMD is installed. No manual step needed.
+
+**QMD is automatically installed and indexed at:**
+- Install time: QMD installed, collections (clawd, master-files) created, initial indexing run
+- After Skill 22: coaching-personas collection added and indexed
+- After Skill 23: workforce files indexed
+- After all 29 skills: final complete index
 
 **QMD INDEXING happens at strategic points - see QMD INDEXING PROTOCOL below.**
 
@@ -108,7 +113,7 @@ Every skill has a specific install sequence. Follow it exactly:
 
 ---
 
-## 🔴 GATEWAY RESTART PROTOCOL - NEVER TRIGGER AUTONOMOUSLY
+## 🔴 GATEWAY RESTART PROTOCOL - NEVER TRIGGER AUTONOMOUSLY (PERMANENT RULE)
 
 **Discipline Rule:** During any skill installation, you may encounter instructions to restart the OpenClaw gateway.
 
@@ -118,16 +123,14 @@ Every skill has a specific install sequence. Follow it exactly:
 When a gateway restart is needed:
 1. **STOP** - Do NOT execute the restart command
 2. **NOTIFY** the user: "This installation requires an OpenClaw gateway restart to complete."
-3. **ASK** one of these questions:
-   - "Would you like me to trigger the gateway restart for you?"
-   - "Or would you prefer to initiate the restart yourself?"
-4. **WAIT** for explicit user confirmation before proceeding
+3. **INSTRUCT**: "Type `/restart` in Telegram to trigger it"
+4. **WAIT** for user action - do NOT proceed until confirmed
 
 ### Forbidden Actions
 - Do NOT run `openclaw gateway restart` without explicit user permission
 - Do NOT say "I'll restart the gateway now" without asking first
 - Do NOT assume the user wants the restart
-- Do NOT restart as part of an "autonomous" workflow
+- Do NOT restart as part of an autonomous workflow"autonomous" workflow
 
 ### Why This Matters
 Gateway restarts interrupt active sessions and can kill running processes. The user must control when this happens.
@@ -346,10 +349,9 @@ After every skill install, verify:
 
 | Milestone | When to Index | Why |
 |-----------|---------------|-----|
-| **Initial** | After Step 3 (QMD install) + TYP + Back Yourself Up complete | Base index of workspace |
-| **Foundation** | After Skills 04-21 complete (before Personas & AI Workforce) | Core tooling ready, prepares for heavy skills |
-| **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions + personas + master-files all indexed together |
-| **API Layer** | After OpenRouter setup (Skill 12) complete | Model routing knowledge searchable |
+| **Initial** | After QMD install (step 3) | Base index of workspace |
+| **Personas** | After Skill 22 (Book-to-Persona) complete | 32+ persona blueprints now searchable |
+| **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions indexed |
 | **Final** | After ALL 29 skills complete | Complete system index |
 | **Ongoing** | After any NEW skill installed post-onboarding | Keep index current |
 

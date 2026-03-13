@@ -160,3 +160,25 @@ The agent does NOT need to keep all reference files loaded. At runtime:
 3. Read only the specific `references/*.md` file needed
 4. Build the API call from the template in that file
 5. Execute with real env var values substituted in
+
+---
+
+## 🔴 GATEWAY RESTART PROTOCOL - NEVER TRIGGER AUTONOMOUSLY
+
+**During this installation, you may encounter instructions to restart the OpenClaw gateway.**
+
+**YOU ARE FORBIDDEN from triggering gateway restarts yourself.**
+
+### Correct Process
+When a gateway restart is needed:
+1. **STOP** - Do NOT execute the restart command
+2. **NOTIFY** the user: "This installation requires an OpenClaw gateway restart to complete."
+3. **INSTRUCT**: "Type `/restart` in Telegram to trigger it"
+4. **WAIT** for user action - do NOT proceed until confirmed
+
+### Forbidden Actions
+- Do NOT run `openclaw gateway restart` without explicit user permission
+- Do NOT say "I will restart the gateway now" without asking first
+- Do NOT assume the user wants the restart
+
+---

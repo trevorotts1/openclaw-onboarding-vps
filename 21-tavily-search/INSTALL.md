@@ -77,3 +77,24 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    `cp -R ./upstream-original/. ~/.openclaw/skills/tavily-search/`
 4. Verify `~/.openclaw/skills/tavily-search/SKILL.md` exists.
 5. Apply relevant core file updates from CORE_UPDATES.md only.
+---
+
+## 🔴 GATEWAY RESTART PROTOCOL - NEVER TRIGGER AUTONOMOUSLY
+
+**During this installation, you may encounter instructions to restart the OpenClaw gateway.**
+
+**YOU ARE FORBIDDEN from triggering gateway restarts yourself.**
+
+### Correct Process
+When a gateway restart is needed:
+1. **STOP** - Do NOT execute the restart command
+2. **NOTIFY** the user: "This installation requires an OpenClaw gateway restart to complete."
+3. **INSTRUCT**: "Type `/restart` in Telegram to trigger it"
+4. **WAIT** for user action - do NOT proceed until confirmed
+
+### Forbidden Actions
+- Do NOT run `openclaw gateway restart` without explicit user permission
+- Do NOT say "I will restart the gateway now" without asking first
+- Do NOT assume the user wants the restart
+
+---

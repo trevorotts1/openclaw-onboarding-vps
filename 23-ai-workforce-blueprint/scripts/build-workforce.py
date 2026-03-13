@@ -544,6 +544,130 @@ def detect_existing_workspace():
     return None
 
 
+ROLE_PERSONAS = {
+    # Marketing roles
+    "content-creator": [
+        ("miller-building-storybrand-2", "Brand messaging and customer story"),
+        ("bly-copywriters-handbook", "Copywriting craft and conversion"),
+        ("godin-this-is-marketing", "Permission marketing and audience service"),
+    ],
+    "social-media-manager": [
+        ("kane-hook-point", "Attention and hooks for social"),
+        ("godin-this-is-marketing", "Building audience and permission"),
+    ],
+    "ads-specialist": [
+        ("wiebe-copy-hackers", "Value propositions and conversion optimization"),
+        ("cialdini-influence", "Persuasion psychology for ads"),
+    ],
+    # Sales roles
+    "appointment-setter": [
+        ("rackham-spin-selling", "Discovery and consultative selling"),
+        ("jones-exactly-what-to-say", "Magic words for setting appointments"),
+    ],
+    "closer": [
+        ("voss-never-split-difference", "Negotiation and objection handling"),
+        ("hormozi-100m-offers", "Offer design and value stacking"),
+        ("jones-exactly-what-to-say", "Closing language and magic words"),
+    ],
+    "account-manager": [
+        ("grenny-crucial-conversations", "High-stakes client conversations"),
+        ("pink-to-sell-is-human", "Moving people and relationship selling"),
+    ],
+    # Support roles
+    "support-agent": [
+        ("tawwab-set-boundaries-find-peace", "Boundaries in customer interactions"),
+        ("brown-atlas-of-heart", "Emotional vocabulary and empathy"),
+        ("voss-never-split-difference", "Tactical empathy and listening"),
+    ],
+    # Operations roles
+    "project-manager": [
+        ("clear-atomic-habits", "Systems and behavior change"),
+        ("moran-12-week-year", "Execution sprints and accountability"),
+        ("forte-para-method", "Organization and folder structure"),
+    ],
+    # Creative roles
+    "graphic-designer": [
+        ("miller-building-storybrand-2", "Visual storytelling and brand voice"),
+        ("kane-hook-point", "Visual hooks and attention"),
+    ],
+    "video-producer": [
+        ("kane-hook-point", "Hooks and attention for video"),
+        ("miller-building-storybrand-2", "Storytelling and narrative"),
+    ],
+    "copywriter": [
+        ("bly-copywriters-handbook", "Copy craft and headlines"),
+        ("wiebe-copy-hackers", "Value propositions and conversion copy"),
+    ],
+    # HR roles
+    "recruiter": [
+        ("grenny-crucial-conversations", "Difficult hiring conversations"),
+        ("obama-becoming", "Identity and resilience in candidates"),
+    ],
+    # Leadership roles
+    "team-lead": [
+        ("sinek-start-with-why", "Why-driven leadership"),
+        ("grenny-crucial-conversations", "Performance conversations"),
+    ],
+    # Default - uses department personas
+    "general": [],
+    "generalist": [],
+}
+
+
+def build_role_personas_content(role_key, dept_key, for_file=False):
+    """Generate governing personas content specific to a role."""
+    # Try role-specific personas first
+    personas = ROLE_PERSONAS.get(role_key, [])
+    
+    # Fall back to department personas if no role-specific mapping
+    if not personas:
+        personas = DEPT_PERSONAS.get(dept_key, [])
+        if not personas:
+            # Try partial match on dept_key
+            for key in DEPT_PERSONAS:
+                if key in dept_key or dept_key in key:
+                    personas = DEPT_PERSONAS[key]
+                    break
+    
+    if not personas:
+        return None, None
+
+    if for_file:
+        entries = []
+        for folder, description in personas:
+            entries.append(f"### {folder}\n**Focus:** {description}\n**Query:** `qmd search \"{description.lower()}\" -c coaching-personas`\n")
+        return '\n'.join(entries), personas
+
+    # For 00-START-HERE.md section
+    lines = []
+    for folder, description in personas:
+        lines.append(f"- **{folder}**: {description}")
+    return '\n'.join(lines), personas
+
+
+def run_qmd_update():
+    """Auto-run QMD update and embed after wiring personas."""
+    telegram_print("\n🔄 Running QMD update after persona wiring...")
+    try:
+        result = subprocess.run(["qmd", "update"], capture_output=True, text=True, timeout=60)
+        if result.returncode == 0:
+            telegram_print("  ✓ qmd update complete")
+        else:
+            telegram_print(f"  ⚠️ qmd update: {result.stderr[:100]}")
+    except Exception as e:
+        telegram_print(f"  ⚠️ qmd update failed: {e}")
+    
+    telegram_print("🔄 Running QMD embed...")
+    try:
+        result = subprocess.run(["qmd", "embed"], capture_output=True, text=True, timeout=300)
+        if result.returncode == 0:
+            telegram_print("  ✓ qmd embed complete")
+        else:
+            telegram_print(f"  ⚠️ qmd embed: {result.stderr[:100]}")
+    except Exception as e:
+        telegram_print(f"  ⚠️ qmd embed failed: {e}")
+
+
 def audit_mode(workspace, personas_installed):
     """Option C - scan existing workspace, fill gaps, wire personas if available."""
     telegram_print(f"\n🔍 AUDIT MODE - Scanning {workspace}\n")
@@ -581,6 +705,7 @@ def audit_mode(workspace, personas_installed):
 
             role_title = role.replace('-', ' ').title()
             dept_name = f"{dept_key.title()} Department"
+            role_key = role.lower().replace('-', '_')
 
             # Add missing files
             for fname, template, kwargs in [
@@ -593,6 +718,21 @@ def audit_mode(workspace, personas_installed):
                     create_file(fpath, template.format(**kwargs))
                     added.append(f"{item}/{role}/{fname}")
 
+            # Add ROLE-LEVEL governing-personas.md if personas installed
+            if personas_installed:
+                role_gp_file = os.path.join(role_path, "governing-personas.md")
+                if not os.path.exists(role_gp_file):
+                    role_persona_content, _ = build_role_personas_content(role_key, dept_key, for_file=True)
+                    if role_persona_content:
+                        create_file(
+                            role_gp_file,
+                            GOVERNING_PERSONAS_FILE.format(
+                                dept_title=f"{role_title} (Role in {dept_key.title()})",
+                                persona_entries=role_persona_content
+                            )
+                        )
+                        added.append(f"{item}/{role}/governing-personas.md")
+
             # Add Governing Personas section to 00-START-HERE.md if missing
             if personas_installed:
                 start_here = os.path.join(role_path, "00-START-HERE.md")
@@ -600,7 +740,10 @@ def audit_mode(workspace, personas_installed):
                     with open(start_here, 'r') as f:
                         content = f.read()
                     if "Governing Personas" not in content:
-                        persona_lines = build_governing_personas_content(dept_key=dept_key, for_file=False)
+                        # Use role-specific personas if available, fall back to dept
+                        persona_lines, _ = build_role_personas_content(role_key, dept_key, for_file=False)
+                        if not persona_lines:
+                            persona_lines = build_governing_personas_content(dept_key=dept_key, for_file=False)
                         if persona_lines:
                             gov_section = GOVERNING_PERSONAS_SECTION.format(persona_list=persona_lines)
                             with open(start_here, 'a') as f:
@@ -622,6 +765,8 @@ def audit_mode(workspace, personas_installed):
         telegram_print("\n✓ Everything looks good - no gaps found.")
     if personas_installed:
         telegram_print("\n✅ Persona wiring complete.")
+        # Auto-run QMD update after wiring
+        run_qmd_update()
     else:
         telegram_print("\nℹ️ Install Skill 22 and re-run to wire personas.")
 
@@ -732,12 +877,37 @@ def build_workforce_automated(context, interview_data, departments):
 
             role_title = role.replace('-', ' ').title()
             dept_name = f"{dept.title()} Department"
+            role_key = role.lower().replace('-', '_')
+
+            # Build ROLE-SPECIFIC governing personas content if installed
+            role_persona_lines = None
+            role_persona_file_content = None
+            if personas_installed:
+                # Try to get role-specific personas, fall back to dept personas
+                role_persona_lines, _ = build_role_personas_content(role_key, dept, for_file=False)
+                role_persona_file_content, _ = build_role_personas_content(role_key, dept, for_file=True)
+                
+                # Fall back to department personas if no role-specific mapping
+                if not role_persona_lines:
+                    role_persona_lines = persona_lines
+                if not role_persona_file_content:
+                    role_persona_file_content = build_governing_personas_content(dept_key=dept, for_file=True)
 
             # Build governing personas section for START-HERE if personas installed
-            if personas_installed and persona_lines:
-                gov_section = GOVERNING_PERSONAS_SECTION.format(persona_list=persona_lines)
+            if personas_installed and role_persona_lines:
+                gov_section = GOVERNING_PERSONAS_SECTION.format(persona_list=role_persona_lines)
             else:
                 gov_section = ""
+
+            # Create ROLE-LEVEL governing-personas.md
+            if personas_installed and role_persona_file_content:
+                create_file(
+                    os.path.join(role_folder, "governing-personas.md"),
+                    GOVERNING_PERSONAS_FILE.format(
+                        dept_title=f"{role_title} (Role in {dept.title()})",
+                        persona_entries=role_persona_file_content or "[No personas mapped for this role yet]"
+                    )
+                )
 
             create_file(
                 os.path.join(role_folder, "00-START-HERE.md"),
@@ -772,13 +942,27 @@ def build_workforce_automated(context, interview_data, departments):
     create_file(os.path.join(universal_sops, "00-ROUTING.md"), routing_content)
     create_file(os.path.join(universal_sops, "tools.md"), "# Universal Tools\n\n[Tools used across all departments]\n")
 
+    # Re-detection after questions: re-check for personas
+    telegram_print("\n🔍 Re-detecting coaching personas after build...")
+    personas_still_installed = check_personas_installed()
+    if personas_still_installed and personas_installed:
+        telegram_print("✅ Personas still detected - wiring complete")
+        # Auto-run QMD update after wiring personas
+        run_qmd_update()
+    elif personas_still_installed and not personas_installed:
+        telegram_print("✅ Personas detected post-build - wiring now...")
+        # Run audit mode to wire personas into existing structure
+        audit_mode(workspace, True)
+    else:
+        telegram_print("ℹ️ Personas not detected - build complete without persona wiring")
+
     telegram_print("\n" + "="*50)
     telegram_print("✅ BUILD COMPLETE")
     telegram_print("="*50)
     telegram_print(f"\n📁 Workforce folder: {workspace}")
     telegram_print(f"📊 Departments built: {len(departments)}")
-    if personas_installed:
-        telegram_print(f"✅ Governing personas wired to all departments")
+    if personas_installed or personas_still_installed:
+        telegram_print(f"✅ Governing personas wired to all departments and roles")
     telegram_print(f"\n🎯 Next steps:")
     telegram_print("  1. Open each 00-START-HERE.md and fill in role details")
     telegram_print("  2. Rename 01-first-task.md to match your actual tasks")
@@ -786,10 +970,50 @@ def build_workforce_automated(context, interview_data, departments):
     telegram_print("  4. Update universal-sops/00-ROUTING.md with your task types")
 
 
+def preflight_check():
+    """Pre-flight check: Skill 23 requires Skill 22 to be fully installed first."""
+    try:
+        result = subprocess.run(
+            ["qmd", "status"],
+            capture_output=True, text=True, timeout=10
+        )
+        if "coaching-personas" in result.stdout:
+            return True, "coaching-personas collection found"
+    except Exception:
+        pass
+    
+    # Fallback check - skill folder exists
+    skill_path = os.path.expanduser("~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/")
+    if os.path.exists(skill_path):
+        return True, "Skill 22 folder found (collection may need embedding)"
+    
+    return False, "Skill 22 (Book-to-Persona) not installed"
+
+
 def main():
     telegram_print("\n" + "="*50)
     telegram_print("🚀 AI WORKFORCE BLUEPRINT - Scaffold Builder")
     telegram_print("="*50)
+    
+    # PRE-FLIGHT CHECK: Skill 23 requires Skill 22
+    telegram_print("\n🔍 Running pre-flight check for Skill 22...")
+    skill22_ok, skill22_msg = preflight_check()
+    
+    if not skill22_ok:
+        telegram_print("\n" + "❌"*25)
+        telegram_print("❌ PRE-FLIGHT CHECK FAILED")
+        telegram_print("❌"*25)
+        telegram_print(f"\nReason: {skill22_msg}")
+        telegram_print("\nSkill 23 (AI Workforce Blueprint) requires Skill 22 to be fully installed first.")
+        telegram_print("\nTo proceed:")
+        telegram_print("  1. Navigate to 22-book-to-persona-coaching-leadership-system/")
+        telegram_print("  2. Complete all installation steps (including QMD setup)")
+        telegram_print("  3. Run: qmd status | grep coaching-personas")
+        telegram_print("  4. Return here and re-run this script")
+        telegram_print("\n" + "❌"*25)
+        sys.exit(1)
+    
+    telegram_print(f"✅ Pre-flight check passed: {skill22_msg}")
 
     # Check for personas
     personas_installed = check_personas_installed()

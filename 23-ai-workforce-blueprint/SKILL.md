@@ -144,15 +144,37 @@ If a workforce structure already exists, run the scaffold script in audit mode. 
 
 ## Connection to Book To Persona & Coaching & Leadership System (Skill 22)
 
-**Skill 23 works independently.** If Skill 22 (Book To Persona & Coaching & Leadership System) is not installed, the workforce blueprint builds clean with no persona references. Personas are an enhancement, not a requirement. Install Skill 23 at any time, regardless of whether Skill 22 is installed.
+**⚠️ PRE-FLIGHT CHECK: Skill 23 requires Skill 22 to be FULLY installed first.**
 
-These two skills are separate but work together automatically when both are present.
+Before running Skill 23, the system checks for the `coaching-personas` QMD collection. If not found:
+- STOP and display: "Install Skill 22 (Book-to-Persona) first"
+- Do not proceed with workforce build
+
+**Skill 23 works independently once Skill 22 is verified.** If Skill 22 is not installed, the workforce blueprint builds clean with no persona references. Personas are an enhancement, not a requirement.
+
+**Pre-flight check in action:**
+```bash
+# This runs automatically at the start of Skill 23
+if qmd status 2>/dev/null | grep -q "coaching-personas"; then
+  echo "✅ Skill 22 verified - proceeding with workforce build"
+else
+  echo "❌ STOP: Install Skill 22 (Book-to-Persona) first"
+  exit 1
+fi
+```
+
+**Re-detection after questions:**
+After all departments/roles are defined, Skill 23 re-checks for coaching-personas. If found during the build, persona wiring runs automatically.
+
+**These two skills work together automatically when both are present:**
 
 **If Skill 22 (book-to-persona) is installed:**
 - The scaffold script detects the `coaching-personas` QMD collection
-- Every department folder automatically gets a `governing-personas.md` file listing which personas govern that department
+- Every department folder gets a `governing-personas.md` file
+- Every role folder gets its own `governing-personas.md` for role-specific tasks
 - Every `00-START-HERE.md` gets a Governing Personas section with QMD query instructions
-- Agents in each department know exactly which persona methodology to follow
+- **Auto-runs QMD update after wiring:** `qmd update && qmd embed`
+- Agents know exactly which persona methodology to follow
 
 **If Skill 22 is NOT installed:**
 - Structure builds clean with no persona references

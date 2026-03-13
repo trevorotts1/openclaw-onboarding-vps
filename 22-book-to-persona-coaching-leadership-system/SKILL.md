@@ -146,11 +146,17 @@ The skill will:
 
 ## Connection to AI Workforce Blueprint (Skill 23)
 
+**⚠️ DEPENDENCY WARNING: Skill 23 requires Skill 22 to be FULLY installed first.**
+
+Skill 23 checks for the `coaching-personas` QMD collection before running. If not found, it stops with:
+> "Install Skill 22 (Book-to-Persona) first"
+
 These two skills are separate but work together automatically.
 
 **If skill 23 (ai-workforce-blueprint) is installed:**
 - The workforce scaffold script detects the `coaching-personas` QMD collection during build
 - Each department folder gets a `governing-personas.md` showing which personas govern it
+- Each role folder gets its own `governing-personas.md` for role-specific tasks
 - Each `00-START-HERE.md` includes a Governing Personas section with QMD query
 - Agents know: go to the right department, use the right persona
 
