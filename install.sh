@@ -789,14 +789,45 @@ echo "  ORCHESTRATION COMPLETE"
 echo "============================================"
 echo ""
 
-TRIGGER_MSG="PARALLEL ONBOARDING ORCHESTRATED - EXECUTE NOW. The 5-wave parallel installation has been initiated. Wave 1 (Foundation: 01-03) and Wave 2 (Pre-Persona: 04-21 via 4 parallel agents) have been launched. Wave 3 (Core: 22-23) requires MAIN ORCHESTRATOR installation - do NOT use sub-agents. Wave 4 (Post-Workforce: 24-29 via 2 parallel agents) has been launched. Wave 5 (Final) is verification. Progress tracked at: $PROGRESS_FILE. Begin execution immediately. Install all skills following the Teach Yourself Protocol. Handle API key prompts autonomously. Report progress after EACH skill completes."
+TRIGGER_MSG="ONBOARDING PACKAGE DOWNLOADED - BEGIN INSTALLATION NOW. 29 skills have been downloaded to ~/.openclaw/onboarding/. Read AGENTS.md for the ONBOARDING PENDING flag. Install all 29 skills following the Teach Yourself Protocol: 1) Read ALL .md files in each skill folder before any install steps, 2) Execute installation steps exactly as written, 3) Handle API key prompts autonomously, 4) Report progress after EACH skill completes. DO NOT skip skills, DO NOT take shortcuts, DO NOT say 'done' until all 29 skills are verified installed. Start with Skill 01."
 
+# Try multiple trigger methods
+AGENT_TRIGGERED=false
+
+# Method 1: Try openclaw agent --deliver
 if openclaw agent --message "$TRIGGER_MSG" --deliver 2>/dev/null; then
-  echo "  Agent triggered successfully."
-else
-  echo "  Note: Could not trigger agent via 'openclaw agent --deliver'."
-  echo "  The onboarding flag has been written to AGENTS.md."
-  echo "  Your agent will pick it up on its next session start."
+  echo "  ✓ Agent triggered via openclaw agent --deliver"
+  AGENT_TRIGGERED=true
+fi
+
+# Method 2: Try sending via gateway if available
+if [ "$AGENT_TRIGGERED" = false ] && command -v openclaw &>/dev/null; then
+  # Write trigger message to a file the agent will see
+  echo "$TRIGGER_MSG" > "$ONBOARDING_DIR/.agent-trigger"
+  echo "  ✓ Trigger message written to $ONBOARDING_DIR/.agent-trigger"
+  echo ""
+  echo "  ============================================"
+  echo "  IMPORTANT: The AI agent needs to be activated"
+  echo "  ============================================"
+  echo ""
+  echo "  The onboarding package is ready. To start the"
+  echo "  AI agent installation, either:"
+  echo ""
+  echo "  1. Send this message to your OpenClaw agent:"
+  echo "     'Begin onboarding installation'"
+  echo ""
+  echo "  2. Or restart your OpenClaw session - the agent"
+  echo "     will automatically detect the onboarding flag"
+  echo ""
+  echo "  3. Or run: openclaw agent --message 'Begin onboarding' --deliver"
+  echo ""
+  AGENT_TRIGGERED=true
+fi
+
+if [ "$AGENT_TRIGGERED" = false ]; then
+  echo "  ✗ Could not trigger agent automatically."
+  echo "  The onboarding flag is in AGENTS.md - the agent"
+  echo "  will detect it on next session start."
 fi
 
 # ----------------------------------------------------------
@@ -804,13 +835,22 @@ fi
 # ----------------------------------------------------------
 echo ""
 echo "============================================"
-echo "  Parallel onboarding orchestrated."
-echo "  Your OpenClaw agents are now installing"
-echo "  29 skills in 5 orchestrated waves."
-echo "  Installer version: ${ONBOARDING_VERSION}"
+echo "  OpenClaw Onboarding Package Ready"
+echo "  Version: ${ONBOARDING_VERSION}"
+echo "============================================"
+echo ""
+echo "  29 skills downloaded to:"
+echo "    ~/.openclaw/onboarding/"
+echo ""
+echo "  Next step: Activate your AI agent to"
+echo "  begin installation. Send this message"
+echo "  to your OpenClaw agent:"
+echo ""
+echo "    'Begin onboarding installation'"
+echo ""
+echo "  The agent will then install all 29 skills"
+echo "  following the Teach Yourself Protocol."
 echo ""
 echo "  Progress file: $PROGRESS_FILE"
-echo "  Check your configured messaging channel"
-echo "  for real-time progress updates."
 echo "============================================"
 echo ""
