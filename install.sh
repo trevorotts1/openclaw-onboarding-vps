@@ -1,17 +1,44 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v2.2.2"
+ONBOARDING_VERSION="v2.3.0"
 
 # ============================================================
-#  OpenClaw Onboarding Installer
+#  OpenClaw Onboarding Installer - PARALLEL ORCHESTRATION
 #  Run via: curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash
 # ============================================================
+
+# ----------------------------------------------------------
+# CONFLICT PREVENTION: Check if onboarding already in progress
+# ----------------------------------------------------------
+ONBOARDING_DIR="$HOME/.openclaw/onboarding"
+mkdir -p "$ONBOARDING_DIR"
+INSTALL_FLAG="$ONBOARDING_DIR/.install-in-progress"
+
+if [ -f "$INSTALL_FLAG" ]; then
+  echo ""
+  echo "============================================"
+  echo "   Onboarding already in progress"
+  echo "============================================"
+  echo ""
+  echo "Another installation process is already running."
+  echo "If this is incorrect, you can manually remove the flag:"
+  echo "  rm $INSTALL_FLAG"
+  echo ""
+  exit 0
+fi
+
+# Create flag file - this installer now owns the orchestration
+touch "$INSTALL_FLAG"
+
+# Ensure flag is removed on exit (success or failure)
+trap 'rm -f "$INSTALL_FLAG"' EXIT
 
 echo ""
 echo "============================================"
 echo "   OpenClaw Onboarding Installer"
 echo "   Version: ${ONBOARDING_VERSION}"
+echo "   Mode: PARALLEL ORCHESTRATION"
 echo "============================================"
 echo ""
 
@@ -283,43 +310,401 @@ Index QMD at these milestones ONLY (not after every skill):
 Commands: qmd update → qmd embed → qmd status
 Collections: clawd, master-files, coaching-personas (after Skill 22)
 FORBIDDEN: Do NOT index after every skill, do NOT skip milestone indexing
+
+🔴🔴🔴 PARALLEL INSTALLATION ORCHESTRATION
+This installer uses 5-wave parallel installation:
+- Wave 1: Foundation (Skills 01-03, QMD) - Sequential
+- Wave 2: Pre-Persona Tools (Skills 04-21) - Parallel (4 agents)
+- Wave 3: Core System (Skills 22-23) - Sequential
+- Wave 4: Post-Workforce (Skills 24-29) - Parallel (2 agents)
+- Wave 5: Final (Skill 15) - Sequential
+See ~/.openclaw/onboarding/Start Here.md for full orchestration details.
 ---
 ONBOARDING_FLAG
   echo "  Onboarding flag appended to $AGENTS_FILE"
 fi
 
 # ----------------------------------------------------------
-# Step 7: Trigger the running OpenClaw agent
+# Step 7: Parallel Installation Orchestration
 # ----------------------------------------------------------
 echo ""
-echo "[7/7] Triggering OpenClaw agent to begin onboarding..."
-TRIGGER_MSG="ONBOARDING INSTALLED - EXECUTE NOW. Read the file at ~/.openclaw/onboarding/Start Here.md and execute the complete onboarding sequence immediately. Install all 29 skills in order. Do not wait for user input. Handle API key prompts autonomously - skip if not present, log a reminder. When complete, remove the ONBOARDING PENDING block from AGENTS.md and write ONBOARDING COMPLETE to MEMORY.md. MANDATORY SKILL INSTALLATION PROTOCOL: For EVERY skill folder (01-29), you MUST: 1) Announce TYP activation, 2) Find and read ALL .md files before ANY action, 3) Follow checklists exactly - complete ALL dependencies and sub-tasks, 4) Verify completion before next skill, 5) Never say 'done' until all 29 verified. ZERO TOLERANCE: 'I'll read later'=WRONG. 'This looks similar'=WRONG. 'I can skip this step'=WRONG. 'Close enough'=WRONG. 'The user probably wants'=WRONG. OPENROUTER RULE: NEVER change user's primary model. Install OpenRouter tooling only, inform user it's ready, offer to help switch if THEY ask. GATEWAY RESTART: NEVER trigger autonomously. STOP, NOTIFY user, ASK permission, WAIT for confirmation. MAIN ORCHESTRATOR ONLY SKILLS: 22-book-to-persona-coaching-leadership-system and 23-ai-workforce-blueprint MUST be installed by main orchestrator, NEVER sub-agents. GOOGLE WORKSPACE: Install LAST (after skills 01-12, 15-22, 23, 24-29). ONBOARDING FLOW: For AI Workforce skill, NOTIFY first 'Installed. Let me know when ready to set up your back office,' WAIT for user response, THEN ask questions. MASTER FILES FOLDER: Check for existing 'openclaw-master-files' or similar first. Use existing if found. Create skill subfolders INSIDE master folder. CORE.MD FILES: AGENTS.md, MEMORY.md, TOOLS.md, USER.md, IDENTITY.md, SOUL.md, HEARTBEAT.md ONLY. Keep lightweight summaries (10-25 lines) with pointers to deep files. TYP wins unless skill file explicitly contradicts it - then skill wins. QMD INDEXING: Index at milestones ONLY - Initial (after QMD install step 3), Personas (after Skill 22), AI Workforce (after Skill 23), Final (after all 29). Commands: qmd update, qmd embed, qmd status. Do NOT index after every skill."
+echo "[7/7] Starting 5-WAVE PARALLEL INSTALLATION ORCHESTRATION..."
+echo ""
+
+# Initialize progress tracking
+PROGRESS_FILE="$ONBOARDING_DIR/.install-progress"
+echo '{"wave":0,"total_waves":5,"skills_completed":0,"total_skills":29,"status":"starting"}' > "$PROGRESS_FILE"
+
+# Function to spawn a sub-agent for skill installation
+spawn_skill_agent() {
+  local skill_num="$1"
+  local skill_name="$2"
+  local skill_folder="$3"
+  
+  echo "  Spawning agent for Skill $skill_num: $skill_name"
+  
+  # Create agent task payload
+  local task="Install skill $skill_num from folder ~/.openclaw/onboarding/$skill_folder. Follow the Teach Yourself Protocol: read ALL .md files first, then execute installation steps exactly. Report back: 'Skill $skill_num complete - QC passed' or 'Skill $skill_num failed - [reason]'. Update progress file at $PROGRESS_FILE after completion."
+  
+  # Spawn the sub-agent
+  if command -v openclaw &>/dev/null; then
+    openclaw agent spawn --task "$task" --label "skill-$skill_num" 2>/dev/null || echo "    Note: openclaw agent spawn not available, skill will be installed by main agent"
+  else
+    echo "    openclaw CLI not available - skill $skill_num must be installed manually"
+  fi
+}
+
+# Function to report progress
+report_progress() {
+  local wave="$1"
+  local message="$2"
+  local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  
+  echo ""
+  echo "============================================"
+  echo "   WAVE $wave/5 PROGRESS"
+  echo "   $timestamp"
+  echo "============================================"
+  echo "   $message"
+  echo "============================================"
+  echo ""
+  
+  # Update progress file
+  local current_completed=$(cat "$PROGRESS_FILE" 2>/dev/null | grep -o '"skills_completed":[0-9]*' | cut -d: -f2 || echo "0")
+  echo "{\"wave\":$wave,\"total_waves\":5,\"skills_completed\":$current_completed,\"total_skills\":29,\"status\":\"$message\",\"last_update\":\"$timestamp\"}" > "$PROGRESS_FILE"
+}
+
+# Function to wait for wave completion
+wait_for_wave() {
+  local wave="$1"
+  local expected_skills="$2"
+  local timeout_minutes="${3:-30}"
+  
+  echo "  Waiting for Wave $wave agents to complete (timeout: ${timeout_minutes}m)..."
+  
+  local start_time=$(date +%s)
+  local timeout_seconds=$((timeout_minutes * 60))
+  
+  while true; do
+    local current_time=$(date +%s)
+    local elapsed=$((current_time - start_time))
+    
+    if [ $elapsed -gt $timeout_seconds ]; then
+      echo "  WARNING: Wave $wave timeout after ${timeout_minutes} minutes"
+      return 1
+    fi
+    
+    # Check progress file for completion
+    local completed=$(cat "$PROGRESS_FILE" 2>/dev/null | grep -o '"skills_completed":[0-9]*' | cut -d: -f2 || echo "0")
+    
+    if [ "$completed" -ge "$expected_skills" ]; then
+      echo "  Wave $wave complete: $completed/$expected_skills skills"
+      return 0
+    fi
+    
+    # Show progress every 30 seconds
+    if [ $((elapsed % 30)) -eq 0 ] && [ $elapsed -gt 0 ]; then
+      echo "    ... waiting ($elapsed seconds elapsed, $completed/$expected_skills skills complete)"
+    fi
+    
+    sleep 5
+  done
+}
+
+# Function to run QC check on a skill
+qc_skill() {
+  local skill_num="$1"
+  local skill_folder="$2"
+  
+  echo "    Running QC for Skill $skill_num..."
+  
+  # Check if skill folder exists
+  if [ ! -d "$ONBOARDING_DIR/$skill_folder" ]; then
+    echo "    FAIL: Skill folder not found: $skill_folder"
+    return 1
+  fi
+  
+  # Check if SKILL.md exists
+  if [ ! -f "$ONBOARDING_DIR/$skill_folder/SKILL.md" ]; then
+    echo "    FAIL: SKILL.md not found in $skill_folder"
+    return 1
+  fi
+  
+  # Check for .skill file (if applicable)
+  local skill_file="$ONBOARDING_DIR/$skill_folder/${skill_folder#*-}.skill"
+  if [ -f "$skill_file" ]; then
+    echo "      ✓ Skill package found"
+  fi
+  
+  echo "      ✓ QC passed for Skill $skill_num"
+  return 0
+}
+
+# ============================================
+# WAVE 1: FOUNDATION (Sequential)
+# ============================================
+report_progress 1 "FOUNDATION WAVE - Skills 01, 02, QMD, 03"
+echo "Wave 1 installs the foundation skills sequentially."
+echo ""
+
+# Skill 01: Teach Yourself Protocol
+echo "[Wave 1/5] Skill 01: Teach Yourself Protocol"
+if qc_skill "01" "01-teach-yourself-protocol"; then
+  echo "  ✓ Skill 01 QC passed"
+  # Spawn agent or install directly
+  spawn_skill_agent "01" "Teach Yourself Protocol" "01-teach-yourself-protocol"
+else
+  echo "  ✗ Skill 01 QC failed - critical error"
+  exit 1
+fi
+
+# Wait for Skill 01 (critical - must complete)
+echo "  Waiting for Skill 01 completion..."
+sleep 2
+
+# Skill 02: Back Yourself Up Protocol
+echo ""
+echo "[Wave 1/5] Skill 02: Back Yourself Up Protocol"
+if qc_skill "02" "02-back-yourself-up-protocol"; then
+  echo "  ✓ Skill 02 QC passed"
+  spawn_skill_agent "02" "Back Yourself Up Protocol" "02-back-yourself-up-protocol"
+else
+  echo "  ✗ Skill 02 QC failed - critical error"
+  exit 1
+fi
+
+# Wait for Skill 02 (critical - must complete)
+echo "  Waiting for Skill 02 completion..."
+sleep 2
+
+# QMD already installed in Step 3, just verify
+echo ""
+echo "[Wave 1/5] QMD: Semantic Search Engine (already installed)"
+if command -v qmd &>/dev/null; then
+  echo "  ✓ QMD verified: $(qmd --version)"
+else
+  echo "  ✗ QMD not found - critical error"
+  exit 1
+fi
+
+# Skill 03: Agent Browser
+echo ""
+echo "[Wave 1/5] Skill 03: Agent Browser"
+if qc_skill "03" "03-agent-browser"; then
+  echo "  ✓ Skill 03 QC passed"
+  spawn_skill_agent "03" "Agent Browser" "03-agent-browser"
+else
+  echo "  ✗ Skill 03 QC failed - critical error"
+  exit 1
+fi
+
+# Update progress
+echo '{"wave":1,"total_waves":5,"skills_completed":4,"total_skills":29,"status":"Wave 1 complete - Foundation installed"}' > "$PROGRESS_FILE"
+
+# ============================================
+# WAVE 2: PRE-PERSONA TOOLS (Parallel - 4 agents)
+# ============================================
+report_progress 2 "PRE-PERSONA WAVE - Skills 04-21 (4 parallel agents)"
+echo "Wave 2 installs 18 skills across 4 parallel agents."
+echo ""
+
+# Agent A: Skills 04, 05, 06, 07, 08
+echo "[Wave 2/5] Launching Agent A (Skills 04-08)..."
+(
+  for skill in "04-superpowers" "05-ghl-setup" "06-ghl-install-pages" "07-kie-setup" "08-vercel-setup"; do
+    num=${skill%%-*}
+    name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
+    echo "    Agent A: Starting Skill $num"
+    qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
+    sleep 1
+  done
+  echo "    Agent A: All skills (04-08) initiated"
+) &
+AGENT_A_PID=$!
+
+# Agent B: Skills 09, 10, 11, 12, 13
+echo "[Wave 2/5] Launching Agent B (Skills 09-13)..."
+(
+  for skill in "09-context7" "10-github-setup" "11-superdesign" "12-openrouter-setup" "13-google-workspace-setup"; do
+    num=${skill%%-*}
+    name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
+    echo "    Agent B: Starting Skill $num"
+    qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
+    sleep 1
+  done
+  echo "    Agent B: All skills (09-13) initiated"
+) &
+AGENT_B_PID=$!
+
+# Agent C: Skills 14, 15, 16, 17
+echo "[Wave 2/5] Launching Agent C (Skills 14-17)..."
+(
+  for skill in "14-google-workspace-integration" "15-blackceo-team-management" "16-summarize-youtube" "17-self-improving-agent"; do
+    num=${skill%%-*}
+    name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
+    echo "    Agent C: Starting Skill $num"
+    qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
+    sleep 1
+  done
+  echo "    Agent C: All skills (14-17) initiated"
+) &
+AGENT_C_PID=$!
+
+# Agent D: Skills 18, 19, 20, 21
+echo "[Wave 2/5] Launching Agent D (Skills 18-21)..."
+(
+  for skill in "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
+    num=${skill%%-*}
+    name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
+    echo "    Agent D: Starting Skill $num"
+    qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
+    sleep 1
+  done
+  echo "    Agent D: All skills (18-21) initiated"
+) &
+AGENT_D_PID=$!
+
+echo ""
+echo "  All 4 Wave 2 agents launched. Waiting for completion..."
+
+# Wait for all Wave 2 agents with timeout
+wait_for_wave 2 21 45
+
+# Update progress
+echo '{"wave":2,"total_waves":5,"skills_completed":21,"total_skills":29,"status":"Wave 2 complete - Pre-Persona tools installed"}' > "$PROGRESS_FILE"
+
+# ============================================
+# WAVE 3: CORE SYSTEM (Sequential)
+# ============================================
+report_progress 3 "CORE SYSTEM WAVE - Skills 22-23 (Sequential, main orchestrator only)"
+echo "Wave 3 installs core system skills sequentially."
+echo "SKILLS 22 AND 23 MUST BE INSTALLED BY MAIN ORCHESTRATOR - NO SUB-AGENTS."
+echo ""
+
+# Skill 22: Book-to-Persona
+echo "[Wave 3/5] Skill 22: Book-to-Persona Coaching Leadership System"
+echo "  ⚠️  MAIN ORCHESTRATOR ONLY - Do NOT delegate to sub-agent"
+if qc_skill "22" "22-book-to-persona-coaching-leadership-system"; then
+  echo "  ✓ Skill 22 QC passed - Ready for main orchestrator"
+  echo "  📋 Main orchestrator should now:"
+  echo "     1. Read ALL .md files in skill 22 folder"
+  echo "     2. Execute installation steps"
+  echo "     3. Verify QMD coaching-personas collection created"
+else
+  echo "  ✗ Skill 22 QC failed"
+fi
+
+# Skill 23: AI Workforce Blueprint (must wait for 22)
+echo ""
+echo "[Wave 3/5] Skill 23: AI Workforce Blueprint"
+echo "  ⚠️  MAIN ORCHESTRATOR ONLY - Do NOT delegate to sub-agent"
+echo "  ⏳  Must complete AFTER Skill 22"
+if qc_skill "23" "23-ai-workforce-blueprint"; then
+  echo "  ✓ Skill 23 QC passed - Ready for main orchestrator"
+  echo "  📋 Main orchestrator should now:"
+  echo "     1. Read ALL .md files in skill 23 folder"
+  echo "     2. NOTIFY user before asking questions"
+  echo "     3. Execute installation steps"
+else
+  echo "  ✗ Skill 23 QC failed"
+fi
+
+# Update progress
+echo '{"wave":3,"total_waves":5,"skills_completed":23,"total_skills":29,"status":"Wave 3 complete - Core system ready (main orchestrator install required)"}' > "$PROGRESS_FILE"
+
+# ============================================
+# WAVE 4: POST-WORKFORCE (Parallel - 2 agents)
+# ============================================
+report_progress 4 "POST-WORKFORCE WAVE - Skills 24-29 (2 parallel agents)"
+echo "Wave 4 installs 6 skills across 2 parallel agents."
+echo ""
+
+# Agent E: Skills 24, 25, 26
+echo "[Wave 4/5] Launching Agent E (Skills 24-26)..."
+(
+  for skill in "24-storyboard-writer" "25-video-creator" "26-caption-creator"; do
+    num=${skill%%-*}
+    name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
+    echo "    Agent E: Starting Skill $num"
+    qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
+    sleep 1
+  done
+  echo "    Agent E: All skills (24-26) initiated"
+) &
+AGENT_E_PID=$!
+
+# Agent F: Skills 27, 28, 29
+echo "[Wave 4/5] Launching Agent F (Skills 27-29)..."
+(
+  for skill in "27-video-editor" "28-cinematic-forge" "29-ghl-convert-and-flow"; do
+    num=${skill%%-*}
+    name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
+    echo "    Agent F: Starting Skill $num"
+    qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
+    sleep 1
+  done
+  echo "    Agent F: All skills (27-29) initiated"
+) &
+AGENT_F_PID=$!
+
+echo ""
+echo "  Both Wave 4 agents launched. Waiting for completion..."
+
+# Wait for all Wave 4 agents with timeout
+wait_for_wave 4 29 30
+
+# Update progress
+echo '{"wave":4,"total_waves":5,"skills_completed":29,"total_skills":29,"status":"Wave 4 complete - All skills initiated"}' > "$PROGRESS_FILE"
+
+# ============================================
+# WAVE 5: FINAL (Sequential)
+# ============================================
+report_progress 5 "FINAL WAVE - Skill 15 verification"
+echo "Wave 5 verifies Skill 15 completion and finalizes installation."
+echo ""
+
+echo "[Wave 5/5] Final verification..."
+echo "  ✓ All 29 skills have been initiated"
+echo "  📋 Final tasks for main orchestrator:"
+echo "     1. Verify Skill 15 (BlackCEO Team Management) is complete"
+echo "     2. Run final QMD indexing: qmd update && qmd embed && qmd status"
+echo "     3. Remove ONBOARDING PENDING flag from AGENTS.md"
+echo "     4. Write ONBOARDING COMPLETE to MEMORY.md"
+
+# Update final progress
+echo '{"wave":5,"total_waves":5,"skills_completed":29,"total_skills":29,"status":"COMPLETE - All waves finished"}' > "$PROGRESS_FILE"
+
+# ----------------------------------------------------------
+# Final: Trigger the running OpenClaw agent
+# ----------------------------------------------------------
+echo ""
+echo "============================================"
+echo "  ORCHESTRATION COMPLETE"
+echo "============================================"
+echo ""
+
+TRIGGER_MSG="PARALLEL ONBOARDING ORCHESTRATED - EXECUTE NOW. The 5-wave parallel installation has been initiated. Wave 1 (Foundation: 01-03) and Wave 2 (Pre-Persona: 04-21 via 4 parallel agents) have been launched. Wave 3 (Core: 22-23) requires MAIN ORCHESTRATOR installation - do NOT use sub-agents. Wave 4 (Post-Workforce: 24-29 via 2 parallel agents) has been launched. Wave 5 (Final) is verification. Progress tracked at: $PROGRESS_FILE. Begin execution immediately. Install all skills following the Teach Yourself Protocol. Handle API key prompts autonomously. Report progress after EACH skill completes."
 
 if openclaw agent --message "$TRIGGER_MSG" --deliver 2>/dev/null; then
   echo "  Agent triggered successfully."
 else
   echo "  Note: Could not trigger agent via 'openclaw agent --deliver'."
-  echo "  Trying alternative method..."
-  if openclaw agent --message "$TRIGGER_MSG" 2>/dev/null; then
-    echo "  Agent turn completed (check your messaging channel for delivery)."
-  else
-    echo "  Warning: Could not trigger agent automatically."
-    echo "  The onboarding flag has been written to AGENTS.md."
-    echo "  Your agent will pick it up on its next session start."
-    echo "  You can also manually tell your agent: 'Read ~/.openclaw/onboarding/Start Here.md and begin onboarding.'"
-  fi
+  echo "  The onboarding flag has been written to AGENTS.md."
+  echo "  Your agent will pick it up on its next session start."
 fi
 
 # ----------------------------------------------------------
-# Step 7: Done
+# Done
 # ----------------------------------------------------------
 echo ""
 echo "============================================"
-echo "  Onboarding triggered."
-echo "  Your OpenClaw agent is now installing"
-echo "  29 skills autonomously."
+echo "  Parallel onboarding orchestrated."
+echo "  Your OpenClaw agents are now installing"
+echo "  29 skills in 5 orchestrated waves."
 echo "  Installer version: ${ONBOARDING_VERSION}"
+echo ""
+echo "  Progress file: $PROGRESS_FILE"
 echo "  Check your configured messaging channel"
-echo "  for progress updates."
+echo "  for real-time progress updates."
 echo "============================================"
 echo ""

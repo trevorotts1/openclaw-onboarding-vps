@@ -1045,18 +1045,28 @@ If any step in a skill's installation fails:
 
 ### EXECUTION STRATEGY (MANDATORY)
 
-1. Run skill 01 and skill 02 sequentially in the main agent.
-2. After skill 02 completes, install skills sequentially by default.
-   Sub-agents MAY be used for skills with no dependencies on each other.
-   The following skills MUST remain sequential - do NOT parallelize:
-   - Skill 05 (GHL Setup) must complete before Skill 06 (GHL Install Pages)
-   - Skill 13 (Google Workspace Setup) must complete before Skill 14 (Google Workspace Integration)
-   - Skill 22 (Book to Persona) must complete before Skill 23 (AI Workforce Blueprint)
-   All other skills may be parallelized in batches of up to 3 sub-agents.
-3. The agent executes all installs. The human is not asked to run steps. The agent runs them.
-3. Keep OpenRouter setup for last after model config backup is verified.
-4. Superdesign is the only skill allowed to rely on service CLI commands.
-5. Vercel, Context7, and GitHub setup must use browser + token/API flows during onboarding, not service CLIs.
+**DEFAULT: Use the 5-Wave Parallel Orchestration documented above.**
+
+1. **Wave 1** (Foundation): Run skills 01-03 sequentially in the main agent
+2. **Wave 2** (Pre-Persona): Spawn 4 parallel agents for skills 04-21
+3. **Wave 3** (Core System): Main agent installs skills 22-23 sequentially (NO sub-agents)
+4. **Wave 4** (Post-Workforce): Spawn 2 parallel agents for skills 24-29
+5. **Wave 5** (Final): Verify skill 15 and finalize
+
+**Sequential Dependencies (Never Parallelize These):**
+- Skill 05 (GHL Setup) must complete before Skill 06 (GHL Install Pages)
+- Skill 13 (Google Workspace Setup) must complete before Skill 14 (Google Workspace Integration)
+- Skill 22 (Book to Persona) must complete before Skill 23 (AI Workforce Blueprint)
+
+**Agent Limits:**
+- Maximum 4 sub-agents at any time
+- Main orchestrator handles skills 22-23 personally (no delegation)
+
+**The agent executes all installs.** The human is not asked to run steps. The agent runs them.
+
+Keep OpenRouter setup for last after model config backup is verified.
+Superdesign is the only skill allowed to rely on service CLI commands.
+Vercel, Context7, and GitHub setup must use browser + token/API flows during onboarding, not service CLIs.
 
 ### API KEY DISCOVERY (MANDATORY BEFORE ASKING USER)
 
@@ -1277,6 +1287,301 @@ Skills 16 through 29 are imported or recreated skills. Many preserve upstream so
 **Core file update rule:**
 - Apply only the updates listed in that skill's `CORE_UPDATES.md`.
 - Do not edit workspace files that CORE_UPDATES.md does not list for that skill.
+
+---
+
+## PARALLEL INSTALLATION ORCHESTRATION
+
+The OpenClaw onboarding uses a **5-WAVE PARALLEL STRATEGY** to install 29 skills efficiently.
+
+### Conflict Prevention (IMPORTANT)
+
+Before starting orchestration, check if install.sh is already running:
+
+```bash
+INSTALL_FLAG="$HOME/.openclaw/onboarding/.install-in-progress"
+
+if [ -f "$INSTALL_FLAG" ]; then
+  echo "Onboarding already in progress via install.sh. Start Here.md orchestration skipped."
+  return
+fi
+
+# Create flag file - Start Here.md now owns the orchestration
+touch "$INSTALL_FLAG"
+
+# Ensure flag is removed on exit
+trap 'rm -f "$INSTALL_FLAG"' EXIT
+```
+
+**First one to run (install.sh OR Start Here.md) creates the flag and takes control. The second one sees the flag and skips to avoid conflicts.**
+
+---
+
+### 5-WAVE PARALLEL STRATEGY
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         5-WAVE PARALLEL INSTALLATION                        │
+├─────────┬─────────────────┬─────────────────────────────────────────────────┤
+│  WAVE   │    AGENTS       │              SKILLS                             │
+├─────────┼─────────────────┼─────────────────────────────────────────────────┤
+│ Wave 1  │ 1 (Sequential)  │ 01 TYP, 02 Backup, QMD, 03 Agent Browser        │
+│         │                 │ Foundation - must complete before Wave 2        │
+├─────────┼─────────────────┼─────────────────────────────────────────────────┤
+│ Wave 2  │ 4 (Parallel)    │ Agent A: 04, 05, 06, 07, 08                     │
+│         │                 │ Agent B: 09, 10, 11, 12, 13                     │
+│         │                 │ Agent C: 14, 15, 16, 17                         │
+│         │                 │ Agent D: 18, 19, 20, 21                         │
+│         │                 │ Pre-Persona tools - all run simultaneously      │
+├─────────┼─────────────────┼─────────────────────────────────────────────────┤
+│ Wave 3  │ 1 (Sequential)  │ 22 Book-to-Persona, 23 AI Workforce Blueprint   │
+│         │                 │ CORE SYSTEM - Main orchestrator ONLY            │
+├─────────┼─────────────────┼─────────────────────────────────────────────────┤
+│ Wave 4  │ 2 (Parallel)    │ Agent E: 24, 25, 26                             │
+│         │                 │ Agent F: 27, 28, 29                             │
+│         │                 │ Post-Workforce tools                            │
+├─────────┼─────────────────┼─────────────────────────────────────────────────┤
+│ Wave 5  │ 1 (Sequential)  │ 15 BlackCEO Team Management (verification)      │
+│         │                 │ Final verification and QMD indexing             │
+└─────────┴─────────────────┴─────────────────────────────────────────────────┘
+```
+
+---
+
+### Agent Spawning Commands
+
+Use these commands to spawn sub-agents for parallel installation:
+
+#### Spawn a Single Skill Agent
+```bash
+openclaw agent spawn \
+  --task "Install skill 04 from ~/.openclaw/onboarding/04-superpowers. Read ALL .md files first, then execute. Report: 'Skill 04 complete - QC passed' or 'Skill 04 failed - [reason]'." \
+  --label "skill-04"
+```
+
+#### Spawn Wave 2 - Agent A (Skills 04-08)
+```bash
+for skill in "04-superpowers" "05-ghl-setup" "06-ghl-install-pages" "07-kie-setup" "08-vercel-setup"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
+
+#### Spawn Wave 2 - Agent B (Skills 09-13)
+```bash
+for skill in "09-context7" "10-github-setup" "11-superdesign" "12-openrouter-setup" "13-google-workspace-setup"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
+
+#### Spawn Wave 2 - Agent C (Skills 14-17)
+```bash
+for skill in "14-google-workspace-integration" "15-blackceo-team-management" "16-summarize-youtube" "17-self-improving-agent"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
+
+#### Spawn Wave 2 - Agent D (Skills 18-21)
+```bash
+for skill in "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
+
+#### Spawn Wave 4 - Agent E (Skills 24-26)
+```bash
+for skill in "24-storyboard-writer" "25-video-creator" "26-caption-creator"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
+
+#### Spawn Wave 4 - Agent F (Skills 27-29)
+```bash
+for skill in "27-video-editor" "28-cinematic-forge" "29-ghl-convert-and-flow"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
+
+---
+
+### Real-Time Progress Tracking
+
+Progress is tracked in a JSON file:
+
+```bash
+PROGRESS_FILE="$HOME/.openclaw/onboarding/.install-progress"
+
+# Read current progress
+cat "$PROGRESS_FILE" | jq .
+```
+
+**Progress File Format:**
+```json
+{
+  "wave": 2,
+  "total_waves": 5,
+  "skills_completed": 15,
+  "total_skills": 29,
+  "status": "Wave 2 in progress - Agent C completing",
+  "last_update": "2026-03-13 09:15:32"
+}
+```
+
+**Update progress after each skill:**
+```bash
+# After skill completes, update the count
+current_completed=$(cat "$PROGRESS_FILE" | jq -r '.skills_completed')
+new_completed=$((current_completed + 1))
+
+echo "{\"wave\":2,\"total_waves\":5,\"skills_completed\":$new_completed,\"total_skills\":29,\"status\":\"Skill 15 complete\"}" > "$PROGRESS_FILE"
+```
+
+**Report progress to user:**
+```bash
+report_progress() {
+  local wave="$1"
+  local message="$2"
+  echo "[Wave $wave/5] $message"
+  
+  # Also send to messaging channel if available
+  openclaw agent --message "Onboarding progress: Wave $wave/5 - $message" --deliver 2>/dev/null || true
+}
+```
+
+---
+
+### QC Checklist for Each Skill
+
+Every sub-agent MUST run this QC checklist after installation:
+
+```bash
+qc_skill() {
+  local skill_num="$1"
+  local skill_folder="$2"
+  local ONBOARDING_DIR="$HOME/.openclaw/onboarding"
+  
+  echo "Running QC for Skill $skill_num..."
+  
+  # 1. Check skill folder exists
+  if [ ! -d "$ONBOARDING_DIR/$skill_folder" ]; then
+    echo "FAIL: Skill folder not found"
+    return 1
+  fi
+  
+  # 2. Check SKILL.md exists
+  if [ ! -f "$ONBOARDING_DIR/$skill_folder/SKILL.md" ]; then
+    echo "FAIL: SKILL.md missing"
+    return 1
+  fi
+  
+  # 3. Check all .md files were read (verification)
+  md_count=$(find "$ONBOARDING_DIR/$skill_folder" -name "*.md" | wc -l)
+  if [ "$md_count" -eq 0 ]; then
+    echo "FAIL: No .md files found"
+    return 1
+  fi
+  
+  # 4. Verify success criteria from SKILL.md
+  # (Read SKILL.md and check each criterion)
+  
+  # 5. Check for .skill file (if applicable)
+  local skill_file="$ONBOARDING_DIR/$skill_folder/${skill_folder#*-}.skill"
+  if [ -f "$skill_file" ]; then
+    echo "  ✓ Skill package present"
+  fi
+  
+  echo "✓ Skill $skill_num QC PASSED"
+  return 0
+}
+```
+
+**Required QC Reporting Format:**
+- **PASS:** `"Skill X complete - QC passed"`
+- **FAIL:** `"Skill X failed - [specific reason]"`
+
+---
+
+### Wave Completion Waiting
+
+Wait for all agents in a wave to complete:
+
+```bash
+wait_for_wave() {
+  local wave="$1"
+  local expected_skills="$2"
+  local timeout_minutes="${3:-30}"
+  local PROGRESS_FILE="$HOME/.openclaw/onboarding/.install-progress"
+  
+  echo "Waiting for Wave $wave completion..."
+  
+  local start_time=$(date +%s)
+  local timeout_seconds=$((timeout_minutes * 60))
+  
+  while true; do
+    local current_time=$(date +%s)
+    local elapsed=$((current_time - start_time))
+    
+    if [ $elapsed -gt $timeout_seconds ]; then
+      echo "WARNING: Wave $wave timeout"
+      return 1
+    fi
+    
+    # Check progress
+    local completed=$(cat "$PROGRESS_FILE" 2>/dev/null | jq -r '.skills_completed' || echo "0")
+    
+    if [ "$completed" -ge "$expected_skills" ]; then
+      echo "Wave $wave complete: $completed/$expected_skills skills"
+      return 0
+    fi
+    
+    sleep 10
+  done
+}
+```
+
+---
+
+### Critical Rules for Parallel Installation
+
+1. **MAXIMUM 4 SUB-AGENTS AT ONCE** - Never spawn more than 4 parallel agents
+2. **SEQUENTIAL WAVES** - Wave N must signal completion before Wave N+1 starts
+3. **MAIN ORCHESTRATOR ONLY** - Skills 22 and 23 MUST be installed by main agent, NEVER sub-agents
+4. **QC AFTER EACH SKILL** - Not just at wave end - every skill gets QC'd
+5. **REAL-TIME REPORTING** - Update progress file and notify after EACH skill
+6. **FAILURE HANDLING** - If a skill fails, log it but continue (optional skills) or stop (critical skills)
+
+### Critical Skills (Cannot Skip)
+- Skill 01: Teach Yourself Protocol
+- Skill 02: Back Yourself Up Protocol  
+- Skill 03: Agent Browser
+- Skill 22: Book-to-Persona
+- Skill 23: AI Workforce Blueprint
+
+### Optional Skills (Can Skip on Failure)
+- All platform-specific skills (GHL, Google Workspace, Vercel, etc.) if missing API keys
 
 ---
 
