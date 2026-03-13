@@ -190,14 +190,20 @@ pip3 install ebooklib --break-system-packages
 
 ### Calibre - ebook-convert (Required for MOBI, AZW, AZW3, KFX)
 
-Run: `which ebook-convert`
-
-**If NOT installed:**
+**Auto-install check:**
 ```bash
-brew install --cask calibre
+if ! command -v ebook-convert &>/dev/null; then
+  echo "Calibre not found. Installing..."
+  brew install --cask calibre
+else
+  echo "Calibre already installed: $(ebook-convert --version | head -1)"
+fi
 ```
 
-After install, verify: `ebook-convert --version`
+**Verify installation:**
+```bash
+ebook-convert --version
+```
 
 Calibre handles all Kindle formats including MOBI, AZW, AZW3, and KFX.
 DRM-free files only - DRM-protected books cannot be converted.
@@ -290,45 +296,44 @@ If Codex OAuth is not found or expired: reconnect via OpenClaw settings using yo
 
 ---
 
-## Step 5 - Set Up QMD Collection (coaching-personas)
+## Step 5 - Set Up QMD Collection (coaching-personas) - DOCUMENTATION ONLY
 
-Pre-built personas are already included in this skill folder. Now add them to QMD so agents can search them.
+Pre-built personas are already included in this skill folder. They will be added to QMD during Skill 23 (AI Workforce Blueprint) installation.
 
-### 5a - Add the collection
+**DO NOT run QMD embed here.** Skill 23 will run the embedding once after all personas AND workforce files are ready.
+
+**What happens next:**
+- Skill 23 will add the coaching-personas collection to QMD
+- Skill 23 will run `qmd update && qmd embed` to index all personas + workforce files together
+- This avoids redundant double-embedding (after Skill 22 and again after Skill 23)
+
+**Note:** If you need to verify personas are searchable after Skill 23 completes, run:
 ```bash
-qmd collection add ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas \
-  --name coaching-personas \
-  --mask "**/*.md"
+qmd search coaching-personas "negotiation"
 ```
 
-**Expected output:** Something like "Added collection coaching-personas with [N] files" where N depends on how many persona files exist.
-If you see an error, check that the personas folder exists at the path above.
+---
 
-### 5b - Index the files
+## Step 5a - SKILL 23 DEPENDENCY CHECK (MANDATORY)
+
+**Skill 23 (AI Workforce Blueprint) requires Skill 22 to be fully installed first.**
+
+**Pre-flight check for Skill 23:**
+Before allowing Skill 23 to run, verify this Skill 22 installation is complete:
+
 ```bash
-qmd update
+# Check if QMD collection "coaching-personas" exists
+if qmd status 2>/dev/null | grep -q "coaching-personas"; then
+  echo "✅ Skill 22 verified: coaching-personas collection exists"
+  echo "Skill 23 may proceed"
+else
+  echo "❌ Skill 22 NOT complete: coaching-personas collection missing"
+  echo "STOP: Install Skill 22 (Book-to-Persona) first before running Skill 23"
+  exit 1
+fi
 ```
 
-**Expected output:** File count confirmation showing the number of markdown files indexed (3 files per persona - extraction-notes.md, analysis-notes.md, persona-blueprint.md).
-
-### 5c - Run the embedding (this takes 3-8 minutes on first run)
-```bash
-qmd embed
-```
-
-**What this does:** Downloads a small local model (one time only) and generates semantic vectors for all indexed documents. This runs locally - no API keys needed, no data leaves your machine.
-
-**Expected output:** Progress updates showing chunks processed. Final line will show total chunks embedded.
-
-**This only runs once.** After the first embed, `qmd update` is all you need when adding new books.
-
-### 5d - Verify it works
-```bash
-qmd search coaching-personas "negotiation objection handling"
-```
-
-**Expected output:** Results showing content from the Voss (Never Split the Difference) persona.
-If you get no results, run `qmd embed` again and wait for it to complete fully.
+**This check MUST pass before Skill 23 can run.**
 
 ---
 
@@ -526,6 +531,28 @@ Expected output: 14. If fewer, the synthesis phase did not complete fully.
 If any check fails, the pipeline is not working. Review the error output from orchestrator.py and fix before proceeding.
 
 If no PDF books are available yet, this step can be deferred until the first book is added. Mark it as PENDING in your checklist and run it on the first real book.
+
+---
+
+---
+
+## 🔴 GATEWAY RESTART PROTOCOL - NEVER TRIGGER AUTONOMOUSLY
+
+**During this installation, you may encounter instructions to restart the OpenClaw gateway.**
+
+**YOU ARE FORBIDDEN from triggering gateway restarts yourself.**
+
+### Correct Process
+When a gateway restart is needed:
+1. **STOP** - Do NOT execute the restart command
+2. **NOTIFY** the user: "This installation requires an OpenClaw gateway restart to complete."
+3. **INSTRUCT**: "Type `/restart` in Telegram to trigger it"
+4. **WAIT** for user action - do NOT proceed until confirmed
+
+### Forbidden Actions
+- Do NOT run `openclaw gateway restart` without explicit user permission
+- Do NOT say "I'll restart the gateway now" without asking first
+- Do NOT assume the user wants the restart
 
 ---
 

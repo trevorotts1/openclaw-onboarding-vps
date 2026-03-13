@@ -348,8 +348,7 @@ After every skill install, verify:
 |-----------|---------------|-----|
 | **Initial** | After Step 3 (QMD install) + TYP + Back Yourself Up complete | Base index of workspace |
 | **Foundation** | After Skills 04-21 complete (before Personas & AI Workforce) | Core tooling ready, prepares for heavy skills |
-| **Personas** | After Skill 22 (Book-to-Persona) complete | 32+ persona blueprints now searchable |
-| **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions indexed |
+| **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions + personas + master-files all indexed together |
 | **API Layer** | After OpenRouter setup (Skill 12) complete | Model routing knowledge searchable |
 | **Final** | After ALL 29 skills complete | Complete system index |
 | **Ongoing** | After any NEW skill installed post-onboarding | Keep index current |
@@ -1346,6 +1345,27 @@ Open [WORKSPACE_ROOT]/AGENTS.md and delete the block that reads:
 ...
 ```
 If the block is not present, continue without error.
+
+### Final QMD Indexing (MANDATORY)
+
+After all 29 skills are installed, run the final QMD indexing:
+
+```bash
+# Final index update
+qmd update
+
+# Final embeddings generation
+qmd embed
+
+# Verify all collections are indexed
+qmd status
+```
+
+**Why this is needed:**
+- Skill 23 indexed personas + workforce + master-files at that milestone
+- Skills 24-29 may have added additional content
+- This final embed ensures everything is searchable
+- Report the final file count and collection status to the user
 
 ### How to deliver the completion summary
 - If running in an active chat session: post the summary in that chat.

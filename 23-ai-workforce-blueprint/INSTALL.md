@@ -70,6 +70,35 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 ---
 
+## 🔴 PHASE 0a - SKILL 22 PRE-FLIGHT CHECK (MANDATORY)
+
+**Skill 23 requires Skill 22 (Book-to-Persona) to be fully installed first.**
+
+**Pre-flight check - verify before proceeding:**
+
+```bash
+# Check if coaching-personas QMD collection exists
+if qmd status 2>/dev/null | grep -q "coaching-personas"; then
+  echo "✅ Skill 22 verified: coaching-personas collection found"
+  SKILL22_INSTALLED=true
+else
+  echo "❌ Skill 22 NOT installed: coaching-personas collection missing"
+  echo ""
+  echo "STOP: Install Skill 22 (Book-to-Persona) first."
+  echo "Skill 23 cannot run without the coaching-personas collection."
+  echo ""
+  echo "To install Skill 22:"
+  echo "  1. Navigate to 22-book-to-persona-coaching-leadership-system/"
+  echo "  2. Complete all installation steps"
+  echo "  3. Return here and re-run Skill 23"
+  exit 1
+fi
+```
+
+**If this check fails: STOP. Do not proceed.** Install Skill 22 first.
+
+---
+
 # Installing the AI Workforce Blueprint Skill
 
 > **You are the agent. You read this file. You execute every step yourself.**
@@ -330,7 +359,26 @@ Use Source 1 if available. Fall back to Source 2, then Source 3. Combine sources
 
 ---
 
-## PHASE 6 - COACHING PERSONAS INTEGRATION CHECK
+## PHASE 5f - RE-DETECT SKILL 22 AFTER QUESTIONS
+
+**After all departments/roles are created, re-check for coaching-personas:**
+
+```bash
+# Re-run detection after questions complete
+if qmd status 2>/dev/null | grep -q "coaching-personas"; then
+  echo "✅ Skill 22 detected post-build - running persona wiring..."
+  RUN_PERSONA_WIRING=true
+else
+  echo "ℹ️ Skill 22 not detected - building clean structure (personas can be added later via Option C)"
+  RUN_PERSONA_WIRING=false
+fi
+```
+
+If `RUN_PERSONA_WIRING=true`, proceed to Phase 6.
+
+---
+
+## PHASE 6 - COACHING PERSONAS INTEGRATION CHECK & WIRING
 
 Check if Skill 22 (Book To Persona & Coaching & Leadership System) is installed.
 
@@ -349,13 +397,44 @@ ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/ 2>/dev/null
 
 **If coaching personas ARE detected (either check succeeds):**
 - Add a `governing-personas.md` file to every department folder
+- Add a `governing-personas.md` file to EVERY role folder (role-specific persona mapping)
 - Add a "Governing Personas" section to every `00-START-HERE.md` with QMD query instructions
-- Wire persona methodologies to department operations
+- Wire persona methodologies to department AND role operations
+
+**Role-Level Governing Personas:**
+Each role gets its own `governing-personas.md` mapping personas to role-specific tasks:
+```
+[role-folder]/
+  ├── 00-START-HERE.md
+  ├── governing-personas.md    ← NEW: Role-specific persona mapping
+  ├── 01-[task].md
+  └── ...
+```
 
 **If coaching personas are NOT detected (both checks fail):**
 - This is NOT an error condition. Both paths are valid.
 - Build proceeds clean with no persona references. No errors, no warnings.
 - Note in the completion report: "Coaching personas not detected. If you install Skill 22 later, re-run this skill in Option C (audit mode) to wire personas in."
+
+### Phase 6b - QMD Indexing (ALWAYS RUN)
+
+Regardless of whether coaching personas were detected, ALWAYS run QMD indexing after the build:
+
+```bash
+# Add/update all collections
+qmd update
+
+# Generate embeddings (covers master-files + coaching-personas + workforce files)
+qmd embed
+
+# Verify completion
+qmd status
+```
+
+**Why this happens here:**
+- Skill 22 no longer runs QMD embed (to avoid double-embedding)
+- Skill 23 indexes everything at once: master-files + coaching-personas + workforce structure
+- One embed covers all collections, saving time and compute
 
 ---
 
@@ -470,6 +549,28 @@ crontab -l | grep update-skills
 This installs a cron that runs every Sunday at 2:00 AM - checks for skill updates, applies them to installed skills, sends a notification with the changelog. Runs automatically. User never has to touch it.
 
 If the script is not found, skip this step and note it in the completion report.
+
+---
+
+---
+
+## 🔴 GATEWAY RESTART PROTOCOL - NEVER TRIGGER AUTONOMOUSLY
+
+**During this installation, you may encounter instructions to restart the OpenClaw gateway.**
+
+**YOU ARE FORBIDDEN from triggering gateway restarts yourself.**
+
+### Correct Process
+When a gateway restart is needed:
+1. **STOP** - Do NOT execute the restart command
+2. **NOTIFY** the user: "This installation requires an OpenClaw gateway restart to complete."
+3. **INSTRUCT**: "Type `/restart` in Telegram to trigger it"
+4. **WAIT** for user action - do NOT proceed until confirmed
+
+### Forbidden Actions
+- Do NOT run `openclaw gateway restart` without explicit user permission
+- Do NOT say "I'll restart the gateway now" without asking first
+- Do NOT assume the user wants the restart
 
 ---
 
