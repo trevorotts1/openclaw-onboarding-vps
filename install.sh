@@ -149,74 +149,29 @@ cat >> "$AGENTS_FILE" << 'ONBOARDING_FLAG'
 The OpenClaw onboarding package (29 skills) has been installed to:
   ~/.openclaw/onboarding/
 
-YOUR TASK: Install all 29 skills following the 5-Wave Parallel Orchestration.
+READ THIS FILE FIRST: ~/.openclaw/onboarding/Start Here.md
 
-STEP 0: CHECK SUB-AGENT CAPABILITY
-First, verify you can spawn sub-agents via sessions_spawn:
-- Try to spawn a test sub-agent with a simple task
-- If successful: Use 5-Wave Parallel Orchestration below
-- If failed: Fall back to sequential installation (01→29)
+It contains the complete execution checklist, wave instructions, and failure handling.
 
-5-WAVE PARALLEL ORCHESTRATION (use if sub-agent spawn works):
+SUMMARY:
+- Install 29 skills using 5-Wave Parallel Orchestration
+- Use parallel sub-agents for Waves 2 and 4 (if sessions_spawn works)
+- Use sequential mode for Waves 1, 3, 5
+- Skip skill 13 (archived)
+- Skills 22-23: Main orchestrator ONLY (no sub-agents)
+- Track progress in ~/.openclaw/onboarding/.onboarding-status
+- Remove this flag and write ONBOARDING COMPLETE to MEMORY.md when done
 
-WAVE 1: FOUNDATION (Sequential - Main Agent)
-Install these 4 skills in order, one at a time:
-- 01-teach-yourself-protocol
-- 02-back-yourself-up-protocol
-- QMD setup (verify qmd is installed)
-- 03-agent-browser
-Report: "Wave 1 complete: Foundation installed"
-
-WAVE 2: PRE-PERSONA TOOLS (Parallel - 3 Install Agents + 1 QC Agent)
-Spawn 3 sub-agents simultaneously, each handling a batch:
-- Agent A: 04-superpowers, 05-ghl-setup, 06-ghl-install-pages, 07-kie-setup
-- Agent B: 08-vercel-setup, 09-context7, 10-github-setup, 11-superdesign
-- Agent C: 12-openrouter-setup, 14-google-workspace-integration, 15-blackceo-team-management, 16-summarize-youtube, 17-self-improving-agent, 18-proactive-agent, 19-humanizer, 20-youtube-watcher, 21-tavily-search
-- Agent D (QC): Monitor all Wave 2 skills, verify completion, remediate if needed
-Wait for all Wave 2 agents to complete.
-Report: "Wave 2 complete: Pre-Persona tools installed"
-Note: Skill 13 (Google Workspace Setup) is ARCHIVED - skip it.
-
-WAVE 3: CORE SYSTEM (Sequential - Main Orchestrator ONLY)
-These 2 skills MUST be installed by main agent, NEVER sub-agents:
-- 22-book-to-persona-coaching-leadership-system
-- 23-ai-workforce-blueprint (after 22 completes)
-Report: "Wave 3 complete: Core system ready"
-
-WAVE 4: POST-WORKFORCE (Parallel - 2 Install Agents)
-Spawn 2 sub-agents simultaneously:
-- Agent E: 24-storyboard-writer, 25-video-creator, 26-caption-creator
-- Agent F: 27-video-editor, 28-cinematic-forge, 29-ghl-convert-and-flow
-Wait for both agents to complete.
-Report: "Wave 4 complete: All skills installed"
-
-WAVE 5: FINAL (Sequential - Main Agent)
-- Verify Skill 15 (BlackCEO Team Management) is complete
-- Run final QMD indexing: qmd update && qmd embed && qmd status
-- Remove ONBOARDING PENDING flag from AGENTS.md
-- Write ONBOARDING COMPLETE to MEMORY.md
-Report: "Wave 5 complete: Onboarding finished"
-
-SKILL INSTALLATION PROTOCOL (for each skill):
-1. Read ALL .md files in the skill folder first (SKILL.md, INSTALL.md, etc.)
-2. Execute installation steps exactly as written
-3. Handle API key prompts autonomously (skip if missing, log reminder)
-4. Verify completion before moving to next
-5. Report: "Skill XX complete"
+DO NOT:
+- Skip reading Start Here.md
+- Skip skills or say "done" until all 29 complete
+- Delegate skills 22-23 to sub-agents
+- Trigger gateway restarts without asking
 
 ZERO TOLERANCE SHORTCUTS:
 - "I'll read that later" = WRONG. Read it NOW.
 - "This looks similar to..." = WRONG. Read every file completely.
 - "I can skip this step" = WRONG. Follow every step exactly.
-- "Close enough" = WRONG. Verify every requirement is met.
-
-FORBIDDEN:
-- Do NOT skip skills or say "done" until all 29 are verified complete
-- Do NOT change the user's model without permission
-- Do NOT trigger gateway restarts without asking
-- Do NOT delegate Skills 22-23 to sub-agents (main orchestrator only)
-
-When complete, write ONBOARDING COMPLETE to MEMORY.md and remove this block.
 ---
 ONBOARDING_FLAG
 
