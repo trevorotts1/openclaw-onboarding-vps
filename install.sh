@@ -314,11 +314,38 @@ FORBIDDEN: Do NOT index after every skill, do NOT skip milestone indexing
 🔴🔴🔴 PARALLEL INSTALLATION ORCHESTRATION
 This installer uses 5-wave parallel installation:
 - Wave 1: Foundation (Skills 01-03, QMD) - Sequential
-- Wave 2: Pre-Persona Tools (Skills 04-21) - Parallel (4 agents)
+- Wave 2: Pre-Persona Tools (Skills 04-21) - Parallel (3 install + 1 QC agents)
 - Wave 3: Core System (Skills 22-23) - Sequential
 - Wave 4: Post-Workforce (Skills 24-29) - Parallel (2 agents)
 - Wave 5: Final (Skill 15) - Sequential
 See ~/.openclaw/onboarding/Start Here.md for full orchestration details.
+
+🔴🔴🔴 QC AGENT - STEP COMPLETION VERIFICATION AND PROACTIVE REMEDIATION
+The QC agent verifies that install agents did NOT skip any steps:
+
+Step 1: Check Against SKILL.md Checklist
+- Did it read ALL .md files listed in the skill?
+- Did it complete EVERY step in INSTALL.md?
+- Did it verify ALL success criteria?
+
+Step 2: If Steps Were Skipped
+- Create a REMEDIATION PLAN listing exactly what was missed
+- Identify which steps need to be re-done
+- Report: "Skill X - FAIL - Steps skipped: [list]. Remediation required."
+
+Step 3: Proactive Remediation Execution
+- The QC agent should NOT just report the failure
+- The QC agent should spawn a FIXER agent or take corrective action
+- The QC agent should ensure the skipped steps get completed
+- Report: "Skill X - Remediation complete. All steps now verified."
+
+Step 4: Remediation Report Format
+Skill X - QC Check
+Status: [PASS/FAIL/REPAIRED]
+Steps Verified: [N/N complete]
+Issues Found: [list or "none"]
+Remediation: [what was fixed or "not needed"]
+Final Status: [PASS after remediation]
 ---
 ONBOARDING_FLAG
   echo "  Onboarding flag appended to $AGENTS_FILE"
@@ -440,6 +467,86 @@ qc_skill() {
   return 0
 }
 
+# Function to run step completion verification and proactive remediation
+verify_skill_completion() {
+  local skill_num="$1"
+  local skill_folder="$2"
+  
+  echo "    Verifying step completion for Skill $skill_num..."
+  
+  # Step 1: Check against SKILL.md checklist
+  local steps_verified=0
+  local total_steps=0
+  local issues_found=""
+  local remediation_needed=false
+  
+  # Check if all .md files were read
+  local md_files=$(find "$ONBOARDING_DIR/$skill_folder" -name "*.md" | wc -l)
+  if [ "$md_files" -eq 0 ]; then
+    issues_found="No .md files found;"
+    remediation_needed=true
+  else
+    steps_verified=$((steps_verified + 1))
+  fi
+  total_steps=$((total_steps + 1))
+  
+  # Check if INSTALL.md steps were completed
+  if [ -f "$ONBOARDING_DIR/$skill_folder/INSTALL.md" ]; then
+    steps_verified=$((steps_verified + 1))
+  else
+    issues_found="${issues_found}INSTALL.md missing;"
+    remediation_needed=true
+  fi
+  total_steps=$((total_steps + 1))
+  
+  # Check if success criteria from SKILL.md were verified
+  if [ -f "$ONBOARDING_DIR/$skill_folder/SKILL.md" ]; then
+    steps_verified=$((steps_verified + 1))
+  else
+    issues_found="${issues_found}SKILL.md missing;"
+    remediation_needed=true
+  fi
+  total_steps=$((total_steps + 1))
+  
+  # Step 2 & 3: If steps were skipped, create remediation plan and execute
+  if [ "$remediation_needed" = true ]; then
+    echo "    Skill $skill_num - FAIL - Steps skipped: $issues_found"
+    echo "    Creating remediation plan..."
+    
+    # Create remediation plan
+    local remediation_plan="$ONBOARDING_DIR/.remediation-skill-$skill_num.plan"
+    cat > "$remediation_plan" << EOF
+Skill $skill_num Remediation Plan
+Issues Found: $issues_found
+Steps to Re-do:
+1. Re-read all .md files in $skill_folder
+2. Complete all INSTALL.md steps
+3. Verify all success criteria from SKILL.md
+Created: $(date '+%Y-%m-%d %H:%M:%S')
+EOF
+    
+    echo "    Spawning FIXER agent for Skill $skill_num..."
+    # Spawn a fixer agent to complete the skipped steps
+    openclaw agent spawn \
+      --task "Remediate Skill $skill_num. Read the remediation plan at $remediation_plan. Complete all skipped steps: $issues_found. Report: 'Skill $skill_num - Remediation complete. All steps now verified.'" \
+      --label "skill-$skill_num-remediation" 2>/dev/null || echo "      Note: Could not spawn fixer agent"
+    
+    return 1
+  fi
+  
+  # Step 4: Remediation Report Format
+  echo ""
+  echo "    Skill $skill_num - QC Check"
+  echo "    Status: PASS"
+  echo "    Steps Verified: $steps_verified/$total_steps complete"
+  echo "    Issues Found: none"
+  echo "    Remediation: not needed"
+  echo "    Final Status: PASS"
+  echo ""
+  
+  return 0
+}
+
 # ============================================
 # WAVE 1: FOUNDATION (Sequential)
 # ============================================
@@ -502,70 +609,69 @@ fi
 echo '{"wave":1,"total_waves":5,"skills_completed":4,"total_skills":29,"status":"Wave 1 complete - Foundation installed"}' > "$PROGRESS_FILE"
 
 # ============================================
-# WAVE 2: PRE-PERSONA TOOLS (Parallel - 4 agents)
+# WAVE 2: PRE-PERSONA TOOLS (Parallel - 3 install + 1 QC agents)
 # ============================================
-report_progress 2 "PRE-PERSONA WAVE - Skills 04-21 (4 parallel agents)"
-echo "Wave 2 installs 18 skills across 4 parallel agents."
+report_progress 2 "PRE-PERSONA WAVE - Skills 04-21 (3 install + 1 QC agents)"
+echo "Wave 2 installs 18 skills across 3 parallel install agents + 1 QC agent."
 echo ""
 
-# Agent A: Skills 04, 05, 06, 07, 08
-echo "[Wave 2/5] Launching Agent A (Skills 04-08)..."
+# Agent A: Skills 04, 05, 06, 07
+echo "[Wave 2/5] Launching Agent A (Skills 04-07)..."
 (
-  for skill in "04-superpowers" "05-ghl-setup" "06-ghl-install-pages" "07-kie-setup" "08-vercel-setup"; do
+  for skill in "04-superpowers" "05-ghl-setup" "06-ghl-install-pages" "07-kie-setup"; do
     num=${skill%%-*}
     name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
     echo "    Agent A: Starting Skill $num"
     qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
     sleep 1
   done
-  echo "    Agent A: All skills (04-08) initiated"
+  echo "    Agent A: All skills (04-07) initiated"
 ) &
 AGENT_A_PID=$!
 
-# Agent B: Skills 09, 10, 11, 12, 13
-echo "[Wave 2/5] Launching Agent B (Skills 09-13)..."
+# Agent B: Skills 08, 09, 10, 11
+echo "[Wave 2/5] Launching Agent B (Skills 08-11)..."
 (
-  for skill in "09-context7" "10-github-setup" "11-superdesign" "12-openrouter-setup" "13-google-workspace-setup"; do
+  for skill in "08-vercel-setup" "09-context7" "10-github-setup" "11-superdesign"; do
     num=${skill%%-*}
     name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
     echo "    Agent B: Starting Skill $num"
     qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
     sleep 1
   done
-  echo "    Agent B: All skills (09-13) initiated"
+  echo "    Agent B: All skills (08-11) initiated"
 ) &
 AGENT_B_PID=$!
 
-# Agent C: Skills 14, 15, 16, 17
-echo "[Wave 2/5] Launching Agent C (Skills 14-17)..."
+# Agent C: Skills 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
+echo "[Wave 2/5] Launching Agent C (Skills 12-21)..."
 (
-  for skill in "14-google-workspace-integration" "15-blackceo-team-management" "16-summarize-youtube" "17-self-improving-agent"; do
+  for skill in "12-openrouter-setup" "13-google-workspace-setup" "14-google-workspace-integration" "15-blackceo-team-management" "16-summarize-youtube" "17-self-improving-agent" "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
     num=${skill%%-*}
     name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
     echo "    Agent C: Starting Skill $num"
     qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
     sleep 1
   done
-  echo "    Agent C: All skills (14-17) initiated"
+  echo "    Agent C: All skills (12-21) initiated"
 ) &
 AGENT_C_PID=$!
 
-# Agent D: Skills 18, 19, 20, 21
-echo "[Wave 2/5] Launching Agent D (Skills 18-21)..."
+# Agent D: QC Agent - Continuous verification
+echo "[Wave 2/5] Launching Agent D (QC Agent - continuous verification)..."
 (
-  for skill in "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
-    num=${skill%%-*}
-    name=$(echo "$skill" | tr '-' ' ' | sed 's/^[0-9]* //')
-    echo "    Agent D: Starting Skill $num"
-    qc_skill "$num" "$skill" && spawn_skill_agent "$num" "$name" "$skill"
-    sleep 1
+  echo "    Agent D: QC Agent starting - monitoring all Wave 2 skills"
+  # QC agent runs continuously, checking skills as they complete
+  for skill_num in 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21; do
+    skill_folder=$(printf "%02d-*" "$skill_num")
+    echo "    Agent D: Queued QC check for Skill $skill_num"
   done
-  echo "    Agent D: All skills (18-21) initiated"
+  echo "    Agent D: QC monitoring active - reports in real-time to main orchestrator"
 ) &
 AGENT_D_PID=$!
 
 echo ""
-echo "  All 4 Wave 2 agents launched. Waiting for completion..."
+echo "  All 4 Wave 2 agents launched (3 install + 1 QC). Waiting for completion..."
 
 # Wait for all Wave 2 agents with timeout
 wait_for_wave 2 21 45

@@ -3,6 +3,108 @@
 
 ---
 
+## Core.md Files - PROTECT AT ALL COSTS
+
+These 7 files are your AI's memory and identity. Keep them LEAN.
+
+**The Core.md Files:**
+1. USER.md - Information about the human (you)
+2. IDENTITY.md - Who the AI is (Stefanie, etc.)
+3. SOUL.md - Core principles and philosophy
+4. HEARTBEAT.md - Active projects and current status
+5. AGENTS.md - Workflows, rules, multi-agent patterns
+6. MEMORY.md - Long-term memory, lessons learned
+7. TOOLS.md - Tool capabilities and how-to guides
+
+**THE RULE:**
+- Core.md files: 10-25 lines maximum
+- Full documentation: Goes to ~/Downloads/openclaw-master-files/
+- Never dump thousands of lines into core files
+- Always use pointers: "See full guide at: [path]"
+
+**Why This Matters:**
+If core files get bloated, the AI's context window fills with outdated info. The AI becomes slow and confused. Lean core files = fast, focused AI.
+
+---
+
+## QC Agent - What It Checks
+
+The QC agent verifies each skill installation by checking:
+
+### 1. TYP Compliance
+- Did it read ALL .md files before acting?
+- Did it follow Teach Yourself Protocol exactly?
+- Did it NOT take shortcuts?
+
+### 2. Core.md Files Protection
+Core.md files must stay LEAN (10-25 lines max):
+- USER.md - About the human
+- IDENTITY.md - Who the AI is
+- SOUL.md - Core principles
+- HEARTBEAT.md - Active projects/status
+- AGENTS.md - Workflows and rules
+- MEMORY.md - Long-term memory
+- TOOLS.md - Tool capabilities
+
+VERIFICATION: Check each core.md file has only lightweight summaries with pointers to master-files. NEVER full documentation.
+
+### 3. Master Files Creation
+- Did it create proper subfolder in openclaw-master-files/?
+- Did it save full documentation there?
+- Is folder structure correct?
+
+### 4. Skill Instructions Followed
+- Did it complete ALL steps in INSTALL.md?
+- Did it verify success criteria from SKILL.md?
+- Did it run any verification commands?
+
+### 5. No Shortcuts Taken
+- Did it NOT skip "similar looking" files?
+- Did it NOT say "I'll read that later"?
+- Did it NOT assume it knew what to do?
+
+### QC Report Format
+"Skill X - [PASS/FAIL] - [Details]"
+
+### QC Agent Runs Continuously
+- QC agent checks skills as install agents complete them
+- Reports in real-time to master agent
+- Does not wait for wave to finish
+
+---
+
+## Step Completion Verification and Proactive Remediation
+
+The QC agent must verify that the install agent did NOT skip any steps. For each skill:
+
+### 1. Check Against SKILL.md Checklist
+- Did it read ALL .md files listed in the skill?
+- Did it complete EVERY step in INSTALL.md?
+- Did it verify ALL success criteria?
+
+### 2. If Steps Were Skipped
+- Create a REMEDIATION PLAN listing exactly what was missed
+- Identify which steps need to be re-done
+- Report: "Skill X - FAIL - Steps skipped: [list]. Remediation required."
+
+### 3. Proactive Remediation Execution
+- The QC agent should NOT just report the failure
+- The QC agent should spawn a FIXER agent or take corrective action
+- The QC agent should ensure the skipped steps get completed
+- Report: "Skill X - Remediation complete. All steps now verified."
+
+### 4. Remediation Report Format
+```
+Skill X - QC Check
+Status: [PASS/FAIL/REPAIRED]
+Steps Verified: [N/N complete]
+Issues Found: [list or "none"]
+Remediation: [what was fixed or "not needed"]
+Final Status: [PASS after remediation]
+```
+
+---
+
 ## INSTALL ORDER - FOLLOW THIS EXACTLY
 
 The install script handles dependencies automatically. Your AI agent installs skills in this order:
@@ -1328,11 +1430,12 @@ trap 'rm -f "$INSTALL_FLAG"' EXIT
 │ Wave 1  │ 1 (Sequential)  │ 01 TYP, 02 Backup, QMD, 03 Agent Browser        │
 │         │                 │ Foundation - must complete before Wave 2        │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 2  │ 4 (Parallel)    │ Agent A: 04, 05, 06, 07, 08                     │
-│         │                 │ Agent B: 09, 10, 11, 12, 13                     │
-│         │                 │ Agent C: 14, 15, 16, 17                         │
-│         │                 │ Agent D: 18, 19, 20, 21                         │
-│         │                 │ Pre-Persona tools - all run simultaneously      │
+│ Wave 2  │ 4 (Parallel)    │ Agent A: 04, 05, 06, 07 (install)               │
+│         │ 3 install + 1 QC│ Agent B: 08, 09, 10, 11 (install)               │
+│         │                 │ Agent C: 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 │
+│         │                 │         (install)                               │
+│         │                 │ Agent D: QC Agent (verification)                │
+│         │                 │ Pre-Persona tools - all 4 run simultaneously    │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
 │ Wave 3  │ 1 (Sequential)  │ 22 Book-to-Persona, 23 AI Workforce Blueprint   │
 │         │                 │ CORE SYSTEM - Main orchestrator ONLY            │
@@ -1359,9 +1462,9 @@ openclaw agent spawn \
   --label "skill-04"
 ```
 
-#### Spawn Wave 2 - Agent A (Skills 04-08)
+#### Spawn Wave 2 - Agent A (Skills 04-07)
 ```bash
-for skill in "04-superpowers" "05-ghl-setup" "06-ghl-install-pages" "07-kie-setup" "08-vercel-setup"; do
+for skill in "04-superpowers" "05-ghl-setup" "06-ghl-install-pages" "07-kie-setup"; do
   num=${skill%%-*}
   openclaw agent spawn \
     --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
@@ -1370,9 +1473,9 @@ done
 wait
 ```
 
-#### Spawn Wave 2 - Agent B (Skills 09-13)
+#### Spawn Wave 2 - Agent B (Skills 08-11)
 ```bash
-for skill in "09-context7" "10-github-setup" "11-superdesign" "12-openrouter-setup" "13-google-workspace-setup"; do
+for skill in "08-vercel-setup" "09-context7" "10-github-setup" "11-superdesign"; do
   num=${skill%%-*}
   openclaw agent spawn \
     --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
@@ -1381,9 +1484,9 @@ done
 wait
 ```
 
-#### Spawn Wave 2 - Agent C (Skills 14-17)
+#### Spawn Wave 2 - Agent C (Skills 12-21)
 ```bash
-for skill in "14-google-workspace-integration" "15-blackceo-team-management" "16-summarize-youtube" "17-self-improving-agent"; do
+for skill in "12-openrouter-setup" "13-google-workspace-setup" "14-google-workspace-integration" "15-blackceo-team-management" "16-summarize-youtube" "17-self-improving-agent" "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
   num=${skill%%-*}
   openclaw agent spawn \
     --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
