@@ -48,7 +48,7 @@ openclaw skill install video-editor.skill
 The client gives you a video link. **You download it:**
 
 ```bash
-/data/.openclaw/skills/video-editor/scripts/download.sh \
+~/.openclaw/skills/video-editor/scripts/download.sh \
   --url "[VIDEO_URL]" \
   --output original_video.mp4
 ```
@@ -62,7 +62,7 @@ The client gives you a video link. **You download it:**
 **Extract the entire audio track - this becomes the voiceover:**
 
 ```bash
-/data/.openclaw/skills/video-editor/scripts/extract-audio.sh \
+~/.openclaw/skills/video-editor/scripts/extract-audio.sh \
   --input original_video.mp4 \
   --output full_voiceover.aac
 ```
@@ -103,21 +103,21 @@ whisper full_voiceover.aac --model medium --output_format json --output_dir /tmp
 
 ```bash
 # Segment 1: Beginning (adjust timestamps based on content)
-/data/.openclaw/skills/video-editor/scripts/cut.sh \
+~/.openclaw/skills/video-editor/scripts/cut.sh \
   --input original_video.mp4 \
   --start 00:00:00 \
   --duration 8 \
   --output person_beginning.mp4
 
 # Segment 2: Middle (find best moment from transcript)
-/data/.openclaw/skills/video-editor/scripts/cut.sh \
+~/.openclaw/skills/video-editor/scripts/cut.sh \
   --input original_video.mp4 \
   --start 00:00:45 \
   --duration 8 \
   --output person_middle.mp4
 
 # Segment 3: End
-/data/.openclaw/skills/video-editor/scripts/cut.sh \
+~/.openclaw/skills/video-editor/scripts/cut.sh \
   --input original_video.mp4 \
   --start 00:01:50 \
   --duration 10 \
@@ -238,7 +238,7 @@ ffmpeg -f concat -safe 0 -i concat_list.txt -i full_voiceover.aac \
 
 **Add captions:**
 ```bash
-/data/.openclaw/skills/video-editor/scripts/caption.sh \
+~/.openclaw/skills/video-editor/scripts/caption.sh \
   --input client_assembled.mp4 \
   --output client_with_captions.mp4
 ```
@@ -252,13 +252,13 @@ Use MoviePy for crossfades if needed for smoother flow.
 
 ```bash
 # For TikTok/Reels (9:16 vertical)
-/data/.openclaw/skills/video-editor/scripts/resize.sh \
+~/.openclaw/skills/video-editor/scripts/resize.sh \
   --input client_with_captions.mp4 \
   --platform tiktok \
   --output client_final_tiktok.mp4
 
 # For YouTube/LinkedIn (16:9)
-/data/.openclaw/skills/video-editor/scripts/resize.sh \
+~/.openclaw/skills/video-editor/scripts/resize.sh \
   --input client_with_captions.mp4 \
   --platform youtube \
   --output client_final_youtube.mp4
@@ -356,10 +356,10 @@ Adjust ratios based on content and preference.
 
 ```bash
 # 1. Download
-/data/.openclaw/skills/video-editor/scripts/download.sh --url "URL" --output original.mp4
+~/.openclaw/skills/video-editor/scripts/download.sh --url "URL" --output original.mp4
 
 # 2. Extract full audio for voiceover
-/data/.openclaw/skills/video-editor/scripts/extract-audio.sh --input original.mp4 --output voiceover.aac
+~/.openclaw/skills/video-editor/scripts/extract-audio.sh --input original.mp4 --output voiceover.aac
 
 # 3. Transcribe for content analysis
 whisper voiceover.aac --model medium --output_format json --output_dir /tmp
@@ -367,9 +367,9 @@ whisper voiceover.aac --model medium --output_format json --output_dir /tmp
 # YOU: Analyze transcript, determine 3 person segments
 
 # 4. Extract person segments (adjust timestamps)
-/data/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:00:00 --duration 8 --output person_beginning.mp4
-/data/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:00:45 --duration 8 --output person_middle.mp4
-/data/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:01:50 --duration 10 --output person_end.mp4
+~/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:00:00 --duration 8 --output person_beginning.mp4
+~/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:00:45 --duration 8 --output person_middle.mp4
+~/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:01:50 --duration 10 --output person_end.mp4
 
 # YOU: Create B-roll storyboard from transcript
 
@@ -380,10 +380,10 @@ whisper voiceover.aac --model medium --output_format json --output_dir /tmp
 # Apply voiceover.aac as continuous audio
 
 # 7. Add captions
-/data/.openclaw/skills/video-editor/scripts/caption.sh --input assembled.mp4 --output captioned.mp4
+~/.openclaw/skills/video-editor/scripts/caption.sh --input assembled.mp4 --output captioned.mp4
 
 # 8. Resize for platform
-/data/.openclaw/skills/video-editor/scripts/resize.sh --input captioned.mp4 --platform tiktok --output final.mp4
+~/.openclaw/skills/video-editor/scripts/resize.sh --input captioned.mp4 --platform tiktok --output final.mp4
 
 ## REMEMBER THE STRUCTURE
 
@@ -395,3 +395,47 @@ whisper voiceover.aac --model medium --output_format json --output_dir /tmp
 **YOU do ALL the work.** The client just gives you the video link. You analyze, extract, generate B-roll, assemble, and deliver.
 
 **Ready to create a professional B-roll cut!**
+---
+
+## 🔴 KIE.AI GENERATION ERROR HANDLING
+
+If KIE.AI returns an error or times out during B-roll generation:
+
+**Step 1 - Identify the failure type:**
+- `401 Unauthorized` → API key is wrong or expired. Check `KIE_API_KEY` in `~/clawd/secrets/.env`
+- `429 Too Many Requests` → Rate limited. Wait 60 seconds and retry
+- `500 / 503` → KIE.AI service issue. Wait 2 minutes and retry once
+- Timeout (no response after 90s) → Retry the single failed clip once before stopping
+
+**Step 2 - Retry logic:**
+- Retry any single failed clip up to 2 times before reporting failure
+- Do NOT retry an entire batch — retry only the specific clip that failed
+- If a clip fails after 2 retries, skip it and note it in your final report
+
+**Step 3 - Report to user:**
+"B-roll clip [number] failed to generate after 2 attempts. Error: [message]. All other clips completed. You can regenerate that clip manually or I can retry it now."
+
+**Never deliver a video with a missing B-roll slot without telling the user.**
+
+---
+
+## 🔴 TIMESTAMP VALIDATION BEFORE MERGE
+
+Before running any merge or assembly script, validate all timestamps:
+
+```bash
+# Check video duration first
+ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 original.mp4
+```
+
+Then verify each timestamp is within the video duration:
+- Start time must be less than total duration
+- Start time + clip duration must not exceed total duration
+- All timestamps must be in HH:MM:SS format
+
+**If a timestamp is out of range:**
+1. Do NOT run the merge script
+2. Recalculate the correct timestamps from the transcript
+3. Confirm the corrected timestamps before proceeding
+
+**A timestamp error caught before assembly saves 10+ minutes of wasted processing.**
