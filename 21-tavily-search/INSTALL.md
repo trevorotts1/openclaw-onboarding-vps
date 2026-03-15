@@ -40,17 +40,11 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in /data/downloads/. It may be named:
-   - OpenClaw Master Files
-   - OpenClaw Master Documents
-   - OpenClaw Documents
-   - openclaw-master-files
-   - openclaw master files
-   - OpenClaw Files
-   - openclaw-documents
-   - Any variation of "openclaw" + "master" or "files" or "documents"
-   Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: /data/downloads/OpenClaw Master Files/
+   The canonical master files folder is: ~/Downloads/openclaw-master-files/
+   If that exact path does not exist, check for these common variations:
+   - ~/Downloads/OpenClaw Master Files/
+   - ~/Downloads/OpenClaw Master Documents/
+   Use whichever exists. If none exist, create: ~/Downloads/openclaw-master-files/
 
    Save this full document content as a .md file in that folder.
 
@@ -72,10 +66,10 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. Ensure TYP read pass is complete.
 2. Create target folder:
-   `mkdir -p /data/.openclaw/skills/tavily-search`
+   `mkdir -p ~/.openclaw/skills/tavily-search`
 3. Copy upstream files:
-   `cp -R ./upstream-original/. /data/.openclaw/skills/tavily-search/`
-4. Verify `/data/.openclaw/skills/tavily-search/SKILL.md` exists.
+   `cp -R ./upstream-original/. ~/.openclaw/skills/tavily-search/`
+4. Verify `~/.openclaw/skills/tavily-search/SKILL.md` exists.
 5. Apply relevant core file updates from CORE_UPDATES.md only.
 ---
 
@@ -98,3 +92,19 @@ When a gateway restart is needed:
 - Do NOT assume the user wants the restart
 
 ---
+
+## 🔴 ERROR RECOVERY - If Install Fails Partway Through
+
+If the installation fails at any step (copy error, permission denied, missing folder, etc.):
+
+1. **STOP** - Do not proceed to the next step
+2. **Clean up** the partial install:
+   ```bash
+   rm -rf ~/.openclaw/skills/tavily-search
+   ```
+3. **Identify the failure** - read the error message carefully
+4. **Fix the root cause** (missing folder, wrong path, permission issue)
+5. **Restart from Step 1** - do not resume from a partially installed state
+6. **Report to user** if the issue cannot be resolved: "Installation of tavily-search failed at [step]. Error: [message]. Please check [specific thing]."
+
+A partial install is worse than no install — it can cause the agent to find incomplete files and behave incorrectly.
