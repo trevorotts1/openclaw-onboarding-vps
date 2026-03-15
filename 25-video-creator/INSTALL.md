@@ -7,6 +7,7 @@ Before you run any commands in this skill:
 1. Open Terminal.
 2. Go into the skill folder:
    ```bash
+   cd ~/.openclaw/skills/video-creator
    ```
 3. Discover every Markdown file in this skill folder (including subfolders):
    ```bash
@@ -40,7 +41,7 @@ Conflict rule:
 
 1. Install FFmpeg and ImageMagick:
    ```bash
-   apt-get install -y ffmpeg imagemagick
+   brew install ffmpeg imagemagick
    ```
 2. Confirm FFmpeg works:
    ```bash
@@ -116,8 +117,9 @@ MoviePy v2 removed `moviepy.editor`, so you must pin MoviePy to v1.
    ```bash
    mkdir -p "$HOME/.openclaw/skills"
    ```
-2. Unzip the skill:
+2. Copy the skill folder from the onboarding package:
    ```bash
+   cp -r "$(find ~/Downloads -name '25-video-creator' -type d | head -1)" "$HOME/.openclaw/skills/video-creator"
    ```
 3. Make scripts executable:
    ```bash
