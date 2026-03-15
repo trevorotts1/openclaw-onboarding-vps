@@ -8,9 +8,9 @@
 If you are reading this file, the user has triggered onboarding by saying something like:
 - "Begin onboarding installation"
 - "Start onboarding"
-- "Install the 29 skills"
+- "Install the 30 skills"
 
-**Your task:** Install all 29 skills using SEQUENTIAL INSTALLATION (01 through 29 in order).
+**Your task:** Install all 30 skills using SEQUENTIAL INSTALLATION (01 through 30 in order).
 
 ### STEP 0: VERIFY TRIGGER AND CHECK CAPABILITY
 
@@ -34,10 +34,10 @@ Before starting Wave 2, verify you can spawn sub-agents:
 ```bash
 # Try to spawn a test sub-agent (this is a capability check, not actual install)
 ```
-Use SEQUENTIAL INSTALLATION (01 through 29 in order). No parallel sub-agents on VPS.
+Use SEQUENTIAL INSTALLATION (01 through 30 in order). No parallel sub-agents on VPS.
 
 **0.4: Announce your strategy**
-Tell user: "Onboarding triggered. I will install 29 skills using SEQUENTIAL INSTALLATION (01 through 29 in order). Checking for existing installations..."
+Tell user: "Onboarding triggered. I will install 30 skills using SEQUENTIAL INSTALLATION (01 through 30 in order). Checking for existing installations..."
 
 ---
 
@@ -170,18 +170,18 @@ It powers the persona search in Skill 22 and the persona detection in Skill 23.
 - Install time: QMD installed, collections (clawd, master-files) created, initial indexing run
 - After Skill 22: coaching-personas collection added and indexed
 - After Skill 23: workforce files indexed
-- After all 29 skills: final complete index
+- After all 30 skills: final complete index
 
 **QMD INDEXING happens at strategic points - see QMD INDEXING PROTOCOL below.**
 
-### STEPS 4-29: All Remaining Skills (in numbered order)
+### STEPS 4-30: All Remaining Skills (in numbered order)
 Skills install sequentially. For each skill:
 - The agent checks if API keys are already present in your env files
 - If a key is found → proceeds automatically
 - If a key is not found → asks you to enter it, or offers to skip and remind you later
 - You can skip any skill and the agent moves to the next one automatically
 
-**Every skill from 04 through 29 requires both TYP (Step 1) and Back Yourself Up (Step 2) to be installed first.**
+**Every skill from 04 through 30 requires both TYP (Step 1) and Back Yourself Up (Step 2) to be installed first.**
 No exceptions. If you skip those two, stop and go back.
 
 ---
@@ -195,7 +195,7 @@ No exceptions. If you skip those two, stop and go back.
 
 ## 🔴 SKILL INSTALLATION PROTOCOL (MANDATORY FOR EACH SKILL)
 
-**For EVERY skill folder (01 through 29), you MUST follow this exact sequence. NO EXCEPTIONS. NO SHORTCUTS.**
+**For EVERY skill folder (01 through 30), you MUST follow this exact sequence. NO EXCEPTIONS. NO SHORTCUTS.**
 
 ### ZERO TOLERANCE SHORTCUTS
 The following are FORBIDDEN and will cause installation failures:
@@ -242,12 +242,12 @@ Every skill has a specific install sequence. Follow it exactly:
 - [ ] Confirm TYP was applied (core files updated with lightweight summary)
 - [ ] Explicitly state: "[Skill-name] installation verified complete"
 
-### STEP 5: NO GLOBAL "DONE" UNTIL ALL 29 ARE DONE
+### STEP 5: NO GLOBAL "DONE" UNTIL ALL 30 ARE DONE
 - Do NOT say "onboarding complete" after finishing one skill
 - Do NOT skip skills because they "seem optional"
-- Install skills 01-29 in order, confirm each one individually
-- Only after skill 29 is verified complete → remove ONBOARDING PENDING flag
-- Only after skill 29 is verified complete → write ONBOARDING COMPLETE to MEMORY.md
+- Install skills 01-30 in order, confirm each one individually
+- Only after skill 30 is verified complete → remove ONBOARDING PENDING flag
+- Only after skill 30 is verified complete → write ONBOARDING COMPLETE to MEMORY.md
 
 ---
 
@@ -371,7 +371,7 @@ Changing someone's primary model without permission breaks their workflow. Model
 - Other skills should be stable before tackling this
 
 ### Install Order
-Skills 01-12 → Skills 15-22 → Skill 23 (AI Workforce) → Skill 24-29 → **THEN Google Workspace**
+Skills 01-12 → Skills 15-22 → Skill 23 (AI Workforce) → Skill 24-30 → **THEN Google Workspace**
 
 If user wants to skip Google Workspace initially, that's acceptable. Log a reminder and continue.
 
@@ -492,7 +492,7 @@ After every skill install, verify:
 | **Initial** | After QMD install (step 3) | Base index of workspace |
 | **Personas** | After Skill 22 (Book-to-Persona) complete | 32+ persona blueprints now searchable |
 | **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions indexed |
-| **Final** | After ALL 29 skills complete | Complete system index |
+| **Final** | After ALL 30 skills complete | Complete system index |
 | **Ongoing** | After any NEW skill installed post-onboarding | Keep index current |
 
 ### What to Index at Each Milestone
@@ -584,7 +584,7 @@ or what content to add - always follow the skill's files.**
 - TYP governs the storage METHOD: lean summaries and file path references in core files
 - The skill governs the CONTENT and which files it touches
 - Skill docs always take precedence over TYP when there is a conflict
-- This applies to every skill from 03 through 29
+- This applies to every skill from 03 through 30
 
 ---
 
@@ -1061,7 +1061,7 @@ Replace `[MASTER_FILES_FOLDER]` with the actual path from step 3.
 **Each skill folder contains some combination of SKILL.md, INSTALL.md, INSTRUCTIONS.md, EXAMPLES.md, CORE_UPDATES.md.** Some skills also include a `[skill-name]-full.md`, a `.skill` package file, an `upstream-original/` subfolder, or additional reference documents. File count varies by skill. If SKILL.md or INSTALL.md is missing from a folder, stop and tell the user before proceeding.
 
 **Naming rules:**
-- Folder names are lowercase with hyphens, prefixed with their install number (01 through 29)
+- Folder names are lowercase with hyphens, prefixed with their install number (01 through 30)
 - The .skill file (when present) matches the folder name without the number prefix
 - Do NOT rename any folder or file. Use the names exactly as listed above.
 
@@ -1143,7 +1143,7 @@ Every skill folder contains these files. Read them in this exact order:
 6. Read CORE_UPDATES.md - update ONLY the workspace files it specifies, with ONLY the text it provides
 7. Install the .skill package file (if one exists in this folder)
 8. Verify the skill is working
-9. **Report to the user:** "Skill [number] of 29 installed. [Skill name] is complete." Then proceed to the next skill immediately. Do not wait for acknowledgment.
+9. **Report to the user:** "Skill [number] of 30 installed. [Skill name] is complete." Then proceed to the next skill immediately. Do not wait for acknowledgment.
 10. Start the next skill.
 
 ### What CORE_UPDATES.md Does
@@ -1185,7 +1185,7 @@ If any step in a skill's installation fails:
 
 ### EXECUTION STRATEGY (MANDATORY)
 
-**DEFAULT: Use SEQUENTIAL INSTALLATION (01 through 29 in order). No parallel sub-agents on VPS.**
+**DEFAULT: Use SEQUENTIAL INSTALLATION (01 through 30 in order). No parallel sub-agents on VPS.**
 
 Install all skills one at a time in numbered order. Skills 22 and 23 must be handled by the main orchestrator directly.
 
@@ -1402,9 +1402,9 @@ All skill folders are located inside:
 
 ---
 
-## IMPORTED SKILLS (16-29) - AUTHORITATIVE INSTALL RULES
+## IMPORTED SKILLS (16-30) - AUTHORITATIVE INSTALL RULES
 
-Skills 16 through 29 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, QMD-RETRIEVAL-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
+Skills 16 through 30 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, QMD-RETRIEVAL-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
 
 **The file-read order for ALL imported skills is the same as for all skills:**
 1. Read `SKILL.md` first
@@ -1472,7 +1472,7 @@ If file exists, resume from first skill not marked complete.
 - After QMD install (step 3): `qmd update && qmd embed`
 - After Skill 22: `qmd update && qmd embed`
 - After Skill 23: `qmd update && qmd embed`
-- After all 29 skills: `qmd update && qmd embed && qmd status`
+- After all 30 skills: `qmd update && qmd embed && qmd status`
 
 ---
 
@@ -1522,7 +1522,7 @@ If file exists, resume from first skill not marked complete.
 - After QMD install (step 3): `qmd update && qmd embed`
 - After Skill 22: `qmd update && qmd embed`
 - After Skill 23: `qmd update && qmd embed`
-- After all 29 skills: `qmd update && qmd embed && qmd status`
+- After all 30 skills: `qmd update && qmd embed && qmd status`
 
 ## AUTO-START RULE - READ THIS BEFORE INSTALLING ANYTHING
 
@@ -1530,7 +1530,7 @@ If file exists, resume from first skill not marked complete.
 
 The install script has already downloaded all skills to disk. Your job is to install them in order, one by one, automatically.
 
-- Install Skill 01 → confirm it worked → install Skill 02 → confirm → continue through all 29
+- Install Skill 01 → confirm it worked → install Skill 02 → confirm → continue through all 30
 - Only pause when you need something the user must provide (API key not in any env file, 2FA code, first-time browser login)
 - When you need a key: ask clearly, wait for answer, then continue
 - When a skill is optional and the user wants to skip: mark SKIPPED, move to next - do not stop the whole install
@@ -1560,13 +1560,13 @@ SKILL-02: INSTALLED
 ## PROGRESS UPDATES
 
 Every 5 skills completed, send a brief status update via the user's configured messaging channel:
-"Onboarding in progress: [X] of 29 skills complete. Currently on: [skill name]."
+"Onboarding in progress: [X] of 30 skills complete. Currently on: [skill name]."
 
 ---
 
 ## FINAL STEP - SET UP WEEKLY AUTO-UPDATE (Agent Runs This)
 
-After all 29 skills are installed, run this as the final step.
+After all 30 skills are installed, run this as the final step.
 The agent executes these commands - the human does nothing.
 
 > **Install script URL:** See your instructor or onboarding package README for the latest auto-update script URL.
@@ -1594,7 +1594,7 @@ If the block is not present, continue without error.
 
 ### Final QMD Indexing (MANDATORY)
 
-After all 29 skills are installed, run the final QMD indexing:
+After all 30 skills are installed, run the final QMD indexing:
 
 ```bash
 # Final index update
@@ -1617,12 +1617,12 @@ qmd status
 - If running in an active chat session: post the summary in that chat.
 - If running as a background or sub-agent task: send the summary via the configured
   messaging channel (detected in prerequisites).
-- Format the 29-skill status report as a table: Skill | Name | Status | Notes
+- Format the 30-skill status report as a table: Skill | Name | Status | Notes
 
-Then write to MEMORY.md: "ONBOARDING COMPLETE - [date] - All 29 skills processed"
+Then write to MEMORY.md: "ONBOARDING COMPLETE - [date] - All 30 skills processed"
 
 When every skill on the list above is installed and verified, tell the user:
-1. Everything that was installed (all 29 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
+1. Everything that was installed (all 30 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
 2. Everything that was added to each workspace file (AGENTS.md, TOOLS.md, MEMORY.md, etc.)
 3. Which workspace files were updated and which were not touched
 4. Where the full documentation for each skill is saved (the master files folder path)
