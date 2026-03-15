@@ -40,13 +40,13 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in /data/downloads/. It may be named:
+   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Master Files Starter
    - openclaw-master-files
    - Any variation of "openclaw" + "master" or "files" or "documents"
-   If no folder is found, create: /data/downloads/OpenClaw Master Files/
+   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -84,6 +84,16 @@ If NOT installed, run:
 npm install -g agent-browser
 agent-browser install
 ```
+
+**If the above fails with a permissions error**, try:
+```bash
+sudo npm install -g agent-browser
+```
+
+If `sudo` is not available or still fails, tell the user:
+"The agent-browser install requires npm global permissions. Please ask your system admin or run the terminal as Administrator (Windows) or with sudo (Mac/Linux)."
+
+Do NOT proceed to Step 3 until `npm install -g agent-browser` completes without error.
 
 ## Step 3 - Verify agent-browser works
 
