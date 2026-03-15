@@ -813,4 +813,4 @@ Can blend coaching + task governance in same session only when emotional regulat
 ```
 
 Saved to:  
-`~/Downloads/openclaw-master-files/coaching-personas/personas/obama-light-we-carry/persona-blueprint.md`
+`/data/openclaw-master-files/coaching-personas/personas/obama-light-we-carry/persona-blueprint.md`

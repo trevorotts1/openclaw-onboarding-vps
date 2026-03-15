@@ -36,7 +36,7 @@ DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -46,7 +46,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -147,7 +147,7 @@ CREDENTIAL STORAGE (Where to Keep GHL Login Info)
 GHL credentials must NEVER be hardcoded in scripts or committed to repositories.
 
 Store credentials in the workspace secrets file:
-~/clawd/secrets/.env
+/data/openclaw/workspace/secrets/.env
 
 Add these lines:
 GHL_EMAIL=user@email.com
@@ -2142,11 +2142,11 @@ Always include this report. Do not skip it. The user needs to know exactly what 
 [ADD TO AGENTS.md]
 
 ## GHL/Convert and Flow Page Deployment
-- Full instructions: ~/Downloads/[master-files-folder]/ghl-install-pages.md
+- Full instructions: /data/downloads/[master-files-folder]/ghl-install-pages.md
 - Use Playwright with launchPersistentContext (never launch())
 - Always verify correct sub-account before building
 - Default to Funnels unless user says Websites
-- GHL credentials stored in ~/clawd/secrets/.env (GHL_EMAIL, GHL_PASSWORD)
+- GHL credentials stored in /data/openclaw/workspace/secrets/.env (GHL_EMAIL, GHL_PASSWORD)
 - NEVER publish without explicit user approval
 - ALWAYS send deployment report after completing
 
@@ -2154,20 +2154,20 @@ Always include this report. Do not skip it. The user needs to know exactly what 
 [ADD TO TOOLS.md]
 
 ## GHL Page Builder (Playwright Automation)
-- Full guide: ~/Downloads/[master-files-folder]/ghl-install-pages.md
+- Full guide: /data/downloads/[master-files-folder]/ghl-install-pages.md
 - Viewport minimum: 1440x900
 - Builder loads inside nested iframes - use get_builder_frame() to switch context
 - Every selector has fallback chains - use find_element_with_fallback()
 - 2FA detection built in - pauses for manual intervention
 - Two deployment methods: Direct code (default) and iframe (for complex/conflicting CSS)
-- Credential location: ~/clawd/secrets/.env
+- Credential location: /data/openclaw/workspace/secrets/.env
 - For updating existing pages: navigate to the funnel, open the step, replace the code in the code editor
 
 
 [ADD TO MEMORY.md]
 
 ## GHL Page Deployment Skill Learned [DATE]
-- Full guide saved to ~/Downloads/[master-files-folder]/ghl-install-pages.md
+- Full guide saved to /data/downloads/[master-files-folder]/ghl-install-pages.md
 - Covers: new funnel creation, multi-page deployment, existing page updates, iframe method
 - Sub-account switching, credential storage, deployment reporting all documented
 

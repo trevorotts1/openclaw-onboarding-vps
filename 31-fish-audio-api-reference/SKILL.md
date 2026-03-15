@@ -35,7 +35,7 @@ qmd search master-files "fish audio voice cloning"
 
 **Direct reference path:**
 ```
-~/Downloads/openclaw-master-files/service-integrations/fish-audio/fish-audio-api-reference.md
+/data/openclaw-master-files/service-integrations/fish-audio/fish-audio-api-reference.md
 ```
 
 ---
@@ -138,14 +138,14 @@ Paralanguage effects (insert inline):
 
 ## Pending Setup Behavior
 
-If `FISH_AUDIO_API_KEY` or `FISH_AUDIO_VOICE_ID` are missing, the installer writes a pending entry to `~/.openclaw/skills/.pending-setup.md`.
+If `FISH_AUDIO_API_KEY` or `FISH_AUDIO_VOICE_ID` are missing, the installer writes a pending entry to `/data/.openclaw/skills/.pending-setup.md`.
 
 **The agent should:**
 1. Remind the client once per session if status is PENDING
 2. When credentials are provided:
    - Add `FISH_AUDIO_API_KEY` to `~/.clawdbot/clawdbot.json` env vars
    - Add `FISH_AUDIO_VOICE_ID` to `~/.clawdbot/clawdbot.json` env vars
-   - Add both to `~/clawd/secrets/.env`
+   - Add both to `/data/openclaw/workspace/secrets/.env`
    - Run `qmd update && qmd embed` to re-index
    - Mark entry as Status: COMPLETE in `.pending-setup.md`
 

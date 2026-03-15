@@ -23,7 +23,7 @@ Add immediately after the first heading line:
 ```
 ## 🔴🔴🔴 SUPERPOWERS - THINKING DISCIPLINE (NON-NEGOTIABLE)
 Source: https://github.com/obra/superpowers
-Local skills: ~/Downloads/openclaw-master-files/superpowers/skills/
+Local skills: /data/openclaw-master-files/superpowers/skills/
 14 skill files. Read the relevant SKILL.md before any coding task.
 
 ### YOU DO NOT HAVE A CHOICE
@@ -95,9 +95,9 @@ Add immediately after the first heading line and opening description:
 
 ```
 ## Superpowers Skills Reference
-- Full skills at: ~/Downloads/openclaw-master-files/superpowers/skills/
-- Commands at: ~/Downloads/openclaw-master-files/superpowers/commands/
-- Agents at: ~/Downloads/openclaw-master-files/superpowers/agents/
+- Full skills at: /data/openclaw-master-files/superpowers/skills/
+- Commands at: /data/openclaw-master-files/superpowers/commands/
+- Agents at: /data/openclaw-master-files/superpowers/agents/
 - 14 skills: brainstorming, systematic-debugging, test-driven-development, verification-before-completion, writing-plans, writing-skills, executing-plans, subagent-driven-development, dispatching-parallel-agents, using-git-worktrees, finishing-a-development-branch, receiving-code-review, requesting-code-review, using-superpowers
 - 3 commands: brainstorm.md, execute-plan.md, write-plan.md
 - 1 agent: code-reviewer.md
@@ -118,7 +118,7 @@ Add immediately after the first heading line. Replace [TODAY] with today's date 
 - Iron Laws are non-negotiable for all coding tasks
 - Hard Gate: no code before design approval (v4.3.0)
 - Worktree required before any implementation (v4.2.0)
-- Full skills: ~/Downloads/openclaw-master-files/superpowers/skills/
+- Full skills: /data/openclaw-master-files/superpowers/skills/
 ```
 
 ---

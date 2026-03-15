@@ -16,7 +16,7 @@ Add this section:
 ## Video Skills Suite
 
 ### Video Creator (Skill 25)
-- Location: `~/.openclaw/skills/video-creator/`
+- Location: `/data/.openclaw/skills/video-creator/`
 - Purpose: generate and assemble videos (for example: text to video, image to video, multi-clip assembly)
 - Primary provider: KIE.ai (uses `KIE_API_KEY`)
 - Output: default is `~/Videos/Output/`
@@ -27,5 +27,5 @@ Add this pointer:
 
 ```md
 ## Video Skills Suite
-- Video Creator (Skill 25): `~/.openclaw/skills/video-creator/`
+- Video Creator (Skill 25): `/data/.openclaw/skills/video-creator/`
 ```

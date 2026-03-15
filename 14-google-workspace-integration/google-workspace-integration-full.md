@@ -36,7 +36,7 @@ DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -46,7 +46,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -128,7 +128,7 @@ This guide walks you through connecting your Google Workspace to your AI agent (
 If you don't want to do all the steps manually, copy this prompt and send it to your AI assistant:
 
 "Set up Google Workspace integration for me. I need you to:
-1. Use Playwright browser automation with launchPersistentContext and store session data in ~/.openclaw/playwright-data/
+1. Use Playwright browser automation with launchPersistentContext and store session data in /data/.openclaw/playwright-data/
 2. Help me create a GCP (Google Cloud Platform) project
 3. Enable the required APIs for Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Forms, Keep, Admin, Analytics, Tag Manager, Search Console, YouTube, Places, and Looker Studio
 4. Create a service account with domain-wide delegation
@@ -144,7 +144,7 @@ Your AI will guide you through the process step-by-step. If you prefer to do it 
 
 ### Browser Agent Mode (Playwright Required)
 If you are using OpenClaw browser automation, Playwright is the primary method.
-- Always use launchPersistentContext(userDataDir) and store sessions in ~/.openclaw/playwright-data/
+- Always use launchPersistentContext(userDataDir) and store sessions in /data/.openclaw/playwright-data/
 - First time login is manual. The agent opens https://admin.google.com and https://console.cloud.google.com. You enter credentials in both tabs.
 - Sessions expire after 7 to 14 days. If the agent sees a login screen, it must pause and ask you to re-login.
 - Chrome extension is a fallback only. Use it only if Playwright is unavailable.
@@ -760,7 +760,7 @@ Google requires every project that accesses user data to have a registered "App.
 The agent navigates to the service account creation page, fills in the name and description, clicks through the steps, then navigates to the Keys tab to create and download the JSON key. The key file downloads to your default Downloads folder. The agent then moves it to the correct location and sets the environment variable.
 
 **Option B - Chrome Extension (Fallback):**
-Follow the numbered steps above in Chrome. After the JSON key downloads, tell your AI where it saved (usually ~/Downloads/) and the AI will handle the rest.
+Follow the numbered steps above in Chrome. After the JSON key downloads, tell your AI where it saved (usually /data/downloads/) and the AI will handle the rest.
 
 ### Verification (Do This Before Moving On)
 
@@ -769,7 +769,7 @@ After creating the service account and downloading the key:
 2. Confirm your new service account appears in the list (e.g., `ai-workspace-agent@yourproject.iam.gserviceaccount.com`)
 3. Confirm the key file exists on your computer. Open Terminal and run:
    ```bash
-   ls -la ~/Downloads/*.json
+   ls -la /data/downloads/*.json
    ```
    You should see a file that starts with your project name.
 4. Do not proceed to Section 9 until the service account exists AND you have the JSON key file.
@@ -1728,7 +1728,7 @@ This was a hard-won lesson. If Calendar and Drive work but Gmail returns `401`:
 If the agent navigates to admin.google.com or console.cloud.google.com and sees a login page instead of the dashboard:
 - Sessions expire every 7 to 14 days depending on Google's security settings.
 - The agent must STOP and ask you to re-login manually.
-- After you log in, the agent can resume where it left off. The persistent context at ~/.openclaw/playwright-data/ retains cookies.
+- After you log in, the agent can resume where it left off. The persistent context at /data/.openclaw/playwright-data/ retains cookies.
 - Do not clear the playwright-data folder unless you want to force a full re-login.
 
 ### General Rule for Browser Agents Hitting Policy Errors

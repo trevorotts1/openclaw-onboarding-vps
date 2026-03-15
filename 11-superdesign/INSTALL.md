@@ -41,8 +41,8 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   The canonical master files path is: ~/Downloads/openclaw-master-files/
-   If this folder does not exist, create it: mkdir -p ~/Downloads/openclaw-master-files/
+   The canonical master files path is: /data/openclaw-master-files/
+   If this folder does not exist, create it: mkdir -p /data/openclaw-master-files/
 
    Save this full document content as a .md file in that folder.
 
@@ -216,7 +216,7 @@ Agent execution:
 Agent execution:
 
 1. Agent checks env files for an existing API key:
-   Execute: `grep -rE "ANTHROPIC_API_KEY|OPENAI_API_KEY|OPENROUTER_API_KEY" ~/clawd/secrets/.env 2>/dev/null | head -5`
+   Execute: `grep -rE "ANTHROPIC_API_KEY|OPENAI_API_KEY|OPENROUTER_API_KEY" /data/openclaw/workspace/secrets/.env 2>/dev/null | head -5`
 2. IF a key is found in env: Agent notes the provider (anthropic, openai, or openrouter) and proceeds to step 4
 3. IF no key found in env: Agent asks user: "Do you have an Anthropic, OpenAI, or OpenRouter API key to configure the SuperDesign IDE extension? This step is optional - you can skip it and use the Web App or CLI instead."
    - IF user provides key: agent captures the key and provider, proceeds to step 4
@@ -255,15 +255,15 @@ Agent execution:
 
 Agent execution:
 
-1. Execute to ensure master files folder exists: `mkdir -p ~/Downloads/openclaw-master-files/superdesign/`
-2. Save this complete document as: ~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
+1. Execute to ensure master files folder exists: `mkdir -p /data/openclaw-master-files/superdesign/`
+2. Save this complete document as: /data/openclaw-master-files/superdesign/superdesign-instructions.md
 4. Add to AGENTS.md (lean summary only, no full content):
 
    ## SuperDesign Web Design Skill [PRIORITY: HIGH]
    SuperDesign (superdesign.dev) is an AI-powered design agent for creating website designs.
    Three modes: Web App (browser, Chrome extension cloning), CLI (terminal commands), IDE Extension.
    Exports: React code, HTML/CSS, style.md (design system document).
-   Deep file: ~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
+   Deep file: /data/openclaw-master-files/superdesign/superdesign-instructions.md
 
 5. Add to TOOLS.md (lean summary only, no full content):
 
@@ -272,7 +272,7 @@ Agent execution:
    CLI install: npm install -g @superdesign/cli@latest
    Skill install: npx clawhub install superdesign
    Key commands: superdesign create-project, superdesign iterate-design-draft, superdesign extract-brand-guide
-   Deep file: ~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
+   Deep file: /data/openclaw-master-files/superdesign/superdesign-instructions.md
 
 6. Verify both AGENTS.md and TOOLS.md were updated successfully
 

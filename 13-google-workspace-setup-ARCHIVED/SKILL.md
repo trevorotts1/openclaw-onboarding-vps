@@ -77,7 +77,7 @@ behalf, and then your AI can do the rest.
   in the GCP Console. Second, authorize the scopes in the Google Admin Console. Missing
   either step causes "Access denied" errors.
 
-- **The JSON key file is like a password.** Store it securely (usually in ~/clawd/secrets/).
+- **The JSON key file is like a password.** Store it securely (usually in /data/openclaw/workspace/secrets/).
   Set file permissions to 600 so only the owner can read it. Never share it or commit it
   to version control.
 

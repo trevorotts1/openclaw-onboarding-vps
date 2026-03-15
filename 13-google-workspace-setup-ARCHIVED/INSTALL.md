@@ -53,7 +53,7 @@ touches. When in doubt: skill docs win.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -63,7 +63,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -229,13 +229,13 @@ npx playwright install chromium
 ```
 
 CRITICAL: Always use `launchPersistentContext` - NEVER regular `launch()`.
-Store session data at: `~/.openclaw/playwright-data/google-setup/`
+Store session data at: `/data/.openclaw/playwright-data/google-setup/`
 
 ```javascript
 const { chromium } = require('playwright');
 const browser = await chromium.launchPersistentContext(
   require('os').homedir() + '/.openclaw/playwright-data/google-setup/',
-  { headless: false }
+  { headless: true }
 );
 const page = browser.pages()[0] || await browser.newPage();
 ```
@@ -286,10 +286,10 @@ gog auth list 2>/dev/null || true
 
 # Known Google env/config values
 cat [WORKSPACE_ROOT]/secrets/.env 2>/dev/null | grep -E "USER_EMAIL|GOG_DEFAULT_ACCOUNT|GCP_IMPERSONATE_USER|GOOGLE" || true
-cat ~/.openclaw/openclaw.json 2>/dev/null | grep -i "google\|gmail\|gcp\|impersonate" || true
+cat /data/.openclaw/openclaw.json 2>/dev/null | grep -i "google\|gmail\|gcp\|impersonate" || true
 
 # Service account files in common locations
-ls ~/clawd/secrets/*google* ~/clawd/secrets/*gcp* ~/Downloads/*google*.json 2>/dev/null || true
+ls /data/openclaw/workspace/secrets/*google* /data/openclaw/workspace/secrets/*gcp* /data/downloads/*google*.json 2>/dev/null || true
 ```
 
 If detection shows Gmail or Workspace is already configured, tell the user exactly:
@@ -332,9 +332,9 @@ Check these locations in order:
 # Workspace root secrets
 cat [WORKSPACE_ROOT]/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
 # OpenClaw secrets
-cat ~/.openclaw/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
+cat /data/.openclaw/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
 # OpenClaw config
-grep -i "google\|gmail" ~/.openclaw/openclaw.json 2>/dev/null
+grep -i "google\|gmail" /data/.openclaw/openclaw.json 2>/dev/null
 # Shell environment
 printenv | grep -i "google\|gmail\|gws\|gcp"
 ```
@@ -375,11 +375,11 @@ Look for any of these keys: `GOOGLE_EMAIL`, `GOOGLE_USERNAME`, `GOOGLE_ACCOUNT`,
 **Either way - use the active browser tool (detected in browser hierarchy above):**
 
 - If `BROWSER_TOOL="agent-browser"`: agent-browser manages session persistence automatically via its own profile storage.
-- If `BROWSER_TOOL="playwright"`: use `launchPersistentContext` with session stored at `~/.openclaw/playwright-data/google-setup/`:
+- If `BROWSER_TOOL="playwright"`: use `launchPersistentContext` with session stored at `/data/.openclaw/playwright-data/google-setup/`:
 ```javascript
 const browser = await chromium.launchPersistentContext(
   path.join(os.homedir(), '.openclaw', 'playwright-data', 'google-setup'),
-  { headless: false }
+  { headless: true }
 );
 ```
 - If `BROWSER_TOOL="openclaw"`: use OpenClaw browser tool with its built-in session handling.
@@ -393,7 +393,7 @@ Session is saved regardless of tool - user only logs in once. Next run detects e
 **Check for existing session first:**
 ```bash
 # Check if a persistent browser session already exists
-ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "PLAYWRIGHT SESSION EXISTS" || true
+ls /data/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "PLAYWRIGHT SESSION EXISTS" || true
 agent-browser --session-name google-setup get url 2>/dev/null && echo "AGENT-BROWSER SESSION EXISTS" || true
 ```
 
@@ -744,7 +744,7 @@ CONTINUE IMMEDIATELY. Do not pause.
    agent-browser --session-name google-setup wait 3000
    ```
 
-   A .json file downloads automatically to ~/Downloads/.
+   A .json file downloads automatically to /data/downloads/.
 
    ### ERROR RECOVERY - Organization Policy Blocks Key Creation
 
@@ -825,8 +825,8 @@ CONTINUE IMMEDIATELY. Do not pause.
 7. DO NOT STOP OR PAUSE HERE. Move the key file immediately:
    ```bash
    mkdir -p [WORKSPACE_ROOT]/secrets
-   mv ~/Downloads/*-*.json [WORKSPACE_ROOT]/secrets/gcp-service-account.json 2>/dev/null || \
-   mv ~/Downloads/"$PROJECT_ID"-*.json [WORKSPACE_ROOT]/secrets/gcp-service-account.json
+   mv /data/downloads/*-*.json [WORKSPACE_ROOT]/secrets/gcp-service-account.json 2>/dev/null || \
+   mv /data/downloads/"$PROJECT_ID"-*.json [WORKSPACE_ROOT]/secrets/gcp-service-account.json
    chmod 600 [WORKSPACE_ROOT]/secrets/gcp-service-account.json
    ls -la [WORKSPACE_ROOT]/secrets/gcp-service-account.json
    ```
@@ -1175,7 +1175,7 @@ to access Gmail, Calendar, Drive, Docs, Sheets, and Contacts.
 
 2. If not installed, install it:
    ```bash
-   brew install steipete/tap/gogcli
+   apt-get install -y steipete/tap/gogcli
    ```
    If brew is not available:
    ```bash
@@ -1258,9 +1258,9 @@ Check these locations in order:
 # Workspace root secrets
 cat [WORKSPACE_ROOT]/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
 # OpenClaw secrets
-cat ~/.openclaw/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
+cat /data/.openclaw/secrets/.env 2>/dev/null | grep -i "google\|gmail\|gws\|gcp"
 # OpenClaw config
-grep -i "google\|gmail" ~/.openclaw/openclaw.json 2>/dev/null
+grep -i "google\|gmail" /data/.openclaw/openclaw.json 2>/dev/null
 # Shell environment
 printenv | grep -i "google\|gmail\|gws\|gcp"
 ```
@@ -1301,11 +1301,11 @@ Look for any of these keys: `GOOGLE_EMAIL`, `GOOGLE_USERNAME`, `GOOGLE_ACCOUNT`,
 **Either way - use the active browser tool (detected in browser hierarchy above):**
 
 - If `BROWSER_TOOL="agent-browser"`: agent-browser manages session persistence automatically.
-- If `BROWSER_TOOL="playwright"`: use `launchPersistentContext` with session stored at `~/.openclaw/playwright-data/google-setup/`:
+- If `BROWSER_TOOL="playwright"`: use `launchPersistentContext` with session stored at `/data/.openclaw/playwright-data/google-setup/`:
 ```javascript
 const browser = await chromium.launchPersistentContext(
   path.join(os.homedir(), '.openclaw', 'playwright-data', 'google-setup'),
-  { headless: false }
+  { headless: true }
 );
 ```
 - If `BROWSER_TOOL="openclaw"`: use OpenClaw browser tool with its built-in session handling.
@@ -1321,7 +1321,7 @@ Same as Step A1. Follow the exact same steps:
 **Check for existing session first:**
 ```bash
 # Check if a persistent browser session already exists
-ls ~/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "PLAYWRIGHT SESSION EXISTS" || true
+ls /data/.openclaw/playwright-data/google-setup/ 2>/dev/null && echo "PLAYWRIGHT SESSION EXISTS" || true
 agent-browser --session-name google-setup get url 2>/dev/null && echo "AGENT-BROWSER SESSION EXISTS" || true
 ```
 
@@ -1557,7 +1557,7 @@ CONTINUE IMMEDIATELY. Do not pause.
 9. Move the credentials file:
    ```bash
    mkdir -p [WORKSPACE_ROOT]/secrets
-   mv ~/Downloads/client_secret_*.json [WORKSPACE_ROOT]/secrets/google-oauth-credentials.json
+   mv /data/downloads/client_secret_*.json [WORKSPACE_ROOT]/secrets/google-oauth-credentials.json
    chmod 600 [WORKSPACE_ROOT]/secrets/google-oauth-credentials.json
    ```
 
@@ -1579,7 +1579,7 @@ CONTINUE IMMEDIATELY. Do not pause.
 
 2. If not installed:
    ```bash
-   brew install steipete/tap/gogcli
+   apt-get install -y steipete/tap/gogcli
    ```
 
 3. Add the Gmail account to GOG with browser OAuth flow:

@@ -17,7 +17,7 @@ full persona into context.
 ### Add the full persona library as a collection
 
 ```bash
-qmd collection add ~/Downloads/openclaw-master-files/coaching-personas/personas \
+qmd collection add /data/openclaw-master-files/coaching-personas/personas \
   --name coaching-personas \
   --mask "**/*.md"
 ```

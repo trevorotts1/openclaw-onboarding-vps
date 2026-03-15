@@ -10,13 +10,13 @@ If you are reading this file, the user has triggered onboarding by saying someth
 - "Start onboarding"
 - "Install the 29 skills"
 
-**Your task:** Install all 29 skills using the 5-Wave Parallel Orchestration below.
+**Your task:** Install all 29 skills using SEQUENTIAL INSTALLATION (01 through 29 in order).
 
 ### STEP 0: VERIFY TRIGGER AND CHECK CAPABILITY
 
 **0.1: Confirm AGENTS.md has ONBOARDING PENDING flag**
 ```bash
-grep "ONBOARDING PENDING" ~/clawd/AGENTS.md
+grep "ONBOARDING PENDING" /data/openclaw/workspace/AGENTS.md
 ```
 If found: Proceed with installation.  
 If NOT found: Stop and tell user: "I don't see an ONBOARDING PENDING flag in AGENTS.md. Please run the install script first: curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash"
@@ -24,7 +24,7 @@ If NOT found: Stop and tell user: "I don't see an ONBOARDING PENDING flag in AGE
 **0.2: Check for partial/resume state**
 ```bash
 cat ~/.openclaw/onboarding/.onboarding-status 2>/dev/null
-cat ~/Downloads/openclaw-master-files/OpenClaw\ Onboarding/.onboarding-status.json 2>/dev/null
+cat /data/openclaw-master-files/OpenClaw Onboarding/.onboarding-status.json 2>/dev/null
 ```
 If status files exist with skill markings (INSTALLED, ALREADY_INSTALLED, SKIPPED):  
 → Resume from first skill NOT marked complete. Do not reinstall completed skills.
@@ -34,11 +34,10 @@ Before starting Wave 2, verify you can spawn sub-agents:
 ```bash
 # Try to spawn a test sub-agent (this is a capability check, not actual install)
 ```
-If `sessions_spawn` works: Use 5-Wave Parallel Orchestration (Waves 2 and 4 use parallel sub-agents).  
-If `sessions_spawn` fails: Use Sequential Mode (install 01→29 one at a time).
+Use SEQUENTIAL INSTALLATION (01 through 29 in order). No parallel sub-agents on VPS.
 
 **0.4: Announce your strategy**
-Tell user: "Onboarding triggered. I will install 29 skills using [5-Wave Parallel / Sequential] strategy. Checking for existing installations..."
+Tell user: "Onboarding triggered. I will install 29 skills using SEQUENTIAL INSTALLATION (01 through 29 in order). Checking for existing installations..."
 
 ---
 
@@ -57,7 +56,7 @@ These 7 files are your AI's memory and identity. Keep them LEAN.
 
 **THE RULE:**
 - Core.md files: 10-25 lines maximum
-- Full documentation: Goes to ~/Downloads/openclaw-master-files/
+- Full documentation: Goes to /data/openclaw-master-files/
 - Never dump thousands of lines into core files
 - Always use pointers: "See full guide at: [path]"
 
@@ -410,20 +409,20 @@ Users need control over when configuration happens. They may want to review docu
 
 ### Step 1: Check for Existing Folders
 Search for existing master file folders:
-- `~/Downloads/openclaw-master-files/`
-- `~/Downloads/OpenClaw Master Files/`
-- `~/Downloads/master-documents/`
+- `/data/openclaw-master-files/`
+- `/data/openclaw-master-files/`
+- `/data/openclaw-master-files/`
 - `~/Documents/openclaw-master-files/`
 - Any folder containing both "openclaw" AND "master" in the name
 
 ### Step 2: Use Existing or Create
 - **If found:** Use that folder. Create skill subfolders inside it.
-- **If not found:** Create `~/Downloads/openclaw-master-files/`
+- **If not found:** Create `/data/openclaw-master-files/`
 
 ### Step 3: Create Skill Subfolders Inside
 All skill content goes inside the master files folder:
 ```
-~/Downloads/openclaw-master-files/
+/data/openclaw-master-files/
 ├── 03-agent-browser/
 ├── 04-superpowers/
 ├── 05-ghl-setup/
@@ -446,17 +445,17 @@ All skill content goes inside the master files folder:
 
 | Core File | Purpose | Location |
 |-----------|---------|----------|
-| AGENTS.md | Behavior rules, operating doctrine | `~/clawd/AGENTS.md` |
-| MEMORY.md | Persistent state, project status | `~/clawd/MEMORY.md` |
-| TOOLS.md | Tool setup, API credentials | `~/clawd/TOOLS.md` |
-| USER.md | User preferences, context | `~/clawd/USER.md` |
-| IDENTITY.md | Agent identity, persona | `~/clawd/IDENTITY.md` |
-| SOUL.md | Core values, philosophy | `~/clawd/SOUL.md` |
-| HEARTBEAT.md | Current priorities, active tasks | `~/clawd/HEARTBEAT.md` |
+| AGENTS.md | Behavior rules, operating doctrine | `/data/openclaw/workspace/AGENTS.md` |
+| MEMORY.md | Persistent state, project status | `/data/openclaw/workspace/MEMORY.md` |
+| TOOLS.md | Tool setup, API credentials | `/data/openclaw/workspace/TOOLS.md` |
+| USER.md | User preferences, context | `/data/openclaw/workspace/USER.md` |
+| IDENTITY.md | Agent identity, persona | `/data/openclaw/workspace/IDENTITY.md` |
+| SOUL.md | Core values, philosophy | `/data/openclaw/workspace/SOUL.md` |
+| HEARTBEAT.md | Current priorities, active tasks | `/data/openclaw/workspace/HEARTBEAT.md` |
 
 ### TYP Storage Rules
 - **Core files:** 10-25 line summaries ONLY, with pointers to deep files
-- **Deep files:** Complete, unabridged content in `~/Downloads/openclaw-master-files/`
+- **Deep files:** Complete, unabridged content in `/data/openclaw-master-files/`
 
 ### TYP Conflict Resolution
 | Scenario | Rule |
@@ -510,8 +509,8 @@ qmd status          # Verify completion
 | Collection | Contents | When Indexed |
 |------------|----------|--------------|
 | `clawd` | Workspace AGENTS.md, MEMORY.md, TOOLS.md, etc. | Every milestone |
-| `master-files` | `~/Downloads/openclaw-master-files/` | Every milestone |
-| `coaching-personas` | `~/Downloads/openclaw-master-files/coaching-personas/personas/` | After Skill 22 |
+| `master-files` | `/data/openclaw-master-files/` | Every milestone |
+| `coaching-personas` | `/data/openclaw-master-files/coaching-personas/personas/` | After Skill 22 |
 
 ### Process for Each Indexing
 
@@ -690,11 +689,11 @@ npx playwright install-deps chromium
 ```
 
 #### 3. Master files folder - use home directory, not Downloads
-`~/Downloads` may not exist on a Linux server. Use this location instead:
+`
 ```bash
 mkdir -p ~/openclaw-master-files
 ```
-When Start Here.md refers to `~/Downloads/openclaw-master-files`, use `~/openclaw-master-files` on Linux.
+On VPS, always use `/data/openclaw-master-files/`.
 
 #### 4. Replace `open` command with `xdg-open`
 Any skill that uses `open <file-or-url>` to open something should use `xdg-open` on Linux.
@@ -723,7 +722,7 @@ onboarding package work in both. No changes needed.
 | macOS | Linux replacement |
 |-------|-------------------|
 | `brew install X` | `sudo apt-get install -y X` |
-| `~/Downloads/` | `~/` (home directory) |
+| `~/Downloads/` | `/data/` (VPS persistent storage) |
 | `open <file>` | `xdg-open <file>` (skip if headless) |
 | Playwright headless: false | Playwright headless: true + --no-sandbox |
 | `uname -s` → Darwin | `uname -s` → Linux |
@@ -768,26 +767,26 @@ Check if the user already has a master files folder. It may not be named exactly
 the same on every machine. Look for any of these patterns:
 
 ```bash
-ls -d ~/Downloads/openclaw-master-files 2>/dev/null
-ls -d ~/Downloads/openclaw-master-docs 2>/dev/null
-ls -d ~/Downloads/OpenClaw\ Master\ Files 2>/dev/null
-ls -d ~/Downloads/master-files 2>/dev/null
+ls -d /data/openclaw-master-files 2>/dev/null
+ls -d /data/openclaw-master-files 2>/dev/null
+ls -d /data/openclaw-master-files 2>/dev/null
+ls -d /data/openclaw-master-files 2>/dev/null
 ls -d ~/Documents/openclaw-master-files 2>/dev/null
 ```
 
-If exactly one match is found: use it and continue. If multiple matches are found: ask the user which to use. If no match is found: create ~/Downloads/openclaw-master-files/ and continue.
+If exactly one match is found: use it and continue. If multiple matches are found: ask the user which to use. If no match is found: create /data/openclaw-master-files/ and continue.
 
 **If a folder exists:** Use it. Store that path. All skills will be extracted there.
 Do not create a second folder.
 
 **If no folder exists:** Create one:
 ```bash
-mkdir -p ~/Downloads/openclaw-master-files/
+mkdir -p /data/openclaw-master-files/
 ```
 
 **Store the path.** Every reference to the master files folder in this onboarding
 uses the path you found or created here. If the user's folder is called
-`~/Downloads/OpenClaw Master Docs` instead of `~/Downloads/openclaw-master-files`,
+`/data/openclaw-master-files` instead of `~/Downloads/openclaw-master-files` (already correct on this VPS install),
 use their path everywhere. Do not rename their folder.
 
 ### 4. Write permission check
@@ -816,7 +815,7 @@ Detect it:
 grep -o '"workspace"[[:space:]]*:[[:space:]]*"[^"]*"' ~/.openclaw/openclaw.json 2>/dev/null
 ```
 
-If not found in the config, check these common locations in order: ~/clawd, ~/openclaw, current directory.
+If not found in the config, check these common locations in order: /data/openclaw/workspace, /data/openclaw, current directory.
 Store the workspace root path - every reference to "workspace root" in this document uses this path.
 
 ### 7. Messaging channel detection
@@ -1186,13 +1185,9 @@ If any step in a skill's installation fails:
 
 ### EXECUTION STRATEGY (MANDATORY)
 
-**DEFAULT: Use the 5-Wave Parallel Orchestration documented above.**
+**DEFAULT: Use SEQUENTIAL INSTALLATION (01 through 29 in order). No parallel sub-agents on VPS.**
 
-1. **Wave 1** (Foundation): Run skills 01-03 sequentially in the main agent
-2. **Wave 2** (Pre-Persona): Spawn 4 parallel agents for skills 04-21
-3. **Wave 3** (Core System): Main agent installs skills 22-23 sequentially (NO sub-agents)
-4. **Wave 4** (Post-Workforce): Spawn 2 parallel agents for skills 24-29
-5. **Wave 5** (Final): Verify skill 15 and finalize
+Install all skills one at a time in numbered order. Skills 22 and 23 must be handled by the main orchestrator directly.
 
 **Sequential Dependencies (Never Parallelize These):**
 - Skill 05 (GHL Setup) must complete before Skill 06 (GHL Install Pages)
@@ -1431,543 +1426,103 @@ Skills 16 through 29 are imported or recreated skills. Many preserve upstream so
 
 ---
 
-## HOW TO EXECUTE PARALLEL ORCHESTRATION (For AI Agent)
+## HOW TO EXECUTE SEQUENTIAL INSTALLATION (VPS Mode)
 
-This section tells YOU (the AI agent) exactly how to run the 5-wave installation using `sessions_spawn`.
+**VPS installations use sequential mode ONLY. No parallel sub-agents. Install skills 01 through 29 one at a time.**
 
-### Before Starting: Check What Exists
+### Why Sequential on VPS
+Docker containers have limited resources and unreliable sub-agent spawning. Sequential installation is slower but never fails due to resource contention.
 
-**Check for already installed skills:**
-```bash
-ls -la ~/.openclaw/skills/ 2>/dev/null | grep -E "^d" | wc -l
-qmd status 2>/dev/null
+### Sequential Install Process
+
+For each skill from 01 to 29 (skip 13 - archived):
+
+1. Read ALL .md files in `/data/.openclaw/onboarding/[skill-folder]/`
+2. Execute all installation steps exactly as written
+3. Write status: `echo "SKILL-XX: INSTALLED" >> /data/.openclaw/onboarding/.onboarding-status`
+4. Report to user: "Skill XX of 29 complete. [Skill name] installed."
+5. Move to next skill immediately
+
+### Install Order
 ```
-
-**Check onboarding status file:**
-```bash
-cat ~/.openclaw/onboarding/.onboarding-status 2>/dev/null
+01 02 03 04 05 06 07 08 09 10 11 12 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
 ```
+(Skip 13 - archived)
 
-If skills are already installed, mark them as ALREADY_INSTALLED and skip.
+Skills 22 and 23 must be handled by the main orchestrator directly. Never delegate to sub-agents.
 
-### Sequential Mode vs Parallel Mode
-
-**Use PARALLEL mode if:**
-- `sessions_spawn` works (you can spawn sub-agents)
-- User hasn't requested sequential
-
-**Use SEQUENTIAL mode if:**
-- `sessions_spawn` fails or is unavailable
-- User explicitly requests sequential
-
----
-
-### PARALLEL MODE: Wave-by-Wave Execution
-
-#### WAVE 1: Foundation (Sequential - You Do These Directly)
-
-Install these 4 items yourself, one at a time:
-
-1. **Skill 01: Teach Yourself Protocol**
-   - Read ALL .md files in `~/.openclaw/onboarding/01-teach-yourself-protocol/`
-   - Execute installation steps
-   - Mark: `SKILL-01: INSTALLED` in `~/.openclaw/onboarding/.onboarding-status`
-   - Report: "Skill 01 complete"
-
-2. **Skill 02: Back Yourself Up Protocol**
-   - Read ALL .md files in `~/.openclaw/onboarding/02-back-yourself-up-protocol/`
-   - Execute installation steps
-   - Mark: `SKILL-02: INSTALLED`
-   - Report: "Skill 02 complete"
-
-3. **QMD Setup**
-   - Verify QMD is installed: `qmd --version`
-   - If not installed, install it
-   - Create collections: `qmd collection add ~/clawd --name clawd --mask "*.md"`
-   - Run initial indexing: `qmd update && qmd embed`
-   - Report: "QMD setup complete"
-
-4. **Skill 03: Agent Browser**
-   - Read ALL .md files in `~/.openclaw/onboarding/03-agent-browser/`
-   - Execute installation steps
-   - Mark: `SKILL-03: INSTALLED`
-   - Report: "Wave 1 complete: Foundation installed"
-
-**Dependencies:** Wave 1 must complete before Wave 2 starts.
-
----
-
-#### WAVE 2: Pre-Persona Tools (Parallel - Spawn 3 Install + 1 QC Sub-Agents)
-
-Spawn these sub-agents SIMULTANEOUSLY using `sessions_spawn`:
-
-**Agent A (Skills 04-07):**
-```
-sessions_spawn with task:
-"Install skills 04, 05, 06, 07 from ~/.openclaw/onboarding/. 
-For each skill: Read ALL .md files first, then execute installation steps exactly.
-Skills: 04-superpowers, 05-ghl-setup, 06-ghl-install-pages, 07-kie-setup.
-Report after each skill: 'Skill XX complete - QC passed' or 'Skill XX failed - [reason]'.
-Write status to ~/.openclaw/onboarding/.onboarding-status after each skill."
-label: "wave2-agent-a"
-```
-
-**Agent B (Skills 08-11):**
-```
-sessions_spawn with task:
-"Install skills 08, 09, 10, 11 from ~/.openclaw/onboarding/.
-For each skill: Read ALL .md files first, then execute installation steps exactly.
-Skills: 08-vercel-setup, 09-context7, 10-github-setup, 11-superdesign.
-Report after each skill: 'Skill XX complete - QC passed' or 'Skill XX failed - [reason]'.
-Write status to ~/.openclaw/onboarding/.onboarding-status after each skill."
-label: "wave2-agent-b"
-```
-
-**Agent C (Skills 12, 14-21):**
-```
-sessions_spawn with task:
-"Install skills 12, 14, 15, 16, 17, 18, 19, 20, 21 from ~/.openclaw/onboarding/.
-For each skill: Read ALL .md files first, then execute installation steps exactly.
-Skills: 12-openrouter-setup, 14-google-workspace-integration, 15-blackceo-team-management, 
-16-summarize-youtube, 17-self-improving-agent, 18-proactive-agent, 19-humanizer, 
-20-youtube-watcher, 21-tavily-search.
-NOTE: Skip skill 13 (Google Workspace Setup) - it is ARCHIVED.
-Report after each skill: 'Skill XX complete - QC passed' or 'Skill XX failed - [reason]'.
-Write status to ~/.openclaw/onboarding/.onboarding-status after each skill."
-label: "wave2-agent-c"
-```
-
-**Agent D (QC Monitor):**
-```
-sessions_spawn with task:
-"Monitor Wave 2 installation progress. Check ~/.openclaw/onboarding/.onboarding-status every 2 minutes.
-Verify each skill was installed correctly by checking:
-1. Status file shows INSTALLED for skill
-2. Skill folder has required files
-3. No FAILED statuses without remediation
-If you find FAILED skills, spawn a FIXER agent to remediate.
-Report: 'Wave 2 QC: X of Y skills complete, Z issues found [list]'"
-label: "wave2-qc-agent"
-```
-
-**After spawning all 4 agents:**
-- Use `subagents(action="list")` to monitor
-- Poll every 30 seconds for completion
-- Wait until all Wave 2 skills show INSTALLED in status file
-- Report: "Wave 2 complete: Pre-Persona tools installed"
-
-**Dependencies:** Wave 2 must complete before Wave 3 starts.
-
----
-
-#### WAVE 3: Core System (Sequential - YOU Install These, No Sub-Agents)
-
-**⚠️ CRITICAL: These skills MUST be installed by YOU (main orchestrator), NEVER by sub-agents.**
-
-1. **Skill 22: Book-to-Persona Coaching Leadership System**
-   - Read ALL .md files in `~/.openclaw/onboarding/22-book-to-persona-coaching-leadership-system/`
-   - Execute installation steps (this includes downloading and processing persona blueprints)
-   - Run QMD indexing for coaching-personas collection
-   - Mark: `SKILL-22: INSTALLED`
-   - Report: "Skill 22 complete"
-
-2. **Skill 23: AI Workforce Blueprint**
-   - **FIRST:** Notify user: "The AI Workforce Blueprint is installed. Let me know when you're ready for me to set up your company's back office."
-   - **WAIT** for user response
-   - **THEN:** Read ALL .md files in `~/.openclaw/onboarding/23-ai-workforce-blueprint/`
-   - Execute installation steps
-   - Mark: `SKILL-23: INSTALLED`
-   - Report: "Wave 3 complete: Core system ready"
-
-**Why no sub-agents?** These skills require complex configuration, user interaction, and high-stakes decisions that only the main orchestrator should handle.
-
----
-
-#### WAVE 4: Post-Workforce (Parallel - Spawn 2 Sub-Agents)
-
-Spawn these sub-agents SIMULTANEOUSLY:
-
-**Agent E (Skills 24-26):**
-```
-sessions_spawn with task:
-"Install skills 24, 25, 26 from ~/.openclaw/onboarding/.
-For each skill: Read ALL .md files first, then execute installation steps exactly.
-Skills: 24-storyboard-writer, 25-video-creator, 26-caption-creator.
-Report after each skill: 'Skill XX complete - QC passed' or 'Skill XX failed - [reason]'.
-Write status to ~/.openclaw/onboarding/.onboarding-status after each skill."
-label: "wave4-agent-e"
-```
-
-**Agent F (Skills 27-29):**
-```
-sessions_spawn with task:
-"Install skills 27, 28, 29 from ~/.openclaw/onboarding/.
-For each skill: Read ALL .md files first, then execute installation steps exactly.
-Skills: 27-video-editor, 28-cinematic-forge, 29-ghl-convert-and-flow.
-Report after each skill: 'Skill XX complete - QC passed' or 'Skill XX failed - [reason]'.
-Write status to ~/.openclaw/onboarding/.onboarding-status after each skill."
-label: "wave4-agent-f"
-```
-
-**After spawning both agents:**
-- Monitor via `subagents(action="list")`
-- Wait until all show INSTALLED
-- Report: "Wave 4 complete: All skills installed"
-
----
-
-#### WAVE 5: Final (Sequential - You Do These)
-
-1. **Verify Skill 15 is complete**
-   - Check status file shows `SKILL-15: INSTALLED`
-   - If not, install it now
-
-2. **Final QMD Indexing**
-   ```bash
-   qmd update
-   qmd embed
-   qmd status
-   ```
-
-3. **Remove ONBOARDING PENDING flag from AGENTS.md**
-   - Open `~/clawd/AGENTS.md`
-   - Delete the ONBOARDING PENDING block
-
-4. **Write ONBOARDING COMPLETE to MEMORY.md**
-   - Add entry: "OpenClaw onboarding completed on [date]. All 29 skills installed."
-
-5. **Report completion**
-   - "Wave 5 complete: Onboarding finished. All 29 skills installed."
-
----
-
-### SEQUENTIAL MODE (Fallback)
-
-If `sessions_spawn` doesn't work, install all 29 skills one at a time:
-
-```
-For skill in 01 02 03 04 05 06 07 08 09 10 11 12 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29:
-  Read ALL .md files in ~/.openclaw/onboarding/[skill-folder]/
-  Execute installation steps
-  Mark: SKILL-XX: INSTALLED
-  Report: "Skill XX complete"
-```
-
-Skip skill 13 (archived).
-
----
-
-### Status File Format
-
-Write to `~/.openclaw/onboarding/.onboarding-status` after EACH skill:
-
+### Status File
+Write to `/data/.openclaw/onboarding/.onboarding-status` after each skill:
 ```
 SKILL-01: INSTALLED
 SKILL-02: INSTALLED
-SKILL-03: INSTALLED
-SKILL-04: FAILED - missing API key
-SKILL-05: SKIPPED - user requested skip
+SKILL-03: ALREADY_INSTALLED
+SKILL-04: SKIPPED - missing API key
 ```
+Valid statuses: INSTALLED, ALREADY_INSTALLED, SKIPPED, FAILED
 
-Valid statuses: INSTALLED, ALREADY_INSTALLED, FAILED, SKIPPED
+### Resume Detection
+Before starting, check:
+```bash
+cat /data/.openclaw/onboarding/.onboarding-status 2>/dev/null
+```
+If file exists, resume from first skill not marked complete.
+
+### QMD Indexing (Sequential Milestones)
+- After QMD install (step 3): `qmd update && qmd embed`
+- After Skill 22: `qmd update && qmd embed`
+- After Skill 23: `qmd update && qmd embed`
+- After all 29 skills: `qmd update && qmd embed && qmd status`
 
 ---
 
-## PARALLEL INSTALLATION ORCHESTRATION
+## HOW TO EXECUTE SEQUENTIAL INSTALLATION (VPS Mode)
 
-The OpenClaw onboarding uses a **5-WAVE PARALLEL STRATEGY** to install 29 skills efficiently.
+**VPS installations use sequential mode ONLY. No parallel sub-agents. Install skills 01 through 29 one at a time.**
 
-### Conflict Prevention (IMPORTANT)
+### Why Sequential on VPS
+Docker containers have limited resources and unreliable sub-agent spawning. Sequential installation is slower but never fails due to resource contention.
 
-Before starting orchestration, check if install.sh is already running:
+### Sequential Install Process
 
+For each skill from 01 to 29 (skip 13 - archived):
+
+1. Read ALL .md files in `/data/.openclaw/onboarding/[skill-folder]/`
+2. Execute all installation steps exactly as written
+3. Write status to status file after each skill
+4. Report to user: "Skill XX of 29 complete. [Skill name] installed."
+5. Move to next skill immediately
+
+### Install Order
+```
+01 02 03 04 05 06 07 08 09 10 11 12 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
+```
+(Skip 13 - archived)
+
+Skills 22 and 23 must be handled by the main orchestrator directly. Never delegate to sub-agents.
+
+### Status File
+Write to `/data/.openclaw/onboarding/.onboarding-status` after each skill:
+```
+SKILL-01: INSTALLED
+SKILL-02: INSTALLED
+SKILL-03: ALREADY_INSTALLED
+SKILL-04: SKIPPED - missing API key
+```
+Valid statuses: INSTALLED, ALREADY_INSTALLED, SKIPPED, FAILED
+
+### Resume Detection
+Before starting, check:
 ```bash
-INSTALL_FLAG="$HOME/.openclaw/onboarding/.install-in-progress"
-
-if [ -f "$INSTALL_FLAG" ]; then
-  echo "Onboarding already in progress via install.sh. Start Here.md orchestration skipped."
-  return
-fi
-
-# Create flag file - Start Here.md now owns the orchestration
-touch "$INSTALL_FLAG"
-
-# Ensure flag is removed on exit
-trap 'rm -f "$INSTALL_FLAG"' EXIT
+cat /data/.openclaw/onboarding/.onboarding-status 2>/dev/null
 ```
+If file exists, resume from first skill not marked complete.
 
-**First one to run (install.sh OR Start Here.md) creates the flag and takes control. The second one sees the flag and skips to avoid conflicts.**
-
----
-
-### 5-WAVE PARALLEL STRATEGY
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         5-WAVE PARALLEL INSTALLATION                        │
-├─────────┬─────────────────┬─────────────────────────────────────────────────┤
-│  WAVE   │    AGENTS       │              SKILLS                             │
-├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 1  │ 1 (Sequential)  │ 01 TYP, 02 Backup, QMD, 03 Agent Browser        │
-│         │                 │ Foundation - must complete before Wave 2        │
-├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 2  │ 4 (Parallel)    │ Agent A: 04, 05, 06, 07 (install)               │
-│         │ 3 install + 1 QC│ Agent B: 08, 09, 10, 11 (install)               │
-│         │                 │ Agent C: 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 │
-│         │                 │         (install)                               │
-│         │                 │ Agent D: QC Agent (verification)                │
-│         │                 │ Pre-Persona tools - all 4 run simultaneously    │
-├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 3  │ 1 (Sequential)  │ 22 Book-to-Persona, 23 AI Workforce Blueprint   │
-│         │                 │ CORE SYSTEM - Main orchestrator ONLY            │
-├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 4  │ 2 (Parallel)    │ Agent E: 24, 25, 26                             │
-│         │                 │ Agent F: 27, 28, 29                             │
-│         │                 │ Post-Workforce tools                            │
-├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 5  │ 1 (Sequential)  │ 15 BlackCEO Team Management (verification)      │
-│         │                 │ Final verification and QMD indexing             │
-└─────────┴─────────────────┴─────────────────────────────────────────────────┘
-```
-
----
-
-### Agent Spawning Commands
-
-Use these commands to spawn sub-agents for parallel installation:
-
-#### Spawn a Single Skill Agent
-```bash
-openclaw agent spawn \
-  --task "Install skill 04 from ~/.openclaw/onboarding/04-superpowers. Read ALL .md files first, then execute. Report: 'Skill 04 complete - QC passed' or 'Skill 04 failed - [reason]'." \
-  --label "skill-04"
-```
-
-#### Spawn Wave 2 - Agent A (Skills 04-07)
-```bash
-for skill in "04-superpowers" "05-ghl-setup" "06-ghl-install-pages" "07-kie-setup"; do
-  num=${skill%%-*}
-  openclaw agent spawn \
-    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
-    --label "skill-$num" &
-done
-wait
-```
-
-#### Spawn Wave 2 - Agent B (Skills 08-11)
-```bash
-for skill in "08-vercel-setup" "09-context7" "10-github-setup" "11-superdesign"; do
-  num=${skill%%-*}
-  openclaw agent spawn \
-    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
-    --label "skill-$num" &
-done
-wait
-```
-
-#### Spawn Wave 2 - Agent C (Skills 12-21)
-```bash
-for skill in "12-openrouter-setup" "13-google-workspace-setup" "14-google-workspace-integration" "15-blackceo-team-management" "16-summarize-youtube" "17-self-improving-agent" "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
-  num=${skill%%-*}
-  openclaw agent spawn \
-    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
-    --label "skill-$num" &
-done
-wait
-```
-
-#### Spawn Wave 2 - Agent D (Skills 18-21)
-```bash
-for skill in "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
-  num=${skill%%-*}
-  openclaw agent spawn \
-    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
-    --label "skill-$num" &
-done
-wait
-```
-
-#### Spawn Wave 4 - Agent E (Skills 24-26)
-```bash
-for skill in "24-storyboard-writer" "25-video-creator" "26-caption-creator"; do
-  num=${skill%%-*}
-  openclaw agent spawn \
-    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
-    --label "skill-$num" &
-done
-wait
-```
-
-#### Spawn Wave 4 - Agent F (Skills 27-29)
-```bash
-for skill in "27-video-editor" "28-cinematic-forge" "29-ghl-convert-and-flow"; do
-  num=${skill%%-*}
-  openclaw agent spawn \
-    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
-    --label "skill-$num" &
-done
-wait
-```
-
----
-
-### Real-Time Progress Tracking
-
-Progress is tracked in a JSON file:
-
-```bash
-PROGRESS_FILE="$HOME/.openclaw/onboarding/.install-progress"
-
-# Read current progress
-cat "$PROGRESS_FILE" | jq .
-```
-
-**Progress File Format:**
-```json
-{
-  "wave": 2,
-  "total_waves": 5,
-  "skills_completed": 15,
-  "total_skills": 29,
-  "status": "Wave 2 in progress - Agent C completing",
-  "last_update": "2026-03-13 09:15:32"
-}
-```
-
-**Update progress after each skill:**
-```bash
-# After skill completes, update the count
-current_completed=$(cat "$PROGRESS_FILE" | jq -r '.skills_completed')
-new_completed=$((current_completed + 1))
-
-echo "{\"wave\":2,\"total_waves\":5,\"skills_completed\":$new_completed,\"total_skills\":29,\"status\":\"Skill 15 complete\"}" > "$PROGRESS_FILE"
-```
-
-**Report progress to user:**
-```bash
-report_progress() {
-  local wave="$1"
-  local message="$2"
-  echo "[Wave $wave/5] $message"
-  
-  # Also send to messaging channel if available
-  openclaw agent --message "Onboarding progress: Wave $wave/5 - $message" --deliver 2>/dev/null || true
-}
-```
-
----
-
-### QC Checklist for Each Skill
-
-Every sub-agent MUST run this QC checklist after installation:
-
-```bash
-qc_skill() {
-  local skill_num="$1"
-  local skill_folder="$2"
-  local ONBOARDING_DIR="$HOME/.openclaw/onboarding"
-  
-  echo "Running QC for Skill $skill_num..."
-  
-  # 1. Check skill folder exists
-  if [ ! -d "$ONBOARDING_DIR/$skill_folder" ]; then
-    echo "FAIL: Skill folder not found"
-    return 1
-  fi
-  
-  # 2. Check SKILL.md exists
-  if [ ! -f "$ONBOARDING_DIR/$skill_folder/SKILL.md" ]; then
-    echo "FAIL: SKILL.md missing"
-    return 1
-  fi
-  
-  # 3. Check all .md files were read (verification)
-  md_count=$(find "$ONBOARDING_DIR/$skill_folder" -name "*.md" | wc -l)
-  if [ "$md_count" -eq 0 ]; then
-    echo "FAIL: No .md files found"
-    return 1
-  fi
-  
-  # 4. Verify success criteria from SKILL.md
-  # (Read SKILL.md and check each criterion)
-  
-  # 5. Check for .skill file (if applicable)
-  local skill_file="$ONBOARDING_DIR/$skill_folder/${skill_folder#*-}.skill"
-  if [ -f "$skill_file" ]; then
-    echo "  ✓ Skill package present"
-  fi
-  
-  echo "✓ Skill $skill_num QC PASSED"
-  return 0
-}
-```
-
-**Required QC Reporting Format:**
-- **PASS:** `"Skill X complete - QC passed"`
-- **FAIL:** `"Skill X failed - [specific reason]"`
-
----
-
-### Wave Completion Waiting
-
-Wait for all agents in a wave to complete:
-
-```bash
-wait_for_wave() {
-  local wave="$1"
-  local expected_skills="$2"
-  local timeout_minutes="${3:-30}"
-  local PROGRESS_FILE="$HOME/.openclaw/onboarding/.install-progress"
-  
-  echo "Waiting for Wave $wave completion..."
-  
-  local start_time=$(date +%s)
-  local timeout_seconds=$((timeout_minutes * 60))
-  
-  while true; do
-    local current_time=$(date +%s)
-    local elapsed=$((current_time - start_time))
-    
-    if [ $elapsed -gt $timeout_seconds ]; then
-      echo "WARNING: Wave $wave timeout"
-      return 1
-    fi
-    
-    # Check progress
-    local completed=$(cat "$PROGRESS_FILE" 2>/dev/null | jq -r '.skills_completed' || echo "0")
-    
-    if [ "$completed" -ge "$expected_skills" ]; then
-      echo "Wave $wave complete: $completed/$expected_skills skills"
-      return 0
-    fi
-    
-    sleep 10
-  done
-}
-```
-
----
-
-### Critical Rules for Parallel Installation
-
-1. **MAXIMUM 4 SUB-AGENTS AT ONCE** - Never spawn more than 4 parallel agents
-2. **SEQUENTIAL WAVES** - Wave N must signal completion before Wave N+1 starts
-3. **MAIN ORCHESTRATOR ONLY** - Skills 22 and 23 MUST be installed by main agent, NEVER sub-agents
-4. **QC AFTER EACH SKILL** - Not just at wave end - every skill gets QC'd
-5. **REAL-TIME REPORTING** - Update progress file and notify after EACH skill
-6. **FAILURE HANDLING** - If a skill fails, log it but continue (optional skills) or stop (critical skills)
-
-### Critical Skills (Cannot Skip)
-- Skill 01: Teach Yourself Protocol
-- Skill 02: Back Yourself Up Protocol  
-- Skill 03: Agent Browser
-- Skill 22: Book-to-Persona
-- Skill 23: AI Workforce Blueprint
-
-### Optional Skills (Can Skip on Failure)
-- All platform-specific skills (GHL, Google Workspace, Vercel, etc.) if missing API keys
-
----
+### QMD Indexing (Sequential Milestones)
+- After QMD install (step 3): `qmd update && qmd embed`
+- After Skill 22: `qmd update && qmd embed`
+- After Skill 23: `qmd update && qmd embed`
+- After all 29 skills: `qmd update && qmd embed && qmd status`
 
 ## AUTO-START RULE - READ THIS BEFORE INSTALLING ANYTHING
 

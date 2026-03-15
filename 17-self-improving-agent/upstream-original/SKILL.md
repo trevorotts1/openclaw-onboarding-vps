@@ -38,7 +38,7 @@ clawdhub install self-improving-agent
 
 **Manual:**
 ```bash
-git clone https://github.com/peterskoett/self-improving-agent.git ~/.openclaw/skills/self-improving-agent
+git clone https://github.com/peterskoett/self-improving-agent.git /data/.openclaw/skills/self-improving-agent
 ```
 
 Remade for openclaw from original repo : https://github.com/pskoett/pskoett-ai-skills - https://github.com/pskoett/pskoett-ai-skills/tree/main/skills/self-improvement
@@ -48,7 +48,7 @@ Remade for openclaw from original repo : https://github.com/pskoett/pskoett-ai-s
 OpenClaw injects these files into every session:
 
 ```
-~/.openclaw/workspace/
+/data/.openclaw/workspace/
 ├── AGENTS.md          # Multi-agent workflows, delegation patterns
 ├── SOUL.md            # Behavioral guidelines, personality, principles
 ├── TOOLS.md           # Tool capabilities, integration gotchas
@@ -64,7 +64,7 @@ OpenClaw injects these files into every session:
 ### Create Learning Files
 
 ```bash
-mkdir -p ~/.openclaw/workspace/.learnings
+mkdir -p /data/.openclaw/workspace/.learnings
 ```
 
 Then create the log files (or copy from `assets/`):
@@ -97,7 +97,7 @@ For automatic reminders at session start:
 
 ```bash
 # Copy hook to OpenClaw hooks directory
-cp -r hooks/openclaw ~/.openclaw/hooks/self-improvement
+cp -r hooks/openclaw /data/.openclaw/hooks/self-improvement
 
 # Enable it
 openclaw hooks enable self-improvement

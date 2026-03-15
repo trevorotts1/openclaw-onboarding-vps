@@ -3,14 +3,14 @@
 ## Part 1: Config Backup (Before Every Config Edit)
 
 ### When This Applies
-Every single time you edit ~/.openclaw/openclaw.json. No exceptions. Not for typos.
+Every single time you edit /data/.openclaw/openclaw.json. No exceptions. Not for typos.
 Not for one model. Not for a temperature change. Every edit, every time.
 
 ### Process
-1. Find the backup folder in ~/Downloads/ (search for openclaw + backup)
+1. Find the backup folder in /data/downloads/ (search for openclaw + backup)
 2. Create backup:
    ```bash
-   cp ~/.openclaw/openclaw.json "[BACKUP_FOLDER]/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
+   cp /data/.openclaw/openclaw.json "[BACKUP_FOLDER]/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
    ```
 3. Verify backup exists and is not 0 bytes
 4. Tell the user what you are about to change and why
@@ -35,11 +35,11 @@ edit the config until I can create a valid backup." Fix the backup problem first
 
 | Item | Location |
 |------|----------|
-| Main config | ~/.openclaw/openclaw.json |
+| Main config | /data/.openclaw/openclaw.json |
 | Workspace .md files | AGENTS.md, TOOLS.md, MEMORY.md, IDENTITY.md, USER.md, SOUL.md, HEARTBEAT.md |
 | Memory logs | memory/*.md |
-| Secrets | ~/clawd/secrets/.env (if exists) |
-| Installed skills | ~/.openclaw/skills/ |
+| Secrets | /data/openclaw/workspace/secrets/.env (if exists) |
+| Installed skills | /data/.openclaw/skills/ |
 | Cron jobs | openclaw cron list (export) |
 
 ### Process
@@ -64,8 +64,8 @@ User says: "Back yourself up", "Run a full backup", "Create a full instance back
 
 The config file is always:
 ```
-~/.openclaw/openclaw.json
+/data/.openclaw/openclaw.json
 ```
 
 NOT clawdbot.json. NOT config.json. NOT any other file. If you are unsure, it is
-~/.openclaw/openclaw.json.
+/data/.openclaw/openclaw.json.

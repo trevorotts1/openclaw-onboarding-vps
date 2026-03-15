@@ -7,4 +7,4 @@
 "Apply only relevant core updates for self-improving-agent from CORE_UPDATES.md."
 
 ## Example 3: Install verify
-"Install self-improving-agent into ~/.openclaw/skills/self-improving-agent and verify SKILL.md exists."
+"Install self-improving-agent into /data/.openclaw/skills/self-improving-agent and verify SKILL.md exists."

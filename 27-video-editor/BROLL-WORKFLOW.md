@@ -48,7 +48,7 @@ openclaw skill install video-editor.skill
 The client gives you a video link. **You download it:**
 
 ```bash
-~/.openclaw/skills/video-editor/scripts/download.sh \
+/data/.openclaw/skills/video-editor/scripts/download.sh \
   --url "[VIDEO_URL]" \
   --output original_video.mp4
 ```
@@ -62,7 +62,7 @@ The client gives you a video link. **You download it:**
 **Extract the entire audio track - this becomes the voiceover:**
 
 ```bash
-~/.openclaw/skills/video-editor/scripts/extract-audio.sh \
+/data/.openclaw/skills/video-editor/scripts/extract-audio.sh \
   --input original_video.mp4 \
   --output full_voiceover.aac
 ```
@@ -103,21 +103,21 @@ whisper full_voiceover.aac --model medium --output_format json --output_dir /tmp
 
 ```bash
 # Segment 1: Beginning (adjust timestamps based on content)
-~/.openclaw/skills/video-editor/scripts/cut.sh \
+/data/.openclaw/skills/video-editor/scripts/cut.sh \
   --input original_video.mp4 \
   --start 00:00:00 \
   --duration 8 \
   --output person_beginning.mp4
 
 # Segment 2: Middle (find best moment from transcript)
-~/.openclaw/skills/video-editor/scripts/cut.sh \
+/data/.openclaw/skills/video-editor/scripts/cut.sh \
   --input original_video.mp4 \
   --start 00:00:45 \
   --duration 8 \
   --output person_middle.mp4
 
 # Segment 3: End
-~/.openclaw/skills/video-editor/scripts/cut.sh \
+/data/.openclaw/skills/video-editor/scripts/cut.sh \
   --input original_video.mp4 \
   --start 00:01:50 \
   --duration 10 \
@@ -238,7 +238,7 @@ ffmpeg -f concat -safe 0 -i concat_list.txt -i full_voiceover.aac \
 
 **Add captions:**
 ```bash
-~/.openclaw/skills/video-editor/scripts/caption.sh \
+/data/.openclaw/skills/video-editor/scripts/caption.sh \
   --input client_assembled.mp4 \
   --output client_with_captions.mp4
 ```
@@ -252,13 +252,13 @@ Use MoviePy for crossfades if needed for smoother flow.
 
 ```bash
 # For TikTok/Reels (9:16 vertical)
-~/.openclaw/skills/video-editor/scripts/resize.sh \
+/data/.openclaw/skills/video-editor/scripts/resize.sh \
   --input client_with_captions.mp4 \
   --platform tiktok \
   --output client_final_tiktok.mp4
 
 # For YouTube/LinkedIn (16:9)
-~/.openclaw/skills/video-editor/scripts/resize.sh \
+/data/.openclaw/skills/video-editor/scripts/resize.sh \
   --input client_with_captions.mp4 \
   --platform youtube \
   --output client_final_youtube.mp4
@@ -356,10 +356,10 @@ Adjust ratios based on content and preference.
 
 ```bash
 # 1. Download
-~/.openclaw/skills/video-editor/scripts/download.sh --url "URL" --output original.mp4
+/data/.openclaw/skills/video-editor/scripts/download.sh --url "URL" --output original.mp4
 
 # 2. Extract full audio for voiceover
-~/.openclaw/skills/video-editor/scripts/extract-audio.sh --input original.mp4 --output voiceover.aac
+/data/.openclaw/skills/video-editor/scripts/extract-audio.sh --input original.mp4 --output voiceover.aac
 
 # 3. Transcribe for content analysis
 whisper voiceover.aac --model medium --output_format json --output_dir /tmp
@@ -367,9 +367,9 @@ whisper voiceover.aac --model medium --output_format json --output_dir /tmp
 # YOU: Analyze transcript, determine 3 person segments
 
 # 4. Extract person segments (adjust timestamps)
-~/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:00:00 --duration 8 --output person_beginning.mp4
-~/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:00:45 --duration 8 --output person_middle.mp4
-~/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:01:50 --duration 10 --output person_end.mp4
+/data/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:00:00 --duration 8 --output person_beginning.mp4
+/data/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:00:45 --duration 8 --output person_middle.mp4
+/data/.openclaw/skills/video-editor/scripts/cut.sh --input original.mp4 --start 00:01:50 --duration 10 --output person_end.mp4
 
 # YOU: Create B-roll storyboard from transcript
 
@@ -380,10 +380,10 @@ whisper voiceover.aac --model medium --output_format json --output_dir /tmp
 # Apply voiceover.aac as continuous audio
 
 # 7. Add captions
-~/.openclaw/skills/video-editor/scripts/caption.sh --input assembled.mp4 --output captioned.mp4
+/data/.openclaw/skills/video-editor/scripts/caption.sh --input assembled.mp4 --output captioned.mp4
 
 # 8. Resize for platform
-~/.openclaw/skills/video-editor/scripts/resize.sh --input captioned.mp4 --platform tiktok --output final.mp4
+/data/.openclaw/skills/video-editor/scripts/resize.sh --input captioned.mp4 --platform tiktok --output final.mp4
 
 ## REMEMBER THE STRUCTURE
 

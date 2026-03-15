@@ -88,8 +88,8 @@ Step 4: Create a Key for the Service Account
 Step 5: Move the Key to Your Secrets Folder
 
 
-mv ~/Downloads/your-project-*.json ~/clawd/secrets/gcp-service-account.json
-chmod 600 ~/clawd/secrets/gcp-service-account.json
+mv /data/downloads/your-project-*.json /data/openclaw/workspace/secrets/gcp-service-account.json
+chmod 600 /data/openclaw/workspace/secrets/gcp-service-account.json
 
 
 Step 6: Enable Domain-Wide Delegation (Google Workspace only)
@@ -120,7 +120,7 @@ https://www.googleapis.com/auth/contacts.readonly
 
 Step 7: Configure OpenClaw
 
-Add these to your secrets file (`~/clawd/secrets/.env`):
+Add these to your secrets file (`/data/openclaw/workspace/secrets/.env`):
 
 env
 GCP_PROJECT_ID=your-project-id
@@ -129,7 +129,7 @@ GCP_IMPERSONATE_USER=your-email@yourdomain.com
 
 
 Then tell your AI:
-> "My GCP service account is at `~/clawd/secrets/gcp-service-account.json` and it impersonates `your-email@yourdomain.com`"
+> "My GCP service account is at `/data/openclaw/workspace/secrets/gcp-service-account.json` and it impersonates `your-email@yourdomain.com`"
 
 
 

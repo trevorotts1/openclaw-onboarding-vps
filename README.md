@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/mai
 
 What it does:
 1. Downloads the latest onboarding package
-2. Copies skills into `~/.openclaw/skills/`
+2. Copies skills into `/data/.openclaw/skills/`
 3. Installs QMD early (required by skill 22 and skill 23)
 4. Asks for missing API keys with a skip option (does not block optional skills)
 5. Prints the next step
@@ -31,7 +31,7 @@ What it does:
 
 Open:
 
-- `~/.openclaw/skills/Start Here.md`
+- `/data/.openclaw/skills/Start Here.md`
 
 That file is the master instruction file. It contains:
 - prerequisites

@@ -787,4 +787,4 @@ Can blend with planning personas only after first launch is secured. Never blend
 ```
 
 Saved to:  
-`~/Downloads/openclaw-master-files/coaching-personas/personas/robbins-five-second-rule/persona-blueprint.md`
+`/data/openclaw-master-files/coaching-personas/personas/robbins-five-second-rule/persona-blueprint.md`

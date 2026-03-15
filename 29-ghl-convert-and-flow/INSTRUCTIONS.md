@@ -197,4 +197,4 @@ Bad:
 curl -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6..." ...
 ```
 
-Store the key in `~/clawd/secrets/.env` or as a shell environment variable only.
+Store the key in `/data/openclaw/workspace/secrets/.env` or as a shell environment variable only.

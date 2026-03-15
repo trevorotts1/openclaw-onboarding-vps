@@ -50,7 +50,7 @@ curl --version
 If FFmpeg is not installed:
 ```bash
 # macOS
-brew install ffmpeg
+apt-get install -y ffmpeg
 
 # Ubuntu/Debian
 sudo apt install ffmpeg
@@ -58,7 +58,7 @@ sudo apt install ffmpeg
 
 ### 3. Required API Access
 
-The agent needs access to these services. API keys should be stored in the agent's secrets/environment file (e.g., `~/.openclaw/secrets/.env (or ~/clawd/secrets/.env)` or equivalent):
+The agent needs access to these services. API keys should be stored in the agent's secrets/environment file (e.g., `/data/.openclaw/secrets/.env (or /data/openclaw/workspace/secrets/.env)` or equivalent):
 
 | Service | What For | How to Get |
 |---------|----------|------------|
@@ -88,12 +88,12 @@ These models must be available on the KIE.ai account:
 2. Run:
 
 ```bash
-ls -la ~/.openclaw/skills/cinematic-forge/
+ls -la /data/.openclaw/skills/cinematic-forge/
 ```
 
 3. You should see files like `SKILL.md`, `INSTALL.md`, `README.md`, and `CORE_UPDATES.md`.
 
-If you do not see that folder, re-run the onboarding installer for this package so the skill is copied into `~/.openclaw/skills/`.
+If you do not see that folder, re-run the onboarding installer for this package so the skill is copied into `/data/.openclaw/skills/`.
 
 ### Step 2: Teach the agent the skill
 
@@ -101,7 +101,7 @@ If you do not see that folder, re-run the onboarding installer for this package 
 
 > Teach yourself this skill
 
-2. Paste the full contents of `~/.openclaw/skills/cinematic-forge/SKILL.md`.
+2. Paste the full contents of `/data/.openclaw/skills/cinematic-forge/SKILL.md`.
 
 The agent should follow Teach Yourself Protocol (TYP): discover all `.md` files in the folder, read them, then summarize pointers into the allowed core files.
 

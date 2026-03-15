@@ -810,4 +810,4 @@ If conflict between WHY persona and tactical optimization persona, WHY persona l
 ```
 
 Saved to:  
-`~/Downloads/openclaw-master-files/coaching-personas/personas/sinek-start-with-why/persona-blueprint.md`
+`/data/openclaw-master-files/coaching-personas/personas/sinek-start-with-why/persona-blueprint.md`

@@ -36,7 +36,7 @@ DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -46,10 +46,10 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
-   Example: ~/Downloads/OpenClaw Master Files/kie-ai-reference.md
+   Example: /data/downloads/OpenClaw Master Files/kie-ai-reference.md
 
 2. DO NOT DUMP FULL CONTENT INTO CORE .MD FILES
    AGENTS.md, TOOLS.md, and MEMORY.md must stay lean.
@@ -124,7 +124,7 @@ STEP 1: Get Your API Key
 5. Add credits (pay-as-you-go)
 
 STEP 2: Add to OpenClaw Config
-nano ~/.openclaw/openclaw.json
+nano /data/.openclaw/openclaw.json
 
 Add under "env" section:
 {

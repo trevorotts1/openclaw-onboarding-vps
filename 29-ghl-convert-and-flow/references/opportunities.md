@@ -137,7 +137,7 @@ Body: { followers: ["userId1"] }
 ## Common Workflow
 
 ```bash
-source ~/clawd/secrets/.env
+source /data/openclaw/workspace/secrets/.env
 
 # 1. Get pipelines and stages
 curl -s \

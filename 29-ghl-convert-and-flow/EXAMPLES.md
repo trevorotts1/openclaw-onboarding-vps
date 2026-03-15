@@ -386,7 +386,7 @@ Required scope: `workflows.readonly`
 # Check that env vars are set before running anything
 if [ -z "$GHL_API_KEY" ] || [ -z "$GHL_LOCATION_ID" ]; then
   echo "ERROR: GHL_API_KEY and GHL_LOCATION_ID must be set."
-  echo "Add them to ~/clawd/secrets/.env or export them in your shell."
+  echo "Add them to /data/openclaw/workspace/secrets/.env or export them in your shell."
   exit 1
 fi
 

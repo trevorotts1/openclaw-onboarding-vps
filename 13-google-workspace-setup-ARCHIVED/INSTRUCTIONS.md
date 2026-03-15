@@ -127,7 +127,7 @@ If you ever want to cut off your AI's access to your Google Workspace:
 
 You can also delete the JSON key file from your computer:
 ```bash
-rm ~/clawd/secrets/gcp-service-account.json
+rm /data/openclaw/workspace/secrets/gcp-service-account.json
 ```
 
 ---

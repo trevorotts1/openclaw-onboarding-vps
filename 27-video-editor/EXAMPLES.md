@@ -9,7 +9,7 @@ cd video-editor
 If you installed the skill into OpenClaw, the scripts live at:
 
 ```bash
-~/.openclaw/skills/video-editor/scripts/
+/data/.openclaw/skills/video-editor/scripts/
 ```
 
 ## Example 1: Download a video from YouTube

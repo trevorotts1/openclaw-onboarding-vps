@@ -40,7 +40,7 @@ Conflict rule:
 
 1. Install FFmpeg and ImageMagick:
    ```bash
-   brew install ffmpeg imagemagick
+   apt-get install -y ffmpeg imagemagick
    ```
 2. Confirm FFmpeg works:
    ```bash

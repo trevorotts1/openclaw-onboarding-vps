@@ -7,4 +7,4 @@
 "Apply only relevant core updates for youtube-watcher from CORE_UPDATES.md."
 
 ## Example 3: Install verify
-"Install youtube-watcher into ~/.openclaw/skills/youtube-watcher and verify SKILL.md exists."
+"Install youtube-watcher into /data/.openclaw/skills/youtube-watcher and verify SKILL.md exists."

@@ -44,7 +44,7 @@ touches. When in doubt: skill docs win.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -54,7 +54,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -131,12 +131,12 @@ Before doing anything else, identify where secrets are stored on this machine.
 Run this check and store the result in $SECRETS_FILE for use in later steps:
 
   SECRETS_FILE=""
-  for f in ~/clawd/secrets/.env ~/.openclaw/.env ~/.env ~/secrets/.env; do
+  for f in /data/openclaw/workspace/secrets/.env /data/.openclaw/.env ~/.env ~/secrets/.env; do
     if [ -f "$f" ]; then SECRETS_FILE="$f"; break; fi
   done
   if [ -z "$SECRETS_FILE" ]; then
-    SECRETS_FILE=~/clawd/secrets/.env
-    mkdir -p ~/clawd/secrets
+    SECRETS_FILE=/data/openclaw/workspace/secrets/.env
+    mkdir -p /data/openclaw/workspace/secrets
   fi
   echo "Secrets file: $SECRETS_FILE"
 

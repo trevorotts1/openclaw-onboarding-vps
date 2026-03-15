@@ -36,7 +36,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -46,7 +46,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -168,7 +168,7 @@ GHL login credentials must NEVER be hardcoded in scripts or saved in code reposi
 
 ```bash
 # Check if GHL_EMAIL and GHL_PASSWORD already exist
-grep -E "GHL_EMAIL|GHL_PASSWORD" ~/clawd/secrets/.env 2>/dev/null
+grep -E "GHL_EMAIL|GHL_PASSWORD" /data/openclaw/workspace/secrets/.env 2>/dev/null
 ```
 
 **Decision tree:**
@@ -185,7 +185,7 @@ grep -E "GHL_EMAIL|GHL_PASSWORD" ~/clawd/secrets/.env 2>/dev/null
 
 If credentials need to be added, store them in the workspace secrets file:
 ```bash
-nano ~/clawd/secrets/.env
+nano /data/openclaw/workspace/secrets/.env
 ```
 
 Add these two lines (replace with actual email and password):
@@ -217,8 +217,8 @@ Required settings:
 Use this browser launch configuration:
 
 # PERSISTENT SESSION - user logs in once, session saved automatically
-# Session stored at: ~/.openclaw/playwright-data/ghl-install-pages/
-# To reset and re-login: rm -rf ~/.openclaw/playwright-data/ghl-install-pages/
+# Session stored at: /data/.openclaw/playwright-data/ghl-install-pages/
+# To reset and re-login: rm -rf /data/.openclaw/playwright-data/ghl-install-pages/
 
 ```python
 import os
@@ -226,7 +226,7 @@ from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
     browser = p.chromium.launch_persistent_context(
-        user_data_dir=os.path.expanduser("~/.openclaw/playwright-data/ghl-install-pages"),
+        user_data_dir=os.path.expanduser("/data/.openclaw/playwright-data/ghl-install-pages"),
         headless=False,
         viewport={"width": 1440, "height": 900},
         args=[
@@ -330,11 +330,11 @@ Follow TYP rules - only add summaries and file path references.
 - Always send a deployment report after completing
 
 **Add to TOOLS.md:**
-- Full guide location: ~/Downloads/[master-files-folder]/ghl-install-pages-full.md
+- Full guide location: /data/downloads/[master-files-folder]/ghl-install-pages-full.md
 - Viewport minimum: 1440x900
 - Builder loads inside nested iframes - use get_builder_frame() to switch context
 - Every selector has fallback chains - use find_element_with_fallback()
-- Credential location: ~/clawd/secrets/.env
+- Credential location: /data/openclaw/workspace/secrets/.env
 
 **Add to MEMORY.md:**
 - GHL page deployment skill has been learned

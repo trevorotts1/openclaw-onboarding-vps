@@ -812,4 +812,4 @@ Can blend with domain personas (sales ops, CS, leadership) only after Magic Word
 ```
 
 Saved to:  
-`~/Downloads/openclaw-master-files/coaching-personas/personas/jones-exactly-what-to-say/persona-blueprint.md`
+`/data/openclaw-master-files/coaching-personas/personas/jones-exactly-what-to-say/persona-blueprint.md`

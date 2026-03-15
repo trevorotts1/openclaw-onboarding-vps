@@ -42,7 +42,7 @@ Add:
 
 ```
 ## KIE.ai API Setup - Installed [DATE]
-- API key in ~/clawd/secrets/.env as KIE_API_KEY
+- API key in /data/openclaw/workspace/secrets/.env as KIE_API_KEY
 - 176K char reference doc with all endpoints, params, pricing
 - Full reference: [MASTER_FILES_FOLDER]/OpenClaw Onboarding/07-kie-setup/kie-setup-full.md
 ```

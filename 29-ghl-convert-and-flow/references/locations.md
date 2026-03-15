@@ -235,7 +235,7 @@ Returns list of valid timezone strings for the location's region.
 ## Common Setup Workflow
 
 ```bash
-source ~/clawd/secrets/.env
+source /data/openclaw/workspace/secrets/.env
 
 # 1. Find all accessible locations (sub-accounts)
 curl -s \

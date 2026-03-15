@@ -36,7 +36,7 @@ DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -46,10 +46,10 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
-   Example: ~/Downloads/OpenClaw Master Files/kie-ai-reference.md
+   Example: /data/downloads/OpenClaw Master Files/kie-ai-reference.md
 
 2. DO NOT DUMP FULL CONTENT INTO CORE .MD FILES
    AGENTS.md, TOOLS.md, and MEMORY.md must stay lean.
@@ -152,7 +152,7 @@ Frequently Asked Questions
 
 Purpose and Overview
 The Back Yourself Up Protocol is a mandatory safety procedure for all OpenClaw agents. It has two distinct parts that serve two different purposes:
-Part 1 - Config Backup protects against configuration corruption. Every single time an agent needs to edit the OpenClaw config file (~/.openclaw/openclaw.json), the agent MUST create a human-readable backup first, and MUST get explicit user permission before making any change. No exceptions. No shortcuts. No "it's just a small change." Every edit, every time.
+Part 1 - Config Backup protects against configuration corruption. Every single time an agent needs to edit the OpenClaw config file (/data/.openclaw/openclaw.json), the agent MUST create a human-readable backup first, and MUST get explicit user permission before making any change. No exceptions. No shortcuts. No "it's just a small change." Every edit, every time.
 Part 2 - Full Instance Backup protects against catastrophic failure. Once every two weeks, the agent creates a complete backup of the entire OpenClaw installation - every file, every config, every secret, every memory log - so that if the worst happens, everything can be restored from scratch. This runs automatically and keeps only the last two versions to prevent storage bloat.
 Together, these two parts ensure that no config edit can permanently break the system, and no catastrophic event can permanently destroy the installation.
 
@@ -174,7 +174,7 @@ This is not theoretical. This happened. This protocol makes sure it never happen
 Part 1 - Config Backup (Before Every Edit)
 When This Applies
 This procedure applies EVERY TIME an agent needs to edit the file at this exact path:
-~/.openclaw/openclaw.json
+/data/.openclaw/openclaw.json
 This is the OpenClaw models configuration file. It controls which models are available, their API keys, temperature settings, routing rules, and other critical gateway configuration.
 Examples of edits that trigger this procedure: 
 Adding a new model
@@ -186,13 +186,13 @@ Changing any parameter, no matter how small
 Any modification of any kind to this file
 There are ZERO exceptions. If the edit seems tiny, back up first. If you are "just fixing a typo," back up first. If the user says "just quickly change this," back up first. The backup takes seconds. Recovering from a corrupted config takes hours.
 Step-by-Step Procedure
-Here is the exact sequence of steps an agent must follow when it needs to edit ~/.openclaw/openclaw.json. Every step is mandatory. No steps can be skipped.
+Here is the exact sequence of steps an agent must follow when it needs to edit /data/.openclaw/openclaw.json. Every step is mandatory. No steps can be skipped.
 Step 1: Announce the Intent
 Before doing anything, tell the user what you intend to change and why. Be specific.
 Example:
 > "I need to update the OpenClaw config to add the new Gemini 3.1 Pro model. Before I touch anything, I am going to create a backup of the current config file."
 Step 2: Locate or Create the Backup Folder
-Check for an existing backup folder in ~/Downloads/. IMPORTANT: Do NOT overwrite or create a duplicate if one already exists.
+Check for an existing backup folder in /data/downloads/. IMPORTANT: Do NOT overwrite or create a duplicate if one already exists.
 
 Standard folder name: OpenClaw Backups
 Common variations to recognize (check case-insensitively):
@@ -208,16 +208,16 @@ open-claw-backups
 open claw backups (two words)
 backups
 backup
-How to search: List folders in ~/Downloads/ and look for any folder name containing keywords like "openclaw," "open claw," "backup," or "backups" in any combination. Match case-insensitively. If you find a folder that clearly serves as the backup location (contains .txt backup files or a full-backup subfolder), use that folder. Do not create a duplicate.
+How to search: List folders in /data/downloads/ and look for any folder name containing keywords like "openclaw," "open claw," "backup," or "backups" in any combination. Match case-insensitively. If you find a folder that clearly serves as the backup location (contains .txt backup files or a full-backup subfolder), use that folder. Do not create a duplicate.
 Decision logic: 
-Search ~/Downloads/ for any folder matching the variations above or similar patterns
+Search /data/downloads/ for any folder matching the variations above or similar patterns
 If a matching folder is found, use it
 If MULTIPLE matching folders exist, prefer the most specific one (the one with "openclaw" in the name)
-If NO matching folder is found, create ~/Downloads/OpenClaw Backups/ (this is the standard default name)
+If NO matching folder is found, create /data/openclaw-backups/ (this is the standard default name)
 See the Backup Folder Detection section below for the detailed decision logic and shell commands.
 Step 3: Create the Backup File
 Copy the config file to the backup folder as a plain readable text file (.txt extension, not .json). The file name must follow the human-readable naming convention described in File Naming Convention.
-cp ~/.openclaw/openclaw.json ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
+cp /data/.openclaw/openclaw.json /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
 The .txt extension is deliberate. It ensures any human can open and read the file on any system without needing a JSON viewer. The contents are still valid JSON - it is just saved with a .txt extension for accessibility.
 Step 4: Verify the Backup
 This step is NOT optional. After creating the backup, the agent must verify:
@@ -225,28 +225,28 @@ The backup file exists at the expected path
 The backup file is NOT empty (has a file size greater than zero)
 The backup file contains valid content (spot-check a few lines)
 # Check that the file exists and is not empty
-ls -la ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
+ls -la /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
 
 # Verify it has content (should show line count greater than zero)
-wc -l ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
+wc -l /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
 
 # Spot-check the first few lines to confirm it is the right file
-head -5 ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
+head -5 /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
 If the backup is empty or missing: STOP. Do not proceed. Do not edit the config. Diagnose why the backup failed and fix it before continuing.
 Step 5: Ask for Permission
 After the backup is confirmed, ask the user for explicit permission to make the edit. This is mandatory every single time, no exceptions. Even if the user already said "go ahead" in a previous message, ask again right before the edit. Even if the change seems obvious or trivial, ask.
 Example:
-> "Backup created successfully at ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt. I am ready to add the Gemini 3.1 Pro model to the config. Here is exactly what I will change: [describe the specific change]. Do I have your permission to proceed?"
+> "Backup created successfully at /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt. I am ready to add the Gemini 3.1 Pro model to the config. Here is exactly what I will change: [describe the specific change]. Do I have your permission to proceed?"
 Wait for an affirmative response. Do not interpret silence as permission. Do not interpret "maybe" as permission. The user must clearly say yes, approved, go ahead, do it, or an equivalent affirmative.
 Step 6: Make the Edit
-Only after BOTH conditions are met (backup verified AND permission granted), make the edit to ~/.openclaw/openclaw.json.
+Only after BOTH conditions are met (backup verified AND permission granted), make the edit to /data/.openclaw/openclaw.json.
 Be surgical. Change only what was discussed. Do not "clean up" other things while you are in there. Do not reformat the file. Do not reorder keys. Change exactly what was approved and nothing else.
 Step 7: Verify the Edit
 After editing, verify the config file is valid:
 # Check that the file is valid JSON
-cat ~/.openclaw/openclaw.json | python3 -m json.tool > /dev/null 2>&1 && echo "Valid JSON" || echo "INVALID JSON - RESTORE FROM BACKUP"
+cat /data/.openclaw/openclaw.json | python3 -m json.tool > /dev/null 2>&1 && echo "Valid JSON" || echo "INVALID JSON - RESTORE FROM BACKUP"
 If the JSON is invalid, immediately restore from the backup you just created:
-cp ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt ~/.openclaw/openclaw.json
+cp /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt /data/.openclaw/openclaw.json
 Then diagnose what went wrong and try again.
 Step 8: Restart the Gateway
 After a successful edit, restart the OpenClaw gateway to apply the changes:
@@ -254,14 +254,14 @@ openclaw gateway restart
 This confirms the new configuration takes effect. Watch the output for any errors. If the gateway fails to restart, the config change may have introduced an issue - restore from backup and investigate.
 Step 9: Confirm to the User
 Tell the user what happened:
-> "Config updated successfully. Gateway restarted and running. The backup is saved at ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt in case you ever need to roll back."
+> "Config updated successfully. Gateway restarted and running. The backup is saved at /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt in case you ever need to roll back."
 Backup Folder Detection
-The agent must search ~/Downloads/ for any existing folder that serves as the OpenClaw backup location. Different users may have named this folder differently - some use hyphens, some use spaces, some capitalize, some use singular "backup" vs plural "backups."
+The agent must search /data/downloads/ for any existing folder that serves as the OpenClaw backup location. Different users may have named this folder differently - some use hyphens, some use spaces, some capitalize, some use singular "backup" vs plural "backups."
 Decision logic: 
 START
   |
   v
-Search ~/Downloads/ for folders matching backup-related names
+Search /data/downloads/ for folders matching backup-related names
 (case-insensitive search for folders containing "openclaw" + "backup" 
 or just "backup/backups")
   |
@@ -275,8 +275,8 @@ Found a folder with "openclaw" in the name? (e.g., "openclaw-backups",
            |
            YES --> Use that folder
            |
-           NO --> Create ~/Downloads/openclaw-backups/
-                  Use ~/Downloads/openclaw-backups/
+           NO --> Create /data/downloads/openclaw-backups/
+                  Use /data/downloads/openclaw-backups/
 Shell commands for the smart detection: 
 # Smart backup folder detection - checks for multiple naming variations
 BACKUP_DIR=""
@@ -363,14 +363,14 @@ Step 1: Announce what you intend to change
   v
 Step 2: Check for backup folder
   |
-  +-- ~/Downloads/openclaw-backups/ exists? --> Use it
+  +-- /data/downloads/openclaw-backups/ exists? --> Use it
   |
-  +-- ~/Downloads/backups/ exists? --> Use it
+  +-- /data/downloads/backups/ exists? --> Use it
   |
-  +-- Neither exists? --> Create ~/Downloads/openclaw-backups/
+  +-- Neither exists? --> Create /data/downloads/openclaw-backups/
   |
   v
-Step 3: Copy ~/.openclaw/openclaw.json to backup folder
+Step 3: Copy /data/.openclaw/openclaw.json to backup folder
          Use human-readable filename (models-backup-MonDD-HHampm.txt)
   |
   v
@@ -412,9 +412,9 @@ DONE
 Config Backup Checklist
 Use this checklist every time. No skipping steps.
 [ ] Announced intent to user (what will change and why)
-[ ] Checked for existing backup folder (openclaw-backups or backups in ~/Downloads/)
+[ ] Checked for existing backup folder (openclaw-backups or backups in /data/downloads/)
 [ ] Backup folder exists or was created
-[ ] Copied ~/.openclaw/openclaw.json to backup folder with human-readable filename
+[ ] Copied /data/.openclaw/openclaw.json to backup folder with human-readable filename
 [ ] Verified backup file exists
 [ ] Verified backup file is not empty
 [ ] Verified backup file contains the right content (spot-checked first few lines)
@@ -434,13 +434,13 @@ TOOLS.md - Under the tools and configuration section. Since the config file is a
 Why all four files? Because agents do not have persistent memory between sessions. They read these files at startup to know who they are and how to behave. If the backup rule only exists in one file, an agent might miss it depending on which files it reads. Putting it in all four files ensures the rule is encountered no matter what.
 What to add to each file (minimum): 
 For IDENTITY.md:
-> "Before editing ~/.openclaw/openclaw.json, I ALWAYS create a backup first. I check for ~/Downloads/openclaw-backups/ or ~/Downloads/backups/, create the backup as a human-readable .txt file, verify it is not empty, ask the user for permission, and only then make the edit. After editing, I run openclaw gateway restart. This is non-negotiable."
+> "Before editing /data/.openclaw/openclaw.json, I ALWAYS create a backup first. I check for /data/downloads/openclaw-backups/ or /data/downloads/backups/, create the backup as a human-readable .txt file, verify it is not empty, ask the user for permission, and only then make the edit. After editing, I run openclaw gateway restart. This is non-negotiable."
 For AGENTS.md:
-> "BACKUP BEFORE EVERY CONFIG EDIT - NON-NEGOTIABLE. Before ANY edit to ~/.openclaw/openclaw.json: (1) check for backup folder in ~/Downloads/, (2) create backup with human-readable filename, (3) verify backup is not empty, (4) ask user for permission, (5) make the edit, (6) validate JSON, (7) run openclaw gateway restart. If backup fails, STOP. Do not edit."
+> "BACKUP BEFORE EVERY CONFIG EDIT - NON-NEGOTIABLE. Before ANY edit to /data/.openclaw/openclaw.json: (1) check for backup folder in /data/downloads/, (2) create backup with human-readable filename, (3) verify backup is not empty, (4) ask user for permission, (5) make the edit, (6) validate JSON, (7) run openclaw gateway restart. If backup fails, STOP. Do not edit."
 For MEMORY.md:
 > "Config Backup Protocol established February 23, 2026. After the February 21 incident where the wrong file was backed up and the config was corrupted, the Back Yourself Up Protocol is now mandatory. Full procedure documented in projects/back-yourself-up-protocol/BACK-YOURSELF-UP-PROTOCOL.md."
 For TOOLS.md:
-> "CONFIG BACKUP - MANDATORY BEFORE EVERY EDIT. Config file path: ~/.openclaw/openclaw.json. Backup folder: ~/Downloads/openclaw-backups/ (or ~/Downloads/backups/ if that exists). Backup command: cp ~/.openclaw/openclaw.json ~/Downloads/openclaw-backups/models-backup-$(date +'%B %-d at %-I-%M %p').txt. Verify backup is not empty. Ask permission. Edit. Validate JSON. Run openclaw gateway restart."
+> "CONFIG BACKUP - MANDATORY BEFORE EVERY EDIT. Config file path: /data/.openclaw/openclaw.json. Backup folder: /data/downloads/openclaw-backups/ (or /data/downloads/backups/ if that exists). Backup command: cp /data/.openclaw/openclaw.json /data/downloads/openclaw-backups/models-backup-$(date +'%B %-d at %-I-%M %p').txt. Verify backup is not empty. Ask permission. Edit. Validate JSON. Run openclaw gateway restart."
 
 Part 2 - Full Instance Backup
 What This Covers
@@ -463,34 +463,34 @@ HEARTBEAT.md  |  Daily routine, scheduled tasks, heartbeat configuration
 If additional .md files exist in the workspace root (such as THINKING.md, BOOTSTRAP.md, or any custom files), include those too. The rule is: any .md file in the workspace root gets backed up.
 Category 2: Configuration Files
 File/Path  |  Purpose
-~/.openclaw/openclaw.json  |  The main OpenClaw gateway config (models, keys, routing)
-~/.openclaw/ (entire directory)  |  Any additional OpenClaw config files that may exist
+/data/.openclaw/openclaw.json  |  The main OpenClaw gateway config (models, keys, routing)
+/data/.openclaw/ (entire directory)  |  Any additional OpenClaw config files that may exist
 ~/.clawdbot/clawdbot.json  |  Legacy config file (if it exists)
 
 If other config files exist in the OpenClaw directory, include them. When in doubt, include it.
 Category 3: Secrets and Credentials
 File/Path  |  Purpose
-~/clawd/secrets/.env  |  API keys, tokens, passwords
-~/clawd/secrets/ (entire directory)  |  Service account JSON files, certificate files, any credential files
+/data/openclaw/workspace/secrets/.env  |  API keys, tokens, passwords
+/data/openclaw/workspace/secrets/ (entire directory)  |  Service account JSON files, certificate files, any credential files
 GCP service account files  |  Google Cloud Platform service account key files (wherever they are stored)
 
 IMPORTANT SECURITY NOTE: The full backup folder will contain sensitive credentials. It should be stored locally only. Do not upload it to cloud storage, do not commit it to git, do not share it. If the backup needs to be moved to external storage, encrypt it first.
 Category 4: Scripts and Tools
 File/Path  |  Purpose
-~/clawd/bin/  |  Custom scripts and tools (cliclick, custom utilities)
-~/clawd/scripts/  |  Automation scripts
-~/clawd/tools/  |  Tool configurations or custom tool files
+/data/openclaw/workspace/bin/  |  Custom scripts and tools (cliclick, custom utilities)
+/data/openclaw/workspace/scripts/  |  Automation scripts
+/data/openclaw/workspace/tools/  |  Tool configurations or custom tool files
 
 Category 5: Memory Files
 File/Path  |  Purpose
-~/clawd/memory/  |  Daily memory logs (YYYY-MM-DD.md files)
-~/clawd/memory/master-files/  |  Master reference documents
-~/Downloads/openclaw-master-files/  |  Master files folder (if it exists)
+/data/openclaw/workspace/memory/  |  Daily memory logs (YYYY-MM-DD.md files)
+/data/openclaw/workspace/memory/master-files/  |  Master reference documents
+/data/openclaw-master-files/  |  Master files folder (if it exists)
 
 Category 6: Installed Skills
 OpenClaw skills are extensions that add capabilities. Back up any installed skill configurations or custom skill files. The exact location depends on the OpenClaw version, but check:
 File/Path  |  Purpose
-~/.openclaw/skills/  |  Installed skills directory (if it exists)
+/data/.openclaw/skills/  |  Installed skills directory (if it exists)
 Skills config within openclaw.json  |  Skill definitions within the main config
 
 Category 7: Cron Jobs and Schedules
@@ -504,9 +504,9 @@ openclaw cron list > full-backup/cron-jobs-export.txt 2>&1
 If the openclaw cron list command is not available, document the known cron jobs manually in a cron-jobs.txt file within the backup, including their IDs, schedules, and descriptions.
 Category 8: Project Files
 File/Path  |  Purpose
-~/clawd/projects/  |  Project directories (protocols, templates, etc.)
-~/clawd/data/  |  Data files (contact lists, user databases, etc.)
-~/clawd/assets/  |  Brand assets, logos, headshots (small image files only - see exclusions below)
+/data/openclaw/workspace/projects/  |  Project directories (protocols, templates, etc.)
+/data/openclaw/workspace/data/  |  Data files (contact lists, user databases, etc.)
+/data/openclaw/workspace/assets/  |  Brand assets, logos, headshots (small image files only - see exclusions below)
 
 Exclusion List - What NOT to Back Up
 The following items must be EXCLUDED from Full Instance Backups to prevent bloat:
@@ -528,7 +528,7 @@ Any single file over 10 megabytes  |  Flag it and skip it to prevent bloat
 The principle: If it can be reinstalled, re-downloaded, or regenerated, do not back it up. Back up things that are unique, custom, or would be lost forever without a backup.
 Folder Structure
 The full backup lives inside the same backup folder used for config backups, in a subfolder called full-backup:
-~/Downloads/openclaw-backups/
+/data/downloads/openclaw-backups/
     |
     +-- models-backup-February 23 at 11-00 AM.txt        (config backup)
     +-- models-backup-Feb21-3pm.txt         (config backup)
@@ -660,28 +660,28 @@ NEW_BACKUP="$FULL_BACKUP_DIR/full-backup-$TODAY"
 mkdir -p "$NEW_BACKUP"/{workspace,config,secrets,memory,scripts,skills,projects,data,assets}
 Step 4: Copy Workspace Markdown Files
 # Copy all .md files from the workspace root
-cp ~/clawd/*.md "$NEW_BACKUP/workspace/" 2>/dev/null
+cp /data/openclaw/workspace/*.md "$NEW_BACKUP/workspace/" 2>/dev/null
 Step 5: Copy Configuration Files
 # Copy the main OpenClaw config
-cp ~/.openclaw/openclaw.json "$NEW_BACKUP/config/" 2>/dev/null
+cp /data/.openclaw/openclaw.json "$NEW_BACKUP/config/" 2>/dev/null
 
 # Copy any other files in the OpenClaw config directory
-cp ~/.openclaw/*.json "$NEW_BACKUP/config/" 2>/dev/null
-cp ~/.openclaw/*.yaml "$NEW_BACKUP/config/" 2>/dev/null
-cp ~/.openclaw/*.yml "$NEW_BACKUP/config/" 2>/dev/null
-cp ~/.openclaw/*.toml "$NEW_BACKUP/config/" 2>/dev/null
+cp /data/.openclaw/*.json "$NEW_BACKUP/config/" 2>/dev/null
+cp /data/.openclaw/*.yaml "$NEW_BACKUP/config/" 2>/dev/null
+cp /data/.openclaw/*.yml "$NEW_BACKUP/config/" 2>/dev/null
+cp /data/.openclaw/*.toml "$NEW_BACKUP/config/" 2>/dev/null
 
 # Copy legacy config if it exists
 cp ~/.clawdbot/clawdbot.json "$NEW_BACKUP/config/" 2>/dev/null
 Step 6: Copy Secrets and Credentials
 # Copy secrets directory
-cp -r ~/clawd/secrets/ "$NEW_BACKUP/secrets/" 2>/dev/null
+cp -r /data/openclaw/workspace/secrets/ "$NEW_BACKUP/secrets/" 2>/dev/null
 
 # Copy any service account files that live elsewhere
 # (Adjust paths based on actual installation)
 Step 7: Copy Memory Files
 # Copy memory directory (daily logs and master files)
-cp -r ~/clawd/memory/ "$NEW_BACKUP/memory/" 2>/dev/null
+cp -r /data/openclaw/workspace/memory/ "$NEW_BACKUP/memory/" 2>/dev/null
 
 # Copy master files if they exist in Downloads
 if [ -d "$HOME/Downloads/openclaw-master-files" ]; then
@@ -689,12 +689,12 @@ if [ -d "$HOME/Downloads/openclaw-master-files" ]; then
 fi
 Step 8: Copy Scripts and Tools
 # Copy custom scripts and tools
-cp -r ~/clawd/bin/ "$NEW_BACKUP/scripts/bin/" 2>/dev/null
-cp -r ~/clawd/scripts/ "$NEW_BACKUP/scripts/scripts/" 2>/dev/null
-cp -r ~/clawd/tools/ "$NEW_BACKUP/scripts/tools/" 2>/dev/null
+cp -r /data/openclaw/workspace/bin/ "$NEW_BACKUP/scripts/bin/" 2>/dev/null
+cp -r /data/openclaw/workspace/scripts/ "$NEW_BACKUP/scripts/scripts/" 2>/dev/null
+cp -r /data/openclaw/workspace/tools/ "$NEW_BACKUP/scripts/tools/" 2>/dev/null
 Step 9: Copy Skills
 # Copy installed skills
-cp -r ~/.openclaw/skills/ "$NEW_BACKUP/skills/" 2>/dev/null
+cp -r /data/.openclaw/skills/ "$NEW_BACKUP/skills/" 2>/dev/null
 Step 10: Export Cron Jobs
 # Export cron job definitions
 openclaw cron list > "$NEW_BACKUP/cron-jobs-export.txt" 2>&1
@@ -724,16 +724,16 @@ rsync -a \
     --exclude='*.aac' \
     --exclude='*.flac' \
     --exclude='*.log' \
-    ~/clawd/projects/ "$NEW_BACKUP/projects/" 2>/dev/null
+    /data/openclaw/workspace/projects/ "$NEW_BACKUP/projects/" 2>/dev/null
 Step 12: Copy Data Files
 # Copy data directory
-cp -r ~/clawd/data/ "$NEW_BACKUP/data/" 2>/dev/null
+cp -r /data/openclaw/workspace/data/ "$NEW_BACKUP/data/" 2>/dev/null
 Step 13: Copy Small Brand Assets
 # Copy assets but skip files over 5MB
-find ~/clawd/assets/ -type f -size -5M -exec cp --parents {} "$NEW_BACKUP/" \; 2>/dev/null
+find /data/openclaw/workspace/assets/ -type f -size -5M -exec cp --parents {} "$NEW_BACKUP/" \; 2>/dev/null
 
 # Alternative approach if --parents is not available on macOS:
-rsync -a --max-size=5M ~/clawd/assets/ "$NEW_BACKUP/assets/" 2>/dev/null
+rsync -a --max-size=5M /data/openclaw/workspace/assets/ "$NEW_BACKUP/assets/" 2>/dev/null
 Step 14: Generate the Manifest
 Create a file listing everything in the backup:
 # Generate a manifest of all backed-up files
@@ -779,9 +779,9 @@ FULL BACKUP TRIGGERED (biweekly cron or manual request)
   v
 Step 1: Determine backup root directory
   |
-  +-- ~/Downloads/openclaw-backups/ exists? --> Use it
-  +-- ~/Downloads/backups/ exists? --> Use it
-  +-- Neither? --> Create ~/Downloads/openclaw-backups/
+  +-- /data/downloads/openclaw-backups/ exists? --> Use it
+  +-- /data/downloads/backups/ exists? --> Use it
+  +-- Neither? --> Create /data/downloads/openclaw-backups/
   |
   v
 Step 2: Ensure full-backup/ subfolder exists
@@ -830,16 +830,16 @@ Step 9: Report completion
   v
 DONE
 Full Backup Checklist
-[ ] Backup root directory determined (openclaw-backups or backups in ~/Downloads/)
+[ ] Backup root directory determined (openclaw-backups or backups in /data/downloads/)
 [ ] full-backup subfolder exists or was created
 [ ] Old backup rotation performed if needed (max 2 versions)
 [ ] New backup directory created with today's date
 [ ] Workspace .md files copied
-[ ] OpenClaw config files copied (~/.openclaw/)
+[ ] OpenClaw config files copied (/data/.openclaw/)
 [ ] Legacy config files copied (if they exist)
-[ ] Secrets and credentials copied (~/clawd/secrets/)
+[ ] Secrets and credentials copied (/data/openclaw/workspace/secrets/)
 [ ] Memory files copied (daily logs and master files)
-[ ] Scripts and tools copied (~/clawd/bin/, ~/clawd/scripts/)
+[ ] Scripts and tools copied (/data/openclaw/workspace/bin/, /data/openclaw/workspace/scripts/)
 [ ] Installed skills copied
 [ ] Cron jobs exported to text file
 [ ] Project files copied (excluding node_modules, .git, caches, media)
@@ -856,14 +856,14 @@ Restoring a Config File
 If the OpenClaw config gets corrupted or a change needs to be rolled back, here is how to restore from a Part 1 config backup:
 Step 1: Find the backup you want to restore
 # List all config backups, newest first
-ls -lt ~/Downloads/openclaw-backups/models-backup-*.txt
+ls -lt /data/downloads/openclaw-backups/models-backup-*.txt
 Step 2: Preview the backup to confirm it is the right one
 # Look at the first 20 lines to verify it is the version you want
-head -20 ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
+head -20 /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
 Step 3: Copy the backup over the current config
-cp ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt ~/.openclaw/openclaw.json
+cp /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt /data/.openclaw/openclaw.json
 Step 4: Validate the restored config
-cat ~/.openclaw/openclaw.json | python3 -m json.tool > /dev/null 2>&1 && echo "Valid JSON" || echo "INVALID JSON"
+cat /data/.openclaw/openclaw.json | python3 -m json.tool > /dev/null 2>&1 && echo "Valid JSON" || echo "INVALID JSON"
 Step 5: Restart the gateway
 openclaw gateway restart
 Step 6: Verify everything works
@@ -875,38 +875,38 @@ A fresh machine with macOS (or the same operating system as the original)
 OpenClaw installed (the base application)
 Access to the full backup folder
 Step 1: Locate the most recent full backup
-ls -d ~/Downloads/openclaw-backups/full-backup/full-backup-* | tail -1
+ls -d /data/downloads/openclaw-backups/full-backup/full-backup-* | tail -1
 This gives you the path to the newest backup. We will call this $BACKUP in the steps below.
 Step 2: Restore the OpenClaw config
-mkdir -p ~/.openclaw/
-cp $BACKUP/config/openclaw.json ~/.openclaw/
-cp $BACKUP/config/*.json ~/.openclaw/ 2>/dev/null
-cp $BACKUP/config/*.yaml ~/.openclaw/ 2>/dev/null
+mkdir -p /data/.openclaw/
+cp $BACKUP/config/openclaw.json /data/.openclaw/
+cp $BACKUP/config/*.json /data/.openclaw/ 2>/dev/null
+cp $BACKUP/config/*.yaml /data/.openclaw/ 2>/dev/null
 Step 3: Restore workspace files
-mkdir -p ~/clawd/
-cp $BACKUP/workspace/*.md ~/clawd/
+mkdir -p /data/openclaw/workspace/
+cp $BACKUP/workspace/*.md /data/openclaw/workspace/
 Step 4: Restore secrets
-mkdir -p ~/clawd/secrets/
-cp -r $BACKUP/secrets/* ~/clawd/secrets/
+mkdir -p /data/openclaw/workspace/secrets/
+cp -r $BACKUP/secrets/* /data/openclaw/workspace/secrets/
 Step 5: Restore memory files
-mkdir -p ~/clawd/memory/
-cp -r $BACKUP/memory/* ~/clawd/memory/
+mkdir -p /data/openclaw/workspace/memory/
+cp -r $BACKUP/memory/* /data/openclaw/workspace/memory/
 Step 6: Restore scripts and tools
-mkdir -p ~/clawd/bin/ ~/clawd/scripts/
-cp -r $BACKUP/scripts/bin/* ~/clawd/bin/ 2>/dev/null
-cp -r $BACKUP/scripts/scripts/* ~/clawd/scripts/ 2>/dev/null
-cp -r $BACKUP/scripts/tools/* ~/clawd/tools/ 2>/dev/null
+mkdir -p /data/openclaw/workspace/bin/ /data/openclaw/workspace/scripts/
+cp -r $BACKUP/scripts/bin/* /data/openclaw/workspace/bin/ 2>/dev/null
+cp -r $BACKUP/scripts/scripts/* /data/openclaw/workspace/scripts/ 2>/dev/null
+cp -r $BACKUP/scripts/tools/* /data/openclaw/workspace/tools/ 2>/dev/null
 
 # Make scripts executable
-chmod +x ~/clawd/bin/* 2>/dev/null
-chmod +x ~/clawd/scripts/* 2>/dev/null
+chmod +x /data/openclaw/workspace/bin/* 2>/dev/null
+chmod +x /data/openclaw/workspace/scripts/* 2>/dev/null
 Step 7: Restore skills
-mkdir -p ~/.openclaw/skills/
-cp -r $BACKUP/skills/* ~/.openclaw/skills/ 2>/dev/null
+mkdir -p /data/.openclaw/skills/
+cp -r $BACKUP/skills/* /data/.openclaw/skills/ 2>/dev/null
 Step 8: Restore projects and data
-cp -r $BACKUP/projects/* ~/clawd/projects/ 2>/dev/null
-cp -r $BACKUP/data/* ~/clawd/data/ 2>/dev/null
-cp -r $BACKUP/assets/* ~/clawd/assets/ 2>/dev/null
+cp -r $BACKUP/projects/* /data/openclaw/workspace/projects/ 2>/dev/null
+cp -r $BACKUP/data/* /data/openclaw/workspace/data/ 2>/dev/null
+cp -r $BACKUP/assets/* /data/openclaw/workspace/assets/ 2>/dev/null
 Step 9: Restore cron jobs
 Review the exported cron jobs and recreate them:
 cat $BACKUP/cron-jobs-export.txt
@@ -926,8 +926,8 @@ After confirming everything works, create a new full backup to establish a clean
 Error Handling
 Config Backup Errors
 Error  |  Cause  |  Resolution
-"Permission denied" when creating backup folder  |  User permissions issue  |  Check folder permissions on ~/Downloads/. Try chmod 755 ~/Downloads/
-Backup file is empty (0 bytes)  |  Source file might be locked or empty  |  Check if ~/.openclaw/openclaw.json exists and has content. Check disk space.
+"Permission denied" when creating backup folder  |  User permissions issue  |  Check folder permissions on /data/downloads/. Try chmod 755 /data/downloads/
+Backup file is empty (0 bytes)  |  Source file might be locked or empty  |  Check if /data/.openclaw/openclaw.json exists and has content. Check disk space.
 "No such file or directory" for config file  |  OpenClaw may not be installed or config is in a different location  |  Run find ~ -name "openclaw.json" -type f 2>/dev/null to locate it
 JSON validation fails after edit  |  Syntax error introduced during edit  |  Immediately restore from backup. Review the diff to find the error.
 Gateway fails to restart  |  Config has valid JSON but invalid settings  |  Restore from backup. Check OpenClaw documentation for valid config format.
@@ -935,7 +935,7 @@ Gateway fails to restart  |  Config has valid JSON but invalid settings  |  Rest
 Full Backup Errors
 Error  |  Cause  |  Resolution
 "No space left on device"  |  Disk is full  |  Check disk space with df -h. Delete unnecessary files. Consider if backup exclusions are working.
-rsync not found  |  rsync not installed  |  Install with brew install rsync or use cp -r with manual exclusions
+rsync not found  |  rsync not installed  |  Install with apt-get install -y rsync or use cp -r with manual exclusions
 Backup is unexpectedly large (over 1 gigabyte)  |  Large files are slipping through exclusions  |  Check MANIFEST.txt for large files. Update exclusion rules.
 Missing critical files in verification  |  Source files do not exist at expected paths  |  The installation may have a non-standard layout. Locate files manually and update the backup script.
 Cron export fails  |  openclaw cron command not available  |  Document cron jobs manually based on HEARTBEAT.md and agent memory
@@ -950,37 +950,37 @@ Examples
 Example 1: Simple Model Addition
 The user asks: "Add the GPT-5 Nano model to my OpenClaw config."
 Agent response: 
-> "I need to add GPT-5 Nano to your OpenClaw config at ~/.openclaw/openclaw.json. Let me create a backup first."
+> "I need to add GPT-5 Nano to your OpenClaw config at /data/.openclaw/openclaw.json. Let me create a backup first."
 Agent checks for backup folder:
-ls -d ~/Downloads/openclaw-backups 2>/dev/null || ls -d ~/Downloads/backups 2>/dev/null
+ls -d /data/downloads/openclaw-backups 2>/dev/null || ls -d /data/downloads/backups 2>/dev/null
 Folder exists. Agent creates backup:
-cp ~/.openclaw/openclaw.json ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
+cp /data/.openclaw/openclaw.json /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
 Agent verifies backup:
-ls -la ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
-wc -l ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
-> "Backup created and verified at ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt (247 lines, 8.2KB). I am ready to add GPT-5 Nano with the following settings: [lists exact changes]. Do I have your permission to proceed?"
+ls -la /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
+wc -l /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt
+> "Backup created and verified at /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt (247 lines, 8.2KB). I am ready to add GPT-5 Nano with the following settings: [lists exact changes]. Do I have your permission to proceed?"
 User says: "Yes, go ahead."
 Agent makes the edit, validates JSON, restarts gateway:
 openclaw gateway restart
-> "Done. GPT-5 Nano has been added to your config. Gateway restarted successfully. Your backup is at ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt if you need to roll back."
+> "Done. GPT-5 Nano has been added to your config. Gateway restarted successfully. Your backup is at /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt if you need to roll back."
 Example 2: First-Time Setup (No Backup Folder Exists)
 The user asks: "Update my API key for Claude in the config."
 Agent checks for backup folder:
-ls -d ~/Downloads/openclaw-backups 2>/dev/null
+ls -d /data/downloads/openclaw-backups 2>/dev/null
 # Not found
-ls -d ~/Downloads/backups 2>/dev/null
+ls -d /data/downloads/backups 2>/dev/null
 # Not found
 > "I need to update your Claude API key in the OpenClaw config. I do not see a backup folder yet, so I am creating one now."
-mkdir -p ~/Downloads/OpenClaw\ Backups/
-cp ~/.openclaw/openclaw.json ~/Downloads/openclaw-backups/models-backup-February 23 at 2-00 PM.txt
+mkdir -p /data/downloads/OpenClaw\ Backups/
+cp /data/.openclaw/openclaw.json /data/downloads/openclaw-backups/models-backup-February 23 at 2-00 PM.txt
 Agent verifies, asks permission, proceeds as normal.
 Example 3: Backup Verification Fails
 Agent creates backup but verification shows 0 bytes:
-ls -la ~/Downloads/openclaw-backups/models-backup-February 23 at 3-00 PM.txt
+ls -la /data/downloads/openclaw-backups/models-backup-February 23 at 3-00 PM.txt
 # -rw-r--r--  1 user  staff  0 Feb 23 15:00 models-backup-February 23 at 3-00 PM.txt
 > "The backup file was created but it is empty (0 bytes). I am NOT going to edit the config until I have a valid backup. Let me investigate why the source file might be empty."
-ls -la ~/.openclaw/openclaw.json
-cat ~/.openclaw/openclaw.json | head -5
+ls -la /data/.openclaw/openclaw.json
+cat /data/.openclaw/openclaw.json | head -5
 Agent diagnoses the issue (perhaps the config path is wrong, or the file is locked) and resolves it before retrying the backup.
 Example 4: Full Backup with Rotation
 Automated biweekly backup runs. Two previous backups exist:
@@ -988,9 +988,9 @@ full-backup/
     full-backup-2026-01-26/
     full-backup-2026-02-09/
 Agent detects 2 existing backups, deletes the oldest:
-rm -rf ~/Downloads/openclaw-backups/full-backup/full-backup-2026-01-26
+rm -rf /data/downloads/openclaw-backups/full-backup/full-backup-2026-01-26
 Creates new backup:
-mkdir -p ~/Downloads/OpenClaw\ Backups/full-backup/full-backup-2026-02-23/
+mkdir -p /data/downloads/OpenClaw\ Backups/full-backup/full-backup-2026-02-23/
 Proceeds with the full backup procedure. Result:
 full-backup/
     full-backup-2026-02-09/    (previous)
@@ -998,9 +998,9 @@ full-backup/
 Example 5: Emergency Config Restoration
 The gateway will not start after a config edit. Agent needs to restore:
 > "The gateway failed to restart after the config change. I am restoring from the backup I created before the edit."
-cp ~/Downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt ~/.openclaw/openclaw.json
+cp /data/downloads/openclaw-backups/models-backup-February 23 at 11-00 AM.txt /data/.openclaw/openclaw.json
 Validate:
-cat ~/.openclaw/openclaw.json | python3 -m json.tool > /dev/null 2>&1 && echo "Valid JSON" || echo "INVALID JSON"
+cat /data/.openclaw/openclaw.json | python3 -m json.tool > /dev/null 2>&1 && echo "Valid JSON" || echo "INVALID JSON"
 # Output: Valid JSON
 Restart:
 openclaw gateway restart
@@ -1010,7 +1010,7 @@ openclaw gateway restart
 Frequently Asked Questions
 Q: What if the user tells me to skip the backup because they are in a hurry?
 A: Do not skip it. The backup takes less than one second. Explain that the backup is a safety requirement that protects their system, and it will be done before they finish reading this sentence. If they insist, the backup is still mandatory - create it and move on. The protocol is non-negotiable.
-Q: What if the config file does not exist at ~/.openclaw/openclaw.json?
+Q: What if the config file does not exist at /data/.openclaw/openclaw.json?
 A: Search for it. Run find ~ -name "openclaw.json" -type f 2>/dev/null. If it is in a different location, use that location and note it for future reference. If it does not exist at all, the user may need to initialize OpenClaw first.
 Q: What if I need to make multiple edits to the config in one session?
 A: Create one backup before the first edit. You do not need to create a separate backup for each individual change within the same editing session, as long as you have not restarted the gateway between edits. However, you DO need permission for each distinct change. If the user asks you to add three models, you can create one backup, get permission for all three, add all three, then restart the gateway once.
@@ -1020,7 +1020,7 @@ Q: What if the full backup is too large?
 A: Review the MANIFEST.txt to identify what is taking up space. The most common causes of bloat are: (1) large files that should have been excluded, (2) project directories with dependencies that were not filtered, or (3) media files that slipped through. Tighten the exclusion rules and re-run the backup.
 Q: What if rsync is not available on the system?
 A: Use cp -r instead, but manually exclude bloat directories. You can use find with -not -path flags to skip excluded directories:
-find ~/clawd/projects/ -type f \
+find /data/openclaw/workspace/projects/ -type f \
     -not -path "*/node_modules/*" \
     -not -path "*/.git/*" \
     -not -path "*/__pycache__/*" \
@@ -1039,8 +1039,8 @@ A: Do not back up the backup folder recursively. That creates infinite nesting a
 
 Summary
 Part  |  What  |  When  |  Where  |  How Many Versions
-Part 1 - Config Backup  |  Single config file as .txt  |  Before every config edit  |  ~/Downloads/openclaw-backups/ (or ~/Downloads/backups/)  |  Unlimited (small files)
-Part 2 - Full Instance Backup  |  Entire OpenClaw installation  |  Every two weeks (automated)  |  ~/Downloads/openclaw-backups/full-backup/  |  Last 2 only
+Part 1 - Config Backup  |  Single config file as .txt  |  Before every config edit  |  /data/downloads/openclaw-backups/ (or /data/downloads/backups/)  |  Unlimited (small files)
+Part 2 - Full Instance Backup  |  Entire OpenClaw installation  |  Every two weeks (automated)  |  /data/downloads/openclaw-backups/full-backup/  |  Last 2 only
 
 The two non-negotiable rules: 
 Never edit the config without a backup. If the backup fails, stop. Do not edit.
@@ -1052,7 +1052,7 @@ Common Mistakes (What Agents Get Wrong)
 These are the most frequent mistakes agents make when executing the Back Yourself Up Protocol. Learn from them so you do not repeat them.
 Mistake 1: Backing Up the Wrong File
 What happened: An agent was told to back up the OpenClaw config. It backed up clawdbot.json instead of openclaw.json. When the config got corrupted, the backup was useless - it was a completely different file.
-The fix: The config file path is ALWAYS ~/.openclaw/openclaw.json. Not clawdbot.json. Not any other file. Verify you are copying the correct file by checking the path character by character before executing the copy command.
+The fix: The config file path is ALWAYS /data/.openclaw/openclaw.json. Not clawdbot.json. Not any other file. Verify you are copying the correct file by checking the path character by character before executing the copy command.
 Mistake 2: Not Verifying the Backup
 What happened: An agent created a backup file but did not check if it was empty. The copy command failed silently (wrong path, permission issue), creating a 0-byte file. The agent proceeded to edit the config, the edit failed, and when it tried to restore - the backup was empty.
 The fix: ALWAYS run the verification steps: check the file exists, check it is not empty (wc -l > 0), and spot-check the first few lines to confirm it is the right content. If ANY check fails, STOP.
@@ -1070,7 +1070,7 @@ What happened: An agent tried to copy the config to a backup folder that did not
 The fix: Always check if the backup folder exists FIRST. If it does not exist, create it. Then verify it was created. Only then copy the backup file.
 Mistake 7: Creating a Duplicate Backup Folder
 What happened: A user already had a folder called "OpenClaw Backup" (with a space, singular). The agent checked only for "openclaw-backups" (hyphenated, plural), did not find it, and created a new folder. Now the user has backups scattered across two folders.
-The fix: Use the smart folder detection. Search ~/Downloads/ case-insensitively for any folder containing "openclaw" and "backup" in any combination. If something exists, use it. Do not create duplicates.
+The fix: Use the smart folder detection. Search /data/downloads/ case-insensitively for any folder containing "openclaw" and "backup" in any combination. If something exists, use it. Do not create duplicates.
 Mistake 8: Full Backup Including node_modules
 What happened: An agent ran a full backup without proper exclusions. The node_modules folder alone was 800MB. The backup took 20 minutes and filled up disk space.
 The fix: Follow the exclusion list religiously. node_modules, .git, caches, temp files, videos, large images - all excluded. Use rsync with --exclude flags or find with -not -path filters.
@@ -1156,9 +1156,9 @@ Only proceed after a passing integrity check
 Final Checklist - Complete Back Yourself Up Protocol Verification
 Config Backup Checklist (Before Every Edit)
 [ ] Announced intent to user (what will change and why)
-[ ] Searched ~/Downloads/ for existing backup folder (smart detection, case-insensitive)
+[ ] Searched /data/downloads/ for existing backup folder (smart detection, case-insensitive)
 [ ] Backup folder exists or was created
-[ ] Copied ~/.openclaw/openclaw.json to backup folder
+[ ] Copied /data/.openclaw/openclaw.json to backup folder
 [ ] Used human-readable filename (models-backup-MonDD-HHampm.txt)
 [ ] Verified backup file exists (ls -la)
 [ ] Verified backup file is not empty (wc -l > 0)
@@ -1179,11 +1179,11 @@ Full Instance Backup Checklist (Every 2 Weeks)
 [ ] Created new backup directory (full-backup-YYYY-MM-DD/)
 [ ] Created subdirectories (workspace, config, secrets, memory, scripts, skills, projects, data, assets)
 [ ] Copied workspace .md files
-[ ] Copied OpenClaw config files (~/.openclaw/)
+[ ] Copied OpenClaw config files (/data/.openclaw/)
 [ ] Copied legacy config if it exists
 [ ] Copied secrets and credentials
 [ ] Copied memory files and daily logs
-[ ] Copied master files folder (if it exists in ~/Downloads/)
+[ ] Copied master files folder (if it exists in /data/downloads/)
 [ ] Copied scripts and tools
 [ ] Copied installed skills
 [ ] Exported cron jobs to text file
@@ -1200,17 +1200,17 @@ Full Instance Backup Checklist (Every 2 Weeks)
 How to Install This Protocol (Self-Installation)
 When a user gives you this document and says "teach yourself this," "learn this," or any variation, follow the Teach Yourself Protocol to install it. Here is the specific process for this document:
 Step 1: Store the Full Document
-This document is large (1,300+ lines). It needs its own .md file. Search ~/Downloads/ for the master files folder (could be named openclaw-master-files, openclaw-master-docs, or any similar variation). If found, use it. If not, create ~/Downloads/openclaw-master-files/. Then ensure a processes/ subfolder exists.
+This document is large (1,300+ lines). It needs its own .md file. Search /data/downloads/ for the master files folder (could be named openclaw-master-files, openclaw-master-docs, or any similar variation). If found, use it. If not, create /data/openclaw-master-files/. Then ensure a processes/ subfolder exists.
 Save this entire document (untruncated) as:
-~/Downloads/openclaw-master-files/processes/back-yourself-up-protocol.md
+/data/openclaw-master-files/processes/back-yourself-up-protocol.md
 Step 2: Write Lightweight Summaries to Core Files
 This protocol affects multiple core files. Add the following to each:
 Add to AGENTS.md: 
 Back Yourself Up Protocol [PRIORITY: CRITICAL]
 
-BEFORE ANY EDIT to ~/.openclaw/openclaw.json:
-1. Search ~/Downloads/ for existing backup folder (check for any folder with "openclaw" + "backup" in the name, case-insensitive, also check for generic "backups" or "backup" folders)
-2. If no backup folder found, create ~/Downloads/openclaw-backups/
+BEFORE ANY EDIT to /data/.openclaw/openclaw.json:
+1. Search /data/downloads/ for existing backup folder (check for any folder with "openclaw" + "backup" in the name, case-insensitive, also check for generic "backups" or "backup" folders)
+2. If no backup folder found, create /data/downloads/openclaw-backups/
 3. Copy config to backup folder as readable .txt file: models-backup-MonDD-HHampm.txt
 4. Verify backup exists and is not empty
 5. ASK USER FOR PERMISSION before editing. Every time. No exceptions.
@@ -1226,30 +1226,30 @@ FULL INSTANCE BACKUP (every 2 weeks):
 - Excludes: videos, large images, node_modules, .git, caches, temp files
 
 If backup fails, STOP. Do not proceed with any edit.
-Full protocol: ~/Downloads/openclaw-master-files/processes/back-yourself-up-protocol.md
+Full protocol: /data/openclaw-master-files/processes/back-yourself-up-protocol.md
 Add to TOOLS.md: 
 Back Yourself Up Protocol [PRIORITY: CRITICAL]
-- Config file: ~/.openclaw/openclaw.json
-- Backup folder: search ~/Downloads/ for any folder with "openclaw" + "backup" in name, or "backups"/"backup"
+- Config file: /data/.openclaw/openclaw.json
+- Backup folder: search /data/downloads/ for any folder with "openclaw" + "backup" in name, or "backups"/"backup"
 - Backup naming: models-backup-MonDD-HHampm.txt (e.g., models-backup-February 23 at 11-00 AM.txt)
 - Generate filename: date +'%B %-d at %-I-%M %p'
 - Verify: ls -la, wc -l, head -5
 - After edit: python3 -m json.tool validation, then openclaw gateway restart
 - Full backup: every 2 weeks, keeps last 2 versions in full-backup/ subfolder
-- Full protocol: ~/Downloads/openclaw-master-files/processes/back-yourself-up-protocol.md
+- Full protocol: /data/openclaw-master-files/processes/back-yourself-up-protocol.md
 Add to MEMORY.md: 
 Back Yourself Up Protocol - Learned [DATE]
 Safety protocol for backing up OpenClaw config before every edit and full instance backup every 2 weeks.
 Born from the February 21, 2026 incident where wrong file was backed up and config got corrupted.
-Stored at: ~/Downloads/openclaw-master-files/processes/back-yourself-up-protocol.md
+Stored at: /data/openclaw-master-files/processes/back-yourself-up-protocol.md
 Priority: CRITICAL - this prevents catastrophic config loss
 Add to IDENTITY.md: 
 Core Safety Behavior: Back Yourself Up Protocol
-Before editing ~/.openclaw/openclaw.json, I ALWAYS create a backup first. I search for the backup folder
-in ~/Downloads/ (could be named openclaw-backups, OpenClaw Backup, backups, or similar). I create a
+Before editing /data/.openclaw/openclaw.json, I ALWAYS create a backup first. I search for the backup folder
+in /data/downloads/ (could be named openclaw-backups, OpenClaw Backup, backups, or similar). I create a
 human-readable .txt backup, verify it is not empty, ask the user for permission, and only then make the edit.
 After editing, I validate JSON and run openclaw gateway restart. This is non-negotiable.
-Full protocol: ~/Downloads/openclaw-master-files/processes/back-yourself-up-protocol.md
+Full protocol: /data/openclaw-master-files/processes/back-yourself-up-protocol.md
 Step 3: Set Up the Biweekly Cron Job
 After installing the protocol, set up an OpenClaw cron job for the full instance backup:
 Schedule: every other Sunday at 3:00 AM

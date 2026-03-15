@@ -9,7 +9,7 @@ OpenClaw uses workspace-based prompt injection combined with event-driven hooks.
 ## Workspace Structure
 
 ```
-~/.openclaw/                      
+/data/.openclaw/                      
 ├── workspace/                   # Working directory
 │   ├── AGENTS.md               # Multi-agent coordination patterns
 │   ├── SOUL.md                 # Behavioral guidelines and personality
@@ -37,7 +37,7 @@ clawdhub install self-improving-agent
 Or copy manually:
 
 ```bash
-cp -r self-improving-agent ~/.openclaw/skills/
+cp -r self-improving-agent /data/.openclaw/skills/
 ```
 
 ### 2. Install the Hook (Optional)
@@ -45,7 +45,7 @@ cp -r self-improving-agent ~/.openclaw/skills/
 Copy the hook to OpenClaw's hooks directory:
 
 ```bash
-cp -r hooks/openclaw ~/.openclaw/hooks/self-improvement
+cp -r hooks/openclaw /data/.openclaw/hooks/self-improvement
 ```
 
 Enable the hook:
@@ -59,13 +59,13 @@ openclaw hooks enable self-improvement
 Create the `.learnings/` directory in your workspace:
 
 ```bash
-mkdir -p ~/.openclaw/workspace/.learnings
+mkdir -p /data/.openclaw/workspace/.learnings
 ```
 
 Or in the skill directory:
 
 ```bash
-mkdir -p ~/.openclaw/skills/self-improving-agent/.learnings
+mkdir -p /data/.openclaw/skills/self-improving-agent/.learnings
 ```
 
 ## Injected Prompt Files

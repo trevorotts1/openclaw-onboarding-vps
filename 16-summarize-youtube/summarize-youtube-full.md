@@ -13,7 +13,7 @@ Install summarize CLI and make YouTube transcript + summary available in OpenCla
 ```bash
 set -e
 brew --version || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install steipete/tap/summarize
+apt-get install -y steipete/tap/summarize
 summarize --help >/dev/null
 
 set -a

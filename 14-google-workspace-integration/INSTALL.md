@@ -45,7 +45,7 @@ touches. When in doubt: skill docs win.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -55,7 +55,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -148,9 +148,9 @@ echo "$USER_EMAIL" | grep -q "@gmail.com" && echo "PATH_B_GMAIL" || echo "PATH_A
 
 - If `@gmail.com` - proceed directly to **Section 0B (Gmail Path)** at the end of this document.
 - If custom domain - continue with **Section 1 (Workspace Path)** below.
-- If no email is stored - check `~/clawd/secrets/.env` first:
+- If no email is stored - check `/data/openclaw/workspace/secrets/.env` first:
   ```bash
-  cat ~/clawd/secrets/.env 2>/dev/null | grep -E "USER_EMAIL|IMPERSONATE|GOG_DEFAULT"
+  cat /data/openclaw/workspace/secrets/.env 2>/dev/null | grep -E "USER_EMAIL|IMPERSONATE|GOG_DEFAULT"
   ```
   If still not found, ask the user for their Google email address. That is the ONLY time to ask.
 
@@ -623,16 +623,16 @@ The app stays in "Testing" mode. That is expected and fine for personal use.
 7. Click "Download JSON"
 8. Move the credentials file:
    ```bash
-   mkdir -p ~/clawd/secrets
-   mv ~/Downloads/client_secret_*.json ~/clawd/secrets/google-oauth-credentials.json
-   chmod 600 ~/clawd/secrets/google-oauth-credentials.json
+   mkdir -p /data/openclaw/workspace/secrets
+   mv /data/downloads/client_secret_*.json /data/openclaw/workspace/secrets/google-oauth-credentials.json
+   chmod 600 /data/openclaw/workspace/secrets/google-oauth-credentials.json
    ```
 
 ### Step G5: GOG CLI Setup (OAuth)
 
 1. Install GOG if not present:
    ```bash
-   command -v gog >/dev/null 2>&1 || brew install steipete/tap/gogcli
+   command -v gog >/dev/null 2>&1 || apt-get install -y steipete/tap/gogcli
    ```
 
 2. Add the Gmail account with OAuth:
@@ -650,8 +650,8 @@ The app stays in "Testing" mode. That is expected and fine for personal use.
 
 4. Store default account:
    ```bash
-   echo "export GOG_DEFAULT_ACCOUNT=$USER_EMAIL" >> ~/clawd/secrets/.env
-   source ~/clawd/secrets/.env
+   echo "export GOG_DEFAULT_ACCOUNT=$USER_EMAIL" >> /data/openclaw/workspace/secrets/.env
+   source /data/openclaw/workspace/secrets/.env
    ```
 
 ### Step G6: Test and Verify

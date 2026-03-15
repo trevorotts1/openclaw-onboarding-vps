@@ -9,7 +9,7 @@ Real examples showing the Google Workspace integration in action, including comm
 The agent handles the full setup autonomously. When triggered, it:
 
 1. Detects account type: Workspace (service account path) or Gmail (OAuth path)
-2. Uses Playwright with `launchPersistentContext` (session stored at `~/.openclaw/playwright-data/`)
+2. Uses Playwright with `launchPersistentContext` (session stored at `/data/.openclaw/playwright-data/`)
 3. Creates a GCP project
 4. Enables all required APIs (Gmail, Calendar, Drive, Docs, Sheets, Slides, Chat, Forms, Keep, Admin, Analytics, Tag Manager, Search Console, YouTube, Places, Looker Studio)
 5. Creates a service account with domain-wide delegation (Workspace path)

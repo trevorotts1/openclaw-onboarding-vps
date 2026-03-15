@@ -14,7 +14,7 @@ Add:
 - Full guide: [MASTER_FILES_FOLDER]/OpenClaw Onboarding/06-ghl-install-pages/ghl-install-pages-full.md
 - Use Playwright with launchPersistentContext (NEVER launch())
 - Always verify correct sub-account before building
-- Credentials: ~/clawd/secrets/.env (GHL_EMAIL, GHL_PASSWORD)
+- Credentials: /data/openclaw/workspace/secrets/.env (GHL_EMAIL, GHL_PASSWORD)
 ```
 
 ---

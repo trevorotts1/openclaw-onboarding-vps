@@ -33,7 +33,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -43,7 +43,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -119,8 +119,8 @@ Stop. Ask your user: "Before I can properly learn this SuperDesign document, I n
 
 Deep File Storage Path:
 Save this entire document (untruncated, nothing removed) to:
-~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
-If the openclaw-master-files folder does not exist, check ~/Downloads/ for any similar folder (openclaw-docs, openclaw-master-docs, master-files). If nothing similar exists, create ~/Downloads/openclaw-master-files/superdesign/ and save there.
+/data/openclaw-master-files/superdesign/superdesign-instructions.md
+If the openclaw-master-files folder does not exist, check /data/downloads/ for any similar folder (openclaw-docs, openclaw-master-docs, master-files). If nothing similar exists, create /data/openclaw-master-files/superdesign/ and save there.
 
 Lightweight Summary Templates:
 After storing the deep file, add these lightweight summaries to your core files:
@@ -133,7 +133,7 @@ Three modes: Web App (browser, Chrome extension cloning), CLI (terminal commands
 Exports: React code, HTML/CSS, style.md (design system document).
 Hosting rules: GHL/Convert & Flow requires self-contained HTML with inline CSS, no React, no external stylesheets. Vercel/Netlify supports React.
 When to go deeper: First time designing, hitting export errors, GHL deployment issues, unfamiliar with CLI commands.
-Deep file: ~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
+Deep file: /data/openclaw-master-files/superdesign/superdesign-instructions.md
 
 Add to TOOLS.md:
 
@@ -145,15 +145,15 @@ Key commands: superdesign create-project, superdesign create-design-draft, super
 Exports: React (for Vercel/Netlify), HTML (for GHL/WordPress), style.md (universal design system)
 GHL rule: Self-contained HTML only. No React. No external CSS. Scripts separate from divs.
 When to go deeper: Complex design tasks, GHL deployment, multi-page funnels, Chrome extension cloning.
-Deep file: ~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
+Deep file: /data/openclaw-master-files/superdesign/superdesign-instructions.md
 
 Add to MEMORY.md:
 
 ## SuperDesign Skill - Learned [DATE]
 Received and stored complete SuperDesign instruction document (169K chars, 2300+ lines).
 Covers: Web App, CLI, IDE Extension, Chrome Extension cloning, hosting compatibility, design principles, 10 prompt templates, GHL deployment walkthrough, post-design assembly process.
-Deep file: ~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md
-SKILL.md: ~/.openclaw/skills/superdesign/SKILL.md (or ~/.agents/skills/superdesign/SKILL.md)
+Deep file: /data/openclaw-master-files/superdesign/superdesign-instructions.md
+SKILL.md: /data/.openclaw/skills/superdesign/SKILL.md (or ~/.agents/skills/superdesign/SKILL.md)
 
 Add to IDENTITY.md:
 
@@ -528,7 +528,7 @@ Saving the final deliverable in the format the user requested
 Never deliver a SuperDesign export with placeholder text as a finished product. The design is the starting point. The finished site requires content injection.
 
 WHAT TO ADD TO YOUR OPENCLAW SKILL FILE (SKILL.md)
-If you are an OpenClaw agent, create or update the following skill file at ~/.openclaw/skills/superdesign-web/SKILL.md:
+If you are an OpenClaw agent, create or update the following skill file at /data/.openclaw/skills/superdesign-web/SKILL.md:
 ---
 name: superdesign-web
 description: Use SuperDesign (superdesign.dev) to design websites via browser automation or CLI. Handles cloning existing sites, generating designs from scratch, creating variations, exporting code, and assembling finished pages with real content.
@@ -2095,7 +2095,7 @@ npm (comes with Node.js)
 A terminal / command line
 If Node.js is not installed:
 # Mac (using Homebrew)
-brew install node
+apt-get install -y node
 
 # Windows (download from)
 # https://nodejs.org - download the LTS version
@@ -2262,7 +2262,7 @@ Once the skill is installed, you can use it conversationally:
 The agent will translate your request into the appropriate CLI commands and execute them.
 
 SKILL REPOSITORY: WHAT TO ADD TO YOUR OPENCLAW SKILL FILE
-If you're using OpenClaw, update or create the skill file at ~/.openclaw/skills/superdesign-skill/SKILL.md:
+If you're using OpenClaw, update or create the skill file at /data/.openclaw/skills/superdesign-skill/SKILL.md:
 ---
 name: superdesign-skill
 description: Official SuperDesign skill for designing websites via CLI and IDE. Handles design generation, site cloning workflows, brand extraction, multi-page funnels, and code export. Uses hybrid approach - web app for cloning, CLI/IDE for unlimited local generation.

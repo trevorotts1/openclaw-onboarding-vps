@@ -71,7 +71,7 @@ Then reload: `source ~/.zshrc`
 ### Option B: OpenClaw secrets file (recommended for agent access)
 
 ```bash
-# Add to ~/clawd/secrets/.env
+# Add to /data/openclaw/workspace/secrets/.env
 GHL_API_KEY=your_private_integration_token_here
 GHL_LOCATION_ID=your_location_id_here
 ```
@@ -129,7 +129,7 @@ This skill uses standard shell tools only. No extra packages needed.
 
 ```bash
 # macOS
-brew install jq
+apt-get install -y jq
 
 # Usage example - get just the location name
 curl -s \

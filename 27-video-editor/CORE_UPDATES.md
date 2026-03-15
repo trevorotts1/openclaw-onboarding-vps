@@ -29,7 +29,7 @@ Add this section:
 ## Video Skills Suite
 
 ### Video Editor (Skill 27)
-- Location: `~/.openclaw/skills/video-editor/`
+- Location: `/data/.openclaw/skills/video-editor/`
 - Purpose: cut, resize, caption, and assemble videos with repeatable scripts
 - Use when: user asks to trim a video, make reels, add overlays, add captions, or export for a platform
 ```
@@ -39,5 +39,5 @@ Add this pointer:
 
 ```md
 ## Video Skills Suite
-- Video Editor (Skill 27): `~/.openclaw/skills/video-editor/`
+- Video Editor (Skill 27): `/data/.openclaw/skills/video-editor/`
 ```

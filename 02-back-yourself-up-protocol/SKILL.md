@@ -7,7 +7,7 @@ OpenClaw system from two types of disaster: config file corruption (small but co
 and total system loss (rare but catastrophic). It has two parts that work together.
 
 **Part 1 - Config Backup:** Every single time the agent needs to edit the OpenClaw
-config file (~/.openclaw/openclaw.json), it must create a backup first and get the
+config file (/data/.openclaw/openclaw.json), it must create a backup first and get the
 user's permission before making any change. No exceptions, no matter how small the
 edit seems.
 
@@ -24,7 +24,7 @@ for over an hour. This protocol makes sure that never happens again.
 
 ## When This Skill Triggers
 
-**Part 1 triggers** any time the agent is about to edit ~/.openclaw/openclaw.json.
+**Part 1 triggers** any time the agent is about to edit /data/.openclaw/openclaw.json.
 Adding a model, removing a model, changing a temperature, updating an API key,
 fixing a typo - every edit, every time.
 
@@ -40,7 +40,7 @@ the edit. Do not proceed. Fix the backup first.
   or create the backup folder, copy the config, verify the backup is not empty, ask
   for permission, make the edit, validate the JSON, restart the gateway, confirm
 - **Backup Folder Detection** - smart search for existing backup folders in
-  ~/Downloads/ using case-insensitive matching (users may have named the folder
+  /data/downloads/ using case-insensitive matching (users may have named the folder
   differently)
 - **Human-Readable File Naming** - backup files use names like
   "models-backup-February 23 at 11-00 AM.txt" instead of robot dates
@@ -83,7 +83,7 @@ reference this protocol.
 
 ## Key Things the Agent Needs to Know
 
-1. **The config file path is always ~/.openclaw/openclaw.json.** Not clawdbot.json.
+1. **The config file path is always /data/.openclaw/openclaw.json.** Not clawdbot.json.
    Not any other file. Verify the path character by character before copying.
 
 2. **Backup before every edit means every edit.** "It is just a small change" is not
@@ -97,9 +97,9 @@ reference this protocol.
 4. **Surgical edits only.** When given permission to change one thing, change only
    that thing. Do not reformat, reorder, or "clean up" anything else in the file.
 
-5. **The backup folder lives in ~/Downloads/.** Search for it using smart detection
+5. **The backup folder lives in /data/downloads/.** Search for it using smart detection
    (case-insensitive, checks multiple naming patterns). If nothing exists, create
-   ~/Downloads/openclaw-backups/ as the default.
+   /data/downloads/openclaw-backups/ as the default.
 
 6. **Human-readable dates on all backup filenames.** Use the format
    "models-backup-February 23 at 11-00 AM.txt". Generate with:

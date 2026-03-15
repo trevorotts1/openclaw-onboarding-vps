@@ -40,7 +40,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -50,7 +50,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -112,15 +112,15 @@ Copy this entire skill folder into the standard OpenClaw skills directory so the
 
 Run:
 ```bash
-mkdir -p ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system
-cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+mkdir -p /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system
+cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
 **Note:** If the onboarding package was extracted to a different location, replace `/tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/` with the actual path to this skill folder.
 
 Verify:
 ```bash
-ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+ls /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
 **Expected output:** SKILL.md, INSTALL.md, PIPELINE.md, CHECKLIST.md, CORE_UPDATES.md, GOOD-AND-BAD-EXAMPLES.md, PERSONA-ROUTER.md, QMD-RETRIEVAL-GUIDE.md, personas/, pipeline/, agent-prompts/ all present.
@@ -194,7 +194,7 @@ pip3 install ebooklib --break-system-packages
 ```bash
 if ! command -v ebook-convert &>/dev/null; then
   echo "Calibre not found. Installing..."
-  brew install --cask calibre
+  apt-get install -y --cask calibre
 else
   echo "Calibre already installed: $(ebook-convert --version | head -1)"
 fi
@@ -233,9 +233,9 @@ find ~/Downloads -maxdepth 2 -type d -iname "*openclaw*master*" -o \
 
 **If no folder is found:** Create the standard one:
 ```bash
-mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/books
-mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/text
-mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/personas
+mkdir -p /data/openclaw-master-files/coaching-personas/books
+mkdir -p /data/openclaw-master-files/coaching-personas/text
+mkdir -p /data/openclaw-master-files/coaching-personas/personas
 ```
 
 **Record the detected path** - you will use it for all file operations in this session.
@@ -268,7 +268,7 @@ _find_key() {
 }
 _find_key "MOONSHOT_API_KEY"
 ```
-If missing, add your Moonshot API key to `~/clawd/secrets/.env`.
+If missing, add your Moonshot API key to `/data/openclaw/workspace/secrets/.env`.
 
 ### DeepSeek V3.2-Speciale (Phase 2)
 Routes via OpenRouter. Check across all known env files:
@@ -279,7 +279,7 @@ _find_key "OPENROUTER_API_KEY"
 ### GPT-5.3 Codex (Phase 3)
 Routes via OpenClaw OAuth. Check:
 ```bash
-cat ~/.openclaw/agents/main/agent/auth-profiles.json | python3 -c "
+cat /data/.openclaw/agents/main/agent/auth-profiles.json | python3 -c "
 import json,sys,datetime
 d=json.load(sys.stdin)
 p=d.get('profiles',{}).get('openai-codex:default',{})
@@ -342,12 +342,12 @@ fi
 Run this command now - the agent executes it autonomously:
 
 ```bash
-bash ~/.openclaw/skills/scripts/update-skills.sh --setup-cron
+bash /data/.openclaw/skills/scripts/update-skills.sh --setup-cron
 ```
 
 If the setup script does not exist yet, check the onboarding package:
 ```bash
-mkdir -p ~/.openclaw/skills/scripts
+mkdir -p /data/.openclaw/skills/scripts
 SETUP_SCRIPT=""
 for candidate in \
   "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
@@ -358,9 +358,9 @@ for candidate in \
   fi
 done
 if [ -n "$SETUP_SCRIPT" ]; then
-  cp "$SETUP_SCRIPT" ~/.openclaw/skills/scripts/setup-weekly-update.sh
-  chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
-  bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  cp "$SETUP_SCRIPT" /data/.openclaw/skills/scripts/setup-weekly-update.sh
+  chmod +x /data/.openclaw/skills/scripts/setup-weekly-update.sh
+  bash /data/.openclaw/skills/scripts/setup-weekly-update.sh
 else
   echo "Setup script not found in onboarding package. Skip and note in completion report."
 fi
@@ -395,7 +395,7 @@ Pick any PDF in the books folder (or use a small test PDF) and confirm pdfplumbe
 python3 -c "
 import pdfplumber, os, glob
 
-books_dir = os.path.expanduser('~/Downloads/openclaw-master-files/coaching-personas/books')
+books_dir = os.path.expanduser('/data/openclaw-master-files/coaching-personas/books')
 pdfs = glob.glob(os.path.join(books_dir, '*.pdf'))
 if not pdfs:
     print('NO PDFs found in books/ folder. Add a book PDF to test.')
@@ -422,20 +422,20 @@ If no PDFs exist yet, skip this sub-step - extraction will be tested on the firs
 ```bash
 # Test Moonshot API key with a minimal request
 curl -s https://api.moonshot.cn/v1/chat/completions \
-  -H "Authorization: Bearer $(grep MOONSHOT_API_KEY ~/clawd/secrets/.env | cut -d= -f2)" \
+  -H "Authorization: Bearer $(grep MOONSHOT_API_KEY /data/openclaw/workspace/secrets/.env | cut -d= -f2)" \
   -H "Content-Type: application/json" \
   -d '{"model":"kimi-k2.5","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"max_tokens":10}' \
   | python3 -c "import json,sys; r=json.load(sys.stdin); print('Phase 1 (Kimi):', r.get('choices',[{}])[0].get('message',{}).get('content','FAILED'))"
 ```
 
 **Expected output:** `Phase 1 (Kimi): CONNECTED`
-If it fails, verify MOONSHOT_API_KEY is correct in `~/clawd/secrets/.env`.
+If it fails, verify MOONSHOT_API_KEY is correct in `/data/openclaw/workspace/secrets/.env`.
 
 ### 8c - Verify Phase 2 model connectivity (DeepSeek via OpenRouter)
 
 ```bash
 curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $(grep OPENROUTER_API_KEY ~/clawd/secrets/.env | cut -d= -f2)" \
+  -H "Authorization: Bearer $(grep OPENROUTER_API_KEY /data/openclaw/workspace/secrets/.env | cut -d= -f2)" \
   -H "Content-Type: application/json" \
   -d '{"model":"deepseek/deepseek-chat","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"max_tokens":10}' \
   | python3 -c "import json,sys; r=json.load(sys.stdin); print('Phase 2 (DeepSeek):', r.get('choices',[{}])[0].get('message',{}).get('content','FAILED'))"
@@ -453,7 +453,7 @@ If Codex is unavailable, the pipeline automatically falls back to Kimi K2.5 (Pha
 ### 8e - Verify output directory structure
 
 ```bash
-MASTER_DIR=~/Downloads/openclaw-master-files/coaching-personas
+MASTER_DIR=/data/openclaw-master-files/coaching-personas
 echo "Checking output directories..."
 for dir in books text personas; do
   if [ -d "$MASTER_DIR/$dir" ]; then
@@ -488,7 +488,7 @@ This triggers the full sequence:
 
 **Output files land in:**
 ```
-~/Downloads/openclaw-master-files/coaching-personas/personas/[author]-[book-slug]/
+/data/openclaw-master-files/coaching-personas/personas/[author]-[book-slug]/
   ├── extraction-notes.md     (Phase 1 output)
   ├── analysis-notes.md       (Phase 2 output)
   └── persona-blueprint.md    (Phase 3 output - the deployable persona)
@@ -503,13 +503,13 @@ Run one book through the complete 3-phase pipeline to verify the entire system w
 1. Pick any PDF from the books/ folder (or use a provided sample book)
 2. Run the orchestrator:
 ```bash
-python3 ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py --single [book-slug]
+python3 /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py --single [book-slug]
 ```
 Replace `[book-slug]` with the filename slug of the book (e.g., `clear-atomic-habits` for a book by James Clear on Atomic Habits).
 
 3. Verify all three output files were created:
 ```bash
-PERSONA_DIR=~/Downloads/openclaw-master-files/coaching-personas/personas/[book-slug]
+PERSONA_DIR=/data/openclaw-master-files/coaching-personas/personas/[book-slug]
 echo "Checking pipeline output..."
 for file in extraction-notes.md analysis-notes.md persona-blueprint.md; do
   if [ -f "$PERSONA_DIR/$file" ]; then
@@ -565,8 +565,8 @@ Run through this checklist:
 - [ ] ebooklib installed
 - [ ] Calibre ebook-convert available
 - [ ] Master files folder located or created
-- [ ] Moonshot API key confirmed in ~/clawd/secrets/.env
-- [ ] OpenRouter API key confirmed in ~/clawd/secrets/.env
+- [ ] Moonshot API key confirmed in /data/openclaw/workspace/secrets/.env
+- [ ] OpenRouter API key confirmed in /data/openclaw/workspace/secrets/.env
 - [ ] Codex OAuth token confirmed and not expired
 - [ ] QMD collection coaching-personas added and embedded (Step 5)
 - [ ] QMD test query returns results

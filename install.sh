@@ -1,18 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v2.4.0"
+ONBOARDING_VERSION="v2.4.0-vps"
 
 # ============================================================
-#  OpenClaw Onboarding Installer
-#  Run via: curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash
+#  OpenClaw VPS Onboarding Installer (Hostinger Edition)
+#  Run INSIDE the Docker container:
+#    docker ps
+#    docker exec -it [container-name] bash
+#    curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 # ============================================================
+
+# ----------------------------------------------------------
+# VPS persistent storage paths
+# Everything must live under /data/ to survive container restarts
+# ----------------------------------------------------------
+DATA_DIR="/data"
+ONBOARDING_DIR="$DATA_DIR/.openclaw/onboarding"
+WORKSPACE_DIR="$DATA_DIR/openclaw/workspace"
+MASTER_FILES_DIR="$DATA_DIR/openclaw-master-files"
+BACKUP_DIR="$DATA_DIR/openclaw-backups"
+SKILLS_DIR="$DATA_DIR/.openclaw/skills"
+
+mkdir -p "$ONBOARDING_DIR" "$WORKSPACE_DIR" "$MASTER_FILES_DIR" "$BACKUP_DIR" "$SKILLS_DIR"
 
 # ----------------------------------------------------------
 # Check if onboarding already in progress
 # ----------------------------------------------------------
-ONBOARDING_DIR="$HOME/.openclaw/onboarding"
-mkdir -p "$ONBOARDING_DIR"
 INSTALL_FLAG="$ONBOARDING_DIR/.install-in-progress"
 
 if [ -f "$INSTALL_FLAG" ]; then
@@ -20,49 +34,71 @@ if [ -f "$INSTALL_FLAG" ]; then
   echo "============================================"
   echo "   Onboarding already in progress"
   echo "============================================"
-  echo ""
-  echo "Another installation process is already running."
-  echo "If this is incorrect, you can manually remove the flag:"
+  echo "If this is incorrect, remove the flag:"
   echo "  rm $INSTALL_FLAG"
   echo ""
   exit 0
 fi
 
-# Create flag file
 touch "$INSTALL_FLAG"
 trap 'rm -f "$INSTALL_FLAG"' EXIT
 
 echo ""
 echo "============================================"
-echo "   OpenClaw Onboarding Installer"
+echo "   OpenClaw VPS Onboarding Installer"
 echo "   Version: ${ONBOARDING_VERSION}"
+echo "   Storage: /data/ (persistent)"
 echo "============================================"
 echo ""
 
 # ----------------------------------------------------------
 # Step 1: Check that OpenClaw CLI is installed
 # ----------------------------------------------------------
-echo "[1/5] Checking for OpenClaw CLI..."
+echo "[1/6] Checking for OpenClaw CLI..."
 if ! command -v openclaw &>/dev/null; then
   echo ""
   echo "ERROR: OpenClaw CLI not found in PATH."
-  echo ""
-  echo "Install OpenClaw first:"
-  echo "  npm install -g openclaw"
+  echo "Install OpenClaw first: npm install -g openclaw"
   echo ""
   exit 1
 fi
 echo "  Found: $(command -v openclaw)"
 
 # ----------------------------------------------------------
-# Step 2: Download the onboarding package
+# Step 2: Check required tools
 # ----------------------------------------------------------
 echo ""
-echo "[2/5] Downloading 29 skills from GitHub..."
-TEMP_ZIP="/tmp/openclaw-onboarding-pkg.zip"
-TEMP_EXTRACT="/tmp/openclaw-onboarding-extract"
+echo "[2/6] Checking required tools..."
 
-curl -fsSL "https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
+# Check for tar (required for extraction)
+if ! command -v tar &>/dev/null; then
+  echo "ERROR: tar not found. Install it: apt-get install -y tar"
+  exit 1
+fi
+echo "  tar: OK"
+
+# Check for curl
+if ! command -v curl &>/dev/null; then
+  echo "ERROR: curl not found. Install it: apt-get install -y curl"
+  exit 1
+fi
+echo "  curl: OK"
+
+# Install unzip if missing (used as fallback)
+if ! command -v unzip &>/dev/null; then
+  echo "  unzip not found - installing..."
+  apt-get update -qq && apt-get install -y -qq unzip 2>/dev/null || echo "  (unzip install failed - will use tar)"
+fi
+
+# ----------------------------------------------------------
+# Step 3: Download the VPS onboarding package
+# ----------------------------------------------------------
+echo ""
+echo "[3/6] Downloading 29 skills from GitHub..."
+TEMP_ZIP="/tmp/openclaw-onboarding-vps-pkg.zip"
+TEMP_EXTRACT="/tmp/openclaw-onboarding-vps-extract"
+
+curl -fsSL "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
 if [ ! -f "$TEMP_ZIP" ]; then
   echo "ERROR: Failed to download onboarding package."
   exit 1
@@ -70,72 +106,70 @@ fi
 echo "  Downloaded to $TEMP_ZIP"
 
 # ----------------------------------------------------------
-# Step 3: Extract to ~/.openclaw/onboarding/
+# Step 4: Extract to /data/.openclaw/onboarding/
 # ----------------------------------------------------------
 echo ""
-echo "[3/5] Extracting to ~/.openclaw/onboarding/..."
+echo "[4/6] Extracting to $ONBOARDING_DIR..."
 rm -rf "$TEMP_EXTRACT"
-unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
-if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
+mkdir -p "$TEMP_EXTRACT"
+
+# Try unzip first, fall back to python3
+if command -v unzip &>/dev/null; then
+  unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
+else
+  python3 -c "import zipfile; zipfile.ZipFile('/tmp/openclaw-onboarding-vps-pkg.zip').extractall('$TEMP_EXTRACT')"
+fi
+
+if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
   echo "ERROR: Unexpected archive structure."
   rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
   exit 1
 fi
 
-# Clear existing onboarding folder and copy fresh
-cp -r "$TEMP_EXTRACT/openclaw-onboarding-main/"* "$ONBOARDING_DIR/"
+cp -r "$TEMP_EXTRACT/openclaw-onboarding-vps-main/"* "$ONBOARDING_DIR/"
 rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
 echo "  Installed to $ONBOARDING_DIR"
 
-# Count skills
 SKILL_COUNT=$(ls -1 "$ONBOARDING_DIR" | grep -E "^[0-9]+-" | wc -l)
 echo "  Skills found: $SKILL_COUNT"
 
-# Record version
-SKILLS_DIR="$HOME/.openclaw/skills"
-mkdir -p "$SKILLS_DIR"
 echo "$ONBOARDING_VERSION" > "$SKILLS_DIR/.onboarding-version"
 echo "$ONBOARDING_VERSION" > "$ONBOARDING_DIR/.onboarding-version"
 echo "  Version: $ONBOARDING_VERSION"
 
 # ----------------------------------------------------------
-# Step 4: Set up backup folder
+# Step 5: Set up ffmpeg static binary in /data/bin/
 # ----------------------------------------------------------
 echo ""
-echo "[4/5] Setting up backup folder..."
-DOWNLOADS_DIR="$HOME/Downloads"
-BACKUP_DIR=""
+echo "[5/6] Checking ffmpeg..."
+BIN_DIR="$DATA_DIR/bin"
+mkdir -p "$BIN_DIR"
 
-# Look for existing backup folder
-if [ -d "$DOWNLOADS_DIR" ]; then
-  while IFS= read -r dir; do
-    dirname_lower=$(basename "$dir" | tr '[:upper:]' '[:lower:]')
-    if [[ "$dirname_lower" == *openclaw* ]] && [[ "$dirname_lower" == *backup* ]]; then
-      BACKUP_DIR="$dir"
-      break
-    fi
-  done < <(find "$DOWNLOADS_DIR" -maxdepth 1 -type d 2>/dev/null)
-fi
-
-# Create if not found
-if [ -z "$BACKUP_DIR" ]; then
-  BACKUP_DIR="$DOWNLOADS_DIR/OpenClaw Backups"
-  mkdir -p "$BACKUP_DIR"
-  echo "  Created: $BACKUP_DIR"
+if command -v ffmpeg &>/dev/null; then
+  echo "  ffmpeg already available: $(command -v ffmpeg)"
 else
-  echo "  Found: $BACKUP_DIR"
+  echo "  ffmpeg not found - downloading static binary to $BIN_DIR..."
+  FFMPEG_URL="https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
+  curl -fsSL "$FFMPEG_URL" -o /tmp/ffmpeg.tar.xz 2>/dev/null && \
+    tar -xf /tmp/ffmpeg.tar.xz -C /tmp/ 2>/dev/null && \
+    cp /tmp/ffmpeg-*-amd64-static/ffmpeg "$BIN_DIR/ffmpeg" && \
+    cp /tmp/ffmpeg-*-amd64-static/ffprobe "$BIN_DIR/ffprobe" && \
+    chmod +x "$BIN_DIR/ffmpeg" "$BIN_DIR/ffprobe" && \
+    rm -rf /tmp/ffmpeg* && \
+    echo "  ffmpeg installed to $BIN_DIR/ffmpeg" || \
+    echo "  WARNING: ffmpeg download failed. Video skills will not work. Install manually later."
+
+  # Add to PATH for this session
+  export PATH="$BIN_DIR:$PATH"
 fi
 
 # ----------------------------------------------------------
-# Step 5: Write onboarding flag to AGENTS.md
+# Step 6: Write onboarding flag to AGENTS.md
 # ----------------------------------------------------------
 echo ""
-echo "[5/5] Writing onboarding flag..."
-WORKSPACE_DIR="$HOME/.openclaw/workspace"
+echo "[6/6] Writing onboarding flag..."
 AGENTS_FILE="$WORKSPACE_DIR/AGENTS.md"
-mkdir -p "$WORKSPACE_DIR"
 
-# Remove any existing ONBOARDING PENDING flag to avoid duplicates
 if [ -f "$AGENTS_FILE" ]; then
   grep -v "ONBOARDING PENDING\|ONBOARDING COMPLETE" "$AGENTS_FILE" > "$AGENTS_FILE.tmp" 2>/dev/null || true
   mv "$AGENTS_FILE.tmp" "$AGENTS_FILE" 2>/dev/null || true
@@ -146,26 +180,25 @@ cat >> "$AGENTS_FILE" << 'ONBOARDING_FLAG'
 ---
 🔴🔴🔴 ONBOARDING PENDING - EXECUTE IMMEDIATELY
 
+VPS INSTALLATION - All paths use /data/ (persistent storage)
+
 The OpenClaw onboarding package (29 skills) has been installed to:
-  ~/.openclaw/onboarding/
+  /data/.openclaw/onboarding/
 
-READ THIS FILE FIRST: ~/.openclaw/onboarding/Start Here.md
+READ THIS FILE FIRST: /data/.openclaw/onboarding/Start Here.md
 
-It contains the complete execution checklist, wave instructions, and failure handling.
-
-SUMMARY:
-- Install 29 skills using 5-Wave Parallel Orchestration
-- Use parallel sub-agents for Waves 2 and 4 (if sessions_spawn works)
-- Use sequential mode for Waves 1, 3, 5
+IMPORTANT - VPS RULES:
+- Install skills SEQUENTIALLY (01 through 29 in order) - NO parallel sub-agents
+- All paths use /data/ NOT ~/clawd/ or ~/Downloads/
+- Browser tools use headless mode only (no visible Chrome on VPS)
 - Skip skill 13 (archived)
-- Skills 22-23: Main orchestrator ONLY (no sub-agents)
-- Track progress in ~/.openclaw/onboarding/.onboarding-status
-- Remove this flag and write ONBOARDING COMPLETE to MEMORY.md when done
+- Skills 22-23: Main orchestrator ONLY
+- Track progress in /data/.openclaw/onboarding/.onboarding-status
 
 DO NOT:
 - Skip reading Start Here.md
-- Skip skills or say "done" until all 29 complete
-- Delegate skills 22-23 to sub-agents
+- Use parallel sub-agents (unreliable in Docker)
+- Use ~/clawd/ or ~/Downloads/ paths (not persistent)
 - Trigger gateway restarts without asking
 
 ZERO TOLERANCE SHORTCUTS:
@@ -175,29 +208,27 @@ ZERO TOLERANCE SHORTCUTS:
 ---
 ONBOARDING_FLAG
 
-echo "  Onboarding flag written to AGENTS.md"
+echo "  Onboarding flag written to $AGENTS_FILE"
 
 # ----------------------------------------------------------
 # Done
 # ----------------------------------------------------------
 echo ""
 echo "============================================"
-echo "  OpenClaw Onboarding Package Ready"
+echo "  OpenClaw VPS Onboarding Package Ready"
 echo "  Version: ${ONBOARDING_VERSION}"
 echo "============================================"
 echo ""
 echo "  📦 29 skills downloaded to:"
-echo "     ~/.openclaw/onboarding/"
+echo "     /data/.openclaw/onboarding/"
 echo ""
-echo "  📋 Next step: Tell your AI agent to begin."
+echo "  💾 All data stored in /data/ (survives restarts)"
 echo ""
-echo "     Send this message to your OpenClaw agent:"
-echo ""
+echo "  📋 Next step: Tell your AI agent:"
 echo "       'Begin onboarding installation'"
 echo ""
-echo "  The agent will read AGENTS.md, find the"
-echo "  ONBOARDING PENDING flag, and install all"
-echo "  29 skills automatically."
+echo "  The agent will read AGENTS.md and install"
+echo "  all 29 skills sequentially."
 echo ""
 echo "============================================"
 echo ""

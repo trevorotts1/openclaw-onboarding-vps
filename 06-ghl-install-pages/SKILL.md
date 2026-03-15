@@ -35,7 +35,7 @@ code into GHL so the page goes live.
 - Backup Protocol must be learned first (skill 02)
 - GHL Setup must be complete (skill 05) - the account must already exist
 - Playwright must be installed for browser automation
-- GHL login credentials must be stored in ~/clawd/secrets/.env
+- GHL login credentials must be stored in /data/openclaw/workspace/secrets/.env
 
 ## What This Skill Covers
 
@@ -87,5 +87,5 @@ code into GHL so the page goes live.
   click too fast or the builder will not keep up.
 - Every deployment ends with a report: what was built, preview screenshots at
   desktop/tablet/mobile sizes, and whether publishing is approved.
-- Credentials go in ~/clawd/secrets/.env as GHL_EMAIL and GHL_PASSWORD.
+- Credentials go in /data/openclaw/workspace/secrets/.env as GHL_EMAIL and GHL_PASSWORD.
   Never hardcode credentials in scripts.

@@ -27,10 +27,10 @@ Load returned persona's Task Mode. Execute the task through that methodology.
 Skip only if the user explicitly says so.
 
 Key paths:
-- Skill: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
-- Personas: ~/Downloads/openclaw-master-files/coaching-personas/personas/
-- Router: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md
-- Orchestrator: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py
+- Skill: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+- Personas: /data/openclaw-master-files/coaching-personas/personas/
+- Router: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md
+- Orchestrator: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py
 - QMD collection: coaching-personas [run: qmd status -c coaching-personas to get current counts]
 
 To add a new book: follow SOP in MEMORY.md under "Add New Book to Coaching Personas Matrix"
@@ -46,14 +46,14 @@ To add a new book: follow SOP in MEMORY.md under "Add New Book to Coaching Perso
 ```
 ## Book-to-Persona - Model Routing and QMD
 Pipeline model routing:
-- Phase 1: moonshot/kimi-k2.5 — MOONSHOT_API_KEY in ~/clawd/secrets/.env — endpoint: https://api.moonshot.cn/v1 — temperature MUST be 1.0
+- Phase 1: moonshot/kimi-k2.5 — MOONSHOT_API_KEY in /data/openclaw/workspace/secrets/.env — endpoint: https://api.moonshot.cn/v1 — temperature MUST be 1.0
 - Phase 2: deepseek/deepseek-v3.2-speciale via OpenRouter ONLY (OPENROUTER_API_KEY)
 - Phase 3: openai/gpt-5.3-codex via OpenClaw OAuth (ChatGPT subscription)
 - Fallback (content filter): OpenRouter moonshotai/kimi-k2.5 for flagged books
 
 QMD collection: coaching-personas
 Setup commands (run once on fresh install):
-  qmd collection add ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas --name coaching-personas --mask "**/*.md"
+  qmd collection add /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas --name coaching-personas --mask "**/*.md"
   qmd update
   qmd embed  (takes 3-8 min first time, downloads local model, runs offline after)
 
@@ -61,8 +61,8 @@ Runtime query: qmd search coaching-personas "<task keywords>"
 After adding new book: qmd update (no need to re-embed everything)
 If stale/broken: qmd cleanup && qmd update && qmd embed
 
-Full pipeline reference: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PIPELINE.md
-Full QMD guide: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/QMD-RETRIEVAL-GUIDE.md
+Full pipeline reference: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PIPELINE.md
+Full QMD guide: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/QMD-RETRIEVAL-GUIDE.md
 ```
 
 ---
@@ -74,8 +74,8 @@ Full QMD guide: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system
 **Exact text to add:**
 ```
 ## Book-to-Persona Persona Library (Installed [DATE])
-- Skill: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
-- Pre-built personas (see qmd status -c coaching-personas for count): ~/Downloads/openclaw-master-files/coaching-personas/personas/
+- Skill: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+- Pre-built personas (see qmd status -c coaching-personas for count): /data/openclaw-master-files/coaching-personas/personas/
 - QMD collection: coaching-personas [run: qmd status -c coaching-personas to get current counts]
 - Source: Available at your onboarding package repo.
 - Persona Reflex: query QMD before every professional task (see AGENTS.md)
@@ -141,9 +141,9 @@ Before professional tasks: qmd search coaching-personas "<task>" → load person
 **Exact text to add:**
 ```
 ## Pending Skill Setup - Check and Remind
-File: ~/.openclaw/skills/.pending-setup.md
+File: /data/.openclaw/skills/.pending-setup.md
 If this file exists with entries marked Status: PENDING, proactively remind the user.
 When relevant to what they are working on, say: "You have a pending skill setup for [key] - want to add that now?"
-When user provides the key: save it to ~/clawd/secrets/.env and mark the entry Status: COMPLETE.
+When user provides the key: save it to /data/openclaw/workspace/secrets/.env and mark the entry Status: COMPLETE.
 Never nag - bring it up once per session max, only when relevant.
 ```

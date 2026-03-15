@@ -11,9 +11,9 @@ Add under behavioral rules:
 
 ```
 ### BACKUP PROTOCOL [PRIORITY: CRITICAL]
-Before EVERY edit to ~/.openclaw/openclaw.json - no matter how small:
-1. Find backup folder in ~/Downloads/ (search for openclaw + backup)
-2. cp ~/.openclaw/openclaw.json "[BACKUP_FOLDER]/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
+Before EVERY edit to /data/.openclaw/openclaw.json - no matter how small:
+1. Find backup folder in /data/downloads/ (search for openclaw + backup)
+2. cp /data/.openclaw/openclaw.json "[BACKUP_FOLDER]/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
 3. Verify backup exists and is not empty
 4. Get explicit user permission before making the change
 5. ONLY THEN edit the config
@@ -30,8 +30,8 @@ Add under config management:
 
 ```
 ## Backup Protocol [PRIORITY: CRITICAL]
-- Config file: ~/.openclaw/openclaw.json (NOT clawdbot.json)
-- Backup command: cp ~/.openclaw/openclaw.json "[BACKUP_FOLDER]/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
+- Config file: /data/.openclaw/openclaw.json (NOT clawdbot.json)
+- Backup command: cp /data/.openclaw/openclaw.json "[BACKUP_FOLDER]/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
 - Date format: Human-readable. Example: models-backup-February 28 at 3-00 PM.txt
 - Date bash: date +'%B %-d at %-I-%M %p'
 - Rule: Every config edit gets a backup. No exceptions. Backup fails = STOP.
@@ -48,7 +48,7 @@ Add as permanent entry:
 ```
 ## Backup Protocol - Installed [DATE]
 - CRITICAL safety protocol. Every config edit requires backup + user permission first.
-- Config file: ~/.openclaw/openclaw.json
+- Config file: /data/.openclaw/openclaw.json
 - Backup folder: [BACKUP_FOLDER]
 - Date format: date +'%B %-d at %-I-%M %p' (human-readable, no robot dates)
 - Full instance backup: cron every 2 weeks
@@ -63,7 +63,7 @@ Add under core principles:
 
 ```
 ## Backup Discipline
-I ALWAYS back up ~/.openclaw/openclaw.json before editing it. Human-readable dates
+I ALWAYS back up /data/.openclaw/openclaw.json before editing it. Human-readable dates
 on all filenames. User permission before config changes. Backup fails = I stop.
 ```
 

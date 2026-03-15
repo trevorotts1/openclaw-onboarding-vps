@@ -855,4 +855,4 @@ Can blend with systems persona after action standard is established. Do not blen
 ```
 
 Saved to:  
-`~/Downloads/openclaw-master-files/coaching-personas/personas/grover-relentless/persona-blueprint.md`
+`/data/openclaw-master-files/coaching-personas/personas/grover-relentless/persona-blueprint.md`

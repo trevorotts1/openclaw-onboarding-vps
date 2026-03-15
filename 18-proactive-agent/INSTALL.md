@@ -40,7 +40,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -50,7 +50,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -75,11 +75,11 @@ TYP must be completed first.
 
 ## Install steps
 1. Create target folder:
-   `mkdir -p ~/.openclaw/skills/proactive-agent`
+   `mkdir -p /data/.openclaw/skills/proactive-agent`
 2. Copy upstream skill files into target:
-   `cp -R ./upstream-original/. ~/.openclaw/skills/proactive-agent/`
+   `cp -R ./upstream-original/. /data/.openclaw/skills/proactive-agent/`
 3. Verify:
-   - `~/.openclaw/skills/proactive-agent/SKILL.md` exists
+   - `/data/.openclaw/skills/proactive-agent/SKILL.md` exists
 4. Apply only relevant core file updates from CORE_UPDATES.md
 5. Do not modify non-relevant core files
 ---

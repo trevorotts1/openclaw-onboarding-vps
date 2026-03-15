@@ -791,4 +791,4 @@ Can blend with execution personas only after task classification is complete. Ne
 ```
 
 Saved to:  
-`~/Downloads/openclaw-master-files/coaching-personas/personas/pink-drive/persona-blueprint.md`
+`/data/openclaw-master-files/coaching-personas/personas/pink-drive/persona-blueprint.md`

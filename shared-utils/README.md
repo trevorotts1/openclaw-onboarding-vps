@@ -16,8 +16,8 @@ Unified API key detection and retrieval from multiple sources.
 
 **Sources checked (in order of priority):**
 1. Environment variables (os.environ)
-2. ~/.openclaw/.env
-3. ~/clawd/secrets/.env
+2. /data/.openclaw/.env
+3. /data/openclaw/workspace/secrets/.env
 4. ~/.clawdbot/.env
 
 **Usage:**
@@ -41,7 +41,7 @@ if check_key_exists("SLACK_BOT_TOKEN"):
 
 # Find where a key is stored
 source = get_key_source("OPENAI_API_KEY")
-# Returns: "environment", "~/.openclaw/.env", etc.
+# Returns: "environment", "/data/.openclaw/.env", etc.
 
 # List all available keys (names only, for security)
 available = list_all_available_keys()

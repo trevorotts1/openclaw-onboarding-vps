@@ -40,7 +40,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -50,7 +50,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -72,10 +72,10 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. Ensure TYP read pass is complete.
 2. Create target folder:
-   `mkdir -p ~/.openclaw/skills/tavily-search`
+   `mkdir -p /data/.openclaw/skills/tavily-search`
 3. Copy upstream files:
-   `cp -R ./upstream-original/. ~/.openclaw/skills/tavily-search/`
-4. Verify `~/.openclaw/skills/tavily-search/SKILL.md` exists.
+   `cp -R ./upstream-original/. /data/.openclaw/skills/tavily-search/`
+4. Verify `/data/.openclaw/skills/tavily-search/SKILL.md` exists.
 5. Apply relevant core file updates from CORE_UPDATES.md only.
 ---
 

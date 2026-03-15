@@ -2,7 +2,7 @@
 
 ## Example 1 - Install + verify
 ```bash
-brew install steipete/tap/summarize
+apt-get install -y steipete/tap/summarize
 summarize --help | head
 ```
 

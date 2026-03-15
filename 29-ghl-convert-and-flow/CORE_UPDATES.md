@@ -9,18 +9,18 @@
 
 ## TOOLS.md Update
 
-Add this block to `~/clawd/TOOLS.md`:
+Add this block to `/data/openclaw/workspace/TOOLS.md`:
 
 ```markdown
 ## Convert and Flow (GoHighLevel) API v2
 
-- **Skill:** `~/.openclaw/skills/29-ghl-convert-and-flow/`
+- **Skill:** `/data/.openclaw/skills/29-ghl-convert-and-flow/`
 - **Master reference (413 endpoints, 35 modules, 106 scopes):**
-  `~/Downloads/openclaw-master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
+  `/data/openclaw-master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
 - **Base URL:** `https://services.leadconnectorhq.com`
 - **Auth:** Private Integration Token (Bearer header) - API keys are DEPRECATED
 - **Required header on most calls:** `Version: 2021-04-15`
-- **Token stored in:** `~/clawd/secrets/.env` as `PRIVATE_INTEGRATION_TOKEN`
+- **Token stored in:** `/data/openclaw/workspace/secrets/.env` as `PRIVATE_INTEGRATION_TOKEN`
 
 ### Usage rule
 Before any GHL API call: open the master reference file and search for the endpoint.
@@ -33,26 +33,26 @@ Never copy the master reference into any core .md file.
 - calendars (34 endpoints): manage calendars, free slots, appointments
 - opportunities (10 endpoints): pipeline management, create/update/search deals
 - locations (29 endpoints): sub-account config, custom fields, users, tags
-- Full module list: `~/.openclaw/skills/29-ghl-convert-and-flow/references/modules.md`
+- Full module list: `/data/.openclaw/skills/29-ghl-convert-and-flow/references/modules.md`
 ```
 
 ---
 
 ## MEMORY.md Update
 
-Add this block to `~/clawd/MEMORY.md`:
+Add this block to `/data/openclaw/workspace/MEMORY.md`:
 
 ```markdown
 ## Convert and Flow API - Active Integration
 
-- **Master reference:** `~/Downloads/openclaw-master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
-- **Skill folder:** `~/.openclaw/skills/29-ghl-convert-and-flow/`
-- **Token:** `~/clawd/secrets/.env` → `PRIVATE_INTEGRATION_TOKEN`
-- **Location ID:** `~/clawd/secrets/.env` → `GHL_LOCATION_ID`
+- **Master reference:** `/data/openclaw-master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
+- **Skill folder:** `/data/.openclaw/skills/29-ghl-convert-and-flow/`
+- **Token:** `/data/openclaw/workspace/secrets/.env` → `PRIVATE_INTEGRATION_TOKEN`
+- **Location ID:** `/data/openclaw/workspace/secrets/.env` → `GHL_LOCATION_ID`
 - **Stats:** 413 endpoints | 35 modules | 106 scopes
 - **Auth method:** Private Integration Token (preferred) - API keys deprecated
 - **Version header:** `Version: 2021-04-15` required on most endpoints
 
 Load credentials before every call:
-`source ~/clawd/secrets/.env`
+`source /data/openclaw/workspace/secrets/.env`
 ```

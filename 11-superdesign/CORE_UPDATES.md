@@ -4,7 +4,7 @@ Update ONLY the files listed below. Add the described section in the appropriate
 Do not update files marked NO UPDATE NEEDED.
 
 Full instruction text for each section lives at:
-`~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md`
+`/data/openclaw-master-files/superdesign/superdesign-instructions.md`
 
 ---
 
@@ -14,7 +14,7 @@ Add a `## SuperDesign Web Design [PRIORITY: HIGH]` section.
 - Rule: NEVER create any website or UI without using SuperDesign first
 - Rule: 'Copy this website' = extract brand guide via SuperDesign, then replicate
 - Rule: 'Create a website' = design in SuperDesign first, build from approved design
-- Ref path: `~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md`
+- Ref path: `/data/openclaw-master-files/superdesign/superdesign-instructions.md`
 
 ---
 
@@ -23,7 +23,7 @@ Add a `## SuperDesign Web Design [PRIORITY: HIGH]` section.
 Add a `## SuperDesign [PRIORITY: HIGH]` section.
 - Key commands: `superdesign create-project`, `create-design-draft`, `iterate-design-draft`, `execute-flow-pages`
 - Rule: Always design before building. Never skip to code.
-- Ref path: `~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md`
+- Ref path: `/data/openclaw-master-files/superdesign/superdesign-instructions.md`
 
 ---
 
@@ -32,7 +32,7 @@ Add a `## SuperDesign [PRIORITY: HIGH]` section.
 Add a `## SuperDesign Skill - Installed [DATE]` section.
 - Summary: AI design agent for frontend UI/UX, installed via onboarding skill 11
 - Rule: SuperDesign first, then build. Always.
-- Ref path: `~/Downloads/openclaw-master-files/superdesign/superdesign-instructions.md`
+- Ref path: `/data/openclaw-master-files/superdesign/superdesign-instructions.md`
 
 ---
 

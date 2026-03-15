@@ -26,13 +26,13 @@ Add concise summaries and file paths only. Never paste full documentation into c
 ### [ADD TO AGENTS.md]
 - This skill requires TYP to be confirmed installed before execution.
 - Trigger: agent learns from mistakes, logs corrections, queries learnings before major tasks.
-- Full reference: ~/Downloads/openclaw-master-files/17-self-improving-agent-full.md
+- Full reference: /data/openclaw-master-files/17-self-improving-agent-full.md
 
 ### [ADD TO TOOLS.md]
 - Add only tool commands or endpoints this skill uses (e.g., learnings file path, CLI hooks).
-- Full reference: ~/Downloads/openclaw-master-files/17-self-improving-agent-full.md
+- Full reference: /data/openclaw-master-files/17-self-improving-agent-full.md
 
 ### [ADD TO MEMORY.md]
 - Log: self-improving-agent skill installed.
 - Persistent constraints: check .learnings/ before major tasks; log corrections immediately.
-- Full reference: ~/Downloads/openclaw-master-files/17-self-improving-agent-full.md
+- Full reference: /data/openclaw-master-files/17-self-improving-agent-full.md

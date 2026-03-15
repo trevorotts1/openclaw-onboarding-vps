@@ -40,7 +40,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -50,7 +50,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -83,7 +83,7 @@ Go to the workspace root that contains `.env`.
 Install summarize:
 ```bash
 brew --version || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install steipete/tap/summarize
+apt-get install -y steipete/tap/summarize
 summarize --help >/dev/null
 ```
 
@@ -156,7 +156,7 @@ fi
 
 if [ "${SKIP_OPENAI:-0}" = "1" ] && [ "${SKIP_GEMINI:-0}" = "1" ]; then
   echo "ERROR: Both providers skipped. At least one API key is required."
-  echo "Add OPENAI_API_KEY or GEMINI_API_KEY to ~/clawd/secrets/.env and re-run."
+  echo "Add OPENAI_API_KEY or GEMINI_API_KEY to /data/openclaw/workspace/secrets/.env and re-run."
   exit 1
 fi
 ```

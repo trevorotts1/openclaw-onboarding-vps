@@ -7,4 +7,4 @@
 "Apply only relevant core updates for proactive-agent from CORE_UPDATES.md."
 
 ## Example 3: Install verify
-"Install proactive-agent into ~/.openclaw/skills/proactive-agent and verify SKILL.md exists."
+"Install proactive-agent into /data/.openclaw/skills/proactive-agent and verify SKILL.md exists."

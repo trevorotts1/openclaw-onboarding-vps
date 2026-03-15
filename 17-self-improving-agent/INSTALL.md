@@ -40,7 +40,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -50,7 +50,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -75,11 +75,11 @@ TYP must be completed first.
 
 ## Install steps
 1. Create target folder:
-   `mkdir -p ~/.openclaw/skills/self-improving-agent`
+   `mkdir -p /data/.openclaw/skills/self-improving-agent`
 2. Copy upstream skill files into target:
-   `cp -R ./upstream-original/. ~/.openclaw/skills/self-improving-agent/`
+   `cp -R ./upstream-original/. /data/.openclaw/skills/self-improving-agent/`
 3. Verify files exist:
-   - `~/.openclaw/skills/self-improving-agent/SKILL.md` exists
+   - `/data/.openclaw/skills/self-improving-agent/SKILL.md` exists
 4. Apply only relevant core file updates from CORE_UPDATES.md
 5. Do not modify non-relevant core files
 
@@ -91,7 +91,7 @@ After install, run this smoke test to confirm the skill is functional:
 echo "--- Self-Improving Agent Smoke Test ---"
 
 # 1. Check SKILL.md is present and non-empty
-SKILL_FILE=~/.openclaw/skills/self-improving-agent/SKILL.md
+SKILL_FILE=/data/.openclaw/skills/self-improving-agent/SKILL.md
 if [ -s "$SKILL_FILE" ]; then
   echo "PASS: SKILL.md present ($(wc -c < "$SKILL_FILE" | tr -d ' ') bytes)"
 else
@@ -99,7 +99,7 @@ else
 fi
 
 # 2. Check learnings directory is writable
-LEARNINGS_DIR=~/.openclaw/skills/self-improving-agent/.learnings
+LEARNINGS_DIR=/data/.openclaw/skills/self-improving-agent/.learnings
 mkdir -p "$LEARNINGS_DIR"
 TEST_FILE="$LEARNINGS_DIR/.smoke-test-$(date +%s)"
 if touch "$TEST_FILE" 2>/dev/null; then

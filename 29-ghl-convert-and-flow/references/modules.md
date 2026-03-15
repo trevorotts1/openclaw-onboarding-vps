@@ -3,7 +3,7 @@
 Base URL for all endpoints: `https://services.leadconnectorhq.com`
 
 For full endpoint details, open:
-`~/Downloads/openclaw-master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
+`/data/openclaw-master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
 
 ---
 

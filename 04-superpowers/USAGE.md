@@ -181,7 +181,7 @@ These are general principles from Superpowers that apply whether or not you are 
 
 All 14 skill files are stored locally at:
 ```
-~/Downloads/[master-files-folder]/superpowers/skills/
+/data/downloads/[master-files-folder]/superpowers/skills/
 ```
 
 Each skill has its own subfolder with a SKILL.md file inside it. When you need the full details of any skill, read the SKILL.md from the appropriate subfolder.

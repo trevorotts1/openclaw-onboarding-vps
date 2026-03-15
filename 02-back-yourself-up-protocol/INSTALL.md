@@ -4,11 +4,11 @@
 - OpenClaw installed and running
 - Teach Yourself Protocol installed first
 - Write access to workspace files
-- ~/Downloads/ accessible
+- /data/downloads/ accessible
 
 ## Step 1: Find or Create Backup Folder
 
-Search ~/Downloads/ for any folder with "openclaw" and "backup" in the name (case-insensitive):
+Search /data/downloads/ for any folder with "openclaw" and "backup" in the name (case-insensitive):
 - OpenClaw Backups  ← standard default name
 - openclaw-backups
 - OpenClaw Backup
@@ -17,7 +17,7 @@ Search ~/Downloads/ for any folder with "openclaw" and "backup" in the name (cas
 
 If found, use it. If not found:
 ```bash
-mkdir -p ~/Downloads/OpenClaw\ Backups/
+mkdir -p /data/downloads/OpenClaw\ Backups/
 ```
 
 ## Step 2: Place the Skill Files
@@ -42,12 +42,12 @@ openclaw skill install back-yourself-up-protocol.skill
 
 The config file is:
 ```
-~/.openclaw/openclaw.json
+/data/.openclaw/openclaw.json
 ```
 
 Verify it exists:
 ```bash
-ls -la ~/.openclaw/openclaw.json
+ls -la /data/.openclaw/openclaw.json
 ```
 
 It is NOT clawdbot.json. It is NOT config.json. It is NOT any other file.
@@ -56,12 +56,12 @@ It is NOT clawdbot.json. It is NOT config.json. It is NOT any other file.
 
 Run a test backup right now:
 ```bash
-cp ~/.openclaw/openclaw.json "~/Downloads/openclaw-backups/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
+cp /data/.openclaw/openclaw.json "/data/downloads/openclaw-backups/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
 ```
 
 Verify:
 ```bash
-ls -la ~/Downloads/openclaw-backups/
+ls -la /data/downloads/openclaw-backups/
 ```
 
 The backup file should exist and not be 0 bytes.
@@ -89,7 +89,7 @@ Ask the agent:
    Expected: Back it up to the backup folder with a human-readable date, verify backup is not empty, get user permission
 
 2. "What is the config file path?"
-   Expected: ~/.openclaw/openclaw.json
+   Expected: /data/.openclaw/openclaw.json
 
 3. "What date format do you use for backups?"
    Expected: Human-readable American dates (February 28 at 3-00 PM), never ISO or robot dates

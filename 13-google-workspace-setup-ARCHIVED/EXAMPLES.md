@@ -242,7 +242,7 @@ Use this checklist to verify your setup is complete:
 [ ] People API enabled
 [ ] OAuth Consent Screen configured (Internal)
 [ ] Service Account created
-[ ] JSON Key downloaded and saved to ~/clawd/secrets/
+[ ] JSON Key downloaded and saved to /data/openclaw/workspace/secrets/
 [ ] Client ID copied (the long number)
 [ ] Domain-Wide Delegation enabled in Cloud Console
 [ ] Domain-Wide Delegation authorized in Admin Console with scopes

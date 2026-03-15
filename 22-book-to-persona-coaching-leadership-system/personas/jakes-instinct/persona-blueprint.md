@@ -684,4 +684,4 @@ Can blend coaching + governance in same engagement; do coaching diagnosis first,
 - **Overall score:** 9/10
 ```
 
-Saved to: `~/Downloads/openclaw-master-files/coaching-personas/personas/jakes-instinct/persona-blueprint.md`
+Saved to: `/data/openclaw-master-files/coaching-personas/personas/jakes-instinct/persona-blueprint.md`

@@ -26,7 +26,7 @@ If the agent does not know the Teach Yourself Protocol:
 
 **Optional but recommended (for Q12 reference video analysis):**
 - `video-frames` skill (ships with OpenClaw, requires FFmpeg) - extracts frames from videos
-- `summarize` CLI (`brew install steipete/tap/summarize`) - transcribes/summarizes YouTube videos and URLs
+- `summarize` CLI (`apt-get install -y steipete/tap/summarize`) - transcribes/summarizes YouTube videos and URLs
 - At least one LLM API key for summarize: `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`
 
 If these aren't installed when a user provides a reference video, the agent should install them on the spot rather than skipping the analysis.
@@ -250,12 +250,12 @@ Wait for answer.
 Before attempting to analyze a reference video, check that these two skills are installed:
 
 1. **video-frames** - Extracts frames from video files using FFmpeg
-   - Check: `ls ~/.npm-global/lib/node_modules/openclaw/skills/video-frames/` or `ls ~/.openclaw/skills/video-frames/`
-   - If not installed: `brew install ffmpeg` (the skill ships with OpenClaw but needs FFmpeg)
+   - Check: `ls ~/.npm-global/lib/node_modules/openclaw/skills/video-frames/` or `ls /data/.openclaw/skills/video-frames/`
+   - If not installed: `apt-get install -y ffmpeg` (the skill ships with OpenClaw but needs FFmpeg)
 
 2. **summarize** - Transcribes/summarizes YouTube videos and URLs
    - Check: `which summarize`
-   - If not installed: `brew install steipete/tap/summarize`
+   - If not installed: `apt-get install -y steipete/tap/summarize`
    - Also needs at least one API key set: `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`
 
 If either skill is missing, install it. Do NOT skip the analysis just because a tool isn't there - get the tool and do the job.
@@ -265,7 +265,7 @@ If either skill is missing, install it. Do NOT skip the analysis just because a 
 **video-frames** (frame extraction from videos):
 - This skill ships with OpenClaw but requires FFmpeg as a dependency
 - GitHub: https://github.com/FFmpeg/FFmpeg
-- Install FFmpeg: `brew install ffmpeg` (macOS) or `sudo apt install ffmpeg` (Ubuntu/Debian)
+- Install FFmpeg: `apt-get install -y ffmpeg` (macOS) or `sudo apt install ffmpeg` (Ubuntu/Debian)
 - The skill itself is at: `~/.npm-global/lib/node_modules/openclaw/skills/video-frames/`
 - If the skill folder doesn't exist, FFmpeg alone is sufficient - the agent can run frame extraction directly:
   ```bash
@@ -275,7 +275,7 @@ If either skill is missing, install it. Do NOT skip the analysis just because a 
 
 **summarize** (transcript/summary extraction from YouTube and URLs):
 - GitHub: https://github.com/steipete/summarize
-- Install: `brew install steipete/tap/summarize`
+- Install: `apt-get install -y steipete/tap/summarize`
 - Requires at least one LLM API key: `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`
 - Key usage for video analysis:
   ```bash
@@ -296,7 +296,7 @@ If either skill is missing, install it. Do NOT skip the analysis just because a 
 **The self-teaching flow:**
 1. Agent detects the missing skill
 2. Agent tells the user: "To analyze your reference video, I need to install a tool. Let me set that up now."
-3. Agent installs the tool (brew install or direct download)
+3. Agent installs the tool (apt-get install -y or direct download)
 4. Agent activates the Teach Yourself Protocol to learn the new skill
 5. Agent writes lightweight summaries in its core files so it knows the skill exists in future sessions
 6. Agent proceeds with the Q12 video analysis
@@ -371,7 +371,7 @@ After all 14 questions are answered, the agent proceeds through these phases:
 
 1. **Create the project folder structure:**
    ```
-   ~/Downloads/cinematic-forge-projects/[project-name]/
+   /data/downloads/cinematic-forge-projects/[project-name]/
      images/          (reference images, start images, derived images)
      segments/        (individual VEO video segments)
      audio/
@@ -387,7 +387,7 @@ After all 14 questions are answered, the agent proceeds through these phases:
 
 2. **Check KIE.ai credit balance:**
    ```bash
-   source ~/clawd/secrets/.env
+   source /data/openclaw/workspace/secrets/.env
    curl -s "https://api.kie.ai/api/v1/user/credits" \
      -H "Authorization: Bearer $KIE_API_KEY"
    ```
@@ -741,6 +741,6 @@ If the agent starts a new session and finds an existing project-state.json in a 
 
 For the complete GIGY "Money Shame Syndrome" PRD (which serves as a detailed example of this entire pipeline in action), reference:
 
-**`~/clawd/projects/gigy-video/GIGY-VIDEO-PRD.md`**
+**`/data/openclaw/workspace/projects/gigy-video/GIGY-VIDEO-PRD.md`**
 
 This 78K-character document shows every decision, every segment prompt, every audio layer, and every FFmpeg command for a real 90-second video production.

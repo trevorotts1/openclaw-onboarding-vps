@@ -111,8 +111,8 @@ Options: `--transition` (fade/slide_left/slide_right/slide_up/slide_down/wipe/zo
 
 Apply the core file updates from `CORE_UPDATES.md`.
 ## Video Creator Skill
-- Installed at: ~/.openclaw/skills/video-creator/
-- Full reference: ~/.openclaw/skills/video-creator/SKILL.md
+- Installed at: /data/.openclaw/skills/video-creator/
+- Full reference: /data/.openclaw/skills/video-creator/SKILL.md
 ```
 
 ---

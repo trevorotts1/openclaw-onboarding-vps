@@ -12,7 +12,7 @@ This document shows real examples of deploying pages into GoHighLevel (Convert a
 **Step 1 - Verify prerequisites:**
 Agent: "Before I deploy, let me verify everything is ready:
 - HTML code: Ready (I have the SuperDesign export)
-- GHL credentials: Found in ~/clawd/secrets/.env
+- GHL credentials: Found in /data/openclaw/workspace/secrets/.env
 - Target account: [Client Sub-Account]
 - Browser session: Launching Playwright with persistent context..."
 

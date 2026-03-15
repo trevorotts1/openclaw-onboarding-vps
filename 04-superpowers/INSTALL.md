@@ -41,7 +41,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -51,7 +51,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -164,7 +164,7 @@ It contains 14 skill files plus commands and agent files. Each skill is a short 
 
 ### Step 1: Locate or Create the Master Files Folder
 
-The agent must find the folder where OpenClaw master files are stored. This folder lives inside ~/Downloads/. Possible names:
+The agent must find the folder where OpenClaw master files are stored. This folder lives inside /data/downloads/. Possible names:
 - openclaw-master-files
 - OpenClaw Master Files
 - OpenClaw Master Documents
@@ -176,13 +176,13 @@ The agent must find the folder where OpenClaw master files are stored. This fold
 Execute this command to search:
 
 ```
-find ~/Downloads/ -maxdepth 1 -type d -iname "*openclaw*" 2>/dev/null
+find /data/downloads/ -maxdepth 1 -type d -iname "*openclaw*" 2>/dev/null
 ```
 
 If the search returns no results, create the folder:
 
 ```
-mkdir -p ~/Downloads/openclaw-master-files
+mkdir -p /data/downloads/openclaw-master-files
 ```
 
 Store the path for use in subsequent steps.
@@ -199,7 +199,7 @@ mkdir -p [MASTER_FILES_FOLDER]/superpowers
 Replace [MASTER_FILES_FOLDER] with the actual path from Step 1. Example:
 
 ```
-mkdir -p ~/Downloads/openclaw-master-files/superpowers
+mkdir -p /data/openclaw-master-files/superpowers
 ```
 
 
@@ -222,7 +222,7 @@ This is the preferred method. If git is available, always use Method A, not Meth
 **Method B - Using browser and manual extraction (if git unavailable):**
 
 1. Open browser to: https://github.com/obra/superpowers/archive/refs/heads/main.zip
-2. Wait for zip file to download to ~/Downloads/
+2. Wait for zip file to download to /data/downloads/
 3. Extract the zip file
 4. Move contents into [MASTER_FILES_FOLDER]/superpowers/
 

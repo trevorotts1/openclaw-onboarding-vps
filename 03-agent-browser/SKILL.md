@@ -19,6 +19,6 @@ agent-browser is our **preferred** browser automation tool because it:
 This onboarding package includes a lightweight wrapper.
 
 The full operational skill docs live on the machine at:
-- `~/clawd/skills/agent-browser/SKILL.md`
+- `/data/openclaw/workspace/skills/agent-browser/SKILL.md`
 
 If that path exists, treat it as the source of truth.

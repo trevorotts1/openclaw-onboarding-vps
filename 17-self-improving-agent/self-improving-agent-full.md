@@ -66,7 +66,7 @@ clawdhub install self-improving-agent
 
 **Manual:**
 ```bash
-git clone https://github.com/peterskoett/self-improving-agent.git ~/.openclaw/skills/self-improving-agent
+git clone https://github.com/peterskoett/self-improving-agent.git /data/.openclaw/skills/self-improving-agent
 ```
 
 Remade for openclaw from original repo : https://github.com/pskoett/pskoett-ai-skills - https://github.com/pskoett/pskoett-ai-skills/tree/main/skills/self-improvement
@@ -76,7 +76,7 @@ Remade for openclaw from original repo : https://github.com/pskoett/pskoett-ai-s
 OpenClaw injects these files into every session:
 
 ```
-~/.openclaw/workspace/
+/data/.openclaw/workspace/
 ├── AGENTS.md          # Multi-agent workflows, delegation patterns
 ├── SOUL.md            # Behavioral guidelines, personality, principles
 ├── TOOLS.md           # Tool capabilities, integration gotchas
@@ -92,7 +92,7 @@ OpenClaw injects these files into every session:
 ### Create Learning Files
 
 ```bash
-mkdir -p ~/.openclaw/workspace/.learnings
+mkdir -p /data/.openclaw/workspace/.learnings
 ```
 
 Then create the log files (or copy from `assets/`):
@@ -125,7 +125,7 @@ For automatic reminders at session start:
 
 ```bash
 # Copy hook to OpenClaw hooks directory
-cp -r hooks/openclaw ~/.openclaw/hooks/self-improvement
+cp -r hooks/openclaw /data/.openclaw/hooks/self-improvement
 
 # Enable it
 openclaw hooks enable self-improvement
@@ -1374,7 +1374,7 @@ OpenClaw uses workspace-based prompt injection combined with event-driven hooks.
 ## Workspace Structure
 
 ```
-~/.openclaw/                      
+/data/.openclaw/                      
 ├── workspace/                   # Working directory
 │   ├── AGENTS.md               # Multi-agent coordination patterns
 │   ├── SOUL.md                 # Behavioral guidelines and personality
@@ -1402,7 +1402,7 @@ clawdhub install self-improving-agent
 Or copy manually:
 
 ```bash
-cp -r self-improving-agent ~/.openclaw/skills/
+cp -r self-improving-agent /data/.openclaw/skills/
 ```
 
 ### 2. Install the Hook (Optional)
@@ -1410,7 +1410,7 @@ cp -r self-improving-agent ~/.openclaw/skills/
 Copy the hook to OpenClaw's hooks directory:
 
 ```bash
-cp -r hooks/openclaw ~/.openclaw/hooks/self-improvement
+cp -r hooks/openclaw /data/.openclaw/hooks/self-improvement
 ```
 
 Enable the hook:
@@ -1424,13 +1424,13 @@ openclaw hooks enable self-improvement
 Create the `.learnings/` directory in your workspace:
 
 ```bash
-mkdir -p ~/.openclaw/workspace/.learnings
+mkdir -p /data/.openclaw/workspace/.learnings
 ```
 
 Or in the skill directory:
 
 ```bash
-mkdir -p ~/.openclaw/skills/self-improving-agent/.learnings
+mkdir -p /data/.openclaw/skills/self-improving-agent/.learnings
 ```
 
 ## Injected Prompt Files

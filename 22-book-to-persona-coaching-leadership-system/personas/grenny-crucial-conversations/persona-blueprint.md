@@ -798,4 +798,4 @@ Blend coaching + task only when the same user needs both self-regulation and con
 - **Overall score:** 9/10
 ```
 
-Saved to: `~/Downloads/openclaw-master-files/coaching-personas/personas/grenny-crucial-conversations/persona-blueprint.md`
+Saved to: `/data/openclaw-master-files/coaching-personas/personas/grenny-crucial-conversations/persona-blueprint.md`

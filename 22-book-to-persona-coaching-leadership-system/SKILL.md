@@ -30,7 +30,7 @@ Do NOT claim the skill is installed until CORE_UPDATES.md has been applied.
 
 **Version:** 1.0.0
 **Owner:** [Your Name / Organization]
-**Skill folder:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/`
+**Skill folder:** `/data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/`
 **Output destination:** Auto-detected master files folder (see INSTALL.md)
 
 ---
@@ -164,4 +164,4 @@ These two skills are separate but work together automatically.
 - Personas operate standalone - no department structure required
 - Same persona blueprints, same QMD search, just without dept folder wiring
 
-**Cross-reference path:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md`
+**Cross-reference path:** `/data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md`

@@ -841,4 +841,4 @@ Can blend with technical discovery personas only after explicit need is establis
 ```
 
 Saved to:  
-`~/Downloads/openclaw-master-files/coaching-personas/personas/rackham-spin-selling/persona-blueprint.md`
+`/data/openclaw-master-files/coaching-personas/personas/rackham-spin-selling/persona-blueprint.md`

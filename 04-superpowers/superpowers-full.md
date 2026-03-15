@@ -33,7 +33,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -43,7 +43,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -170,7 +170,7 @@ STEP-BY-STEP INSTALLATION FOR OPENCLAW:
 
 Step 1: Find or Create the Master Files Folder
 
-The agent must search ~/Downloads/ for the master files folder. It could be named any of these:
+The agent must search /data/downloads/ for the master files folder. It could be named any of these:
 - openclaw-master-files
 - OpenClaw Master Files
 - OpenClaw Master Documents
@@ -183,10 +183,10 @@ The agent must search ~/Downloads/ for the master files folder. It could be name
 Search case-insensitively. Check for spaces, hyphens, or no separator.
 
 Command to find it:
-find ~/Downloads/ -maxdepth 1 -type d -iname "*openclaw*" 2>/dev/null
+find /data/downloads/ -maxdepth 1 -type d -iname "*openclaw*" 2>/dev/null
 
 If no folder is found, create one:
-mkdir -p ~/Downloads/openclaw-master-files
+mkdir -p /data/downloads/openclaw-master-files
 
 Step 2: Create the Superpowers Subfolder
 
@@ -286,7 +286,7 @@ Follow the TYP rules - only add summaries and file path references. Never paste 
 
 ## Superpowers - Thinking Discipline (NON-NEGOTIABLE)
 Source: https://github.com/obra/superpowers
-Local skills: ~/Downloads/[master-files-folder]/superpowers/skills/
+Local skills: /data/downloads/[master-files-folder]/superpowers/skills/
 14 skill files with full processes. Read the relevant SKILL.md before any coding task.
 
 ### THE 4 IRON LAWS (Violations are unacceptable)
@@ -356,7 +356,7 @@ After completion: verification-before-completion -> finishing-a-development-bran
 [ADD TO TOOLS.md]
 
 ## Superpowers Skills Reference
-- Full skills at: ~/Downloads/[master-files-folder]/superpowers/skills/
+- Full skills at: /data/downloads/[master-files-folder]/superpowers/skills/
 - 14 skills: brainstorming, systematic-debugging, test-driven-development, verification-before-completion, writing-plans, writing-skills, executing-plans, subagent-driven-development, dispatching-parallel-agents, using-git-worktrees, finishing-a-development-branch, receiving-code-review, requesting-code-review, using-superpowers
 - When to use: Before ANY coding task, read the relevant SKILL.md from the local folder
 - Trigger map:
@@ -370,7 +370,7 @@ After completion: verification-before-completion -> finishing-a-development-bran
 [ADD TO MEMORY.md]
 
 ## Superpowers Installed [DATE]
-- Downloaded from https://github.com/obra/superpowers to ~/Downloads/[master-files-folder]/superpowers/
+- Downloaded from https://github.com/obra/superpowers to /data/downloads/[master-files-folder]/superpowers/
 - 14 skills, all SKILL.md files verified present
 - Agent has read and internalized all 14 skills
 - Iron Laws are non-negotiable and apply to every coding task

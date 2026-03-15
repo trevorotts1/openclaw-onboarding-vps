@@ -39,7 +39,7 @@ This skill runs locally using:
 2. Install FFmpeg:
 
 ```bash
-brew install ffmpeg
+apt-get install -y ffmpeg
 ```
 
 3. Verify:
