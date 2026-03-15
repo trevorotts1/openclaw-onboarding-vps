@@ -2,7 +2,9 @@
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent.**
 
-This repo contains **28 skill folders** (01 through 28) plus an install script.
+**Current Version: v3.0.0** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
+
+This repo contains **31 skill folders** (01 through 31, with 13 archived) plus an install script.
 
 - Install happens in a strict order
 - The agent executes the steps autonomously
@@ -20,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/mai
 
 What it does:
 1. Downloads the latest onboarding package
-2. Copies skills into `/data/.openclaw/skills/`
+2. Copies skills into `~/.openclaw/skills/`
 3. Installs QMD early (required by skill 22 and skill 23)
 4. Asks for missing API keys with a skip option (does not block optional skills)
 5. Prints the next step
@@ -31,7 +33,7 @@ What it does:
 
 Open:
 
-- `/data/.openclaw/skills/Start Here.md`
+- `~/.openclaw/skills/Start Here.md`
 
 That file is the master instruction file. It contains:
 - prerequisites
