@@ -247,8 +247,8 @@ Every skill has a specific install sequence. Follow it exactly:
 - Do NOT say "onboarding complete" after finishing one skill
 - Do NOT skip skills because they "seem optional"
 - Install skills 01-30 in order, confirm each one individually
-- Only after skill 30 is verified complete → remove ONBOARDING PENDING flag
-- Only after skill 30 is verified complete → write ONBOARDING COMPLETE to MEMORY.md
+- Only after skill 30 (Fish Audio API Reference) is verified complete → remove ONBOARDING PENDING flag
+- Only after skill 30 (Fish Audio API Reference) is verified complete → write ONBOARDING COMPLETE to MEMORY.md
 
 ---
 
@@ -1603,7 +1603,7 @@ label: "wave4-agent-e"
 sessions_spawn with task:
 "Install skills 27, 28, 29, 30 from ~/.openclaw/onboarding/.
 For each skill: Read ALL .md files first, then execute installation steps exactly.
-Skills: 27-video-editor, 28-cinematic-forge, 29-ghl-convert-and-flow, 30-blackceo-voice-call-plugin.
+Skills: 27-video-editor, 28-cinematic-forge, 29-ghl-convert-and-flow, 30-fish-audio-api-reference.
 Report after each skill: 'Skill XX complete - QC passed' or 'Skill XX failed - [reason]'.
 Write status to ~/.openclaw/onboarding/.onboarding-status after each skill."
 label: "wave4-agent-f"
@@ -2011,7 +2011,7 @@ Every 5 skills completed, send a brief status update via the user's configured m
 
 ## FINAL STEP - SET UP WEEKLY AUTO-UPDATE (Agent Runs This)
 
-After all 31 skills are installed, run this as the final step.
+After all 30 skills are installed, run this as the final step.
 The agent executes these commands - the human does nothing.
 
 ```bash

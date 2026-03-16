@@ -11,7 +11,7 @@ Complete every step in order.
 **If NO** - do Steps 1 through 3, then run this to flag setup as pending:
 
 ```bash
-cat >> /data/.openclaw/skills/.pending-setup.md << 'EOF'
+cat >> ~/.openclaw/skills/.pending-setup.md << 'EOF'
 
 ## fish-audio
 - Status: PENDING
@@ -29,7 +29,7 @@ Your agent will remind you to complete setup once you have your credentials.
 ## Step 1 - Create the Master Files Folder
 
 ```bash
-mkdir -p /data/openclaw-master-files/service-integrations/fish-audio
+mkdir -p ~/Downloads/openclaw-master-files/service-integrations/fish-audio
 ```
 
 ---
@@ -38,7 +38,7 @@ mkdir -p /data/openclaw-master-files/service-integrations/fish-audio
 
 ```bash
 cp "$(dirname "$0")/references/fish-audio-api-reference.md" \
-   /data/openclaw-master-files/service-integrations/fish-audio/fish-audio-api-reference.md
+   ~/Downloads/openclaw-master-files/service-integrations/fish-audio/fish-audio-api-reference.md
 ```
 
 ---
@@ -63,7 +63,7 @@ Add to `~/.clawdbot/clawdbot.json` under `env.vars`:
 "FISH_AUDIO_VOICE_ID": "your_voice_id_here"
 ```
 
-Also add to `/data/openclaw/workspace/secrets/.env`:
+Also add to `~/clawd/secrets/.env`:
 
 ```
 FISH_AUDIO_API_KEY=your_api_key_here
@@ -100,7 +100,7 @@ You should get `200` and a file at `/tmp/fish_audio_test.mp3`. Play it to confir
 ## Done
 
 Skill 31 is complete when:
-- [ ] API reference doc is in `/data/openclaw-master-files/service-integrations/fish-audio/`
+- [ ] API reference doc is in `~/Downloads/openclaw-master-files/service-integrations/fish-audio/`
 - [ ] QMD has indexed and embedded the document
 - [ ] Credentials are stored in `clawdbot.json` and `.env`
 - [ ] Test curl returned 200 with audio output

@@ -4,7 +4,7 @@
 
 **Current Version: v4.0.0** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
-This repo contains **31 skill folders** (01 through 31, with 13 archived) plus an install script.
+This repo contains **30 skill folders** (01 through 30, with 13 archived) plus an install script.
 
 ### What's New in v4.0.0 (March 16, 2026)
 - **3 new departments:** graphics-dept, video-dept, audio-dept (separate from creative)
@@ -87,8 +87,9 @@ That file is the master instruction file. It contains:
 | 27-video-editor | Video Editor |
 | 28-cinematic-forge | Cinematic Forge |
 | 29-ghl-convert-and-flow | GHL Convert and Flow |
-| 30-blackceo-voice-call-plugin | Voice Call Plugin + Fish Audio |
-| 31-fish-audio-api-reference | Fish Audio API Reference (standalone) |
+| 30-fish-audio-api-reference | Fish Audio API Reference |
+
+> **Note:** The Voice Call Plugin (`@openclaw/voice-call`) is installed separately via `openclaw plugins install @openclaw/voice-call`. It is NOT part of the onboarding skill sequence — installing it as a skill caused double-install conflicts.
 
 ---
 
