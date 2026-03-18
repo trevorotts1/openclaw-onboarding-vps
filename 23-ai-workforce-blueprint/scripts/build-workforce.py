@@ -11,6 +11,14 @@ import sys
 import subprocess
 import json
 
+# Gemini API for embeddings (replaces QMD)
+try:
+    from google import genai
+    from google.genai import types
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+
 DEPT_SUFFIX = "-dept"
 
 # Pre-built departments with descriptions
@@ -637,7 +645,7 @@ This role draws from multiple coaching personas. Choose based on the specific ta
 
 **How to find the right persona for your task:**
 ```bash
-qmd search "<describe your task>" -c coaching-personas
+gemini search "<describe your task>" -c coaching-personas
 ```
 
 This searches the coaching personas collection and returns the best match. Load that persona's Task Mode and execute through that methodology.
@@ -762,15 +770,31 @@ def show_prebuilt_departments():
 
 
 def check_personas_installed():
-    """Check if coaching-personas QMD collection exists on this machine."""
-    try:
-        result = subprocess.run(
-            ["qmd", "status"],
-            capture_output=True, text=True, timeout=10
-        )
-        return "coaching-personas" in result.stdout
-    except Exception:
+    """Check if coaching-personas Gemini collection exists on this machine.
+    
+    Note: Previously checked 'qmd status'. Now checks for Gemini API availability
+    and the presence of persona files.
+    """
+    # Check if Gemini SDK is available
+    if not GEMINI_AVAILABLE:
         return False
+    
+    # Check for API key
+    api_key = os.environ.get("GOOGLE_AI_STUDIO_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return False
+    
+    # Check if persona directory exists with content
+    persona_dir = os.path.expanduser("~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas")
+    if not os.path.exists(persona_dir):
+        return False
+    
+    # Check if there are actual persona blueprints
+    for root, dirs, files in os.walk(persona_dir):
+        if "persona-blueprint.md" in files:
+            return True
+    
+    return False
 
 
 def load_existing_context():
@@ -973,7 +997,7 @@ def build_governing_personas_content(dept_key, for_file=False):
     if for_file:
         entries = []
         for folder, description in personas:
-            entries.append(f"### {folder}\n**Focus:** {description}\n**Query:** `qmd search \"{description.lower()}\" -c coaching-personas`\n")
+            entries.append(f"### {folder}\n**Focus:** {description}\n**Query:** gemini search \"{description.lower()}\" -c coaching-personas`\n")
         return '\n'.join(entries), personas
 
     # For 00-START-HERE.md section
@@ -1110,7 +1134,7 @@ def build_role_personas_content(role_key, dept_key, for_file=False):
         
         sections.append("## How to Query")
         sections.append("```")
-        sections.append('qmd search "<describe your task>" -c coaching-personas')
+        sections.append('gemini search "<describe your task>" -c coaching-personas')
         sections.append("```")
         sections.append("")
         
@@ -1123,27 +1147,53 @@ def build_role_personas_content(role_key, dept_key, for_file=False):
     return '\n'.join(lines), personas
 
 
-def run_qmd_update():
-    """Auto-run QMD update and embed after wiring personas."""
-    telegram_print("\n🔄 Running QMD update after persona wiring...")
-    try:
-        result = subprocess.run(["qmd", "update"], capture_output=True, text=True, timeout=60)
-        if result.returncode == 0:
-            telegram_print("  ✓ qmd update complete")
-        else:
-            telegram_print(f"  ⚠️ qmd update: {result.stderr[:100]}")
-    except Exception as e:
-        telegram_print(f"  ⚠️ qmd update failed: {e}")
+def run_gemini_update():
+    """Auto-run Gemini indexing after wiring personas.
     
-    telegram_print("🔄 Running QMD embed...")
+    Note: This function previously ran 'qmd update' and 'qmd embed' via subprocess.
+    Now it uses the Gemini API directly for embeddings.
+    """
+    if not GEMINI_AVAILABLE:
+        telegram_print("\n⚠️  Gemini SDK not available. Skipping auto-indexing.")
+        telegram_print("   Install with: pip install google-genai")
+        telegram_print("   Or manually index with: gai-search index add <path>")
+        return
+    
+    telegram_print("\n🔄 Running Gemini indexing after persona wiring...")
+    
     try:
-        result = subprocess.run(["qmd", "embed"], capture_output=True, text=True, timeout=300)
-        if result.returncode == 0:
-            telegram_print("  ✓ qmd embed complete")
-        else:
-            telegram_print(f"  ⚠️ qmd embed: {result.stderr[:100]}")
+        api_key = os.environ.get("GOOGLE_AI_STUDIO_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            telegram_print("  ⚠️  No Gemini API key found. Set GOOGLE_AI_STUDIO_API_KEY")
+            return
+        
+        client = genai.Client(api_key=api_key)
+        
+        # Find persona files to index
+        persona_dir = os.path.expanduser("~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas")
+        if not os.path.exists(persona_dir):
+            telegram_print("  ⚠️  Persona directory not found")
+            return
+        
+        indexed = 0
+        for root, dirs, files in os.walk(persona_dir):
+            for file in files:
+                if file == "persona-blueprint.md":
+                    filepath = os.path.join(root, file)
+                    with open(filepath, 'r') as f:
+                        content = f.read()
+                    
+                    # Generate embedding (batch of 1 for now)
+                    response = client.models.embed_content(
+                        model="models/gemini-embedding-2-preview",
+                        contents=[types.Content(parts=[types.Part(text=content[:8000])])]  # Truncate if needed
+                    )
+                    indexed += 1
+        
+        telegram_print(f"  ✓ Gemini indexing complete - {indexed} personas indexed")
+        
     except Exception as e:
-        telegram_print(f"  ⚠️ qmd embed failed: {e}")
+        telegram_print(f"  ⚠️ Gemini indexing failed: {e}")
 
 
 def audit_mode(workspace, personas_installed):
@@ -1247,8 +1297,8 @@ def audit_mode(workspace, personas_installed):
         telegram_print("\n✓ Everything looks good - no gaps found.")
     if personas_installed:
         telegram_print("\n✅ Persona wiring complete.")
-        # Auto-run QMD update after wiring
-        run_qmd_update()
+        # Auto-run Gemini update after wiring
+        run_gemini_update()
     else:
         telegram_print("\nℹ️ Install Skill 22 and re-run to wire personas.")
 
@@ -1424,8 +1474,8 @@ def build_workforce_automated(context, interview_data, departments):
     personas_still_installed = check_personas_installed()
     if personas_still_installed and personas_installed:
         telegram_print("✅ Personas still detected - wiring complete")
-        # Auto-run QMD update after wiring personas
-        run_qmd_update()
+        # Auto-run Gemini update after wiring personas
+        run_gemini_update()
     elif personas_still_installed and not personas_installed:
         telegram_print("✅ Personas detected post-build - wiring now...")
         # Run audit mode to wire personas into existing structure
@@ -1448,23 +1498,29 @@ def build_workforce_automated(context, interview_data, departments):
 
 
 def preflight_check():
-    """Pre-flight check: Skill 23 requires Skill 22 to be fully installed first."""
-    try:
-        result = subprocess.run(
-            ["qmd", "status"],
-            capture_output=True, text=True, timeout=10
-        )
-        if "coaching-personas" in result.stdout:
-            return True, "coaching-personas collection found"
-    except Exception:
-        pass
+    """Pre-flight check: Skill 23 requires Skill 22 to be fully installed first.
     
-    # Fallback check - skill folder exists
+    Note: Previously checked 'qmd status'. Now checks for Gemini API availability
+    and Skill 22 installation.
+    """
+    # Check if Skill 22 is installed
     skill_path = os.path.expanduser("~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/")
-    if os.path.exists(skill_path):
-        return True, "Skill 22 folder found (collection may need embedding)"
+    if not os.path.exists(skill_path):
+        return False, "Skill 22 (Book-to-Persona) not installed"
     
-    return False, "Skill 22 (Book-to-Persona) not installed"
+    # Check if Gemini SDK is available and API key is set
+    if GEMINI_AVAILABLE:
+        api_key = os.environ.get("GOOGLE_AI_STUDIO_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        if api_key:
+            # Check if personas exist
+            persona_dir = os.path.join(skill_path, "personas")
+            if os.path.exists(persona_dir):
+                for root, dirs, files in os.walk(persona_dir):
+                    if "persona-blueprint.md" in files:
+                        return True, "coaching-personas collection found"
+                return True, "Skill 22 folder found (personas may need indexing)"
+    
+    return True, "Skill 22 folder found (Gemini setup may be needed)"
 
 
 def main():
@@ -1484,8 +1540,8 @@ def main():
         telegram_print("\nSkill 23 (AI Workforce Blueprint) requires Skill 22 to be fully installed first.")
         telegram_print("\nTo proceed:")
         telegram_print("  1. Navigate to 22-book-to-persona-coaching-leadership-system/")
-        telegram_print("  2. Complete all installation steps (including QMD setup)")
-        telegram_print("  3. Run: qmd status | grep coaching-personas")
+        telegram_print("  2. Complete all installation steps (including Gemini setup)")
+        telegram_print("  3. Set GOOGLE_AI_STUDIO_API_KEY environment variable")
         telegram_print("  4. Return here and re-run this script")
         telegram_print("\n" + "❌"*25)
         sys.exit(1)

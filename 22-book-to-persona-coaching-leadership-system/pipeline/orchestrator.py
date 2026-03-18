@@ -826,8 +826,8 @@ At the end, rate your output on the 6 dimensions specified in your instructions.
 **Source Book:** {book['title']} by {book['author']}
 **Version:** 1.0.0
 **Built:** {datetime.datetime.now().strftime('%B %-d at %-I:%M %p')}
-**QMD Index:** {folder}
-**Index Location:** ./qmd-index/
+**Gemini Index:** {folder}
+**Index Location:** ./gemini-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING

@@ -96,7 +96,7 @@ Run the Teach Yourself Protocol on this skill folder now. Read every .md file in
 3. CHECKLIST.md
 4. GOOD-AND-BAD-EXAMPLES.md
 5. PERSONA-ROUTER.md
-6. QMD-RETRIEVAL-GUIDE.md
+6. GAI-SEARCH-GUIDE.md
 7. CORE_UPDATES.md
 8. INSTALL.md (this file - you are reading it now)
 
@@ -123,7 +123,7 @@ Verify:
 ls /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
-**Expected output:** SKILL.md, INSTALL.md, PIPELINE.md, CHECKLIST.md, CORE_UPDATES.md, GOOD-AND-BAD-EXAMPLES.md, PERSONA-ROUTER.md, QMD-RETRIEVAL-GUIDE.md, personas/, pipeline/, agent-prompts/ all present.
+**Expected output:** SKILL.md, INSTALL.md, PIPELINE.md, CHECKLIST.md, CORE_UPDATES.md, GOOD-AND-BAD-EXAMPLES.md, PERSONA-ROUTER.md, GAI-SEARCH-GUIDE.md, personas/, pipeline/, agent-prompts/ all present.
 
 If any files are missing, re-run the copy command above.
 
@@ -131,44 +131,44 @@ If any files are missing, re-run the copy command above.
 
 ## Step 2 - Check Dependencies
 
-### QMD (Required)
+### Gemini (Required)
 
-**Step 1:** Check if QMD is already installed:
+**Step 1:** Check if Gemini is already installed:
 ```bash
-qmd --version
+gemini --version
 ```
 
-**If you see a version number** (like `qmd 1.1.0`): QMD is installed. Skip to the next dependency.
+**If you see a version number** (like `gemini 1.1.0`): Gemini is installed. Skip to the next dependency.
 
-**If you see "command not found":** Install QMD now using this sequence:
+**If you see "command not found":** Install Gemini now using this sequence:
 
 ```bash
 # Attempt 1: Install via bun (recommended)
-bun install -g https://github.com/tobi/qmd
+bun install -g https://github.com/tobi/gemini
 ```
 
 If bun is not installed or the command fails:
 ```bash
-# Attempt 2: Install bun first, then QMD
+# Attempt 2: Install bun first, then Gemini
 curl -fsSL https://bun.sh/install | bash
 source ~/.bashrc 2>/dev/null || source ~/.zshrc 2>/dev/null
-bun install -g https://github.com/tobi/qmd
+bun install -g https://github.com/tobi/gemini
 ```
 
 If bun install still fails:
 ```bash
 # Attempt 3: Fallback to npm
-npm install -g @anthropic/qmd
+npm install -g @anthropic/gemini
 ```
 
 **After any install attempt, verify:**
 ```bash
-qmd --version
+gemini --version
 ```
 
-This MUST return a version number. If it does not, STOP and report the exact error output. Do not proceed without a working QMD installation.
+This MUST return a version number. If it does not, STOP and report the exact error output. Do not proceed without a working Gemini installation.
 
-QMD documentation and source: https://github.com/tobi/qmd
+Gemini documentation and source: https://github.com/tobi/gemini
 
 ### pdfplumber (Required for PDF extraction)
 
@@ -296,20 +296,20 @@ If Codex OAuth is not found or expired: reconnect via OpenClaw settings using yo
 
 ---
 
-## Step 5 - Set Up QMD Collection (coaching-personas) - DOCUMENTATION ONLY
+## Step 5 - Set Up Gemini Collection (coaching-personas) - DOCUMENTATION ONLY
 
-Pre-built personas are already included in this skill folder. They will be added to QMD during Skill 23 (AI Workforce Blueprint) installation.
+Pre-built personas are already included in this skill folder. They will be added to Gemini during Skill 23 (AI Workforce Blueprint) installation.
 
-**DO NOT run QMD embed here.** Skill 23 will run the embedding once after all personas AND workforce files are ready.
+**DO NOT run Gemini embed here.** Skill 23 will run the embedding once after all personas AND workforce files are ready.
 
 **What happens next:**
-- Skill 23 will add the coaching-personas collection to QMD
-- Skill 23 will run `qmd update && qmd embed` to index all personas + workforce files together
+- Skill 23 will add the coaching-personas collection to Gemini
+- Skill 23 will run `gemini update && gemini embed` to index all personas + workforce files together
 - This avoids redundant double-embedding (after Skill 22 and again after Skill 23)
 
 **Note:** If you need to verify personas are searchable after Skill 23 completes, run:
 ```bash
-qmd search coaching-personas "negotiation"
+gemini search coaching-personas "negotiation"
 ```
 
 ---
@@ -322,8 +322,8 @@ qmd search coaching-personas "negotiation"
 Before allowing Skill 23 to run, verify this Skill 22 installation is complete:
 
 ```bash
-# Check if QMD collection "coaching-personas" exists
-if qmd status 2>/dev/null | grep -q "coaching-personas"; then
+# Check if Gemini collection "coaching-personas" exists
+if gemini status 2>/dev/null | grep -q "coaching-personas"; then
   echo "✅ Skill 22 verified: coaching-personas collection exists"
   echo "Skill 23 may proceed"
 else
@@ -479,7 +479,7 @@ This triggers the full sequence:
 2. **Phase 1 (Kimi K2.5)** - Spawns sub-agent with extraction prompt + book text. Output: `personas/[author]-[book-slug]/extraction-notes.md`
 3. **Phase 2 (DeepSeek V3.2-Speciale)** - Spawns sub-agent with analysis prompt + extraction notes. Output: `personas/[author]-[book-slug]/analysis-notes.md`
 4. **Phase 3 (GPT-5.3 Codex)** - Spawns sub-agent with synthesis prompt + extraction + analysis notes. Output: `personas/[author]-[book-slug]/persona-blueprint.md`. Falls back to Kimi K2.5 on failure.
-5. **QMD indexing** - Runs `qmd update && qmd embed` to make the new persona searchable.
+5. **Gemini indexing** - Runs `gemini update && gemini embed` to make the new persona searchable.
 
 **Verify each phase completed** by checking:
 - File exists at the expected path
@@ -560,7 +560,7 @@ When a gateway restart is needed:
 
 Run through this checklist:
 - [ ] All 8 skill .md files read (TYP complete)
-- [ ] QMD installed and returning version
+- [ ] Gemini installed and returning version
 - [ ] pdfplumber installed
 - [ ] ebooklib installed
 - [ ] Calibre ebook-convert available
@@ -568,9 +568,9 @@ Run through this checklist:
 - [ ] Moonshot API key confirmed in /data/openclaw/workspace/secrets/.env
 - [ ] OpenRouter API key confirmed in /data/openclaw/workspace/secrets/.env
 - [ ] Codex OAuth token confirmed and not expired
-- [ ] QMD collection coaching-personas added and embedded (Step 5)
-- [ ] QMD test query returns results
+- [ ] Gemini collection coaching-personas added and embedded (Step 5)
+- [ ] Gemini test query returns results
 - [ ] Core files updated per CORE_UPDATES.md (Step 7)
 - [ ] Pipeline execution test passed (Step 8)
 
-When all boxes are checked: log "Book-to-Persona skill fully installed. QMD collection active. Pre-built personas ready (run: qmd status -c coaching-personas to see count). Pipeline verified operational. Ready to process new books or query personas."
+When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini collection active. Pre-built personas ready (run: gemini status -c coaching-personas to see count). Pipeline verified operational. Ready to process new books or query personas."

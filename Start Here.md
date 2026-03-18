@@ -172,18 +172,18 @@ Teaches the AI how to back up config files before touching anything.
 Without this, one bad edit can corrupt your system with no way to recover.
 **Nothing else installs until this is confirmed.**
 
-### ✅ STEP 3: QMD (Semantic Search Engine)
+### ✅ STEP 3: Gemini (Semantic Search Engine)
 **Handled automatically by the install script - no skill folder needed.**
-QMD is installed as a system dependency during Step 3 of install.sh.
+Gemini is installed as a system dependency during Step 3 of install.sh.
 It powers the persona search in Skill 22 and the persona detection in Skill 23.
 
 **QMD is automatically installed and indexed at:**
-- Install time: QMD installed, collections (clawd, master-files) created, initial indexing run
+- Install time: Gemini installed, collections (clawd, master-files) created, initial indexing run
 - After Skill 22: coaching-personas collection added and indexed
 - After Skill 23: workforce files indexed
 - After all 30 skills: final complete index
 
-**QMD INDEXING happens at strategic points - see QMD INDEXING PROTOCOL below.**
+**Gemini INDEXING happens at strategic points - see Gemini INDEXING PROTOCOL below.**
 
 ### STEPS 4-30: All Remaining Skills (in numbered order)
 Skills install sequentially. For each skill:
@@ -492,9 +492,9 @@ After every skill install, verify:
 
 ---
 
-## 🔴 QMD INDEXING PROTOCOL - STRATEGIC EMBEDDING SCHEDULE
+## 🔴 Gemini INDEXING PROTOCOL - STRATEGIC EMBEDDING SCHEDULE
 
-**QMD (semantic search) must be indexed at specific milestones, not after every skill.**
+**Gemini (semantic search) must be indexed at specific milestones, not after every skill.**
 
 ### Indexing Schedule
 
@@ -510,9 +510,9 @@ After every skill install, verify:
 
 ```bash
 # Standard indexing command sequence:
-qmd update          # Update file index
-qmd embed           # Generate embeddings
-qmd status          # Verify completion
+gemini update          # Update file index
+gemini embed           # Generate embeddings
+gemini status          # Verify completion
 ```
 
 ### Collections to Index
@@ -525,16 +525,16 @@ qmd status          # Verify completion
 
 ### Process for Each Indexing
 
-1. **Announce:** "Running QMD indexing for [milestone] milestone..."
-2. **Update:** `qmd update` - scans all collections
-3. **Embed:** `qmd embed` - generates vectors
+1. **Announce:** "Running Gemini indexing for [milestone] milestone..."
+2. **Update:** `gemini update` - scans all collections
+3. **Embed:** `gemini embed` - generates vectors
 4. **Verify:** Check status shows all files indexed
 5. **Report:** "QMD indexing complete: X files, Y collections"
 
 ### Forbidden Actions
 - Do NOT index after every single skill (wasteful)
 - Do NOT skip indexing at milestones (breaks search)
-- Do NOT assume "it's probably fine" - verify with `qmd status`
+- Do NOT assume "it's probably fine" - verify with `gemini status`
 - Do NOT index before TYP and Back Yourself Up are complete
 
 ### Why This Schedule
@@ -1026,7 +1026,7 @@ Replace `[MASTER_FILES_FOLDER]` with the actual path from step 3.
         INSTALL.md
         CORE_UPDATES.md
         PIPELINE.md
-        QMD-RETRIEVAL-GUIDE.md
+        GAI-SEARCH-GUIDE.md
         PERSONA-ROUTER.md
         personas/
         pipeline/
@@ -1350,7 +1350,7 @@ All skill folders are located inside:
 |---|-------|-------------|-------|
 | 1 | Teach Yourself Protocol | 01-teach-yourself-protocol | 🔴 MANDATORY FIRST |
 | 2 | Back Yourself Up Protocol | 02-back-yourself-up-protocol | 🔴 MANDATORY SECOND |
-| — | **QMD** | *(installed by install script)* | ✅ Auto-installed before skills 3-30 |
+| — | **Gemini** | *(installed by install script)* | ✅ Auto-configured before skills 3-30 |
 | 3 | Agent Browser (Vercel) - preferred browser automation | 03-agent-browser |
 | 4 | Superpowers | 04-superpowers |
 | 5 | GHL / Convert and Flow Setup | 05-ghl-setup |
@@ -1419,7 +1419,7 @@ All skill folders are located inside:
 
 ## IMPORTED SKILLS (16-30) - AUTHORITATIVE INSTALL RULES
 
-Skills 16 through 30 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, QMD-RETRIEVAL-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
+Skills 16 through 30 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, GAI-SEARCH-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
 
 **The file-read order for ALL imported skills is the same as for all skills:**
 1. Read `SKILL.md` first
@@ -1450,7 +1450,7 @@ This section tells YOU (the AI agent) exactly how to run the 5-wave installation
 **Check for already installed skills:**
 ```bash
 ls -la ~/.openclaw/skills/ 2>/dev/null | grep -E "^d" | wc -l
-qmd status 2>/dev/null
+gemini status 2>/dev/null
 ```
 
 **Check onboarding status file:**
@@ -1491,10 +1491,10 @@ Install these 4 items yourself, one at a time:
    - Report: "Skill 02 complete"
 
 3. **QMD Setup**
-   - Verify QMD is installed: `qmd --version`
+   - Verify Gemini is installed: `qmd --version`
    - If not installed, install it
    - Create collections: `qmd collection add ~/clawd --name clawd --mask "*.md"`
-   - Run initial indexing: `qmd update && qmd embed`
+   - Run initial indexing: `gemini update && gemini embed`
    - Report: "QMD setup complete"
 
 4. **Skill 03: Agent Browser**
@@ -1634,9 +1634,9 @@ label: "wave4-agent-f"
 
 2. **Final QMD Indexing**
    ```bash
-   qmd update
-   qmd embed
-   qmd status
+   gemini update
+   gemini embed
+   gemini status
    ```
 
 3. **Remove ONBOARDING PENDING flag from AGENTS.md**
@@ -2068,13 +2068,13 @@ After all 30 skills are installed, run the final QMD indexing:
 
 ```bash
 # Final index update
-qmd update
+gemini update
 
 # Final embeddings generation
-qmd embed
+gemini embed
 
 # Verify all collections are indexed
-qmd status
+gemini status
 ```
 
 **Why this is needed:**

@@ -1,23 +1,23 @@
-# QMD-RETRIEVAL-GUIDE.md - How Agents Query Personas at Runtime
+# GAI-SEARCH-GUIDE.md - How Agents Query Personas at Runtime
 
-## What QMD Does in This System
+## What Gemini Does in This System
 
-QMD is the Layer 2 retrieval system for the persona library. It allows any agent to search
+Gemini is the Layer 2 retrieval system for the persona library. It allows any agent to search
 across all persona blueprints and pull the exact section they need - without loading every
 full persona into context.
 
 - **Layer 1** (always in context): Lightweight routing tags and persona summaries
 - **Layer 2** (on-demand retrieval): Full methodology sections, question libraries, tools,
-  frameworks - pulled surgically via QMD query
+  frameworks - pulled surgically via Gemini query
 
 ---
 
-## Setup - Adding Personas to QMD
+## Setup - Adding Personas to Gemini
 
 ### Add the full persona library as a collection
 
 ```bash
-qmd collection add /data/openclaw-master-files/coaching-personas/personas \
+gemini collection add /data/openclaw-master-files/coaching-personas/personas \
   --name coaching-personas \
   --mask "**/*.md"
 ```
@@ -25,22 +25,22 @@ qmd collection add /data/openclaw-master-files/coaching-personas/personas \
 ### Index it
 
 ```bash
-qmd update
-qmd embed
+gemini update
+gemini embed
 ```
 
 ### Verify
 
 ```bash
-qmd status
+gemini status
 # Should show coaching-personas collection with file count
 ```
 
 ### After each new persona is built, re-index
 
 ```bash
-qmd update
-qmd embed
+gemini update
+gemini embed
 ```
 
 ---
@@ -52,12 +52,12 @@ qmd embed
 Use when: you need to identify which persona to activate for a specific human challenge or task
 
 ```bash
-qmd query "methodology for building habits and systems for consistency"
-qmd query "negotiation framework for difficult conversations and objection handling"
-qmd query "sales questioning technique for uncovering customer problems"
+gemini query "methodology for building habits and systems for consistency"
+gemini query "negotiation framework for difficult conversations and objection handling"
+gemini query "sales questioning technique for uncovering customer problems"
 ```
 
-QMD returns the most relevant sections from matching persona blueprints.
+Gemini returns the most relevant sections from matching persona blueprints.
 Read the results to identify which persona to activate.
 
 ### Query Pattern 2 - Pull a specific section from a known persona
@@ -65,9 +65,9 @@ Read the results to identify which persona to activate.
 Use when: you know which persona you want, and need a specific section (questions, tools, etc.)
 
 ```bash
-qmd query "Atomic Habits coaching questions assessment phase"
-qmd query "SPIN Selling decision logic framework agent governance"
-qmd query "Never Split the Difference objection handling resistance"
+gemini query "Atomic Habits coaching questions assessment phase"
+gemini query "SPIN Selling decision logic framework agent governance"
+gemini query "Never Split the Difference objection handling resistance"
 ```
 
 ### Query Pattern 3 - Find execution standards for a task type
@@ -76,9 +76,9 @@ Use when: an agent is about to execute a specific type of professional task and 
 the governance standard
 
 ```bash
-qmd query "email outreach quality standard non-negotiable rules"
-qmd query "sales call preparation checklist execution standard"
-qmd query "leadership coaching session structure definition of done"
+gemini query "email outreach quality standard non-negotiable rules"
+gemini query "sales call preparation checklist execution standard"
+gemini query "leadership coaching session structure definition of done"
 ```
 
 ### Query Pattern 4 - Find failure patterns to avoid
@@ -86,9 +86,9 @@ qmd query "leadership coaching session structure definition of done"
 Use when: an agent is reviewing their own output or checking for common mistakes
 
 ```bash
-qmd query "failure patterns amateur mistakes sales execution"
-qmd query "what bad coaching looks like versus expert coaching"
-qmd query "content writing failure patterns quality markers"
+gemini query "failure patterns amateur mistakes sales execution"
+gemini query "what bad coaching looks like versus expert coaching"
+gemini query "content writing failure patterns quality markers"
 ```
 
 ---
@@ -97,37 +97,37 @@ qmd query "content writing failure patterns quality markers"
 
 ### Simple hybrid query (recommended - combines BM25 + vector)
 ```bash
-qmd query "your question here"
+gemini query "your question here"
 ```
 
 ### Structured query (when you need precise control)
 ```bash
-qmd query 'lex:habits systems consistency
+gemini query 'lex:habits systems consistency
 vec:building repeatable behaviors over time
 hyde:a methodology for creating automatic daily routines'
 ```
 
 ### Get a specific file section
 ```bash
-qmd get personas/clear-atomic-habits/persona-blueprint.md:1 -l 100
+gemini get personas/clear-atomic-habits/persona-blueprint.md:1 -l 100
 # Returns lines 1-100 of the Atomic Habits blueprint
 ```
 
 ### Search multiple personas at once
 ```bash
-qmd multi-get "personas/*/persona-blueprint.md"
+gemini multi-get "personas/*/persona-blueprint.md"
 # Returns summaries of all persona blueprints
 ```
 
 ---
 
-## How to Use QMD Results in Agent Context
+## How to Use Gemini Results in Agent Context
 
-When QMD returns results, the agent should:
+When Gemini returns results, the agent should:
 
-1. **Read the returned section** - QMD returns the matching text with file path and line numbers
+1. **Read the returned section** - Gemini returns the matching text with file path and line numbers
 2. **Identify the persona** - note which persona blueprint the result came from
-3. **Pull more context if needed** - use `qmd get [path]:[line] -l [count]` to expand
+3. **Pull more context if needed** - use `gemini get [path]:[line] -l [count]` to expand
 4. **Apply the methodology** - use the extracted framework, questions, or standards directly
 
 ### Example Agent Workflow
@@ -136,9 +136,9 @@ When QMD returns results, the agent should:
 Agent task: Write a sales outreach email for a SaaS product
 
 Step 1: Query for relevant governance standard
-→ qmd query "sales outreach email quality standard execution rules"
+→ gemini query "sales outreach email quality standard execution rules"
 
-Step 2: QMD returns sections from SPIN Selling and StoryBrand personas
+Step 2: Gemini returns sections from SPIN Selling and StoryBrand personas
 
 Step 3: Agent reads the returned standards:
 - SPIN: Open with situation question, not product pitch
@@ -146,34 +146,34 @@ Step 3: Agent reads the returned standards:
 
 Step 4: Agent writes email following those standards
 
-Step 5: Agent self-reviews against the non-negotiable rules returned by QMD
+Step 5: Agent self-reviews against the non-negotiable rules returned by Gemini
 ```
 
 ---
 
-## QMD Collection Maintenance
+## Gemini Collection Maintenance
 
 ### Check collection health
 ```bash
-qmd status
+gemini status
 ```
 
 ### After adding new persona blueprints
 ```bash
-qmd update
-qmd embed
+gemini update
+gemini embed
 ```
 
 ### If results seem stale or wrong
 ```bash
-qmd cleanup
-qmd update
-qmd embed
+gemini cleanup
+gemini update
+gemini embed
 ```
 
 ### View what is indexed
 ```bash
-qmd ls coaching-personas
+gemini ls coaching-personas
 ```
 
 ---
@@ -181,10 +181,10 @@ qmd ls coaching-personas
 ## Integration with Routing System
 
 The routing system (trigger-matrix.md, task-routing-matrix.md) identifies WHICH persona to activate.
-QMD retrieves the CONTENT from that persona on demand.
+Gemini retrieves the CONTENT from that persona on demand.
 
 They work together:
 1. Routing engine matches situation to persona (using keyword/tag triggers)
 2. Persona summary activates (Layer 1 - already in context)
-3. For deeper methodology detail, agent runs QMD query (Layer 2 - on-demand)
-4. QMD returns the specific sections needed for that task or coaching moment
+3. For deeper methodology detail, agent runs Gemini query (Layer 2 - on-demand)
+4. Gemini returns the specific sections needed for that task or coaching moment

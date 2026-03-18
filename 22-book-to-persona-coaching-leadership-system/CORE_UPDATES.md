@@ -13,7 +13,7 @@ Add concise summaries and file paths only. Never paste full documentation into c
 ```
 ## Book-to-Persona Skill (Installed)
 Converts any book (PDF/EPUB/MOBI/AZW3) into a dual-purpose persona blueprint.
-Pre-built personas already included. Run: qmd status -c coaching-personas to see total count. Pipeline runs on new books only.
+Pre-built personas already included. Run: gemini status -c coaching-personas to see total count. Pipeline runs on new books only.
 
 Pipeline:
 - Phase 1: Kimi K2.5 via direct Moonshot API (api.moonshot.cn/v1, temp 1.0) → extraction-notes.md
@@ -22,7 +22,7 @@ Pipeline:
 - Content filter fallback: OpenRouter moonshotai/kimi-k2.5
 
 Persona Reflex (DEFAULT BEHAVIOR):
-Before any professional task, run: qmd search coaching-personas "<task keywords>"
+Before any professional task, run: gemini search coaching-personas "<task keywords>"
 Load returned persona's Task Mode. Execute the task through that methodology.
 Skip only if the user explicitly says so.
 
@@ -31,7 +31,7 @@ Key paths:
 - Personas: /data/openclaw-master-files/coaching-personas/personas/
 - Router: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md
 - Orchestrator: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py
-- QMD collection: coaching-personas [run: qmd status -c coaching-personas to get current counts]
+- Gemini collection: coaching-personas [run: gemini status -c coaching-personas to get current counts]
 
 To add a new book: follow SOP in MEMORY.md under "Add New Book to Coaching Personas Matrix"
 ```
@@ -40,29 +40,29 @@ To add a new book: follow SOP in MEMORY.md under "Add New Book to Coaching Perso
 
 ## TOOLS.md
 
-**Where:** Add a new section under model routing titled `## Book-to-Persona - Model Routing and QMD`
+**Where:** Add a new section under model routing titled `## Book-to-Persona - Model Routing and Gemini`
 
 **Exact text to add:**
 ```
-## Book-to-Persona - Model Routing and QMD
+## Book-to-Persona - Model Routing and Gemini
 Pipeline model routing:
 - Phase 1: moonshot/kimi-k2.5 — MOONSHOT_API_KEY in /data/openclaw/workspace/secrets/.env — endpoint: https://api.moonshot.cn/v1 — temperature MUST be 1.0
 - Phase 2: deepseek/deepseek-v3.2-speciale via OpenRouter ONLY (OPENROUTER_API_KEY)
 - Phase 3: openai/gpt-5.3-codex via OpenClaw OAuth (ChatGPT subscription)
 - Fallback (content filter): OpenRouter moonshotai/kimi-k2.5 for flagged books
 
-QMD collection: coaching-personas
+Gemini collection: coaching-personas
 Setup commands (run once on fresh install):
-  qmd collection add /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas --name coaching-personas --mask "**/*.md"
-  qmd update
-  qmd embed  (takes 3-8 min first time, downloads local model, runs offline after)
+  gemini collection add /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas --name coaching-personas --mask "**/*.md"
+  gemini update
+  gemini embed  (takes 3-8 min first time, downloads local model, runs offline after)
 
-Runtime query: qmd search coaching-personas "<task keywords>"
-After adding new book: qmd update (no need to re-embed everything)
-If stale/broken: qmd cleanup && qmd update && qmd embed
+Runtime query: gemini search coaching-personas "<task keywords>"
+After adding new book: gemini update (no need to re-embed everything)
+If stale/broken: gemini cleanup && gemini update && gemini embed
 
 Full pipeline reference: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PIPELINE.md
-Full QMD guide: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/QMD-RETRIEVAL-GUIDE.md
+Full Gemini guide: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/GAI-SEARCH-GUIDE.md
 ```
 
 ---
@@ -75,10 +75,10 @@ Full QMD guide: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-sy
 ```
 ## Book-to-Persona Persona Library (Installed [DATE])
 - Skill: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
-- Pre-built personas (see qmd status -c coaching-personas for count): /data/openclaw-master-files/coaching-personas/personas/
-- QMD collection: coaching-personas [run: qmd status -c coaching-personas to get current counts]
+- Pre-built personas (see gemini status -c coaching-personas for count): /data/openclaw-master-files/coaching-personas/personas/
+- Gemini collection: coaching-personas [run: gemini status -c coaching-personas to get current counts]
 - Source: Available at your onboarding package repo.
-- Persona Reflex: query QMD before every professional task (see AGENTS.md)
+- Persona Reflex: query Gemini before every professional task (see AGENTS.md)
 - Add new book SOP: see "Add New Book to Coaching Personas Matrix" section in this file
 ```
 
@@ -119,8 +119,8 @@ No update required unless you are setting up a persona as your primary operating
 **Exact text to add:**
 ```
 ## Persona Reflex - ACTIVE
-QMD collection coaching-personas loaded [run: qmd status -c coaching-personas to get current counts].
-Before professional tasks: qmd search coaching-personas "<task>" → load persona Task Mode.
+Gemini collection coaching-personas loaded [run: gemini status -c coaching-personas to get current counts].
+Before professional tasks: gemini search coaching-personas "<task>" → load persona Task Mode.
 ```
 
 ---
