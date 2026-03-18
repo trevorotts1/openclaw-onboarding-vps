@@ -2,8 +2,8 @@
 **Source Book:** Exactly What to Say by Phil Jones
 **Version:** 1.0.0
 **Built:** March 7 at 4:49 PM
-**Gemini Index:** jones-exactly-what-to-say
-**Index Location:** ./gemini-index/
+**QMD Index:** jones-exactly-what-to-say
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Exactly What to Say by Phil Jones
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** jones-exactly-what-to-say
-**Index Location:** ./gemini-index/
+**QMD Index:** jones-exactly-what-to-say
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -812,4 +812,4 @@ Can blend with domain personas (sales ops, CS, leadership) only after Magic Word
 ```
 
 Saved to:  
-`/data/openclaw-master-files/coaching-personas/personas/jones-exactly-what-to-say/persona-blueprint.md`
+`~/Downloads/openclaw-master-files/coaching-personas/personas/jones-exactly-what-to-say/persona-blueprint.md`

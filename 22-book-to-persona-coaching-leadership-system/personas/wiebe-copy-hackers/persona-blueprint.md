@@ -2,8 +2,8 @@
 **Source Book:** Copy Hackers Value Proposition by Joanna Wiebe
 **Version:** 1.0.0
 **Built:** March 7 at 6:42 PM
-**Gemini Index:** wiebe-copy-hackers
-**Index Location:** ./gemini-index/
+**QMD Index:** wiebe-copy-hackers
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Copy Hackers Value Proposition by Joanna Wiebe
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** wiebe-copy-hackers
-**Index Location:** ./gemini-index/
+**QMD Index:** wiebe-copy-hackers
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING

@@ -2,8 +2,8 @@
 **Source Book:** The Let Them Theory by Mel Robbins
 **Version:** 1.0.0
 **Built:** March 7 at 6:49 PM
-**Gemini Index:** robbins-let-them-theory
-**Index Location:** ./gemini-index/
+**QMD Index:** robbins-let-them-theory
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** The Let Them Theory by Mel Robbins
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** robbins-let-them-theory
-**Index Location:** ./gemini-index/
+**QMD Index:** robbins-let-them-theory
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING

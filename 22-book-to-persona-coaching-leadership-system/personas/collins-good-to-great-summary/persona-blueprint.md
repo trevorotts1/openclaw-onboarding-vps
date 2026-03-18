@@ -2,8 +2,8 @@
 **Source Book:** Good to Great Summary by Jim Collins
 **Version:** 1.0.0
 **Built:** March 7 at 5:54 PM
-**Gemini Index:** collins-good-to-great-summary
-**Index Location:** ./gemini-index/
+**QMD Index:** collins-good-to-great-summary
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Good to Great Summary by Jim Collins
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** collins-good-to-great-summary
-**Index Location:** ./gemini-index/
+**QMD Index:** collins-good-to-great-summary
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING

@@ -2,8 +2,8 @@
 **Source Book:** Disrupt Yourself by Jay Samit
 **Version:** 1.0.0
 **Built:** March 7 at 7:37 PM
-**Gemini Index:** samit-disrupt-yourself
-**Index Location:** ./gemini-index/
+**QMD Index:** samit-disrupt-yourself
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Disrupt Yourself by Jay Samit
 **Version:** 1.0.0
 **Built:** March 8, 2026
-**Gemini Index:** samit-disrupt-yourself
-**Index Location:** ./gemini-index/
+**QMD Index:** samit-disrupt-yourself
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING

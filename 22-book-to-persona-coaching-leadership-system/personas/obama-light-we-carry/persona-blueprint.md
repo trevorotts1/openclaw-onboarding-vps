@@ -2,8 +2,8 @@
 **Source Book:** The Light We Carry by Michelle Obama
 **Version:** 1.0.0
 **Built:** March 7 at 5:51 PM
-**Gemini Index:** obama-light-we-carry
-**Index Location:** ./gemini-index/
+**QMD Index:** obama-light-we-carry
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** The Light We Carry by Michelle Obama
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** obama-light-we-carry
-**Index Location:** ./gemini-index/
+**QMD Index:** obama-light-we-carry
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -813,4 +813,4 @@ Can blend coaching + task governance in same session only when emotional regulat
 ```
 
 Saved to:  
-`/data/openclaw-master-files/coaching-personas/personas/obama-light-we-carry/persona-blueprint.md`
+`~/Downloads/openclaw-master-files/coaching-personas/personas/obama-light-we-carry/persona-blueprint.md`

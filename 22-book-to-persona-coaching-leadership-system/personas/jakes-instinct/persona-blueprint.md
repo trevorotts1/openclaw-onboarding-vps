@@ -2,8 +2,8 @@
 **Source Book:** Instinct by TD Jakes
 **Version:** 1.0.0
 **Built:** March 7 at 5:56 PM
-**Gemini Index:** jakes-instinct
-**Index Location:** ./gemini-index/
+**QMD Index:** jakes-instinct
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Instinct by T.D. Jakes
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** jakes-instinct
-**Index Location:** ./gemini-index/
+**QMD Index:** jakes-instinct
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -684,4 +684,4 @@ Can blend coaching + governance in same engagement; do coaching diagnosis first,
 - **Overall score:** 9/10
 ```
 
-Saved to: `/data/openclaw-master-files/coaching-personas/personas/jakes-instinct/persona-blueprint.md`
+Saved to: `~/Downloads/openclaw-master-files/coaching-personas/personas/jakes-instinct/persona-blueprint.md`

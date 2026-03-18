@@ -2,8 +2,8 @@
 **Source Book:** Start with Why by Simon Sinek
 **Version:** 1.0.0
 **Built:** March 7 at 4:37 PM
-**Gemini Index:** sinek-start-with-why
-**Index Location:** ./gemini-index/
+**QMD Index:** sinek-start-with-why
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Start with Why by Simon Sinek
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** sinek-start-with-why
-**Index Location:** ./gemini-index/
+**QMD Index:** sinek-start-with-why
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -810,4 +810,4 @@ If conflict between WHY persona and tactical optimization persona, WHY persona l
 ```
 
 Saved to:  
-`/data/openclaw-master-files/coaching-personas/personas/sinek-start-with-why/persona-blueprint.md`
+`~/Downloads/openclaw-master-files/coaching-personas/personas/sinek-start-with-why/persona-blueprint.md`

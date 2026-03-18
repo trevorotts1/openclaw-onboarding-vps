@@ -2,8 +2,8 @@
 **Source Book:** The 5 AM Club by Robin Sharma
 **Version:** 1.0.0
 **Built:** March 7 at 6:40 PM
-**Gemini Index:** sharma-5am-club
-**Index Location:** ./gemini-index/
+**QMD Index:** sharma-5am-club
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** The 5 AM Club by Robin Sharma
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** sharma-5am-club
-**Index Location:** ./gemini-index/
+**QMD Index:** sharma-5am-club
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING

@@ -2,8 +2,8 @@
 **Source Book:** Building a StoryBrand 2.0 by Donald Miller
 **Version:** 1.0.0
 **Built:** March 7 at 4:33 PM
-**Gemini Index:** miller-building-storybrand-2
-**Index Location:** ./gemini-index/
+**QMD Index:** miller-building-storybrand-2
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Building a StoryBrand 2.0 by Donald Miller
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** miller-building-storybrand-2
-**Index Location:** ./gemini-index/
+**QMD Index:** miller-building-storybrand-2
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING

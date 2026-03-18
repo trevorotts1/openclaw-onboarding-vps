@@ -2,8 +2,8 @@
 **Source Book:** When by Daniel Pink
 **Version:** 1.0.0
 **Built:** March 7 at 6:41 PM
-**Gemini Index:** pink-when
-**Index Location:** ./gemini-index/
+**QMD Index:** pink-when
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -14,8 +14,8 @@
 **Source Book:** *When: The Scientific Secrets of Perfect Timing* by Daniel H. Pink  
 **Version:** 1.0.0  
 **Built:** March 7, 2026  
-**Gemini Index:** pink-when  
-**Index Location:** ./gemini-index/  
+**QMD Index:** pink-when  
+**Index Location:** ./qmd-index/  
 **Coaching Mode:** BUILT  
 **Task Mode:** BUILT  
 **QC Status:** QC_PENDING  

@@ -2,8 +2,8 @@
 **Source Book:** Oversubscribed by Daniel Priestley
 **Version:** 1.0.0
 **Built:** March 7 at 6:47 PM
-**Gemini Index:** priestley-oversubscribed
-**Index Location:** ./gemini-index/
+**QMD Index:** priestley-oversubscribed
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -14,8 +14,8 @@
 **Source Book:** Oversubscribed by Daniel Priestley  
 **Version:** 1.0.0  
 **Built:** March 7, 2026  
-**Gemini Index:** priestley-oversubscribed  
-**Index Location:** ./gemini-index/  
+**QMD Index:** priestley-oversubscribed  
+**Index Location:** ./qmd-index/  
 **Coaching Mode:** BUILT  
 **Task Mode:** BUILT  
 **QC Status:** QC_PENDING

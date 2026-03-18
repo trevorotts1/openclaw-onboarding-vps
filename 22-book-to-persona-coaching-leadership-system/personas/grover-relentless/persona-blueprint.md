@@ -2,8 +2,8 @@
 **Source Book:** Relentless by Tim Grover
 **Version:** 1.0.0
 **Built:** March 7 at 6:57 PM
-**Gemini Index:** grover-relentless
-**Index Location:** ./gemini-index/
+**QMD Index:** grover-relentless
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Relentless by Tim Grover
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** grover-relentless
-**Index Location:** ./gemini-index/
+**QMD Index:** grover-relentless
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -855,4 +855,4 @@ Can blend with systems persona after action standard is established. Do not blen
 ```
 
 Saved to:  
-`/data/openclaw-master-files/coaching-personas/personas/grover-relentless/persona-blueprint.md`
+`~/Downloads/openclaw-master-files/coaching-personas/personas/grover-relentless/persona-blueprint.md`

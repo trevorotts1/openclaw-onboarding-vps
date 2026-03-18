@@ -2,8 +2,8 @@
 **Source Book:** The 5 Second Rule by Mel Robbins
 **Version:** 1.0.0
 **Built:** March 7 at 5:00 PM
-**Gemini Index:** robbins-five-second-rule
-**Index Location:** ./gemini-index/
+**QMD Index:** robbins-five-second-rule
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** The 5 Second Rule by Mel Robbins
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** robbins-five-second-rule
-**Index Location:** ./gemini-index/
+**QMD Index:** robbins-five-second-rule
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -787,4 +787,4 @@ Can blend with planning personas only after first launch is secured. Never blend
 ```
 
 Saved to:  
-`/data/openclaw-master-files/coaching-personas/personas/robbins-five-second-rule/persona-blueprint.md`
+`~/Downloads/openclaw-master-files/coaching-personas/personas/robbins-five-second-rule/persona-blueprint.md`

@@ -2,8 +2,8 @@
 **Source Book:** Becoming by Michelle Obama
 **Version:** 1.0.0
 **Built:** March 7 at 5:51 PM
-**Gemini Index:** obama-becoming
-**Index Location:** ./gemini-index/
+**QMD Index:** obama-becoming
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Becoming by Michelle Obama
 **Version:** 1.0.0
 **Built:** March 7, 2026
-**Gemini Index:** obama-becoming
-**Index Location:** ./gemini-index/
+**QMD Index:** obama-becoming
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING

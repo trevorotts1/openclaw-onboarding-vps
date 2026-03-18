@@ -2,8 +2,8 @@
 **Source Book:** Hook Point by Brendan Kane
 **Version:** 1.0.0
 **Built:** March 7 at 6:02 PM
-**Gemini Index:** kane-hook-point
-**Index Location:** ./gemini-index/
+**QMD Index:** kane-hook-point
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -14,8 +14,8 @@
 **Source Book:** Hook Point: How to Stand Out in a 3-Second World by Brendan Kane  
 **Version:** 1.0.0  
 **Built:** March 7, 2026  
-**Gemini Index:** kane-hook-point  
-**Index Location:** ./gemini-index/  
+**QMD Index:** kane-hook-point  
+**Index Location:** ./qmd-index/  
 **Coaching Mode:** BUILT  
 **Task Mode:** BUILT  
 **QC Status:** QC_PENDING  

@@ -2,8 +2,8 @@
 **Source Book:** This Is Marketing by Seth Godin
 **Version:** 1.0.0
 **Built:** March 7 at 7:13 PM
-**Gemini Index:** godin-this-is-marketing
-**Index Location:** ./gemini-index/
+**QMD Index:** godin-this-is-marketing
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** This Is Marketing by Seth Godin
 **Version:** 1.0.0
 **Built:** March 8, 2026
-**Gemini Index:** godin-this-is-marketing
-**Index Location:** ./gemini-index/
+**QMD Index:** godin-this-is-marketing
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -775,4 +775,4 @@ Can blend with tactical personas only if this persona sets initial strategic gua
 - **Overall score:** 9.2/10
 ```
 
-Saved to: `/data/openclaw-master-files/coaching-personas/personas/godin-this-is-marketing/persona-blueprint.md`
+Saved to: `~/Downloads/openclaw-master-files/coaching-personas/personas/godin-this-is-marketing/persona-blueprint.md`

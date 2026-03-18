@@ -2,8 +2,8 @@
 **Source Book:** Atomic Habits by James Clear
 **Version:** 1.0.0
 **Built:** March 7 at 4:26 PM
-**Gemini Index:** clear-atomic-habits
-**Index Location:** ./gemini-index/
+**QMD Index:** clear-atomic-habits
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -14,8 +14,8 @@
 **Source Book:** Atomic Habits by James Clear  
 **Version:** 1.0.0  
 **Built:** March 7, 2026  
-**Gemini Index:** clear-atomic-habits  
-**Index Location:** ./gemini-index/  
+**QMD Index:** clear-atomic-habits  
+**Index Location:** ./qmd-index/  
 **Coaching Mode:** BUILT  
 **Task Mode:** BUILT  
 **QC Status:** QC_PENDING

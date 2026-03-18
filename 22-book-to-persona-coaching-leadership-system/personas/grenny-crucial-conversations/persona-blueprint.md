@@ -2,8 +2,8 @@
 **Source Book:** Crucial Conversations by Grenny Patterson
 **Version:** 1.0.0
 **Built:** March 7 at 6:40 PM
-**Gemini Index:** grenny-crucial-conversations
-**Index Location:** ./gemini-index/
+**QMD Index:** grenny-crucial-conversations
+**Index Location:** ./qmd-index/
 **Coaching Mode:** BUILT
 **Task Mode:** BUILT
 **QC Status:** QC_PENDING
@@ -15,8 +15,8 @@
 **Source Book:** Crucial Conversations: Tools for Talking When Stakes Are High by Joseph Grenny, Kerry Patterson, Ron McMillan, Al Switzler, and Emily Gregory  
 **Version:** 1.0.0  
 **Built:** March 7, 2026  
-**Gemini Index:** grenny-crucial-conversations  
-**Index Location:** ./gemini-index/  
+**QMD Index:** grenny-crucial-conversations  
+**Index Location:** ./qmd-index/  
 **Coaching Mode:** BUILT  
 **Task Mode:** BUILT  
 **QC Status:** QC_PENDING
@@ -798,4 +798,4 @@ Blend coaching + task only when the same user needs both self-regulation and con
 - **Overall score:** 9/10
 ```
 
-Saved to: `/data/openclaw-master-files/coaching-personas/personas/grenny-crucial-conversations/persona-blueprint.md`
+Saved to: `~/Downloads/openclaw-master-files/coaching-personas/personas/grenny-crucial-conversations/persona-blueprint.md`
