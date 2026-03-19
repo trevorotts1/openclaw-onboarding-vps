@@ -129,7 +129,9 @@ If any files are missing, re-run the copy command above.
 
 ---
 
-## Step 2 - Check Dependencies
+## Step 2 - Check Dependencies (REQUIRED - DO NOT SKIP)
+
+This step must complete successfully before proceeding. The pipeline will fail if any dependency is missing.
 
 ### Gemini (Required)
 
