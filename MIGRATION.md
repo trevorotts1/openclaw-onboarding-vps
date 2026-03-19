@@ -116,7 +116,7 @@ Your old Gemini Engine index at `~/.cache/qmd/index.sqlite` is **not deleted** d
 **To reclaim disk space** (optional):
 ```bash
 rm ~/.cache/qmd/index.sqlite
-# Or remove entire qmd cache:
+# Or remove legacy QMD cache if present:
 # rm -rf ~/.cache/qmd/
 ```
 

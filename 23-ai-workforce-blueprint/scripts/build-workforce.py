@@ -772,7 +772,7 @@ def show_prebuilt_departments():
 def check_personas_installed():
     """Check if coaching-personas Gemini collection exists on this machine.
     
-    Note: Previously checked 'qmd status'. Now checks for Gemini API availability
+    Note: Previously used QMD. Now uses Gemini Embedding 2. Now checks for Gemini API availability
     and the presence of persona files.
     """
     # Check if Gemini SDK is available
@@ -1500,7 +1500,7 @@ def build_workforce_automated(context, interview_data, departments):
 def preflight_check():
     """Pre-flight check: Skill 23 requires Skill 22 to be fully installed first.
     
-    Note: Previously checked 'qmd status'. Now checks for Gemini API availability
+    Note: Previously used QMD. Now uses Gemini Embedding 2. Now checks for Gemini API availability
     and Skill 22 installation.
     """
     # Check if Skill 22 is installed

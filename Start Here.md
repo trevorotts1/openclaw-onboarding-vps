@@ -1491,9 +1491,9 @@ Install these 4 items yourself, one at a time:
    - Report: "Skill 02 complete"
 
 3. **Gemini Engine Setup**
-   - Verify Gemini is installed: `qmd --version`
+   - Verify Gemini is installed: `python3 ~/clawd/scripts/gemini-indexer.py --status`
    - If not installed, install it
-   - Create collections: `qmd collection add ~/clawd --name clawd --mask "*.md"`
+   - Index workspace: `python3 ~/clawd/scripts/gemini-indexer.py`
    - Run initial indexing: `gemini update && gemini embed`
    - Report: "Gemini Engine setup complete"
 
