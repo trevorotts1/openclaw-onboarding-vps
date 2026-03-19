@@ -138,7 +138,7 @@ The skill will:
 - **How to install:** `INSTALL.md`
 - **Pipeline technical reference:** `PIPELINE.md`
 - **Core file updates:** `CORE_UPDATES.md`
-- **QMD retrieval at runtime:** `GAI-SEARCH-GUIDE.md`
+- **Gemini Engine retrieval at runtime:** `GAI-SEARCH-GUIDE.md`
 - **Build checklist:** `CHECKLIST.md`
 - **Good and bad examples:** `GOOD-AND-BAD-EXAMPLES.md`
 
@@ -157,7 +157,7 @@ These two skills are separate but work together automatically.
 - The workforce scaffold script detects the `coaching-personas` Gemini collection during build
 - Each department folder gets a `governing-personas.md` showing which personas govern it
 - Each role folder gets its own `governing-personas.md` for role-specific tasks
-- Each `00-START-HERE.md` includes a Governing Personas section with QMD query
+- Each `00-START-HERE.md` includes a Governing Personas section with Gemini Engine query
 - Agents know: go to the right department, use the right persona
 
 **If skill 23 is NOT installed:**

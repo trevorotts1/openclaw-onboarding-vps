@@ -177,7 +177,7 @@ Without this, one bad edit can corrupt your system with no way to recover.
 Gemini is installed as a system dependency during Step 3 of install.sh.
 It powers the persona search in Skill 22 and the persona detection in Skill 23.
 
-**QMD is automatically installed and indexed at:**
+**Gemini Engine is automatically installed and indexed at:**
 - Install time: Gemini installed, collections (clawd, master-files) created, initial indexing run
 - After Skill 22: coaching-personas collection added and indexed
 - After Skill 23: workforce files indexed
@@ -500,7 +500,7 @@ After every skill install, verify:
 
 | Milestone | When to Index | Why |
 |-----------|---------------|-----|
-| **Initial** | After QMD install (step 3) | Base index of workspace |
+| **Initial** | After Gemini Engine install (step 3) | Base index of workspace |
 | **Personas** | After Skill 22 (Book-to-Persona) complete | 32+ persona blueprints now searchable |
 | **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions indexed |
 | **Final** | After ALL 30 skills complete | Complete system index |
@@ -529,7 +529,7 @@ gemini status          # Verify completion
 2. **Update:** `gemini update` - scans all collections
 3. **Embed:** `gemini embed` - generates vectors
 4. **Verify:** Check status shows all files indexed
-5. **Report:** "QMD indexing complete: X files, Y collections"
+5. **Report:** "Gemini Engine indexing complete: X files, Y collections"
 
 ### Forbidden Actions
 - Do NOT index after every single skill (wasteful)
@@ -1490,12 +1490,12 @@ Install these 4 items yourself, one at a time:
    - Mark: `SKILL-02: INSTALLED`
    - Report: "Skill 02 complete"
 
-3. **QMD Setup**
+3. **Gemini Engine Setup**
    - Verify Gemini is installed: `qmd --version`
    - If not installed, install it
    - Create collections: `qmd collection add ~/clawd --name clawd --mask "*.md"`
    - Run initial indexing: `gemini update && gemini embed`
-   - Report: "QMD setup complete"
+   - Report: "Gemini Engine setup complete"
 
 4. **Skill 03: Agent Browser**
    - Read ALL .md files in `~/.openclaw/onboarding/03-agent-browser/`
@@ -1577,7 +1577,7 @@ label: "wave2-qc-agent"
 1. **Skill 22: Book-to-Persona Coaching Leadership System**
    - Read ALL .md files in `~/.openclaw/onboarding/22-book-to-persona-coaching-leadership-system/`
    - Execute installation steps (this includes downloading and processing persona blueprints)
-   - Run QMD indexing for coaching-personas collection
+   - Run Gemini Engine indexing for coaching-personas collection
    - Mark: `SKILL-22: INSTALLED`
    - Report: "Skill 22 complete"
 
@@ -1632,7 +1632,7 @@ label: "wave4-agent-f"
    - Check status file shows `SKILL-15: INSTALLED`
    - If not, install it now
 
-2. **Final QMD Indexing**
+2. **Final Gemini Engine Indexing**
    ```bash
    gemini update
    gemini embed
@@ -1718,7 +1718,7 @@ trap 'rm -f "$INSTALL_FLAG"' EXIT
 ├─────────┬─────────────────┬─────────────────────────────────────────────────┤
 │  WAVE   │    AGENTS       │              SKILLS                             │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 1  │ 1 (Sequential)  │ 01 TYP, 02 Backup, QMD, 03 Agent Browser        │
+│ Wave 1  │ 1 (Sequential)  │ 01 TYP, 02 Backup, Gemini Engine, 03 Agent Browser        │
 │         │                 │ Foundation - must complete before Wave 2        │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
 │ Wave 2  │ 4 (Parallel)    │ Agent A: 04, 05, 06, 07 (install)               │
@@ -1736,7 +1736,7 @@ trap 'rm -f "$INSTALL_FLAG"' EXIT
 │         │                 │ Post-Workforce tools                            │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
 │ Wave 5  │ 1 (Sequential)  │ 15 BlackCEO Team Management (verification)      │
-│         │                 │ Final verification and QMD indexing             │
+│         │                 │ Final verification and Gemini Engine indexing             │
 └─────────┴─────────────────┴─────────────────────────────────────────────────┘
 ```
 
@@ -2062,9 +2062,9 @@ Open [WORKSPACE_ROOT]/AGENTS.md and delete the block that reads:
 ```
 If the block is not present, continue without error.
 
-### Final QMD Indexing (MANDATORY)
+### Final Gemini Engine Indexing (MANDATORY)
 
-After all 30 skills are installed, run the final QMD indexing:
+After all 30 skills are installed, run the final Gemini Engine indexing:
 
 ```bash
 # Final index update

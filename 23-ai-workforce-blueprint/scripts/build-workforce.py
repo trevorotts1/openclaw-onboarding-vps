@@ -11,7 +11,7 @@ import sys
 import subprocess
 import json
 
-# Gemini API for embeddings (replaces QMD)
+# Gemini API for embeddings (replaces Gemini Engine)
 try:
     from google import genai
     from google.genai import types

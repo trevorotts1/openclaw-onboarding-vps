@@ -1,8 +1,8 @@
-# TODO: QMD to Gemini Embedding 2 Migration
+# TODO: Gemini Engine to Gemini Embedding 2 Migration
 **VPS Repo:** `trevorotts1/openclaw-onboarding-vps`  
 **Status:** ✅ COMPLETED  
 **Last updated:** March 17, 2026 at 11:55 PM  
-**Commit:** `5f32263` - feat: migrate from QMD to Gemini Embedding 2
+**Commit:** `5f32263` - feat: migrate from Gemini Engine to Gemini Embedding 2
 
 ---
 
@@ -32,7 +32,7 @@
   cd /tmp/openclaw-onboarding-vps/22-book-to-persona-coaching-leadership-system/personas/
   for file in */persona-blueprint.md; do
     sed -i '' \
-      -e 's/\*\*QMD Index:\*\*/\*\*Gemini Index:\*\*/g' \
+      -e 's/\*\*Gemini Engine Index:\*\*/\*\*Gemini Index:\*\*/g' \
       -e 's|\.\/qmd-index\/|./gemini-index/|g' \
       "$file"
   done
@@ -55,45 +55,45 @@
 **Risk:** Medium
 
 ### 2.1 Rename Primary Documentation File
-- [x] **2.1.1** Rename `QMD-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
+- [x] **2.1.1** Rename `GEMINI-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
   ```bash
-  mv QMD-RETRIEVAL-GUIDE.md GAI-SEARCH-GUIDE.md
+  mv GEMINI-RETRIEVAL-GUIDE.md GAI-SEARCH-GUIDE.md
   ```
-- [x] **2.1.2** Update file content (46 QMD references inside)
-  - Replace "QMD" → "Gemini" or "gai-search" contextually
+- [x] **2.1.2** Update file content (46 Gemini Engine references inside)
+  - Replace "Gemini Engine" → "Gemini" or "gai-search" contextually
   - Keep code examples valid
 
 ### 2.2 Update SKILL.md
 - [x] **2.2.1** Line 21: Update TYP reading list reference
-  - Change: `6. QMD-RETRIEVAL-GUIDE.md` → `6. GAI-SEARCH-GUIDE.md`
+  - Change: `6. GEMINI-RETRIEVAL-GUIDE.md` → `6. GAI-SEARCH-GUIDE.md`
 - [x] **2.2.2** Line 76: Update TYP step reference
-  - Change: `Read QMD-RETRIEVAL-GUIDE.md` → `Read GAI-SEARCH-GUIDE.md`
+  - Change: `Read GEMINI-RETRIEVAL-GUIDE.md` → `Read GAI-SEARCH-GUIDE.md`
 - [x] **2.2.3** Line 141: Update documentation link
-  - Change: `QMD-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
-- [x] **2.2.4** Step 3 (QMD setup): Rewrite entirely for Gemini
+  - Change: `GEMINI-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
+- [x] **2.2.4** Step 3 (Gemini Engine setup): Rewrite entirely for Gemini
   - Remove `python3 ~/clawd/scripts/gemini-indexer.py`
   - Add `gai-search index add` or direct API equivalent
-- [x] **2.2.5** All remaining "QMD" mentions: Update to "Gemini"
+- [x] **2.2.5** All remaining "Gemini Engine" mentions: Update to "Gemini"
 
 ### 2.3 Update INSTALL.md
 - [x] **2.3.1** Line 99: Update file listing
-  - Change: `6. QMD-RETRIEVAL-GUIDE.md` → `6. GAI-SEARCH-GUIDE.md`
+  - Change: `6. GEMINI-RETRIEVAL-GUIDE.md` → `6. GAI-SEARCH-GUIDE.md`
 - [x] **2.3.2** Line 126: Update expected output list
-  - Change: `QMD-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
-- [x] **2.3.3** QMD installation section: Replace with Gemini setup
+  - Change: `GEMINI-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
+- [x] **2.3.3** Gemini Engine installation section: Replace with Gemini setup
 
 ### 2.4 Update QC.md
-- [x] **2.4.1** 32 QMD references: Update all to Gemini equivalents
+- [x] **2.4.1** 32 Gemini Engine references: Update all to Gemini equivalents
 - [x] **2.4.2** Validation commands: Replace `qmd status` with Gemini checks
 
 ### 2.5 Update CORE_UPDATES.md
 - [x] **2.5.1** Line 64: Update guide location reference
-  - Change path from `QMD-RETRIEVAL-GUIDE.md` to `GAI-SEARCH-GUIDE.md`
-- [x] **2.5.2** Memory slot references: Update from QMD to Gemini
+  - Change path from `GEMINI-RETRIEVAL-GUIDE.md` to `GAI-SEARCH-GUIDE.md`
+- [x] **2.5.2** Memory slot references: Update from Gemini Engine to Gemini
 
 ### 2.6 Update _meta.json
 - [x] **2.6.1** Line 4: Update description
-  - Change: `"QMD-indexed for retrieval"` → `"Gemini-indexed for retrieval"`
+  - Change: `"Gemini Engine-indexed for retrieval"` → `"Gemini-indexed for retrieval"`
 - [x] **2.6.2** Line 8: Update binary dependencies
   - Change: `"bins": ["qmd", "python3"]` → `"bins": ["gai-search", "python3"]`
 - [x] **2.6.3** Line 17: Update tags
@@ -101,7 +101,7 @@
 
 ### 2.7 Update pipeline/orchestrator.py
 - [x] **2.7.1** Line 829: Update generated header field
-  - Change: `**QMD Index:**` → `**Gemini Index:**`
+  - Change: `**Gemini Engine Index:**` → `**Gemini Index:**`
 - [x] **2.7.2** Line 830: Update index location
   - Change: `./qmd-index/` → `./gemini-index/`
 
@@ -119,12 +119,12 @@
 **Current code locations:**
 - Line ~640: `subprocess.run(["qmd", "update"])`
 - Line ~765-768: `subprocess.run(["qmd", "embed"])`
-- Line ~976: QMD status check
-- Line ~1113-1146: Multiple QMD calls
-- Line ~1250-1251: QMD subprocess
-- Line ~1427-1428: QMD commands
-- Line ~1454: QMD reference
-- Line ~1487-1488: QMD subprocess
+- Line ~976: Gemini Engine status check
+- Line ~1113-1146: Multiple Gemini Engine calls
+- Line ~1250-1251: Gemini Engine subprocess
+- Line ~1427-1428: Gemini Engine commands
+- Line ~1454: Gemini Engine reference
+- Line ~1487-1488: Gemini Engine subprocess
 
 **Replacement strategy:**
 - [x] **3.1.1** Import Google GenAI SDK at top of file
@@ -156,22 +156,22 @@
   ```
 - [x] **3.1.3** Replace `subprocess.run(["qmd", "update"])` calls
 - [x] **3.1.4** Replace `subprocess.run(["qmd", "embed"])` calls
-- [x] **3.1.5** Replace QMD status checks with Gemini API validation
-- [x] **3.1.6** Update error messages to reference Gemini instead of QMD
+- [x] **3.1.5** Replace Gemini Engine status checks with Gemini API validation
+- [x] **3.1.6** Update error messages to reference Gemini instead of Gemini Engine
 - [x] **3.1.7** Test the script to ensure it runs without errors
 
 ### 3.2 Update SKILL.md
-- [x] **3.2.1** All QMD references → Gemini
-- [x] **3.2.2** QMD-RETRIEVAL-GUIDE.md → GAI-SEARCH-GUIDE.md
+- [x] **3.2.1** All Gemini Engine references → Gemini
+- [x] **3.2.2** GEMINI-RETRIEVAL-GUIDE.md → GAI-SEARCH-GUIDE.md
 - [x] **3.2.3** Python subprocess examples → Gemini SDK examples
 
 ### 3.3 Update INSTALL.md
 - [x] **3.3.1** Dependencies section: Remove qmd, add google-genai
-- [x] **3.3.2** Installation steps: Replace QMD setup with Gemini setup
-- [x] **3.3.3** Verification section: Update QMD checks → Gemini checks
+- [x] **3.3.2** Installation steps: Replace Gemini Engine setup with Gemini setup
+- [x] **3.3.3** Verification section: Update Gemini Engine checks → Gemini checks
 
 ### 3.4 Update master-orchestrator-dept/03-Activity-Log-Template.md
-- [x] **3.4.1** QMD references → Gemini
+- [x] **3.4.1** Gemini Engine references → Gemini
 
 ---
 
@@ -182,8 +182,8 @@
 **Time estimate:** 30 minutes  
 **Risk:** Low
 
-- [x] **4.1** SKILL.md: Update 2 QMD references
-- [x] **4.2** INSTRUCTIONS.md: Update QMD → Gemini
+- [x] **4.1** SKILL.md: Update 2 Gemini Engine references
+- [x] **4.2** INSTRUCTIONS.md: Update Gemini Engine → Gemini
 
 ---
 
@@ -194,10 +194,10 @@
 **Time estimate:** 1 hour  
 **Risk:** Low
 
-- [x] **5.1** SKILL.md: Update QMD validation steps
-- [x] **5.2** QC.md: Update 19 QMD references
-- [x] **5.3** INSTALL.md: Update QMD → Gemini
-- [x] **5.4** README.md: Update QMD → Gemini
+- [x] **5.1** SKILL.md: Update Gemini Engine validation steps
+- [x] **5.2** QC.md: Update 19 Gemini Engine references
+- [x] **5.3** INSTALL.md: Update Gemini Engine → Gemini
+- [x] **5.4** README.md: Update Gemini Engine → Gemini
 
 ---
 
@@ -210,39 +210,39 @@
 
 ### 6.1 Update Start Here.md (67 references - CRITICAL FILE)
 
-**Major section: Step 3 (QMD setup)**
+**Major section: Step 3 (Gemini Engine setup)**
 - [x] **6.1.1** Rewrite Step 3 entirely
   - Remove: `python3 ~/clawd/scripts/gemini-indexer.py`
   - Add: Gemini API key setup and `gai-search` or direct API
-- [x] **6.1.2** All inline QMD commands → Gemini equivalents
-- [x] **6.1.3** QMD-RETRIEVAL-GUIDE.md → GAI-SEARCH-GUIDE.md
+- [x] **6.1.2** All inline Gemini Engine commands → Gemini equivalents
+- [x] **6.1.3** GEMINI-RETRIEVAL-GUIDE.md → GAI-SEARCH-GUIDE.md
 - [x] **6.1.4** Maintain warm, clear tone (Trevor's standard)
 - [x] **6.1.5** Add clear numbering for 60+ users
 
 ### 6.2 Update AGENTS.md
-- [x] **6.2.1** 20 QMD references → Gemini
-- [x] **6.2.2** Memory slot documentation: Update QMD → Gemini
+- [x] **6.2.1** 20 Gemini Engine references → Gemini
+- [x] **6.2.2** Memory slot documentation: Update Gemini Engine → Gemini
 
 ### 6.3 Update CHANGELOG.md
 - [x] **6.3.1** Add migration entry for v4.0.0 (or next version)
   ```markdown
   ## [4.0.0] - 2026-03-XX
   ### Changed
-  - Migrated from QMD (local SQLite) to Gemini Embedding 2 (Google API)
+  - Migrated from Gemini Engine (local SQLite) to Gemini Embedding 2 (Google API)
   - Replaced all `qmd` CLI commands with `gai-search` or direct API
   - Updated 40 persona blueprints with new index references
   ```
 
 ### 6.4 Update README.md
-- [x] **6.4.1** Feature list: Update QMD → Gemini
-- [x] **6.4.2** Architecture diagram: Update Layer 2 from QMD to Gemini
+- [x] **6.4.1** Feature list: Update Gemini Engine → Gemini
+- [x] **6.4.2** Architecture diagram: Update Layer 2 from Gemini Engine to Gemini
 
 ---
 
 ## Phase 7: Testing & Validation
 
 - [x] **7.1** Run install.sh on clean environment
-- [x] **7.2** Verify all 30 skills install without QMD errors
+- [x] **7.2** Verify all 30 skills install without Gemini Engine errors
 - [x] **7.3** Test Skill 22 pipeline end-to-end
 - [x] **7.4** Test Skill 23 build-workforce.py
 - [x] **7.5** Verify persona blueprints generate correctly
@@ -254,17 +254,17 @@
 
 - [x] **8.1** Create MIGRATION.md
   - For existing users (Corey, Trevor)
-  - Explain how to transition existing QMD indexes
+  - Explain how to transition existing Gemini Engine indexes
   - Provide rollback instructions
 - [x] **8.2** Update CHANGELOG.md with migration notes
 - [x] **8.3** Commit all changes
   ```bash
   git add -A
-  git commit -m "feat: migrate from QMD to Gemini Embedding 2
+  git commit -m "feat: migrate from Gemini Engine to Gemini Embedding 2
 
-  - Replace local SQLite QMD with Google Gemini Embedding 2 API
+  - Replace local SQLite Gemini Engine with Google Gemini Embedding 2 API
   - Update 40 persona blueprints with new index headers
-  - Rename QMD-RETRIEVAL-GUIDE.md → GAI-SEARCH-GUIDE.md
+  - Rename GEMINI-RETRIEVAL-GUIDE.md → GAI-SEARCH-GUIDE.md
   - Rewrite build-workforce.py to use Gemini SDK
   - Update all documentation and install scripts
   - Add MIGRATION.md for existing users
@@ -320,13 +320,13 @@
 
 ### What Was Changed:
 
-1. **40 persona blueprints** - "QMD Index" → "Gemini Index", "./qmd-index/" → "./gemini-index/"
-2. **Renamed file** - `QMD-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
+1. **40 persona blueprints** - "Gemini Engine Index" → "Gemini Index", "./qmd-index/" → "./gemini-index/"
+2. **Renamed file** - `GEMINI-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
 3. **Skill 22 core files** - SKILL.md, INSTALL.md, QC.md, CORE_UPDATES.md, _meta.json, orchestrator.py
 4. **build-workforce.py** - Complete rewrite of subprocess calls to use Gemini API with `google-genai` SDK
-5. **Skills 29, 30** - Updated all QMD references
+5. **Skills 29, 30** - Updated all Gemini Engine references
 6. **Top-level files** - Start Here.md, AGENTS.md, CHANGELOG.md, README.md
-7. **Created MIGRATION.md** - Guide for existing users transitioning from QMD
+7. **Created MIGRATION.md** - Guide for existing users transitioning from Gemini Engine
 
 ### What Users Need to Do:
 
@@ -336,5 +336,5 @@
 
 ### Rollback Info:
 
-If needed, old QMD index is at `~/.cache/qmd/index.sqlite` (not deleted).
+If needed, old Gemini Engine index is at `~/.cache/qmd/index.sqlite` (not deleted).
 

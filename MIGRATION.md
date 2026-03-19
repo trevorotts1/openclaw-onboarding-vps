@@ -1,8 +1,8 @@
-# Migration Guide: QMD to Gemini Embedding 2
+# Migration Guide: Gemini Engine to Gemini Embedding 2
 
-**For:** Existing users with QMD indexes (Corey, Trevor, and others)  
+**For:** Existing users with Gemini Engine indexes (Corey, Trevor, and others)  
 **When:** After updating to the new onboarding package  
-**What:** Transition from local SQLite QMD to Google Gemini API
+**What:** Transition from local SQLite Gemini Engine to Google Gemini API
 
 ---
 
@@ -12,9 +12,9 @@
 |--------|-------|
 | Local SQLite database (`~/.cache/qmd/index.sqlite`) | Google Gemini Embedding 2 API |
 | `python3 ~/clawd/scripts/gemini-indexer.py` commands | `gai-search` CLI or direct Gemini API |
-| `QMD Index` in persona blueprints | `Gemini Index` |
+| `Gemini Engine Index` in persona blueprints | `Gemini Index` |
 | `./qmd-index/` folder references | `./gemini-index/` |
-| `QMD-RETRIEVAL-GUIDE.md` | `GAI-SEARCH-GUIDE.md` |
+| `GEMINI-RETRIEVAL-GUIDE.md` | `GAI-SEARCH-GUIDE.md` |
 
 ---
 
@@ -109,9 +109,9 @@ print('✅ Gemini API is working')
 
 ---
 
-## What About My Old QMD Data?
+## What About My Old Gemini Engine Data?
 
-Your old QMD index at `~/.cache/qmd/index.sqlite` is **not deleted** during migration. It remains in place but is no longer used.
+Your old Gemini Engine index at `~/.cache/qmd/index.sqlite` is **not deleted** during migration. It remains in place but is no longer used.
 
 **To reclaim disk space** (optional):
 ```bash
@@ -147,7 +147,7 @@ pip install google-genai
 - Verify the key is valid at [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 - Check that billing is enabled on your Google Cloud project
 
-### "Persona blueprints still say QMD Index"
+### "Persona blueprints still say Gemini Engine Index"
 The blueprints were updated during the package update. If you see old references:
 ```bash
 # Force refresh the skill
@@ -159,16 +159,16 @@ git pull origin main  # or re-run install script
 
 ## Rollback (If Needed)
 
-If you need to revert to QMD temporarily:
+If you need to revert to Gemini Engine temporarily:
 
-1. **Restore QMD index** (if you backed it up):
+1. **Restore Gemini Engine index** (if you backed it up):
    ```bash
    mv ~/.cache/qmd/index.sqlite.backup ~/.cache/qmd/index.sqlite
    ```
 
 2. **Reinstall qmd** (if removed):
    ```bash
-   # Follow original QMD installation steps
+   # Follow original Gemini Engine installation steps
    ```
 
 3. **Use older version** of onboarding package:
@@ -182,7 +182,7 @@ If you need to revert to QMD temporarily:
 
 ## FAQ
 
-**Q: Why did we move from QMD to Gemini?**  
+**Q: Why did we move from Gemini Engine to Gemini?**  
 A: Gemini Embedding 2 is a managed API with better performance, no local database maintenance, and automatic scaling. It also integrates directly with Google's AI ecosystem.
 
 **Q: Will this cost money?**  
@@ -191,10 +191,10 @@ A: Google AI Studio has a free tier. Check [https://ai.google.dev/pricing](https
 **Q: Do I need to rebuild all my personas?**  
 A: No. The persona blueprints are unchanged. Only the indexing mechanism changed. Your content is preserved.
 
-**Q: Can I use both QMD and Gemini simultaneously?**  
+**Q: Can I use both Gemini Engine and Gemini simultaneously?**  
 A: Not recommended. The codebase now expects Gemini. Using both would cause confusion.
 
-**Q: What about other skills that used QMD?**  
+**Q: What about other skills that used Gemini Engine?**  
 A: All 30 skills have been updated. The `build-workforce.py` script now uses Gemini API directly.
 
 ---
@@ -218,7 +218,7 @@ If you encounter issues during migration:
 | Set environment | `export GOOGLE_AI_STUDIO_API_KEY="..."` | Required |
 | Install SDK | `pip install google-genai` | Required |
 | Re-index personas | Use Option A or B above | Required |
-| Clean up old QMD | `rm ~/.cache/qmd/index.sqlite` | Optional |
+| Clean up old Gemini Engine | `rm ~/.cache/qmd/index.sqlite` | Optional |
 | Verify | Python test script above | Recommended |
 
-**Migration complete when:** You can run `build-workforce.py` without QMD errors.
+**Migration complete when:** You can run `build-workforce.py` without Gemini Engine errors.
