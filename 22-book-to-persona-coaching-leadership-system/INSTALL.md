@@ -170,23 +170,28 @@ This MUST return a version number. If it does not, STOP and report the exact err
 
 Gemini documentation and source: https://github.com/tobi/gemini
 
-### pdfplumber (Required for PDF extraction)
+### All Python Dependencies (Required)
 
-Run: `python3 -c "import pdfplumber; print('OK')"`
-
-**If NOT installed:**
+**Install ALL dependencies in one command before proceeding:**
 ```bash
-pip3 install pdfplumber --break-system-packages
+pip3 install google-genai numpy pdfplumber pypdf ebooklib aiohttp beautifulsoup4 mobi --break-system-packages
 ```
 
-### ebooklib (Required for EPUB extraction)
+**What each package does:**
+- `google-genai` + `numpy`: Gemini Embedding 2 vector search (Layer 4)
+- `pdfplumber`: Extracts text from PDF books (primary extractor)
+- `pypdf`: Fallback PDF reader if pdfplumber fails on certain files
+- `ebooklib`: Extracts text from EPUB books
+- `aiohttp`: Async HTTP client used by the pipeline orchestrator
+- `beautifulsoup4`: Parses HTML from MOBI book conversions
+- `mobi`: Direct MOBI file extraction
 
-Run: `python3 -c "import ebooklib; print('OK')"`
-
-**If NOT installed:**
+**Verify all installed:**
 ```bash
-pip3 install ebooklib --break-system-packages
+python3 -c "import google.genai, numpy, pdfplumber, pypdf, ebooklib, aiohttp, bs4, mobi; print('All dependencies OK')"
 ```
+
+If any fail, re-run the pip3 install command above.
 
 ### Calibre - ebook-convert (Required for MOBI, AZW, AZW3, KFX)
 
