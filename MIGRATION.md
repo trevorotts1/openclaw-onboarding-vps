@@ -11,7 +11,7 @@
 | Before | After |
 |--------|-------|
 | Local SQLite database (`~/.cache/qmd/index.sqlite`) | Google Gemini Embedding 2 API |
-| `qmd update && qmd embed` commands | `gai-search` CLI or direct Gemini API |
+| `python3 ~/clawd/scripts/gemini-indexer.py` commands | `gai-search` CLI or direct Gemini API |
 | `QMD Index` in persona blueprints | `Gemini Index` |
 | `./qmd-index/` folder references | `./gemini-index/` |
 | `QMD-RETRIEVAL-GUIDE.md` | `GAI-SEARCH-GUIDE.md` |

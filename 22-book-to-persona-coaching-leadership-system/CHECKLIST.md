@@ -66,9 +66,9 @@
 ## QMD Indexing Checklist
 
 - [ ] coaching-personas collection exists (`qmd ls coaching-personas`)
-- [ ] `qmd update` run after persona saved
-- [ ] `qmd embed` run to generate vector embeddings
-- [ ] Test query returns relevant results: `qmd query "[book topic]"`
+- [ ] `python3 ~/clawd/scripts/gemini-indexer.py` run after persona saved
+- [ ] `# Handled by gemini-indexer.py` run to generate vector embeddings
+- [ ] Test query returns relevant results: `python3 ~/clawd/scripts/gemini-search.py "[book topic]"`
 - [ ] At minimum 3 test queries return accurate chunks
 
 ---

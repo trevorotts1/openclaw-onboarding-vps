@@ -71,7 +71,7 @@
 - [x] **2.2.3** Line 141: Update documentation link
   - Change: `QMD-RETRIEVAL-GUIDE.md` → `GAI-SEARCH-GUIDE.md`
 - [x] **2.2.4** Step 3 (QMD setup): Rewrite entirely for Gemini
-  - Remove `qmd update && qmd embed`
+  - Remove `python3 ~/clawd/scripts/gemini-indexer.py`
   - Add `gai-search index add` or direct API equivalent
 - [x] **2.2.5** All remaining "QMD" mentions: Update to "Gemini"
 
@@ -212,7 +212,7 @@
 
 **Major section: Step 3 (QMD setup)**
 - [x] **6.1.1** Rewrite Step 3 entirely
-  - Remove: `qmd update && qmd embed`
+  - Remove: `python3 ~/clawd/scripts/gemini-indexer.py`
   - Add: Gemini API key setup and `gai-search` or direct API
 - [x] **6.1.2** All inline QMD commands → Gemini equivalents
 - [x] **6.1.3** QMD-RETRIEVAL-GUIDE.md → GAI-SEARCH-GUIDE.md

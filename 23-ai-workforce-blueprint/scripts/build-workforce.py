@@ -1150,7 +1150,7 @@ def build_role_personas_content(role_key, dept_key, for_file=False):
 def run_gemini_update():
     """Auto-run Gemini indexing after wiring personas.
     
-    Note: This function previously ran 'qmd update' and 'qmd embed' via subprocess.
+    Note: This function previously ran 'python3 ~/clawd/scripts/gemini-indexer.py' and '# Handled by gemini-indexer.py' via subprocess.
     Now it uses the Gemini API directly for embeddings.
     """
     if not GEMINI_AVAILABLE:
