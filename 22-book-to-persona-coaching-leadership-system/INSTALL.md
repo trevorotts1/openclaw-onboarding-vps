@@ -170,39 +170,53 @@ This MUST return a version number. If it does not, STOP and report the exact err
 
 Gemini documentation and source: https://github.com/tobi/gemini
 
-### All Python Dependencies (Required)
+### Step 2a - Install All Python Packages (Required)
 
-**Install ALL dependencies in one command before proceeding:**
+**Run this ONE command to install all required packages:**
 ```bash
-pip3 install google-genai numpy pdfplumber pypdf ebooklib aiohttp beautifulsoup4 mobi --break-system-packages
+pip3 install google-genai numpy pdfplumber pypdf ebooklib aiohttp beautifulsoup4 mobi lxml --break-system-packages
 ```
 
 **What each package does:**
-- `google-genai` + `numpy`: Gemini Embedding 2 vector search (Layer 4)
-- `pdfplumber`: Extracts text from PDF books (primary extractor)
-- `pypdf`: Fallback PDF reader if pdfplumber fails on certain files
-- `ebooklib`: Extracts text from EPUB books
-- `aiohttp`: Async HTTP client used by the pipeline orchestrator
-- `beautifulsoup4`: Parses HTML from MOBI book conversions
+- `google-genai` + `numpy`: Gemini Engine vector search
+- `pdfplumber`: Primary PDF text extraction
+- `pypdf`: Fallback PDF reader
+- `ebooklib`: EPUB text extraction
+- `aiohttp`: Async HTTP client for pipeline
+- `beautifulsoup4`: HTML parsing for MOBI files
 - `mobi`: Direct MOBI file extraction
+- `lxml`: XML parsing (required by ebooklib internally)
 
-**Verify all installed:**
+### Step 2b - Verify Each Package Individually
+
+**Run this verification script. Each line should print "PASS":**
 ```bash
-python3 -c "import google.genai, numpy, pdfplumber, pypdf, ebooklib, aiohttp, bs4, mobi; print('All dependencies OK')"
+echo "Testing google.genai..."; python3 -c "import google.genai; print('PASS')" 2>&1 | grep -q "PASS" && echo "  google.genai: PASS" || echo "  google.genai: FAIL"
+echo "Testing numpy..."; python3 -c "import numpy; print('PASS')" 2>&1 | grep -q "PASS" && echo "  numpy: PASS" || echo "  numpy: FAIL"
+echo "Testing pdfplumber..."; python3 -c "import pdfplumber; print('PASS')" 2>&1 | grep -q "PASS" && echo "  pdfplumber: PASS" || echo "  pdfplumber: FAIL"
+echo "Testing pypdf..."; python3 -c "import pypdf; print('PASS')" 2>&1 | grep -q "PASS" && echo "  pypdf: PASS" || echo "  pypdf: FAIL"
+echo "Testing ebooklib..."; python3 -c "import ebooklib; print('PASS')" 2>&1 | grep -q "PASS" && echo "  ebooklib: PASS" || echo "  ebooklib: FAIL"
+echo "Testing aiohttp..."; python3 -c "import aiohttp; print('PASS')" 2>&1 | grep -q "PASS" && echo "  aiohttp: PASS" || echo "  aiohttp: FAIL"
+echo "Testing bs4..."; python3 -c "import bs4; print('PASS')" 2>&1 | grep -q "PASS" && echo "  beautifulsoup4: PASS" || echo "  beautifulsoup4: FAIL"
+echo "Testing mobi..."; python3 -c "import mobi; print('PASS')" 2>&1 | grep -q "PASS" && echo "  mobi: PASS" || echo "  mobi: FAIL"
+echo "Testing lxml..."; python3 -c "import lxml; print('PASS')" 2>&1 | grep -q "PASS" && echo "  lxml: PASS" || echo "  lxml: FAIL"
 ```
 
-If any fail, re-run the pip3 install command above.
+**If any show FAIL:** Re-run the pip3 install command and check for error messages.
 
-### Calibre - ebook-convert (Required for MOBI, AZW, AZW3, KFX)
+### Step 2c - Install Calibre (ebook-convert)
 
-**Auto-install check:**
+Calibre is required for Kindle format conversion (MOBI, AZW, AZW3, KFX).
+
+**For Linux/VPS (apt-get):**
 ```bash
-if ! command -v ebook-convert &>/dev/null; then
-  echo "Calibre not found. Installing..."
-  apt-get install -y --cask calibre
-else
-  echo "Calibre already installed: $(ebook-convert --version | head -1)"
-fi
+sudo apt-get update
+sudo apt-get install calibre
+```
+
+**For Mac (Homebrew):**
+```bash
+brew install --cask calibre
 ```
 
 **Verify installation:**
@@ -210,14 +224,100 @@ fi
 ebook-convert --version
 ```
 
-Calibre handles all Kindle formats including MOBI, AZW, AZW3, and KFX.
-DRM-free files only - DRM-protected books cannot be converted.
+Expected output should show version info (e.g., "ebook-convert (calibre 6.x)"). DRM-free files only.
 
-### Python 3 (Required)
+### Step 2d - Verify GOOGLE_API_KEY
 
-Run: `python3 --version`
+**Check your API key is set:**
+```bash
+grep "GOOGLE_API_KEY" ~/clawd/secrets/.env
+```
 
-Should return Python 3.8 or higher. If not installed, install from https://python.org
+**If missing:** Add your Gemini API key to `~/clawd/secrets/.env`:
+```
+GOOGLE_API_KEY=your_key_here
+```
+
+### Step 2e - Dependency Check Complete Gate
+
+**Before proceeding, confirm ALL checks passed:**
+
+Run this final verification:
+```bash
+python3 << 'EOF'
+import sys
+errors = []
+
+try:
+    import google.genai
+except ImportError as e:
+    errors.append("google.genai: " + str(e))
+
+try:
+    import numpy
+except ImportError as e:
+    errors.append("numpy: " + str(e))
+
+try:
+    import pdfplumber
+except ImportError as e:
+    errors.append("pdfplumber: " + str(e))
+
+try:
+    import pypdf
+except ImportError as e:
+    errors.append("pypdf: " + str(e))
+
+try:
+    import ebooklib
+except ImportError as e:
+    errors.append("ebooklib: " + str(e))
+
+try:
+    import aiohttp
+except ImportError as e:
+    errors.append("aiohttp: " + str(e))
+
+try:
+    import bs4
+except ImportError as e:
+    errors.append("beautifulsoup4: " + str(e))
+
+try:
+    import mobi
+except ImportError as e:
+    errors.append("mobi: " + str(e))
+
+try:
+    import lxml
+except ImportError as e:
+    errors.append("lxml: " + str(e))
+
+try:
+    import subprocess
+    result = subprocess.run(["ebook-convert", "--version"], capture_output=True, text=True)
+    if result.returncode != 0:
+        errors.append("Calibre (ebook-convert) not found")
+except FileNotFoundError:
+    errors.append("Calibre (ebook-convert) not found")
+
+if errors:
+    print("DEPENDENCY CHECK FAILED")
+    print("The following dependencies are missing:")
+    for err in errors:
+        print(f"  - {err}")
+    print("\nSTOP: Install missing dependencies before continuing.")
+    sys.exit(1)
+else:
+    print("DEPENDENCY CHECK PASSED")
+    print("All Python packages and Calibre are installed correctly.")
+    sys.exit(0)
+EOF
+```
+
+**STOP if you see "DEPENDENCY CHECK FAILED"** - Fix the listed issues before proceeding to Step 3.
+
+**If you see "DEPENDENCY CHECK PASSED" - Continue to Step 3.**
 
 ---
 
