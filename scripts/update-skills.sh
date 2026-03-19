@@ -158,7 +158,7 @@ step_detect_version() {
         LOCAL_VERSION="unknown (pre-v1.0.0)"
     fi
 
-    curl -fsSL "$REPO_URL/CHANGELOG.md" -o "$CHANGELOG_CACHE" 2>/dev/null
+    curl -fsSL -H "Cache-Control: no-cache" "$REPO_URL/CHANGELOG.md?cb=$(date +%s)" -o "$CHANGELOG_CACHE" 2>/dev/null
     if [ $? -ne 0 ]; then
         echo "  ❌ ERROR: Could not fetch changelog from GitHub."
         exit 1
@@ -180,7 +180,7 @@ step_gap_report() {
     echo ""
     LOCAL_SKILL_COUNT=$(find "$LOCAL_ONBOARDING_DIR" -maxdepth 1 -type d -name "[0-9]*-*" 2>/dev/null | wc -l | tr -d ' ')
     mkdir -p "$TEMP_DIR"
-    curl -fsSL "$REPO_ZIP" -o "$TEMP_DIR/latest.zip" 2>/dev/null
+    curl -fsSL -H "Cache-Control: no-cache" "$REPO_ZIP?cb=$(date +%s)" -o "$TEMP_DIR/latest.zip" 2>/dev/null
     if [ $? -ne 0 ]; then
         echo "  ❌ ERROR: Could not download latest version."
         exit 1
