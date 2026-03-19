@@ -4,7 +4,7 @@
 # Works on ANY Mac Mini client machine
 #
 # Run via:
-#   curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/update-skills.sh | bash
 #
 # SAFETY PROTOCOLS:
 # 1. Backs up core .md files and config BEFORE touching anything
@@ -23,8 +23,8 @@
 
 set -euo pipefail
 
-REPO_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main"
-REPO_ZIP="https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip"
+REPO_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main"
+REPO_ZIP="https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip"
 LOCAL_ONBOARDING_DIR=""
 LOG_FILE="$HOME/.openclaw/skills/.update-log"
 CHANGELOG_CACHE="/tmp/openclaw-onboarding-changelog.md"
@@ -33,7 +33,7 @@ LATEST_VERSION=""
 LOCAL_VERSION=""
 QMD_DETECTED=false
 TEMP_DIR="/tmp/openclaw-update-$$"
-SELF_SCRIPT_RAW_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh"
+SELF_SCRIPT_RAW_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/update-skills.sh"
 INTERACTIVE=false
 if [ -t 0 ] && [ -t 1 ]; then
     INTERACTIVE=true
@@ -175,7 +175,7 @@ step_detect_folder() {
     echo "  1. You have not installed the onboarding package yet."
     echo "     Run this command first:"
     echo ""
-    echo "     curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash"
+    echo "     curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash"
     echo ""
     echo "  2. Your onboarding files are in a different location."
     echo "     Run this to find them:"
@@ -246,7 +246,7 @@ step_gap_report() {
         exit 1
     fi
     unzip -qo "$TEMP_DIR/latest.zip" -d "$TEMP_DIR" 2>/dev/null
-    REMOTE_DIR="$TEMP_DIR/openclaw-onboarding-vps-main"
+    REMOTE_DIR="$TEMP_DIR/openclaw-onboarding-main"
     
     REMOTE_SKILL_COUNT=$(find "$REMOTE_DIR" -maxdepth 1 -type d -name "[0-9]*-*" 2>/dev/null | wc -l | tr -d ' ')
     

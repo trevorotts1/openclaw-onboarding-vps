@@ -8,9 +8,9 @@
 If you are reading this file, the user has triggered onboarding by saying something like:
 - "Begin onboarding installation"
 - "Start onboarding"
-- "Install the 31 skills"
+- "Install the 32 skills"
 
-**Your task:** Install all 31 skills using the 5-Wave Parallel Orchestration below.
+**Your task:** Install all 32 skills using the 5-Wave Parallel Orchestration below.
 
 ### STEP 0: VERIFY TRIGGER AND CHECK CAPABILITY
 
@@ -48,7 +48,7 @@ If `sessions_spawn` works: Use 5-Wave Parallel Orchestration (Waves 2 and 4 use 
 If `sessions_spawn` fails: Use Sequential Mode (install 01→30 one at a time).
 
 **0.4: Announce your strategy**
-Tell user: "Onboarding triggered. I will install 31 skills using [5-Wave Parallel / Sequential] strategy. Checking for existing installations..."
+Tell user: "Onboarding triggered. I will install 32 skills using [5-Wave Parallel / Sequential] strategy. Checking for existing installations..."
 
 ---
 
@@ -172,18 +172,18 @@ Teaches the AI how to back up config files before touching anything.
 Without this, one bad edit can corrupt your system with no way to recover.
 **Nothing else installs until this is confirmed.**
 
-### ✅ STEP 3: Gemini (Semantic Search Engine)
+### ✅ STEP 3: Gemini Engine (Semantic Search Engine)
 **Handled automatically by the install script - no skill folder needed.**
-Gemini is installed as a system dependency during Step 3 of install.sh.
+Gemini Engine is installed as a system dependency during Step 3 of install.sh.
 It powers the persona search in Skill 22 and the persona detection in Skill 23.
 
 **Gemini Engine is automatically installed and indexed at:**
-- Install time: Gemini installed, collections (clawd, master-files) created, initial indexing run
+- Install time: Gemini Engine installed, collections (clawd, master-files) created, initial indexing run
 - After Skill 22: coaching-personas collection added and indexed
 - After Skill 23: workforce files indexed
-- After all 31 skills: final complete index
+- After all 32 skills: final complete index
 
-**Gemini INDEXING happens at strategic points - see Gemini INDEXING PROTOCOL below.**
+**Gemini Engine INDEXING happens at strategic points - see Gemini Engine INDEXING PROTOCOL below.**
 
 ### STEPS 4-30: All Remaining Skills (in numbered order)
 Skills install sequentially. For each skill:
@@ -253,12 +253,12 @@ Every skill has a specific install sequence. Follow it exactly:
 - [ ] Confirm TYP was applied (core files updated with lightweight summary)
 - [ ] Explicitly state: "[Skill-name] installation verified complete"
 
-### STEP 5: NO GLOBAL "DONE" UNTIL ALL 30 ARE DONE
+### STEP 5: NO GLOBAL "DONE" UNTIL ALL 32 ARE DONE
 - Do NOT say "onboarding complete" after finishing one skill
 - Do NOT skip skills because they "seem optional"
-- Install skills 01-30 in order, confirm each one individually
-- Only after skill 30 (Fish Audio API Reference) is verified complete → remove ONBOARDING PENDING flag
-- Only after skill 30 (Fish Audio API Reference) is verified complete → write ONBOARDING COMPLETE to MEMORY.md
+- Install skills 01-32 in order, confirm each one individually
+- Only after skill 32 (Command Center Setup) is verified complete → remove ONBOARDING PENDING flag
+- Only after skill 32 (Command Center Setup) is verified complete → write ONBOARDING COMPLETE to MEMORY.md
 
 ---
 
@@ -358,14 +358,14 @@ Check onboarding status:
 2. Count how many skills are INSTALLED vs remaining
 3. If skills remain and you are not currently installing one, resume from the next unfinished skill
 4. If you are stuck on a skill for more than 10 minutes, skip it, mark it FAILED, and move to the next
-5. Report progress: "[X] of 31 skills installed. Currently on: [skill name]."
+5. Report progress: "[X] of 32 skills installed. Currently on: [skill name]."
 
-DO NOT REMOVE this block until all 31 skills are installed or attempted.
+DO NOT REMOVE this block until all 32 skills are installed or attempted.
 ```
 
 **Step 3: After onboarding completes, clean up**
 
-When all 31 skills are installed (or attempted), the agent MUST:
+When all 32 skills are installed (or attempted), the agent MUST:
 1. Remove the "ONBOARDING IN PROGRESS" block from HEARTBEAT.md
 2. Reset the heartbeat interval back to the default:
 ```json
@@ -383,9 +383,9 @@ After onboarding finishes, the heartbeat goes back to hourly and the watchdog ta
 
 ---
 
-## 🔴 ONBOARDING CONTINUITY - NEVER STOP UNTIL ALL 31 SKILLS ARE INSTALLED
+## 🔴 ONBOARDING CONTINUITY - NEVER STOP UNTIL ALL 32 SKILLS ARE INSTALLED
 
-**The onboarding process must run continuously until all 31 skills are installed.** Some models will stall, pause, or silently stop mid-installation. This protocol prevents that.
+**The onboarding process must run continuously until all 32 skills are installed.** Some models will stall, pause, or silently stop mid-installation. This protocol prevents that.
 
 ### Self-Check Rules
 
@@ -409,17 +409,17 @@ After onboarding finishes, the heartbeat goes back to hourly and the watchdog ta
 ### Progress Reporting
 
 After every 5 skills completed, send the user a brief progress update:
-"Onboarding progress: [X] of 31 skills installed. Currently on: [skill name]. [Y] skills remaining."
+"Onboarding progress: [X] of 32 skills installed. Currently on: [skill name]. [Y] skills remaining."
 
 ### Completion
 
-When all 31 skills are installed:
-1. Count and verify: all 31 skill folders should exist in ~/.openclaw/skills/
+When all 32 skills are installed:
+1. Count and verify: all 32 skill folders should exist in ~/.openclaw/skills/
 2. Check the status file for any FAILED skills
 3. If any failed, attempt to re-install them one more time
 4. Send the user the final report with pass/fail for each skill
 5. If a gateway restart is needed for any changes to take effect, tell the user:
-   "All 31 skills are installed. To activate the changes, please type /restart in Telegram."
+   "All 32 skills are installed. To activate the changes, please type /restart in Telegram."
 
 ### 🔴 MANDATORY FILE READING BEFORE INSTALLATION
 
@@ -453,7 +453,7 @@ If you cannot list the files you read, you did not read them. Go back and read t
 - Agent forgetting where it was after compaction
 - Agent triggering restarts on its own (NEVER do this)
 
-**ZERO TOLERANCE: The onboarding does not end until all 31 skills have been attempted. If you stop early, you failed.**
+**ZERO TOLERANCE: The onboarding does not end until all 32 skills have been attempted. If you stop early, you failed.**
 
 ---
 
@@ -661,9 +661,9 @@ After every skill install, verify:
 
 ---
 
-## 🔴 Gemini INDEXING PROTOCOL - STRATEGIC EMBEDDING SCHEDULE
+## 🔴 Gemini Engine INDEXING PROTOCOL - STRATEGIC EMBEDDING SCHEDULE
 
-**Gemini (semantic search) must be indexed at specific milestones, not after every skill.**
+**Gemini Engine (semantic search) must be indexed at specific milestones, not after every skill.**
 
 ### Indexing Schedule
 
@@ -672,16 +672,16 @@ After every skill install, verify:
 | **Initial** | After Gemini Engine install (step 3) | Base index of workspace |
 | **Personas** | After Skill 22 (Book-to-Persona) complete | 32+ persona blueprints now searchable |
 | **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions indexed |
-| **Final** | After ALL 31 skills complete | Complete system index |
+| **Final** | After ALL 32 skills complete | Complete system index |
 | **Ongoing** | After any NEW skill installed post-onboarding | Keep index current |
 
 ### What to Index at Each Milestone
 
 ```bash
 # Standard indexing command sequence:
-gemini update          # Update file index
-gemini embed           # Generate embeddings
-gemini status          # Verify completion
+python3 ~/clawd/scripts/gemini-indexer.py          # Update file index
+# Handled by gemini-indexer.py           # Generate embeddings
+python3 ~/clawd/scripts/gemini-indexer.py --status   # Verify completion
 ```
 
 ### Collections to Index
@@ -694,16 +694,16 @@ gemini status          # Verify completion
 
 ### Process for Each Indexing
 
-1. **Announce:** "Running Gemini indexing for [milestone] milestone..."
-2. **Update:** `gemini update` - scans all collections
-3. **Embed:** `gemini embed` - generates vectors
+1. **Announce:** "Running Gemini Engine indexing for [milestone] milestone..."
+2. **Update:** `python3 ~/clawd/scripts/gemini-indexer.py` - scans all collections
+3. **Embed:** `# Handled by gemini-indexer.py` - generates vectors
 4. **Verify:** Check status shows all files indexed
 5. **Report:** "Gemini Engine indexing complete: X files, Y collections"
 
 ### Forbidden Actions
 - Do NOT index after every single skill (wasteful)
 - Do NOT skip indexing at milestones (breaks search)
-- Do NOT assume "it's probably fine" - verify with `gemini status`
+- Do NOT assume "it's probably fine" - verify with `python3 ~/clawd/scripts/gemini-indexer.py --status`
 - Do NOT index before TYP and Back Yourself Up are complete
 
 ### Why This Schedule
@@ -1195,7 +1195,7 @@ Replace `[MASTER_FILES_FOLDER]` with the actual path from step 3.
         INSTALL.md
         CORE_UPDATES.md
         PIPELINE.md
-        GAI-SEARCH-GUIDE.md
+        GEMINI-RETRIEVAL-GUIDE.md
         PERSONA-ROUTER.md
         personas/
         pipeline/
@@ -1371,7 +1371,7 @@ If any step in a skill's installation fails:
 2. **Wave 2** (Pre-Persona): Spawn 4 parallel agents for skills 04-21
 3. **Wave 3** (Core System): Main agent installs skills 22-23 sequentially (NO sub-agents)
 4. **Wave 4** (Post-Workforce): Spawn 2 parallel agents for skills 24-30
-5. **Wave 5** (Final): Verify skill 15 and finalize
+5. **Wave 5** (Final): Install skills 31-32, verify skill 15, and finalize
 
 **Sequential Dependencies (Never Parallelize These):**
 - Skill 05 (GHL Setup) must complete before Skill 06 (GHL Install Pages)
@@ -1519,7 +1519,7 @@ All skill folders are located inside:
 |---|-------|-------------|-------|
 | 1 | Teach Yourself Protocol | 01-teach-yourself-protocol | 🔴 MANDATORY FIRST |
 | 2 | Back Yourself Up Protocol | 02-back-yourself-up-protocol | 🔴 MANDATORY SECOND |
-| - | **Gemini** | *(installed by install script)* | ✅ Auto-configured before skills 3-30 |
+| - | **Gemini Engine** | *(installed by install script)* | ✅ Auto-installed before skills 3-30 |
 | 3 | Agent Browser (Vercel) - preferred browser automation | 03-agent-browser |
 | 4 | Superpowers | 04-superpowers |
 | 5 | GHL / Convert and Flow Setup | 05-ghl-setup |
@@ -1547,6 +1547,9 @@ All skill folders are located inside:
 | 27 | Cinematic Forge | 28-cinematic-forge |
 | 28 | OpenRouter Setup (MUST BE LAST, after model backup) | 12-openrouter-setup |
 | 29 | GHL / Convert and Flow API v2 | 29-ghl-convert-and-flow |
+| 30 | Fish Audio API Reference | 30-fish-audio-api-reference |
+| 31 | Upgraded Memory System | 31-upgraded-memory-system |
+| 32 | Command Center Setup | 32-command-center-setup |
 
 
 ---
@@ -1588,7 +1591,7 @@ All skill folders are located inside:
 
 ## IMPORTED SKILLS (16-30) - AUTHORITATIVE INSTALL RULES
 
-Skills 16 through 30 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, GAI-SEARCH-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
+Skills 16 through 30 are imported or recreated skills. Many preserve upstream source files under an `upstream-original/` subfolder. Some have additional reference documents (PIPELINE.md, GEMINI-RETRIEVAL-GUIDE.md, GOOD-AND-BAD-EXAMPLES.md, etc.).
 
 **The file-read order for ALL imported skills is the same as for all skills:**
 1. Read `SKILL.md` first
@@ -1619,7 +1622,7 @@ This section tells YOU (the AI agent) exactly how to run the 5-wave installation
 **Check for already installed skills:**
 ```bash
 ls -la ~/.openclaw/skills/ 2>/dev/null | grep -E "^d" | wc -l
-gemini status 2>/dev/null
+python3 ~/clawd/scripts/gemini-indexer.py --status 2>/dev/null
 ```
 
 **Check onboarding status file:**
@@ -1660,10 +1663,9 @@ Install these 4 items yourself, one at a time:
    - Report: "Skill 02 complete"
 
 3. **Gemini Engine Setup**
-   - Verify Gemini is installed: `python3 ~/clawd/scripts/gemini-indexer.py --status`
+   - Verify Gemini Engine is installed: `python3 ~/clawd/scripts/gemini-indexer.py --status`
    - If not installed, install it
-   - Index workspace: `python3 ~/clawd/scripts/gemini-indexer.py`
-   - Run initial indexing: `gemini update && gemini embed`
+   - Run initial indexing: `python3 ~/clawd/scripts/gemini-indexer.py`
    - Report: "Gemini Engine setup complete"
 
 4. **Skill 03: Agent Browser**
@@ -1803,9 +1805,9 @@ label: "wave4-agent-f"
 
 2. **Final Gemini Engine Indexing**
    ```bash
-   gemini update
-   gemini embed
-   gemini status
+   python3 ~/clawd/scripts/gemini-indexer.py
+   # Handled by gemini-indexer.py
+   python3 ~/clawd/scripts/gemini-indexer.py --status
    ```
 
 3. **Remove ONBOARDING PENDING flag from AGENTS.md**
@@ -1813,17 +1815,18 @@ label: "wave4-agent-f"
    - Delete the ONBOARDING PENDING block
 
 4. **Write ONBOARDING COMPLETE to MEMORY.md**
-   - Add entry: "OpenClaw onboarding completed on [date]. All 31 skills installed."
+   - Add entry: "OpenClaw onboarding completed on [date]. All 32 skills installed."
 
 5. **Report completion**
    - Install Skill 31 (Upgraded Memory System): Read SKILL.md, check prerequisites, follow INSTALL.md
-   - "Wave 5 complete: Onboarding finished. All 31 skills installed."
+   - Install Skill 32 (Command Center Setup): Read SKILL.md, check prerequisites, follow INSTALL.md
+   - "Wave 5 complete: Onboarding finished. All 32 skills installed."
 
 ---
 
 ### SEQUENTIAL MODE (Fallback)
 
-If `sessions_spawn` doesn't work, install all 31 skills one at a time:
+If `sessions_spawn` doesn't work, install all 32 skills one at a time:
 
 ```
 For skill in 01 02 03 04 05 06 07 08 09 10 11 12 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30:
@@ -1855,7 +1858,7 @@ Valid statuses: INSTALLED, ALREADY_INSTALLED, FAILED, SKIPPED
 
 ## PARALLEL INSTALLATION ORCHESTRATION
 
-The OpenClaw onboarding uses a **5-WAVE PARALLEL STRATEGY** to install 31 skills efficiently.
+The OpenClaw onboarding uses a **5-WAVE PARALLEL STRATEGY** to install 32 skills efficiently.
 
 ### Conflict Prevention (IMPORTANT)
 
@@ -1905,8 +1908,9 @@ trap 'rm -f "$INSTALL_FLAG"' EXIT
 │         │                 │ Agent F: 27, 28, 29, 30                             │
 │         │                 │ Post-Workforce tools                            │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 5  │ 2 (Sequential)  │ 15 BlackCEO Team Management, 31 Upgraded Memory  │
-│         │                 │ Final verification and Gemini Engine indexing             │
+│ Wave 5  │ 3 (Sequential)  │ 15 BlackCEO Team Management, 31 Upgraded Memory, │
+│         │                 │ 32 Command Center Setup                              │
+│         │                 │ Final verification and Gemini Engine indexing       │
 └─────────┴─────────────────┴─────────────────────────────────────────────────┘
 ```
 
@@ -2155,7 +2159,7 @@ wait_for_wave() {
 
 The install script has already downloaded all skills to disk. Your job is to install them in order, one by one, automatically.
 
-- Install Skill 01 → confirm it worked → install Skill 02 → confirm → continue through all 30
+- Install Skill 01 → confirm it worked → install Skill 02 → confirm → continue through all 32
 - Only pause when you need something the user must provide (API key not in any env file, 2FA code, first-time browser login)
 - When you need a key: ask clearly, wait for answer, then continue
 - When a skill is optional and the user wants to skip: mark SKIPPED, move to next - do not stop the whole install
@@ -2185,13 +2189,13 @@ SKILL-02: INSTALLED
 ## PROGRESS UPDATES
 
 Every 5 skills completed, send a brief status update via the user's configured messaging channel:
-"Onboarding in progress: [X] of 31 skills complete. Currently on: [skill name]."
+"Onboarding in progress: [X] of 32 skills complete. Currently on: [skill name]."
 
 ---
 
 ## FINAL STEP - SET UP WEEKLY AUTO-UPDATE (Agent Runs This)
 
-After all 31 skills are installed, run this as the final step.
+After all 32 skills are installed, run this as the final step.
 The agent executes these commands - the human does nothing.
 
 ```bash
@@ -2234,17 +2238,17 @@ If the block is not present, continue without error.
 
 ### Final Gemini Engine Indexing (MANDATORY)
 
-After all 31 skills are installed, run the final Gemini Engine indexing:
+After all 32 skills are installed, run the final Gemini Engine indexing:
 
 ```bash
 # Final index update
-gemini update
+python3 ~/clawd/scripts/gemini-indexer.py
 
 # Final embeddings generation
-gemini embed
+# Handled by gemini-indexer.py
 
 # Verify all collections are indexed
-gemini status
+python3 ~/clawd/scripts/gemini-indexer.py --status
 ```
 
 **Why this is needed:**
@@ -2259,10 +2263,10 @@ gemini status
   messaging channel (detected in prerequisites).
 - Format the 30-skill status report as a table: Skill | Name | Status | Notes
 
-Then write to MEMORY.md: "ONBOARDING COMPLETE - [date] - All 31 skills processed"
+Then write to MEMORY.md: "ONBOARDING COMPLETE - [date] - All 32 skills processed"
 
 When every skill on the list above is installed and verified, tell the user:
-1. Everything that was installed (all 31 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
+1. Everything that was installed (all 32 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
 2. Everything that was added to each workspace file (AGENTS.md, TOOLS.md, MEMORY.md, etc.)
 3. Which workspace files were updated and which were not touched
 4. Where the full documentation for each skill is saved (the master files folder path)
