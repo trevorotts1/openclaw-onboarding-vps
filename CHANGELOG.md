@@ -4,6 +4,22 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## [v5.4.0] - March 19, 2026
+
+### Skill 32: Command Center Setup
+
+#### Added
+- **Skill 32: Command Center Setup** - Full install flow for activating the AI workforce as a live Command Center
+- Telegram supergroup setup with step-by-step instructions (60+ friendly)
+- Workspace creation with symlinks for shared files
+- Agent configuration with topic bindings
+- Dashboard deployment from GitHub repo
+- Optional Cloudflare Tunnel for remote access
+- Verification tests for each department
+- Heartbeat trigger to auto-detect Skill 23 completion
+
+---
+
 ## [v5.3.1] - March 19, 2026
 
 ### Updater: Silent Failure Fix
