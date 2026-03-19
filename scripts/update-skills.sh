@@ -1,253 +1,399 @@
 #!/bin/bash
 # OpenClaw Onboarding — Surgical Update Script
-# Version: 2.1 | March 19, 2026
-# Runs weekly (Sundays 2 AM) via cron, or manually triggered
+# Version: 3.0 | March 19, 2026
+# Works on ANY client machine
 #
-# LOGIC:
-# 1. Read CHANGELOG.md from GitHub — understand what's new
-# 2. Compare against local version markers
-# 3. Build gap list (new items, changed items)
-# 4. Rate each item: LOW / MEDIUM / HIGH risk
-# 5. Surface recommendations to user
-# 6. Wait for user approval on MEDIUM/HIGH items
-# 7. Apply only approved changes — surgical, additive only
+# Run via:
+#   curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash
 #
-# RULES:
-# - NEVER overwrite: core .md files, company dept folders, custom SOPs
-# - NEVER trigger a gateway restart
-# - LOW risk items auto-apply (new files, nothing existing touched)
-# - MEDIUM risk: recommend + confirm
-# - HIGH risk: recommend SKIP + show diff + require explicit yes
+# SAFETY PROTOCOLS:
+# 1. Backs up core .md files and config BEFORE touching anything
+# 2. Smart folder detection (searches multiple locations)
+# 3. Version comparison against GitHub
+# 4. Gap report with risk ratings
+# 5. Displays plan and waits for user approval
+# 6. Downloads only changed files
+# 7. Verification checklist after completion
+# 8. NEVER triggers a gateway restart — asks user to do it
+#
+# PROTECTED — NEVER OVERWRITTEN:
+# - Company department folders
+# - secrets/, .env files, credentials
+# - Custom SOPs or client work
 
-REPO_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main"
-VPS_REPO_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main"
+set -euo pipefail
+
+REPO_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main"
+REPO_ZIP="https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip"
 LOCAL_ONBOARDING_DIR=""
 LOG_FILE="$HOME/.openclaw/skills/.update-log"
-VERSION_FILE="$HOME/.openclaw/skills/.installed-versions"
 CHANGELOG_CACHE="/tmp/openclaw-onboarding-changelog.md"
-NEEDS_RESTART=false
+BACKUP_DIR=""
+LATEST_VERSION=""
+LOCAL_VERSION=""
+QMD_DETECTED=false
+TEMP_DIR="/tmp/openclaw-update-$$"
 
-# Detect environment
-detect_environment() {
-    if [ -d "$HOME/Downloads/openclaw-master-files/OpenClaw Onboarding" ]; then
-        LOCAL_ONBOARDING_DIR="$HOME/Downloads/openclaw-master-files/OpenClaw Onboarding"
-        ACTIVE_REPO_URL="$REPO_URL"
-        echo "[INFO] Detected Mac environment"
-    elif [ -d "$HOME/.openclaw/skills" ]; then
-        LOCAL_ONBOARDING_DIR="$HOME/.openclaw/skills"
-        ACTIVE_REPO_URL="$VPS_REPO_URL"
-        echo "[INFO] Detected VPS environment"
+mkdir -p "$HOME/.openclaw/skills" 2>/dev/null
+
+echo ""
+echo "============================================"
+echo "  OpenClaw Onboarding Update Script v3.0"
+echo "============================================"
+echo ""
+
+step_backup() {
+    echo "[STEP 1/7] Running backup protocol..."
+    FOUND=$(find "$HOME/Downloads" -maxdepth 1 -type d -iname "*openclaw*backup*" 2>/dev/null | head -1)
+    if [ -n "$FOUND" ]; then
+        BACKUP_DIR="$FOUND"
+    elif [ -d "$HOME/Downloads/backups" ]; then
+        BACKUP_DIR="$HOME/Downloads/backups"
+    elif [ -d "$HOME/Downloads/backup" ]; then
+        BACKUP_DIR="$HOME/Downloads/backup"
     else
-        echo "[ERROR] Cannot detect onboarding installation directory"
-        exit 1
+        BACKUP_DIR="$HOME/Downloads/openclaw-backups"
+        mkdir -p "$BACKUP_DIR"
     fi
+
+    TIMESTAMP=$(date +%Y-%m-%d-%H%M)
+    UPDATE_BACKUP="$BACKUP_DIR/pre-update-backup-$TIMESTAMP"
+    mkdir -p "$UPDATE_BACKUP"
+
+    if [ -f "$HOME/.openclaw/openclaw.json" ]; then
+        cp "$HOME/.openclaw/openclaw.json" "$UPDATE_BACKUP/openclaw.json" 2>/dev/null
+        echo "  ✅ Config backed up"
+    fi
+
+    WORKSPACE=""
+    if [ -f "$HOME/.openclaw/openclaw.json" ]; then
+        WORKSPACE=$(grep -o '"workspace"[[:space:]]*:[[:space:]]*"[^"]*"' "$HOME/.openclaw/openclaw.json" 2>/dev/null | head -1 | sed 's/.*"workspace"[[:space:]]*:[[:space:]]*"//' | sed 's/"//')
+    fi
+    if [ -z "$WORKSPACE" ]; then
+        if [ -d "$HOME/clawd" ]; then
+            WORKSPACE="$HOME/clawd"
+        elif [ -d "$HOME/.openclaw/workspace" ]; then
+            WORKSPACE="$HOME/.openclaw/workspace"
+        fi
+    fi
+
+    if [ -n "$WORKSPACE" ] && [ -d "$WORKSPACE" ]; then
+        for f in AGENTS.md MEMORY.md TOOLS.md USER.md IDENTITY.md SOUL.md HEARTBEAT.md; do
+            if [ -f "$WORKSPACE/$f" ]; then
+                cp "$WORKSPACE/$f" "$UPDATE_BACKUP/$f" 2>/dev/null
+            fi
+        done
+        echo "  ✅ Core .md files backed up"
+    fi
+
+    FILE_COUNT=$(find "$UPDATE_BACKUP" -type f | wc -l | tr -d ' ')
+    if [ "$FILE_COUNT" -eq 0 ]; then
+        echo "  ⚠️  WARNING: Backup folder is empty. Proceeding with caution."
+    else
+        echo "  ✅ Backup complete: $FILE_COUNT files in $UPDATE_BACKUP"
+    fi
+    echo ""
 }
 
-# Step 1: Read changelog from GitHub
-fetch_changelog() {
-    echo "[STEP 1] Fetching changelog from GitHub..."
-    curl -fsSL "$ACTIVE_REPO_URL/CHANGELOG.md" -o "$CHANGELOG_CACHE" 2>/dev/null
+step_detect_folder() {
+    echo "[STEP 2/7] Looking for onboarding folder..."
+    SEARCH_PATHS=(
+        "$HOME/.openclaw/onboarding"
+        "$HOME/Downloads/openclaw-master-files/OpenClaw Onboarding"
+        "$HOME/Downloads/OpenClaw Onboarding"
+        "$HOME/Downloads/openclaw-onboarding"
+    )
+    for path in "${SEARCH_PATHS[@]}"; do
+        if [ -d "$path" ] && [ -f "$path/Start Here.md" -o -f "$path/CHANGELOG.md" ]; then
+            LOCAL_ONBOARDING_DIR="$path"
+            echo "  ✅ Found: $LOCAL_ONBOARDING_DIR"
+            echo ""
+            return
+        fi
+    done
+    echo "  Searching ~/Downloads/ recursively..."
+    FOUND_PATH=$(find "$HOME/Downloads" -maxdepth 3 -name "Start Here.md" -type f 2>/dev/null | head -1)
+    if [ -n "$FOUND_PATH" ]; then
+        LOCAL_ONBOARDING_DIR=$(dirname "$FOUND_PATH")
+        echo "  ✅ Found: $LOCAL_ONBOARDING_DIR"
+        echo ""
+        return
+    fi
+    if [ -d "$HOME/.openclaw/onboarding" ]; then
+        LOCAL_ONBOARDING_DIR="$HOME/.openclaw/onboarding"
+        echo "  ✅ Found: $LOCAL_ONBOARDING_DIR"
+        echo ""
+        return
+    fi
+    echo ""
+    echo "  ❌ ERROR: Cannot find onboarding folder."
+    echo "  If this is a first-time install, run:"
+    echo "    curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash"
+    echo ""
+    exit 1
+}
+
+step_detect_version() {
+    echo "[STEP 3/7] Detecting versions..."
+    if [ -f "$HOME/.openclaw/skills/.onboarding-version" ]; then
+        LOCAL_VERSION=$(cat "$HOME/.openclaw/skills/.onboarding-version" 2>/dev/null | tr -d '[:space:]')
+    elif [ -f "$LOCAL_ONBOARDING_DIR/.onboarding-version" ]; then
+        LOCAL_VERSION=$(cat "$LOCAL_ONBOARDING_DIR/.onboarding-version" 2>/dev/null | tr -d '[:space:]')
+    elif [ -f "$LOCAL_ONBOARDING_DIR/CHANGELOG.md" ]; then
+        LOCAL_VERSION=$(grep -m1 '^## \[v' "$LOCAL_ONBOARDING_DIR/CHANGELOG.md" 2>/dev/null | sed 's/## \[//' | sed 's/\].*//' | tr -d '[:space:]')
+    fi
+    if [ -z "$LOCAL_VERSION" ]; then
+        LOCAL_VERSION="unknown (pre-v1.0.0)"
+    fi
+
+    curl -fsSL "$REPO_URL/CHANGELOG.md" -o "$CHANGELOG_CACHE" 2>/dev/null
     if [ $? -ne 0 ]; then
-        echo "[ERROR] Could not fetch changelog. Network issue or repo unavailable."
-        echo "$(date '+%Y-%m-%d %H:%M') — Update check failed: could not fetch changelog" >> "$LOG_FILE"
+        echo "  ❌ ERROR: Could not fetch changelog from GitHub."
         exit 1
     fi
-    echo "[OK] Changelog fetched"
-}
-
-# Step 2: Compare versions
-compare_versions() {
-    echo "[STEP 2] Comparing installed versions against changelog..."
-    
-    # Read local version markers
-    if [ ! -f "$VERSION_FILE" ]; then
-        echo "[INFO] No version file found. This appears to be a first-time check."
-        echo "# Installed Versions — auto-generated" > "$VERSION_FILE"
-    fi
-    
-    # Extract latest version from changelog
-    LATEST_VERSION=$(grep -m1 "^## " "$CHANGELOG_CACHE" | sed 's/## //' | head -1)
-    LOCAL_VERSION=$(head -2 "$VERSION_FILE" | tail -1 | sed 's/# Latest: //')
-    
-    echo "[INFO] Remote latest: $LATEST_VERSION"
-    echo "[INFO] Local latest: ${LOCAL_VERSION:-none}"
-    
-    if [ "$LATEST_VERSION" = "$LOCAL_VERSION" ]; then
-        echo "[OK] Already up to date. No changes needed."
+    LATEST_VERSION=$(grep -m1 '^## \[v' "$CHANGELOG_CACHE" | sed 's/## \[//' | sed 's/\].*//' | tr -d '[:space:]')
+    echo "  Your version:   $LOCAL_VERSION"
+    echo "  Latest version: $LATEST_VERSION"
+    echo ""
+    if [ "$LOCAL_VERSION" = "$LATEST_VERSION" ]; then
+        echo "  ✅ You're already up to date!"
+        echo ""
         echo "$(date '+%Y-%m-%d %H:%M') — Update check: already up to date ($LATEST_VERSION)" >> "$LOG_FILE"
         exit 0
     fi
 }
 
-# Step 3: Build gap list
-build_gap_list() {
-    echo "[STEP 3] Building gap list..."
-    
-    GAP_REPORT="/tmp/openclaw-update-gap-report.md"
-    echo "# Update Gap Report" > "$GAP_REPORT"
-    echo "Generated: $(date '+%Y-%m-%d %H:%M')" >> "$GAP_REPORT"
-    echo "Remote version: $LATEST_VERSION" >> "$GAP_REPORT"
-    echo "Local version: ${LOCAL_VERSION:-none}" >> "$GAP_REPORT"
-    echo "" >> "$GAP_REPORT"
-    
-    NEW_COUNT=0
-    CHANGED_COUNT=0
-    
-    # Check each skill folder
-    for skill_num in $(seq -w 1 31); do
-        SKILL_DIR=$(find "$LOCAL_ONBOARDING_DIR" -maxdepth 1 -name "${skill_num}-*" -type d 2>/dev/null | head -1)
-        
-        if [ -z "$SKILL_DIR" ]; then
-            # Skill not installed locally
-            echo "- [NEW] Skill $skill_num: Not installed" >> "$GAP_REPORT"
-            NEW_COUNT=$((NEW_COUNT + 1))
+step_gap_report() {
+    echo "[STEP 4/7] Building gap report..."
+    echo ""
+    LOCAL_SKILL_COUNT=$(find "$LOCAL_ONBOARDING_DIR" -maxdepth 1 -type d -name "[0-9]*-*" 2>/dev/null | wc -l | tr -d ' ')
+    mkdir -p "$TEMP_DIR"
+    curl -fsSL "$REPO_ZIP" -o "$TEMP_DIR/latest.zip" 2>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "  ❌ ERROR: Could not download latest version."
+        exit 1
+    fi
+    unzip -qo "$TEMP_DIR/latest.zip" -d "$TEMP_DIR" 2>/dev/null
+    REMOTE_DIR="$TEMP_DIR/openclaw-onboarding-vps-main"
+    REMOTE_SKILL_COUNT=$(find "$REMOTE_DIR" -maxdepth 1 -type d -name "[0-9]*-*" 2>/dev/null | wc -l | tr -d ' ')
+    echo "  Local skills:  $LOCAL_SKILL_COUNT"
+    echo "  Remote skills: $REMOTE_SKILL_COUNT"
+    echo ""
+
+    NEW_SKILLS=""
+    CHANGED_SKILLS=""
+    for remote_skill in $(find "$REMOTE_DIR" -maxdepth 1 -type d -name "[0-9]*-*" -exec basename {} \; 2>/dev/null | sort); do
+        skill_num=$(echo "$remote_skill" | grep -o '^[0-9]*')
+        local_match=$(find "$LOCAL_ONBOARDING_DIR" -maxdepth 1 -type d -name "${skill_num}-*" 2>/dev/null | head -1)
+        if [ -z "$local_match" ]; then
+            echo "  📦 NEW:     $remote_skill"
+            NEW_SKILLS="$NEW_SKILLS $remote_skill"
         else
-            # Check for .version file
-            LOCAL_VER=$(cat "$SKILL_DIR/.version" 2>/dev/null || echo "unknown")
-            echo "- [INSTALLED] Skill $skill_num: v$LOCAL_VER" >> "$GAP_REPORT"
+            local_size=$(du -s "$local_match" 2>/dev/null | cut -f1)
+            remote_size=$(du -s "$REMOTE_DIR/$remote_skill" 2>/dev/null | cut -f1)
+            if [ "$local_size" != "$remote_size" ]; then
+                echo "  🔄 CHANGED: $remote_skill (local: ${local_size}KB, remote: ${remote_size}KB)"
+                CHANGED_SKILLS="$CHANGED_SKILLS $remote_skill"
+            fi
         fi
     done
-    
-    echo "" >> "$GAP_REPORT"
-    echo "## Summary" >> "$GAP_REPORT"
-    echo "- New skills to install: $NEW_COUNT" >> "$GAP_REPORT"
-    echo "- Installed skills to check: $CHANGED_COUNT" >> "$GAP_REPORT"
-    
-    echo "[OK] Gap report built: $GAP_REPORT"
+
+    CHANGED_INFRA=""
+    for infra_file in CHANGELOG.md CONTRIBUTING.md MIGRATION.md "Start Here.md" README.md; do
+        if [ -f "$REMOTE_DIR/$infra_file" ]; then
+            if [ -f "$LOCAL_ONBOARDING_DIR/$infra_file" ]; then
+                local_hash=$(md5 -q "$LOCAL_ONBOARDING_DIR/$infra_file" 2>/dev/null || md5sum "$LOCAL_ONBOARDING_DIR/$infra_file" 2>/dev/null | cut -d' ' -f1)
+                remote_hash=$(md5 -q "$REMOTE_DIR/$infra_file" 2>/dev/null || md5sum "$REMOTE_DIR/$infra_file" 2>/dev/null | cut -d' ' -f1)
+                if [ "$local_hash" != "$remote_hash" ]; then
+                    echo "  📄 UPDATED: $infra_file"
+                    CHANGED_INFRA="$CHANGED_INFRA $infra_file"
+                fi
+            else
+                echo "  📄 NEW:     $infra_file"
+                CHANGED_INFRA="$CHANGED_INFRA $infra_file"
+            fi
+        fi
+    done
+    if [ -d "$REMOTE_DIR/scripts" ]; then
+        for script_file in $(find "$REMOTE_DIR/scripts" -type f -exec basename {} \; 2>/dev/null); do
+            if [ ! -f "$LOCAL_ONBOARDING_DIR/scripts/$script_file" ]; then
+                echo "  📄 NEW:     scripts/$script_file"
+                CHANGED_INFRA="$CHANGED_INFRA scripts/$script_file"
+            fi
+        done
+    fi
+    if [ -z "$NEW_SKILLS" ] && [ -z "$CHANGED_SKILLS" ] && [ -z "$CHANGED_INFRA" ]; then
+        echo "  ✅ No file-level changes detected (version marker may just need updating)."
+    fi
+    echo ""
 }
 
-# Step 3.5: Detect old QMD-based version
-detect_qmd_legacy() {
-    echo "[STEP 3.5] Checking for legacy QMD installation..."
-    
-    QMD_DETECTED=false
-    QMD_RISK_REASON=""
-    
-    # Check 1: qmd command exists
-    if command -v qmd &>/dev/null; then
-        QMD_DETECTED=true
-        QMD_RISK_REASON="QMD command found in PATH"
-    fi
-    
-    # Check 2: QMD cache exists
-    if [ -d "$HOME/.cache/qmd" ] || [ -f "$HOME/.cache/qmd/index.sqlite" ]; then
-        QMD_DETECTED=true
-        QMD_RISK_REASON="$QMD_RISK_REASON; QMD cache found at ~/.cache/qmd"
-    fi
-    
-    # Check 3: Old config references QMD
-    if [ -f "$HOME/.openclaw/openclaw.json" ]; then
-        if grep -q '"backend".*"qmd"' "$HOME/.openclaw/openclaw.json" 2>/dev/null; then
-            QMD_DETECTED=true
-            QMD_RISK_REASON="$QMD_RISK_REASON; openclaw.json has memory.backend = qmd"
-        fi
-    fi
-    
-    if [ "$QMD_DETECTED" = true ]; then
-        echo "[WARNING] LEGACY QMD DETECTED - HIGH RISK MIGRATION REQUIRED"
-        echo "  Reasons: $QMD_RISK_REASON"
-        echo "  Action: Run migration steps in MIGRATION.md before updating"
+step_approval() {
+    echo "[STEP 5/7] Impact analysis..."
+    echo ""
+    echo "=========================================="
+    echo "  UPDATE PLAN: $LOCAL_VERSION → $LATEST_VERSION"
+    echo "=========================================="
+    echo ""
+    TOTAL_CHANGES=0
+    if [ -n "$NEW_SKILLS" ]; then
+        echo "  LOW RISK — New skills to install:"
+        for s in $NEW_SKILLS; do
+            echo "    ✅ $s (new files only, nothing overwritten)"
+            TOTAL_CHANGES=$((TOTAL_CHANGES + 1))
+        done
         echo ""
-        echo "QMD_LEGACY_DETECTED=true" >> "$LOG_FILE"
+    fi
+    if [ -n "$CHANGED_SKILLS" ]; then
+        echo "  MEDIUM RISK — Skills with changes:"
+        for s in $CHANGED_SKILLS; do
+            echo "    🔄 $s (skill files updated, core .md NOT touched)"
+            TOTAL_CHANGES=$((TOTAL_CHANGES + 1))
+        done
+        echo ""
+    fi
+    if [ -n "$CHANGED_INFRA" ]; then
+        echo "  LOW RISK — Infrastructure updates:"
+        for f in $CHANGED_INFRA; do
+            echo "    📄 $f"
+            TOTAL_CHANGES=$((TOTAL_CHANGES + 1))
+        done
+        echo ""
+    fi
+    if [ -f "$HOME/.openclaw/openclaw.json" ] && grep -q '"backend".*"qmd"' "$HOME/.openclaw/openclaw.json" 2>/dev/null; then
+        echo "  ⚠️  HIGH RISK — Legacy QMD system detected in config"
+        echo "     The update includes migration from QMD to Gemini Embedding 2."
+        echo "     Review MIGRATION.md after update completes."
+        echo ""
+    fi
+    echo "  PROTECTED (will NOT be touched):"
+    echo "    🔒 Core .md files (AGENTS.md, MEMORY.md, etc.)"
+    echo "    🔒 Company department folders"
+    echo "    🔒 secrets/, .env, credentials"
+    echo "    🔒 Gateway will NOT be restarted"
+    echo ""
+    echo "  Total changes: $TOTAL_CHANGES"
+    echo "  Backup saved to: $UPDATE_BACKUP"
+    echo ""
+    echo "=========================================="
+    echo ""
+    if [ "$TOTAL_CHANGES" -eq 0 ]; then
+        echo "  No changes to apply. Updating version marker only."
+        echo ""
+        read -p "  Update version marker to $LATEST_VERSION? (y/n): " CONFIRM
     else
-        echo "[OK] No legacy QMD detected"
+        read -p "  Apply these changes? (y/n): " CONFIRM
     fi
+    if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ] && [ "$CONFIRM" != "yes" ]; then
+        echo ""
+        echo "  Update cancelled. No changes made."
+        echo "  Your backup is at: $UPDATE_BACKUP"
+        echo ""
+        echo "$(date '+%Y-%m-%d %H:%M') — Update cancelled by user ($LOCAL_VERSION → $LATEST_VERSION)" >> "$LOG_FILE"
+        rm -rf "$TEMP_DIR"
+        exit 0
+    fi
+    echo ""
 }
 
-# Step 4: Impact analysis
-run_impact_analysis() {
-    echo "[STEP 4] Running impact analysis..."
-    
-    IMPACT_REPORT="/tmp/openclaw-update-impact.md"
-    echo "# Impact Analysis" > "$IMPACT_REPORT"
-    echo "" >> "$IMPACT_REPORT"
-    
-    # Check for QMD legacy system
-    if [ "$QMD_DETECTED" = true ]; then
-        echo "## ⚠️ HIGH RISK: Legacy QMD System Detected" >> "$IMPACT_REPORT"
-        echo "" >> "$IMPACT_REPORT"
-        echo "**Status:** MIGRATION REQUIRED BEFORE UPDATE" >> "$IMPACT_REPORT"
-        echo "" >> "$IMPACT_REPORT"
-        echo "**Detected:** $QMD_RISK_REASON" >> "$IMPACT_REPORT"
-        echo "" >> "$IMPACT_REPORT"
-        echo "**Required Action:**" >> "$IMPACT_REPORT"
-        echo "1. Read MIGRATION.md in your onboarding folder" >> "$IMPACT_REPORT"
-        echo "2. Follow the QMD to Gemini Embedding 2 migration steps" >> "$IMPACT_REPORT"
-        echo "3. After migration completes, re-run this update check" >> "$IMPACT_REPORT"
-        echo "" >> "$IMPACT_REPORT"
-        echo "**DO NOT proceed with this update until migration is complete.**" >> "$IMPACT_REPORT"
-        echo "" >> "$IMPACT_REPORT"
-        echo "Migration guide: $LOCAL_ONBOARDING_DIR/MIGRATION.md" >> "$IMPACT_REPORT"
-        echo "" >> "$IMPACT_REPORT"
-    fi
-    
-    # Protected files — NEVER overwrite
-    PROTECTED_FILES="AGENTS.md MEMORY.md SOUL.md USER.md IDENTITY.md HEARTBEAT.md TOOLS.md"
-    
-    echo "## Protected Files (NEVER overwritten)" >> "$IMPACT_REPORT"
-    for f in $PROTECTED_FILES; do
-        echo "- $f — PROTECTED" >> "$IMPACT_REPORT"
+step_apply() {
+    echo "[STEP 6/7] Applying approved changes..."
+    echo ""
+    APPLIED=0
+    ERRORS=0
+    for s in $NEW_SKILLS; do
+        if [ -d "$REMOTE_DIR/$s" ]; then
+            cp -r "$REMOTE_DIR/$s" "$LOCAL_ONBOARDING_DIR/$s" 2>/dev/null
+            if [ $? -eq 0 ]; then echo "  ✅ Installed: $s"; APPLIED=$((APPLIED + 1)); else echo "  ❌ FAILED: $s"; ERRORS=$((ERRORS + 1)); fi
+        fi
     done
-    
-    echo "" >> "$IMPACT_REPORT"
-    echo "## Company Department Folders — PROTECTED" >> "$IMPACT_REPORT"
-    echo "Any folder inside 'my AI company departments' is client work. Never touch." >> "$IMPACT_REPORT"
-    
-    echo "[OK] Impact analysis complete: $IMPACT_REPORT"
+    for s in $CHANGED_SKILLS; do
+        if [ -d "$REMOTE_DIR/$s" ]; then
+            local_match=$(find "$LOCAL_ONBOARDING_DIR" -maxdepth 1 -type d -name "$(echo $s | grep -o '^[0-9]*')-*" 2>/dev/null | head -1)
+            if [ -n "$local_match" ]; then rm -rf "$local_match"; fi
+            cp -r "$REMOTE_DIR/$s" "$LOCAL_ONBOARDING_DIR/$s" 2>/dev/null
+            if [ $? -eq 0 ]; then echo "  ✅ Updated: $s"; APPLIED=$((APPLIED + 1)); else echo "  ❌ FAILED: $s"; ERRORS=$((ERRORS + 1)); fi
+        fi
+    done
+    for f in $CHANGED_INFRA; do
+        if [[ "$f" == scripts/* ]]; then
+            mkdir -p "$LOCAL_ONBOARDING_DIR/scripts" 2>/dev/null
+            cp "$REMOTE_DIR/$f" "$LOCAL_ONBOARDING_DIR/$f" 2>/dev/null
+        elif [ -f "$REMOTE_DIR/$f" ]; then
+            cp "$REMOTE_DIR/$f" "$LOCAL_ONBOARDING_DIR/$f" 2>/dev/null
+        fi
+        if [ $? -eq 0 ]; then echo "  ✅ Updated: $f"; APPLIED=$((APPLIED + 1)); else echo "  ❌ FAILED: $f"; ERRORS=$((ERRORS + 1)); fi
+    done
+    echo "$LATEST_VERSION" > "$HOME/.openclaw/skills/.onboarding-version" 2>/dev/null
+    echo "$LATEST_VERSION" > "$LOCAL_ONBOARDING_DIR/.onboarding-version" 2>/dev/null
+    echo ""
+    echo "  Applied: $APPLIED changes"
+    if [ "$ERRORS" -gt 0 ]; then echo "  ❌ Errors: $ERRORS (check above for details)"; fi
+    echo ""
 }
 
-# Step 5: Surface recommendations
-surface_recommendations() {
-    echo "[STEP 5] Generating recommendations..."
+step_verify() {
+    echo "[STEP 7/7] Verifying update..."
+    echo ""
+    INSTALLED_VER=$(cat "$HOME/.openclaw/skills/.onboarding-version" 2>/dev/null | tr -d '[:space:]')
+    if [ "$INSTALLED_VER" = "$LATEST_VERSION" ]; then
+        echo "  ✅ Version marker: $INSTALLED_VER"
+    else
+        echo "  ❌ Version marker mismatch: expected $LATEST_VERSION, got ${INSTALLED_VER:-none}"
+    fi
+    FINAL_SKILL_COUNT=$(find "$LOCAL_ONBOARDING_DIR" -maxdepth 1 -type d -name "[0-9]*-*" 2>/dev/null | wc -l | tr -d ' ')
+    echo "  ✅ Skills installed: $FINAL_SKILL_COUNT"
+    if [ -n "$WORKSPACE" ] && [ -d "$WORKSPACE" ]; then
+        CORE_OK=true
+        for f in AGENTS.md MEMORY.md TOOLS.md USER.md IDENTITY.md SOUL.md HEARTBEAT.md; do
+            if [ -f "$UPDATE_BACKUP/$f" ] && [ -f "$WORKSPACE/$f" ]; then
+                backup_hash=$(md5 -q "$UPDATE_BACKUP/$f" 2>/dev/null || md5sum "$UPDATE_BACKUP/$f" 2>/dev/null | cut -d' ' -f1)
+                current_hash=$(md5 -q "$WORKSPACE/$f" 2>/dev/null || md5sum "$WORKSPACE/$f" 2>/dev/null | cut -d' ' -f1)
+                if [ "$backup_hash" != "$current_hash" ]; then
+                    echo "  ⚠️  WARNING: $f was modified during update!"
+                    CORE_OK=false
+                fi
+            fi
+        done
+        if [ "$CORE_OK" = true ]; then echo "  ✅ Core .md files: untouched"; fi
+    fi
+    RESTART_NEEDED=false
+    for s in $NEW_SKILLS $CHANGED_SKILLS; do
+        if [ -f "$LOCAL_ONBOARDING_DIR/$s/INSTALL.md" ] && grep -qi 'openclaw.json\|gateway restart\|config change\|env var' "$LOCAL_ONBOARDING_DIR/$s/INSTALL.md" 2>/dev/null; then
+            RESTART_NEEDED=true
+            break
+        fi
+    done
     echo ""
     echo "=========================================="
-    echo "  OPENCLAW ONBOARDING UPDATE AVAILABLE"
+    echo "  UPDATE COMPLETE"
     echo "=========================================="
     echo ""
-    echo "Remote version: $LATEST_VERSION"
-    echo "Your version: ${LOCAL_VERSION:-none}"
+    echo "  Version: $LOCAL_VERSION → $LATEST_VERSION"
+    echo "  Backup:  $UPDATE_BACKUP"
     echo ""
-    
-    # HIGH RISK warning if QMD detected
-    if [ "$QMD_DETECTED" = true ]; then
-        echo "⚠️  HIGH RISK: LEGACY QMD SYSTEM DETECTED"
-        echo ""
-        echo "You are running an old QMD-based version of the onboarding package."
-        echo "You MUST migrate to Gemini Embedding 2 BEFORE applying this update."
-        echo ""
-        echo "Migration steps: $LOCAL_ONBOARDING_DIR/MIGRATION.md"
-        echo ""
-        echo "DO NOT proceed with this update until migration is complete."
-        echo ""
-        echo "=========================================="
+    if [ "$RESTART_NEEDED" = true ]; then
+        echo "  ⚠️  RESTART RECOMMENDED"
+        echo "  Some updated skills may require config changes."
+        echo "  Tell your AI agent to review the updated skills,"
+        echo "  then type /restart in Telegram when ready."
         echo ""
     fi
-    
-    echo "See gap report: $GAP_REPORT"
-    echo "See impact report: $IMPACT_REPORT"
-    echo ""
-    echo "To review and apply updates, tell your AI assistant:"
-    echo "  'Review the update reports and apply approved changes'"
+    echo "  To tell your AI agent about the update, send:"
+    echo "    'The onboarding package was updated from $LOCAL_VERSION to $LATEST_VERSION."
+    echo "     Review the CHANGELOG.md in $LOCAL_ONBOARDING_DIR and apply any config"
+    echo "     changes that new or updated skills require.'"
     echo ""
     echo "=========================================="
-    
-    echo "$(date '+%Y-%m-%d %H:%M') — Update available: $LATEST_VERSION (current: ${LOCAL_VERSION:-none})" >> "$LOG_FILE"
+    echo ""
+    echo "$(date '+%Y-%m-%d %H:%M') — Updated $LOCAL_VERSION → $LATEST_VERSION ($APPLIED changes applied, $ERRORS errors)" >> "$LOG_FILE"
+    rm -rf "$TEMP_DIR"
 }
 
-# Main
-detect_environment
-fetch_changelog
-compare_versions
-build_gap_list
-
-# Initialize QMD detection variables
-QMD_DETECTED=false
-QMD_RISK_REASON=""
-detect_qmd_legacy
-
-run_impact_analysis
-surface_recommendations
-
-echo ""
-echo "[DONE] Update check complete. Reports generated for review."
-echo "No changes have been made. Waiting for your approval."
+step_backup
+step_detect_folder
+step_detect_version
+step_gap_report
+step_approval
+step_apply
+step_verify
