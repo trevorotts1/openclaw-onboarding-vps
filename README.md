@@ -2,9 +2,15 @@
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent.**
 
-**Current Version: v5.5.0** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
+**Current Version: v5.5.1** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 This repo contains **32 skill folders** (01 through 32, with 13 archived) plus an install script.
+
+### What's New in v5.5.1 (March 20, 2026)
+- **QC Agent Roles** added to all 17 departments - optional quality control agents that report to department heads
+- New QC-ROLES-MASTER.md reference document (34KB) covering QC agent responsibilities, workflows, and model selection
+- Department-specific QC checklists and validation procedures
+- No config changes required for existing clients - purely additive
 
 ### What's New in v5.5.0 (March 20, 2026)
 - **Mem0 switched to Gemini (Skill 31), Cloudflare manual setup added (Skill 32)
@@ -74,6 +80,22 @@ What it does:
 3. Installs Gemini Engine early (required by skill 22 and skill 23)
 4. Asks for missing API keys with a skip option (does not block optional skills)
 5. Prints the next step
+
+---
+
+## Updating Existing Installs
+
+To update an existing installation to the latest version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash
+```
+
+This script will:
+- Back up your existing config and core files
+- Show you what's changing before applying updates
+- Wait for your approval before making changes
+- Verify the update completed successfully
 
 ---
 

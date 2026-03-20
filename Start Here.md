@@ -1756,6 +1756,7 @@ label: "wave2-qc-agent"
    - **FIRST:** Notify user: "The AI Workforce Blueprint is installed. Let me know when you're ready for me to set up your company's back office."
    - **WAIT** for user response
    - **THEN:** Read ALL .md files in `~/.openclaw/onboarding/23-ai-workforce-blueprint/`
+   - **ALSO READ:** `QC-ROLES-MASTER.md` for QC agent role guidance
    - Execute installation steps
    - Mark: `SKILL-23: INSTALLED`
    - Report: "Wave 3 complete: Core system ready"
