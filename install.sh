@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v5.5.1"
+ONBOARDING_VERSION="v5.5.2"
 
 # ============================================================
 #  OpenClaw Onboarding Installer
@@ -58,7 +58,7 @@ echo "  Found: $(command -v openclaw)"
 # Step 2: Download the onboarding package
 # ----------------------------------------------------------
 echo ""
-echo "[2/5] Downloading 32 skills from GitHub..."
+echo "[2/5] Downloading 33 skills from GitHub..."
 TEMP_ZIP="/tmp/openclaw-onboarding-pkg.zip"
 TEMP_EXTRACT="/tmp/openclaw-onboarding-extract"
 
@@ -96,6 +96,25 @@ SKILLS_DIR="$HOME/.openclaw/skills"
 mkdir -p "$SKILLS_DIR"
 echo "$ONBOARDING_VERSION" > "$SKILLS_DIR/.onboarding-version"
 echo "$ONBOARDING_VERSION" > "$ONBOARDING_DIR/.onboarding-version"
+
+# Copy Gemini scripts to ~/clawd/scripts/ so all skill docs can reference them
+CLAWD_SCRIPTS="$HOME/clawd/scripts"
+mkdir -p "$CLAWD_SCRIPTS"
+if [ -f "$ONBOARDING_DIR/projects/gemini-migration/gemini-indexer.py" ]; then
+  cp "$ONBOARDING_DIR/projects/gemini-migration/gemini-indexer.py" "$CLAWD_SCRIPTS/gemini-indexer.py"
+fi
+if [ -f "$ONBOARDING_DIR/projects/gemini-migration/gemini-search.py" ]; then
+  cp "$ONBOARDING_DIR/projects/gemini-migration/gemini-search.py" "$CLAWD_SCRIPTS/gemini-search.py"
+fi
+
+# Write GOOGLE_API_KEY to secrets/.env if provided
+SECRETS_DIR="$HOME/clawd/secrets"
+mkdir -p "$SECRETS_DIR"
+if [ -n "$GOOGLE_API_KEY" ]; then
+  if ! grep -q "GOOGLE_API_KEY" "$SECRETS_DIR/.env" 2>/dev/null; then
+    echo "GOOGLE_API_KEY=$GOOGLE_API_KEY" >> "$SECRETS_DIR/.env"
+  fi
+fi
 echo "  Version: $ONBOARDING_VERSION"
 
 # ----------------------------------------------------------

@@ -4,7 +4,7 @@
 
 **Current Version: v5.5.1** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
-This repo contains **32 skill folders** (01 through 32, with 13 archived) plus an install script.
+This repo contains **33 skill folders** (01 through 33, with 13 archived) plus an install script.
 
 ### What's New in v5.5.1 (March 20, 2026)
 - **QC Agent Roles** added to all 17 departments - optional quality control agents that report to department heads
@@ -150,6 +150,7 @@ That file is the master instruction file. It contains:
 | 30-fish-audio-api-reference | Fish Audio API Reference |
 | 31-upgraded-memory-system | Upgraded Memory System |
 | 32-command-center-setup | Command Center Setup |
+| 33-department-heads | Department Heads |
 
 > **Note:** The Voice Call Plugin (`@openclaw/voice-call`) is installed separately via `openclaw plugins install @openclaw/voice-call`. It is NOT part of the onboarding skill sequence — installing it as a skill caused double-install conflicts.
 
