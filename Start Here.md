@@ -45,7 +45,7 @@ Before starting Wave 2, verify you can spawn sub-agents:
 # Try to spawn a test sub-agent (this is a capability check, not actual install)
 ```
 If `sessions_spawn` works: Use 5-Wave Parallel Orchestration (Waves 2 and 4 use parallel sub-agents).  
-If `sessions_spawn` fails: Use Sequential Mode (install 01→30 one at a time).
+If `sessions_spawn` fails: Use Sequential Mode (install 01→31 one at a time, skipping 13 which is archived).
 
 **0.4: Announce your strategy**
 Tell user: "Onboarding triggered. I will install 32 skills using [5-Wave Parallel / Sequential] strategy. Checking for existing installations..."
@@ -206,7 +206,7 @@ No exceptions. If you skip those two, stop and go back.
 
 ## 🔴 SKILL INSTALLATION PROTOCOL (MANDATORY FOR EACH SKILL)
 
-**For EVERY skill folder (01 through 30), you MUST follow this exact sequence. NO EXCEPTIONS. NO SHORTCUTS.**
+**For EVERY skill folder (01 through 31, skipping 13 which is archived), you MUST follow this exact sequence. NO EXCEPTIONS. NO SHORTCUTS.**
 
 ### ZERO TOLERANCE SHORTCUTS
 The following are FORBIDDEN and will cause installation failures:
@@ -253,12 +253,13 @@ Every skill has a specific install sequence. Follow it exactly:
 - [ ] Confirm TYP was applied (core files updated with lightweight summary)
 - [ ] Explicitly state: "[Skill-name] installation verified complete"
 
-### STEP 5: NO GLOBAL "DONE" UNTIL ALL 32 ARE DONE
+### STEP 5: NO GLOBAL "DONE" UNTIL ALL 30 ARE DONE
 - Do NOT say "onboarding complete" after finishing one skill
 - Do NOT skip skills because they "seem optional"
-- Install skills 01-32 in order, confirm each one individually
-- Only after skill 32 (Command Center Setup) is verified complete → remove ONBOARDING PENDING flag
-- Only after skill 32 (Command Center Setup) is verified complete → write ONBOARDING COMPLETE to MEMORY.md
+- Install skills 01-30 in order, confirm each one individually
+- Only after skill 31 (Upgraded Memory System) is verified complete → remove ONBOARDING PENDING flag
+- Only after skill 31 (Upgraded Memory System) is verified complete → write ONBOARDING COMPLETE to MEMORY.md
+- NOTE: Former Skills 33 (Department Heads) and 34 (Intelligent Staffing) have been merged INTO Skill 23 (AI Workforce Blueprint). They no longer exist as separate skills. Their folders are archived as 33-department-heads-ARCHIVED and 34-intelligent-staffing-ARCHIVED.
 
 ---
 
@@ -304,6 +305,73 @@ Every skill has a specific install sequence. Follow it exactly:
 The Teach Yourself Protocol (TYP) exists specifically to prevent this. Without TYP, agents dump entire skill documentation into AGENTS.md, ballooning it from 500 lines to 5000+ lines. This wastes tokens on every session start, slows the agent down, and pushes important information out of the context window.
 
 **The core files are the agent's brain. Keep them lean. Keep them fast. Keep them relevant.**
+
+---
+
+## 🔴 SYSTEM PHILOSOPHY - READ AND INTERNALIZE
+
+### Why This System Exists
+
+This system builds non-technical business owners into running their business like a real company. Many clients are new entrepreneurs or business owners who have never successfully run a company. The AI is their business partner - not a chatbot, not a tool, but a partner that helps them build something real.
+
+### The Golden Rule of Client Experience
+
+"The whole point of this system is to BUILD them into running a real company. Not quiz them on shit they don't know. The AI should be the expert that guides them, not a survey that interrogates them."
+
+When a client does not know the answer to a question, the AI says: "No worries. Let me research best practices for your industry and suggest something. You just approve it."
+
+The AI leads with knowledge. It suggests answers. It detects when they are stuck and helps them through it. It NEVER uses jargon. It NEVER makes them feel stupid.
+
+### How the Skills Connect (The Pipeline)
+
+Skill 22 (Book-to-Persona Coaching Leadership System) → Skill 23 (AI Workforce Blueprint) → BlackCEO Command Center
+
+- Skill 22 converts books into persona blueprints (coaching and leadership frameworks)
+- Skill 23 interviews the client, creates departments, hires department heads, determines specialists, assigns personas, generates the org chart, and sets up the Command Center config
+- The Command Center displays and manages everything Skill 23 built
+
+Skills 33 (Department Heads) and 34 (Intelligent Staffing) are ARCHIVED. Their logic has been merged into Skill 23. Skill 23 is now the single skill that builds the entire AI company.
+
+### The Act As If Protocol
+
+When a persona is assigned to an agent for a task, the instruction is: "Act as if you are [persona name] executing this task."
+
+This means the agent BECOMES that person for the duration of the task. Their beliefs, standards, voice, approach, quirks. Personas are selected PER TASK, not per role. The same Marketing Director might use Seth Godin for content strategy and Gary Vee for social media.
+
+### Persona Alignment (5 Layers)
+
+Before selecting a persona:
+1. Company Mission - does the persona align with the company's mission?
+2. Owner Values - does it match the owner's personal beliefs and style?
+3. Company Goals/KPIs - does it support what the company is trying to achieve?
+4. Department Goals/KPIs - does it fit this department's objectives?
+5. Task Fit - is this persona the right guide for THIS specific task?
+
+### Model Requirements for Critical Skills
+
+Skills 22 (Book-to-Persona) and 23 (AI Workforce Blueprint) MUST run on high reasoning models:
+- anthropic/claude-opus-4-6
+- anthropic/claude-sonnet-4-6
+- openrouter/xiaomi/mimo-v2-pro (with thinking enabled)
+- google/gemini-3.1-pro-preview
+- openai-codex/gpt-5.4
+
+NEVER use Kimi 2.5, Gemini Flash, or Gemini Flash Lite for these skills. If the client is on a low reasoning model, suggest switching before proceeding.
+
+### Workspace Architecture
+
+Every department gets a workspace with:
+- SOUL.md (unique - department identity)
+- MEMORY.md (unique - department knowledge)
+- HEARTBEAT.md (unique - department priorities)
+- memory/ folder (unique - daily logs)
+- TOOLS.md (inherited from main CEO workspace)
+- AGENTS.md (inherited from main CEO workspace)
+- USER.md (inherited from main CEO workspace)
+
+### Backup Protocol
+
+Before ANY config edit: backup to ~/Downloads/openclaw-backups/ with a human-readable filename. NEVER put backups in hidden dot-folders. Validate JSON after writing. If the backup ended up in the wrong place, re-backup to the correct location.
 
 ---
 
@@ -414,7 +482,7 @@ After every 5 skills completed, send the user a brief progress update:
 ### Completion
 
 When all 32 skills are installed:
-1. Count and verify: all 32 skill folders should exist in ~/.openclaw/skills/
+1. Count and verify: all 32 skill folders should exist in ~/.openclaw/skills/ (33 and 34 are archived)
 2. Check the status file for any FAILED skills
 3. If any failed, attempt to re-install them one more time
 4. Send the user the final report with pass/fail for each skill
@@ -671,7 +739,7 @@ After every skill install, verify:
 |-----------|---------------|-----|
 | **Initial** | After Gemini Engine install (step 3) | Base index of workspace |
 | **Personas** | After Skill 22 (Book-to-Persona) complete | 32+ persona blueprints now searchable |
-| **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions indexed |
+| **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions, department workspaces, persona-matrix.md, persona-categories.json, ORG-CHART.md indexed |
 | **Final** | After ALL 32 skills complete | Complete system index |
 | **Ongoing** | After any NEW skill installed post-onboarding | Keep index current |
 
@@ -691,6 +759,7 @@ python3 ~/clawd/scripts/gemini-indexer.py --status   # Verify completion
 | `clawd` | Workspace AGENTS.md, MEMORY.md, TOOLS.md, etc. | Every milestone |
 | `master-files` | `~/Downloads/openclaw-master-files/` | Every milestone |
 | `coaching-personas` | `~/Downloads/openclaw-master-files/coaching-personas/personas/` | After Skill 22 |
+| `departments` | `~/clawd/departments/` (workspace core files, governing-personas.md) | After Skill 23 |
 
 ### Process for Each Indexing
 
@@ -1241,7 +1310,7 @@ Replace `[MASTER_FILES_FOLDER]` with the actual path from step 3.
 **Each skill folder contains some combination of SKILL.md, INSTALL.md, INSTRUCTIONS.md, EXAMPLES.md, CORE_UPDATES.md.** Some skills also include a `[skill-name]-full.md`, a `.skill` package file, an `upstream-original/` subfolder, or additional reference documents. File count varies by skill. If SKILL.md or INSTALL.md is missing from a folder, stop and tell the user before proceeding.
 
 **Naming rules:**
-- Folder names are lowercase with hyphens, prefixed with their install number (01 through 30)
+- Folder names are lowercase with hyphens, prefixed with their install number (01 through 31, 33 and 34 are archived)
 - The .skill file (when present) matches the folder name without the number prefix
 - Do NOT rename any folder or file. Use the names exactly as listed above.
 
@@ -1311,7 +1380,7 @@ Every skill folder contains these files. Read them in this exact order:
 | 2nd | **INSTALL.md** | Read this SECOND. Step-by-step installation and configuration. Follow every step exactly. Do not skip verification steps. |
 | 3rd | **Full guide doc(s)** (if present) | Read any additional guide documents that exist in the folder: INSTRUCTIONS.md, EXAMPLES.md, [skill-name]-full.md, PIPELINE.md, upstream-original/ files, etc. Not every skill has all of these - read whatever is present. |
 | 4th | **CORE_UPDATES.md** | Read this LAST before installing. This file tells you exactly which workspace files (AGENTS.md, TOOLS.md, MEMORY.md, IDENTITY.md, USER.md, SOUL.md, HEARTBEAT.md) need updating and gives you the exact text to add. Only update the files listed. Do not update files that are not listed. Do not add more than what is written. |
-| Final | **[skill-name].skill** | Install this after reading all docs. This is the skill package. Install it with: openclaw skill install [skill-name].skill (only if a .skill file exists in this folder) |
+| Final | **[skill-name].skill** | This is an archive of the skill folder. No installation command exists - the skill is installed by following SKILL.md, INSTALL.md, and CORE_UPDATES.md above. Simply copy the folder into ~/.openclaw/skills/ and the agent reads the .md files |
 
 ### For Each Skill, Follow This Process
 
@@ -1367,46 +1436,20 @@ If any step in a skill's installation fails:
 
 **DEFAULT: Use the 5-Wave Parallel Orchestration documented above.**
 
-### 🔴 PRE-FLIGHT: Write Sub-Agent Config FIRST (before spawning anything)
-
-Before spawning any sub-agents, the main orchestrator MUST write this block to ~/.openclaw/openclaw.json under agents.defaults.subagents. This prevents spawn failures and rate limit errors:
-
-```json
-"subagents": {
-  "maxConcurrent": 20,
-  "maxChildrenPerAgent": 10,
-  "maxSpawnDepth": 4,
-  "archiveAfterMinutes": 43200,
-  "model": {
-    "primary": "[client's primary model from their config]",
-    "fallbacks": []
-  }
-}
-```
-
-After writing, validate JSON syntax: python3 -m json.tool ~/.openclaw/openclaw.json > /dev/null
-If validation fails, fix before spawning. If it passes, proceed.
-
----
-
-0. **Pre-Flight**: Write sub-agent config block to openclaw.json (above). Validate JSON. Then proceed.
-1. **Wave 1** (Foundation): Spawn ONE sub-agent to install skills 01-03 sequentially. Main agent stays free and available to talk to the client. Sub-agent reports back when done.
-2. **Wave 2** (Pre-Persona): Spawn up to 8 parallel sub-agents for skills 04-21 (in groups respecting dependencies below)
-3. **Wave 3** (Core System): Main agent installs skills 22-23 personally and sequentially (NO sub-agents - requires user interaction)
-4. **Wave 4** (Post-Workforce): Spawn up to 8 parallel sub-agents for skills 24-30
-5. **Wave 5** (Final): Main agent installs skills 31-32, verifies skill 15, sends completion report
+1. **Wave 1** (Foundation): Run skills 01-03 sequentially in the main agent
+2. **Wave 2** (Pre-Persona): Spawn 4 parallel agents for skills 04-21
+3. **Wave 3** (Core System): Main agent installs skills 22-23 sequentially (NO sub-agents)
+4. **Wave 4** (Post-Workforce): Spawn 2 parallel agents for skills 24-30
+5. **Wave 5** (Final): Verify skill 15, install skill 31, and finalize (Skills 32+ are archived or part of Skill 23)
 
 **Sequential Dependencies (Never Parallelize These):**
 - Skill 05 (GHL Setup) must complete before Skill 06 (GHL Install Pages)
 - Skill 13 (Google Workspace Setup) must complete before Skill 14 (Google Workspace Integration)
 - Skill 22 (Book to Persona) must complete before Skill 23 (AI Workforce Blueprint)
 
-**Agent Limits (from pre-flight config):**
-- maxConcurrent: 20 (hard ceiling from OpenClaw)
-- maxChildrenPerAgent: 10
-- maxSpawnDepth: 4
-- Recommended working limit: 8 parallel at once (safe, avoids file conflicts)
-- Main orchestrator handles skills 22-23 personally (no delegation - requires user interaction)
+**Agent Limits:**
+- Maximum 4 sub-agents at any time
+- Main orchestrator handles skills 22-23 personally (no delegation)
 
 **The agent executes all installs.** The human is not asked to run steps. The agent runs them.
 
@@ -1545,7 +1588,7 @@ All skill folders are located inside:
 |---|-------|-------------|-------|
 | 1 | Teach Yourself Protocol | 01-teach-yourself-protocol | 🔴 MANDATORY FIRST |
 | 2 | Back Yourself Up Protocol | 02-back-yourself-up-protocol | 🔴 MANDATORY SECOND |
-| - | **Gemini Engine** | *(installed by install script)* | ✅ Auto-installed before skills 3-30 |
+| - | **Gemini Engine** | *(installed by install script)* | ✅ Auto-installed before skills 3-31 |
 | 3 | Agent Browser (Vercel) - preferred browser automation | 03-agent-browser |
 | 4 | Superpowers | 04-superpowers |
 | 5 | GHL / Convert and Flow Setup | 05-ghl-setup |
@@ -1573,9 +1616,6 @@ All skill folders are located inside:
 | 27 | Cinematic Forge | 28-cinematic-forge |
 | 28 | OpenRouter Setup (MUST BE LAST, after model backup) | 12-openrouter-setup |
 | 29 | GHL / Convert and Flow API v2 | 29-ghl-convert-and-flow |
-| 30 | Fish Audio API Reference | 30-fish-audio-api-reference |
-| 31 | Upgraded Memory System | 31-upgraded-memory-system |
-| 32 | Command Center Setup | 32-command-center-setup |
 
 
 ---
@@ -1782,11 +1822,9 @@ label: "wave2-qc-agent"
    - **FIRST:** Notify user: "The AI Workforce Blueprint is installed. Let me know when you're ready for me to set up your company's back office."
    - **WAIT** for user response
    - **THEN:** Read ALL .md files in `~/.openclaw/onboarding/23-ai-workforce-blueprint/`
-   - **🔴 MANDATORY - DO NOT SKIP:** Before asking ANY company questions or building ANYTHING, present the 3 setup options (A, B, C) exactly as described in INSTALL.md Phase 5b. WAIT for the user to choose an option. Do NOT auto-select. Do NOT default to Option A. Do NOT start asking questions until the user has explicitly chosen A, B, or C.
-   - Only AFTER the user picks an option: execute the chosen option's steps from INSTALL.md
+   - Execute installation steps
    - Mark: `SKILL-23: INSTALLED`
    - Report: "Wave 3 complete: Core system ready"
-   - **ALSO READ:** `23-ai-workforce-blueprint/QC-ROLES-MASTER.md` - Covers QC agent role definitions for all 17 departments
 
 **Why no sub-agents?** These skills require complex configuration, user interaction, and high-stakes decisions that only the main orchestrator should handle.
 
@@ -1847,24 +1885,23 @@ label: "wave4-agent-f"
 
 5. **Report completion**
    - Install Skill 31 (Upgraded Memory System): Read SKILL.md, check prerequisites, follow INSTALL.md
-   - Install Skill 32 (Command Center Setup): Read SKILL.md, check prerequisites, follow INSTALL.md
    - "Wave 5 complete: Onboarding finished. All 32 skills installed."
 
 ---
 
 ### SEQUENTIAL MODE (Fallback)
 
-If `sessions_spawn` doesn't work, install all 32 skills one at a time:
+If `sessions_spawn` doesn't work, install 32 skills one at a time:
 
 ```
-For skill in 01 02 03 04 05 06 07 08 09 10 11 12 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30:
+For skill in 01 02 03 04 05 06 07 08 09 10 11 12 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31:
   Read ALL .md files in ~/.openclaw/onboarding/[skill-folder]/
   Execute installation steps
   Mark: SKILL-XX: INSTALLED
   Report: "Skill XX complete"
 ```
 
-Skip skill 13 (archived).
+Skip skill 13 (archived). Skills 33 and 34 are archived (merged into Skill 23).
 
 ---
 
@@ -1919,33 +1956,26 @@ trap 'rm -f "$INSTALL_FLAG"' EXIT
 ├─────────┬─────────────────┬─────────────────────────────────────────────────┤
 │  WAVE   │    AGENTS       │              SKILLS                             │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 0  │ Main Agent      │ Write sub-agent config to openclaw.json         │
-│         │                 │ maxConcurrent:20, maxChildren:10, maxDepth:4    │
-│         │                 │ Validate JSON before proceeding                 │
+│ Wave 1  │ 1 (Sequential)  │ 01 TYP, 02 Backup, Gemini Engine, 03 Agent Browser        │
+│         │                 │ Foundation - must complete before Wave 2        │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 1  │ 1 Sub-Agent     │ Skills 01 TYP, 02 Backup, 03 Agent Browser      │
-│         │ (Sequential)    │ Foundation - main agent stays FREE for client   │
-│         │                 │ Sub-agent reports back when all 3 done          │
-├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 2  │ 6 (Parallel)    │ Agent A: 04, 05, 06, 07                         │
-│         │                 │ Agent B: 08, 09, 10, 11                         │
-│         │                 │ Agent C: 12, 14                                 │
-│         │                 │ Agent D: 15, 16, 17                             │
-│         │                 │ Agent E: 18, 19, 20                             │
-│         │                 │ Agent F: 21                                     │
-│         │                 │ All 6 run simultaneously                        │
+│ Wave 2  │ 4 (Parallel)    │ Agent A: 04, 05, 06, 07 (install)               │
+│         │ 3 install + 1 QC│ Agent B: 08, 09, 10, 11 (install)               │
+│         │                 │ Agent C: 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 │
+│         │                 │         (install)                               │
+│         │                 │ Agent D: QC Agent (verification)                │
+│         │                 │ Pre-Persona tools - all 4 run simultaneously    │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
 │ Wave 3  │ 1 (Sequential)  │ 22 Book-to-Persona, 23 AI Workforce Blueprint   │
-│         │ Main Agent ONLY │ CORE SYSTEM - requires user interaction         │
-│         │                 │ Present A/B/C options - WAIT for user choice    │
+│         │                 │ CORE SYSTEM - Main orchestrator ONLY            │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 4  │ 2 (Parallel)    │ Agent G: 24, 25, 26, 27                         │
-│         │                 │ Agent H: 28, 29, 30                             │
-│         │                 │ Both run simultaneously                         │
+│ Wave 4  │ 2 (Parallel)    │ Agent E: 24, 25, 26                             │
+│         │                 │ Agent F: 27, 28, 29, 30                             │
+│         │                 │ Post-Workforce tools                            │
 ├─────────┼─────────────────┼─────────────────────────────────────────────────┤
-│ Wave 5  │ Main Agent      │ 31 Upgraded Memory, 32 Command Center Setup     │
-│         │ (Sequential)    │ Verify Skill 15 IDs written, send completion    │
-│         │                 │ report to Trevor via Telegram                   │
+│ Wave 5  │ 1 (Sequential)  │ 31 Upgraded Memory System                         │
+│         │                 │ Final verification and Gemini Engine indexing    │
+│         │                 │ NOTE: Skills 33-34 archived (merged into 23)    │
 └─────────┴─────────────────┴─────────────────────────────────────────────────┘
 ```
 
@@ -1953,54 +1983,80 @@ trap 'rm -f "$INSTALL_FLAG"' EXIT
 
 ### Agent Spawning Commands
 
-Use the sessions_spawn tool (NOT openclaw agent spawn -- that command does not exist).
-The correct method is to call sessions_spawn from within the agent session.
+Use these commands to spawn sub-agents for parallel installation:
 
-#### Wave 1 - Sub-Agent for Skills 01-03 (Sequential)
-Spawn ONE sub-agent to handle foundation skills. Main agent stays free.
+#### Spawn a Single Skill Agent
+```bash
+openclaw agent spawn \
+  --task "Install skill 04 from ~/.openclaw/onboarding/04-superpowers. Read ALL .md files first, then execute. Report: 'Skill 04 complete - QC passed' or 'Skill 04 failed - [reason]'." \
+  --label "skill-04"
+```
 
-sessions_spawn task:
-"Install skills 01-TYP, 02-back-yourself-up-protocol, and 03-agent-browser SEQUENTIALLY from ~/.openclaw/onboarding/. Read ALL .md files in each skill folder before executing. Follow Teach Yourself Protocol for each. Do NOT proceed to the next skill until the current one is fully complete. If a skill fails, report the failure and stop. When all 3 are complete, send: 'Wave 1 complete: Skills 01, 02, 03 installed.'"
+#### Spawn Wave 2 - Agent A (Skills 04-07)
+```bash
+for skill in "04-superpowers" "05-ghl-setup" "06-ghl-install-pages" "07-kie-setup"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
 
-label: "wave-1-foundation"
+#### Spawn Wave 2 - Agent B (Skills 08-11)
+```bash
+for skill in "08-vercel-setup" "09-context7" "10-github-setup" "11-superdesign"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
 
-#### Wave 2 - 8 Parallel Sub-Agents (Skills 04-21)
-After Wave 1 completes, spawn these 8 agents simultaneously using sessions_spawn for each:
+#### Spawn Wave 2 - Agent C (Skills 12-21)
+```bash
+for skill in "12-openrouter-setup" "13-google-workspace-setup" "14-google-workspace-integration" "15-blackceo-team-management" "16-summarize-youtube" "17-self-improving-agent" "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
 
-Agent A (04, 05, 06, 07):
-task: "Install skills 04-superpowers, 05-ghl-setup, 06-ghl-install-pages, 07-kie-setup SEQUENTIALLY from ~/.openclaw/onboarding/. Read ALL .md files first, then execute. Install 05 before 06 (dependency). If a key is missing, mark SKIPPED and continue. Report: 'Agent A complete: skills 04, 05, 06, 07 status: [installed/skipped/failed per skill]'"
-label: "wave-2-agent-a"
+#### Spawn Wave 2 - Agent D (Skills 18-21)
+```bash
+for skill in "18-proactive-agent" "19-humanizer" "20-youtube-watcher" "21-tavily-search"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
 
-Agent B (08, 09, 10, 11):
-task: "Install skills 08-vercel-setup, 09-context7, 10-github-setup, 11-superdesign SEQUENTIALLY from ~/.openclaw/onboarding/. Read ALL .md files first, then execute. If a key is missing, mark SKIPPED and continue. Report: 'Agent B complete: skills 08, 09, 10, 11 status: [installed/skipped/failed per skill]'"
-label: "wave-2-agent-b"
+#### Spawn Wave 4 - Agent E (Skills 24-26)
+```bash
+for skill in "24-storyboard-writer" "25-video-creator" "26-caption-creator"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
 
-Agent C (12, 14):
-task: "Install skills 12-openrouter-setup, 14-google-workspace-integration SEQUENTIALLY from ~/.openclaw/onboarding/. Read ALL .md files first, then execute. If a key is missing, mark SKIPPED and continue. Report: 'Agent C complete: skills 12, 14 status: [installed/skipped/failed per skill]'"
-label: "wave-2-agent-c"
-
-Agent D (15, 16, 17):
-task: "Install skills 15-blackceo-team-management, 16-summarize-youtube, 17-self-improving-agent SEQUENTIALLY from ~/.openclaw/onboarding/. Read ALL .md files first, then execute. If a key is missing, mark SKIPPED and continue. Report: 'Agent D complete: skills 15, 16, 17 status: [installed/skipped/failed per skill]'"
-label: "wave-2-agent-d"
-
-Agent E (18, 19, 20):
-task: "Install skills 18-proactive-agent, 19-humanizer, 20-youtube-watcher SEQUENTIALLY from ~/.openclaw/onboarding/. Read ALL .md files first, then execute. If a key is missing, mark SKIPPED and continue. Report: 'Agent E complete: skills 18, 19, 20 status: [installed/skipped/failed per skill]'"
-label: "wave-2-agent-e"
-
-Agent F (21):
-task: "Install skill 21-tavily-search from ~/.openclaw/onboarding/. Read ALL .md files first, then execute. If a key is missing, mark SKIPPED. Report: 'Agent F complete: skill 21 status: [installed/skipped/failed]'"
-label: "wave-2-agent-f"
-
-#### Wave 4 - 2 Parallel Sub-Agents (Skills 24-30)
-After Wave 3 (main agent handles 22-23), spawn these 2 simultaneously:
-
-Agent G (24, 25, 26, 27):
-task: "Install skills 24-storyboard-writer, 25-video-creator, 26-caption-creator, 27-video-editor SEQUENTIALLY from ~/.openclaw/onboarding/. Read ALL .md files first, then execute. If a key is missing, mark SKIPPED and continue. Report: 'Agent G complete: skills 24, 25, 26, 27 status: [installed/skipped/failed per skill]'"
-label: "wave-4-agent-g"
-
-Agent H (28, 29, 30):
-task: "Install skills 28-cinematic-forge, 29-ghl-convert-and-flow, 30-fish-audio-api-reference SEQUENTIALLY from ~/.openclaw/onboarding/. Read ALL .md files first, then execute. If a key is missing, mark SKIPPED and continue. Report: 'Agent H complete: skills 28, 29, 30 status: [installed/skipped/failed per skill]'"
-label: "wave-4-agent-h"
+#### Spawn Wave 4 - Agent F (Skills 27-30)
+```bash
+for skill in "27-video-editor" "28-cinematic-forge" "29-ghl-convert-and-flow"; do
+  num=${skill%%-*}
+  openclaw agent spawn \
+    --task "Install skill $num from ~/.openclaw/onboarding/$skill. Follow Teach Yourself Protocol. Report completion status." \
+    --label "skill-$num" &
+done
+wait
+```
 
 ---
 
@@ -2168,7 +2224,7 @@ wait_for_wave() {
 
 The install script has already downloaded all skills to disk. Your job is to install them in order, one by one, automatically.
 
-- Install Skill 01 → confirm it worked → install Skill 02 → confirm → continue through all 32
+- Install Skill 01 → confirm it worked → install Skill 02 → confirm → continue through all 30
 - Only pause when you need something the user must provide (API key not in any env file, 2FA code, first-time browser login)
 - When you need a key: ask clearly, wait for answer, then continue
 - When a skill is optional and the user wants to skip: mark SKIPPED, move to next - do not stop the whole install
@@ -2274,33 +2330,22 @@ python3 ~/clawd/scripts/gemini-indexer.py --status
 
 Then write to MEMORY.md: "ONBOARDING COMPLETE - [date] - All 32 skills processed"
 
-### Post-Install Heartbeat Triggers (MANDATORY after onboarding complete)
-
-After all 32 skills are installed, create TWO recurring OpenClaw cron jobs to nudge the client toward building their AI workforce:
-
-**Morning nudge (9 AM daily):**
-openclaw cron create --name "ai-workforce-morning-nudge" --schedule "0 9 * * *" --task "Send this message to the owner via their primary messaging channel: 'Good morning! Your AI system is fully set up and ready to work for you. Are you ready to start building out your AI workforce? When you say the word, I will walk you through setting up your departments, your roles, and your first AI employees. Let's build something powerful.'"
-
-**Afternoon nudge (1 PM daily):**
-openclaw cron create --name "ai-workforce-afternoon-nudge" --schedule "0 13 * * *" --task "Check if Skill 23 (AI Workforce Blueprint) has been fully completed (check MEMORY.md for 'AI WORKFORCE COMPLETE' marker). If NOT complete: send message to owner: 'Hey -- just checking in. Your AI workforce is ready to be built whenever you are. Pick up where we left off and let\'s get your company running. One question at a time, I\'ll walk you through everything.' If complete: remove or disable this cron job."
-
-**After client finishes all intake questions in Skill 23:**
-The AI must write "AI WORKFORCE COMPLETE - [date]" to MEMORY.md. This disables the afternoon nudge automatically.
-
-**After intake is complete**, the AI must also:
-1. Trigger the workspace provisioning flow (build-workforce.py if it exists, otherwise proceed to department folder creation)
-2. Set up their Cloudflare Tunnel subdomain if Skill 32 has not been run yet
-3. Send the client a message: "Your AI Command Center is being set up now. I will send you the link as soon as it is ready."
-
 When every skill on the list above is installed and verified, tell the user:
-1. Everything that was installed (all 32 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
+1. Everything that was install 32 skills with status: INSTALLED / ALREADY_INSTALLED / SKIPPED / FAILED)
 2. Everything that was added to each workspace file (AGENTS.md, TOOLS.md, MEMORY.md, etc.)
 3. Which workspace files were updated and which were not touched
-4. Any missing API keys or tokens (consolidated list -- do NOT ask for them one by one)
-5. Confirm the two post-install heartbeat cron jobs are active
 4. Where the full documentation for each skill is saved (the master files folder path)
 5. That the backup protocol is active and the first backup has been created
 
 ---
 
 This file is part of the OpenClaw Onboarding system.
+oarding system.
+not touched
+4. Where the full documentation for each skill is saved (the master files folder path)
+5. That the backup protocol is active and the first backup has been created
+
+---
+
+This file is part of the OpenClaw Onboarding system.
+oarding system.

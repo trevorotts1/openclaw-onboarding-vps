@@ -29,7 +29,7 @@ pip install moviepy opencv-python requests pillow
 
 ### Step 2: Install the Skill
 ```bash
-openclaw skill install video-creator.skill
+The .skill file is an archive. No CLI command needed - install by following SKILL.md, INSTALL.md, and CORE_UPDATES.md instructions.
 ```
 
 Or manually:
@@ -111,8 +111,8 @@ Options: `--transition` (fade/slide_left/slide_right/slide_up/slide_down/wipe/zo
 
 Apply the core file updates from `CORE_UPDATES.md`.
 ## Video Creator Skill
-- Installed at: /data/.openclaw/skills/video-creator/
-- Full reference: /data/.openclaw/skills/video-creator/SKILL.md
+- Installed at: ~/.openclaw/skills/video-creator/
+- Full reference: ~/.openclaw/skills/video-creator/SKILL.md
 ```
 
 ---

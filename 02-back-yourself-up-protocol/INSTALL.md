@@ -4,11 +4,11 @@
 - OpenClaw installed and running
 - Teach Yourself Protocol installed first
 - Write access to workspace files
-- /data/downloads/ accessible
+- ~/Downloads/ accessible
 
 ## Step 1: Find or Create Backup Folder
 
-Search /data/downloads/ for any folder with "openclaw" and "backup" in the name (case-insensitive):
+Search ~/Downloads/ for any folder with "openclaw" and "backup" in the name (case-insensitive):
 - OpenClaw Backups  ← standard default name
 - openclaw-backups
 - OpenClaw Backup
@@ -17,7 +17,7 @@ Search /data/downloads/ for any folder with "openclaw" and "backup" in the name 
 
 If found, use it. If not found:
 ```bash
-mkdir -p /data/downloads/OpenClaw\ Backups/
+mkdir -p ~/Downloads/OpenClaw\ Backups/
 ```
 
 ## Step 2: Place the Skill Files
@@ -35,19 +35,19 @@ All files:
 ## Step 3: Install the Skill Package
 
 ```bash
-openclaw skill install back-yourself-up-protocol.skill
+The .skill file is an archive. No CLI command needed - install by following SKILL.md, INSTALL.md, and CORE_UPDATES.md instructions.
 ```
 
 ## Step 4: Verify the Correct Config File
 
 The config file is:
 ```
-/data/.openclaw/openclaw.json
+~/.openclaw/openclaw.json
 ```
 
 Verify it exists:
 ```bash
-ls -la /data/.openclaw/openclaw.json
+ls -la ~/.openclaw/openclaw.json
 ```
 
 It is NOT clawdbot.json. It is NOT config.json. It is NOT any other file.
@@ -56,12 +56,12 @@ It is NOT clawdbot.json. It is NOT config.json. It is NOT any other file.
 
 Run a test backup right now:
 ```bash
-cp /data/.openclaw/openclaw.json "/data/downloads/openclaw-backups/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
+cp ~/.openclaw/openclaw.json "~/Downloads/openclaw-backups/models-backup-$(date +'%B %-d at %-I-%M %p').txt"
 ```
 
 Verify:
 ```bash
-ls -la /data/downloads/openclaw-backups/
+ls -la ~/Downloads/openclaw-backups/
 ```
 
 The backup file should exist and not be 0 bytes.
@@ -89,7 +89,7 @@ Ask the agent:
    Expected: Back it up to the backup folder with a human-readable date, verify backup is not empty, get user permission
 
 2. "What is the config file path?"
-   Expected: /data/.openclaw/openclaw.json
+   Expected: ~/.openclaw/openclaw.json
 
 3. "What date format do you use for backups?"
    Expected: Human-readable American dates (February 28 at 3-00 PM), never ISO or robot dates
