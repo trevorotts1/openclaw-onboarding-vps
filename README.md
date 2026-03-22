@@ -4,7 +4,7 @@
 
 **Current Version: v5.5.1** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
-This repo contains **33 skill folders** (01 through 33, with 13 archived) plus an install script.
+This repo contains **34 skill folders** (01 through 34, with 13, 33, and 34 archived) plus an install script.
 
 ### What's New in v5.5.1 (March 20, 2026)
 - **QC Agent Roles** added to all 17 departments - optional quality control agents that report to department heads
