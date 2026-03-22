@@ -5,7 +5,7 @@ ONBOARDING_VERSION="v6.0.0"
 
 # ============================================================
 #  OpenClaw Onboarding Installer
-#  Run via: curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
+#  Run via: curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash
 # ============================================================
 
 # ----------------------------------------------------------
@@ -62,7 +62,7 @@ echo "[2/5] Downloading 34 skills from GitHub..."
 TEMP_ZIP="/tmp/openclaw-onboarding-pkg.zip"
 TEMP_EXTRACT="/tmp/openclaw-onboarding-extract"
 
-curl -fsSL "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
+curl -fsSL "https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
 if [ ! -f "$TEMP_ZIP" ]; then
   echo "ERROR: Failed to download onboarding package."
   exit 1
@@ -76,14 +76,14 @@ echo ""
 echo "[3/5] Extracting to ~/.openclaw/onboarding/..."
 rm -rf "$TEMP_EXTRACT"
 unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
-if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
+if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
   echo "ERROR: Unexpected archive structure."
   rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
   exit 1
 fi
 
 # Clear existing onboarding folder and copy fresh
-cp -r "$TEMP_EXTRACT/openclaw-onboarding-vps-main/"* "$ONBOARDING_DIR/"
+cp -r "$TEMP_EXTRACT/openclaw-onboarding-main/"* "$ONBOARDING_DIR/"
 rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
 echo "  Installed to $ONBOARDING_DIR"
 
@@ -96,24 +96,46 @@ SKILLS_DIR="$HOME/.openclaw/skills"
 mkdir -p "$SKILLS_DIR"
 echo "$ONBOARDING_VERSION" > "$SKILLS_DIR/.onboarding-version"
 echo "$ONBOARDING_VERSION" > "$ONBOARDING_DIR/.onboarding-version"
-# Copy Gemini scripts to ~/clawd/scripts/ so all skill docs can reference them
-CLAWD_SCRIPTS="$HOME/clawd/scripts"
-mkdir -p "$CLAWD_SCRIPTS"
-if [ -f "$ONBOARDING_DIR/projects/gemini-migration/gemini-indexer.py" ]; then
-  cp "$ONBOARDING_DIR/projects/gemini-migration/gemini-indexer.py" "$CLAWD_SCRIPTS/gemini-indexer.py"
-fi
-if [ -f "$ONBOARDING_DIR/projects/gemini-migration/gemini-search.py" ]; then
-  cp "$ONBOARDING_DIR/projects/gemini-migration/gemini-search.py" "$CLAWD_SCRIPTS/gemini-search.py"
-fi
-# Write GOOGLE_API_KEY to secrets/.env if provided
-SECRETS_DIR="$HOME/clawd/secrets"
-mkdir -p "$SECRETS_DIR"
-if [ -n "$GOOGLE_API_KEY" ]; then
-  if ! grep -q "GOOGLE_API_KEY" "$SECRETS_DIR/.env" 2>/dev/null; then
-    echo "GOOGLE_API_KEY=$GOOGLE_API_KEY" >> "$SECRETS_DIR/.env"
-  fi
-fi
 echo "  Version: $ONBOARDING_VERSION"
+
+# ----------------------------------------------------------
+# Step 3b: Set up Gemini Engine (semantic search)
+# ----------------------------------------------------------
+echo ""
+echo "[3b/5] Setting up Gemini Engine (semantic search)..."
+SKILLS_DIR="$HOME/.openclaw/skills"
+SCRIPTS_DIR="$HOME/clawd/scripts"
+mkdir -p "$SCRIPTS_DIR"
+
+# Copy gemini-indexer.py to the expected location
+if [ -f "$ONBOARDING_DIR/scripts/gemini-indexer.py" ]; then
+  cp "$ONBOARDING_DIR/scripts/gemini-indexer.py" "$SCRIPTS_DIR/gemini-indexer.py"
+  chmod +x "$SCRIPTS_DIR/gemini-indexer.py"
+  echo "  Copied gemini-indexer.py to $SCRIPTS_DIR/"
+else
+  echo "  gemini-indexer.py not found in onboarding scripts (will need manual setup)"
+fi
+
+# Install google-genai Python package if not present
+if ! python3 -c "import google.genai" 2>/dev/null; then
+  echo "  Installing google-genai Python package..."
+  pip3 install google-genai --break-system-packages 2>/dev/null || \
+  pip3 install google-genai 2>/dev/null || \
+  echo "  Warning: google-genai install failed. You may need to install it manually: pip3 install google-genai"
+else
+  echo "  google-genai already installed"
+fi
+
+# Check for GOOGLE_API_KEY
+if grep -q "GOOGLE_API_KEY" ~/clawd/secrets/.env 2>/dev/null; then
+  echo "  GOOGLE_API_KEY found in ~/clawd/secrets/.env"
+elif grep -q "GEMINI_API_KEY" ~/clawd/secrets/.env 2>/dev/null; then
+  echo "  GEMINI_API_KEY found in ~/clawd/secrets/.env"
+else
+  echo "  Warning: No Google API key found. Add GOOGLE_API_KEY to ~/clawd/secrets/.env before running Gemini Engine indexing."
+fi
+
+echo "  Gemini Engine setup complete"
 
 # ----------------------------------------------------------
 # Step 4: Set up backup folder
@@ -148,13 +170,7 @@ fi
 # ----------------------------------------------------------
 echo ""
 echo "[5/5] Writing onboarding flag..."
-# On Hostinger VPS/Docker containers, openclaw data lives in /data/.openclaw/
-# Fall back to $HOME/.openclaw/workspace if /data path doesn't exist
-if [ -d "/data/.openclaw" ] || [ -d "/data" ]; then
-  WORKSPACE_DIR="/data/.openclaw/workspace"
-else
-  WORKSPACE_DIR="$HOME/.openclaw/workspace"
-fi
+WORKSPACE_DIR="$HOME/.openclaw/workspace"
 AGENTS_FILE="$WORKSPACE_DIR/AGENTS.md"
 mkdir -p "$WORKSPACE_DIR"
 
