@@ -12,6 +12,19 @@ This repo contains **33 skill folders** (01 through 33, with 13 archived) plus a
 - Department-specific QC checklists and validation procedures
 - No config changes required for existing clients - purely additive
 
+### What's New in v5.5.1
+- **QC Agent Roles** for all 17 departments with department-specific checklists
+- **QC-ROLES-MASTER.md** (34KB) master reference for QC agent setup
+- Version bump + changelog updated
+
+### Updating Existing Installs
+If you already have the onboarding system installed, update to the latest version:
+
+```
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash
+```
+
+
 ### What's New in v5.5.0 (March 20, 2026)
 - **Mem0 switched to Gemini (Skill 31), Cloudflare manual setup added (Skill 32)
 - Added client-hostname uniqueness requirement before DNS registration

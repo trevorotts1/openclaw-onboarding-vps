@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v5.5.2"
+ONBOARDING_VERSION="v5.5.1"
 
 # ============================================================
 #  OpenClaw Onboarding Installer
-#  Run via: curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
+#  Run via: curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash
 # ============================================================
 
 # ----------------------------------------------------------
@@ -58,11 +58,11 @@ echo "  Found: $(command -v openclaw)"
 # Step 2: Download the onboarding package
 # ----------------------------------------------------------
 echo ""
-echo "[2/5] Downloading 33 skills from GitHub..."
+echo "[2/5] Downloading 32 skills from GitHub..."
 TEMP_ZIP="/tmp/openclaw-onboarding-pkg.zip"
 TEMP_EXTRACT="/tmp/openclaw-onboarding-extract"
 
-curl -fsSL "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
+curl -fsSL "https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
 if [ ! -f "$TEMP_ZIP" ]; then
   echo "ERROR: Failed to download onboarding package."
   exit 1
@@ -76,14 +76,14 @@ echo ""
 echo "[3/5] Extracting to ~/.openclaw/onboarding/..."
 rm -rf "$TEMP_EXTRACT"
 unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
-if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
+if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
   echo "ERROR: Unexpected archive structure."
   rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
   exit 1
 fi
 
 # Clear existing onboarding folder and copy fresh
-cp -r "$TEMP_EXTRACT/openclaw-onboarding-vps-main/"* "$ONBOARDING_DIR/"
+cp -r "$TEMP_EXTRACT/openclaw-onboarding-main/"* "$ONBOARDING_DIR/"
 rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
 echo "  Installed to $ONBOARDING_DIR"
 
@@ -96,23 +96,6 @@ SKILLS_DIR="$HOME/.openclaw/skills"
 mkdir -p "$SKILLS_DIR"
 echo "$ONBOARDING_VERSION" > "$SKILLS_DIR/.onboarding-version"
 echo "$ONBOARDING_VERSION" > "$ONBOARDING_DIR/.onboarding-version"
-# Copy Gemini scripts to ~/clawd/scripts/ so all skill docs can reference them
-CLAWD_SCRIPTS="$HOME/clawd/scripts"
-mkdir -p "$CLAWD_SCRIPTS"
-if [ -f "$ONBOARDING_DIR/projects/gemini-migration/gemini-indexer.py" ]; then
-  cp "$ONBOARDING_DIR/projects/gemini-migration/gemini-indexer.py" "$CLAWD_SCRIPTS/gemini-indexer.py"
-fi
-if [ -f "$ONBOARDING_DIR/projects/gemini-migration/gemini-search.py" ]; then
-  cp "$ONBOARDING_DIR/projects/gemini-migration/gemini-search.py" "$CLAWD_SCRIPTS/gemini-search.py"
-fi
-# Write GOOGLE_API_KEY to secrets/.env if provided
-SECRETS_DIR="$HOME/clawd/secrets"
-mkdir -p "$SECRETS_DIR"
-if [ -n "$GOOGLE_API_KEY" ]; then
-  if ! grep -q "GOOGLE_API_KEY" "$SECRETS_DIR/.env" 2>/dev/null; then
-    echo "GOOGLE_API_KEY=$GOOGLE_API_KEY" >> "$SECRETS_DIR/.env"
-  fi
-fi
 echo "  Version: $ONBOARDING_VERSION"
 
 # ----------------------------------------------------------
@@ -148,13 +131,7 @@ fi
 # ----------------------------------------------------------
 echo ""
 echo "[5/5] Writing onboarding flag..."
-# On Hostinger VPS/Docker containers, openclaw data lives in /data/.openclaw/
-# Fall back to $HOME/.openclaw/workspace if /data path doesn't exist
-if [ -d "/data/.openclaw" ] || [ -d "/data" ]; then
-  WORKSPACE_DIR="/data/.openclaw/workspace"
-else
-  WORKSPACE_DIR="$HOME/.openclaw/workspace"
-fi
+WORKSPACE_DIR="$HOME/.openclaw/workspace"
 AGENTS_FILE="$WORKSPACE_DIR/AGENTS.md"
 mkdir -p "$WORKSPACE_DIR"
 

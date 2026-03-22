@@ -1,3 +1,19 @@
+## [v5.5.1] - March 20, 2026
+
+### Skill 23: QC Agent Roles for All 17 Departments
+
+#### Added
+- QC-ROLES-MASTER.md: 34KB master reference covering what QC agents do, how they work, reporting structure, and model selection guidance
+- QC agent role added to all 17 department suggested-roles files
+- Department-specific QC checklists and validation procedures
+- QC agents report to department heads. Do not produce deliverables.
+
+#### Notes for Existing Clients
+- No config changes required
+- QC agent roles are optional additions. Existing department setups are not affected.
+- To add a QC agent to any department, read QC-ROLES-MASTER.md first.
+- Risk level: LOW (additive only, no breaking changes)
+
 # Changelog
 
 All notable changes to the OpenClaw Onboarding package are documented here.
@@ -585,3 +601,29 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 - **Skill 02 - Back Yourself Up Protocol**: Automatic config backups before every change.
 - **Skill 03 - Superpowers**: 4 Iron Laws + 14 sub-skills for systematic problem-solving.
 - README.md and Start Here.md included.
+
+## v5.5.2 - March 21, 2026
+- Fix: gemini-indexer.py now does case-insensitive search for master files folder
+- Fix: install.sh now copies gemini-indexer.py and gemini-search.py to ~/clawd/scripts/ on install
+- Fix: install.sh now writes GOOGLE_API_KEY to ~/clawd/secrets/.env if set in environment during install
+- Fix: Skill 22 docs updated to use correct script paths
+
+- Fix: Skill 22 orchestrator.py now auto-installs Calibre via Homebrew when missing instead of stopping and asking the user
+
+- Fix: Parallel sub-agent install architecture - Wave 0 pre-flight config, Wave 1 via sub-agent (main stays free), Wave 2 with 6 parallel agents, correct sessions_spawn commands replacing invalid openclaw agent spawn, maxConcurrent 20/maxChildren 10/maxDepth 4 config block
+
+- Fix: CRM Specialist added as mandatory role in ALL 17 departments (was only in 4)
+- Feature: Post-install heartbeat triggers - morning (9AM) + afternoon (1PM) nudges added to Wave 5 completion flow
+- Feature: AI Workforce Complete marker disables afternoon nudge automatically on completion
+
+- Fix: Skill 23 no longer treats web-dev and app-dev as secondary/optional departments -- all 17 presented as flat equal list
+
+- Feature: Skill 31 now includes per-department memory architecture -- Tier 1 (CEO full 5 layers), Tier 2 (6 heavy depts full 5 layers, 14-day logs, 500-line cap), Tier 3 (10 light depts layers 1+2+5 only, 14-day logs, 300-line cap), per-department Mem0 namespacing, memory bloat prevention rules
+
+- Feature: Skill 31 per-department memory architecture -- 3 tiers (CEO full 5 layers, 6 heavy depts full 5 layers, 10 light depts 3 layers), 14-day log retention for departments, per-department Mem0 namespace isolation
+
+- Fix: Skill 32 now includes mandatory Step 6.5 to seed all 17 department workspaces into Mission Control DB after install + added seed-workspaces.py script
+
+- Feature: Skill 23 interview log system -- creates AI-Workforce-Interview.md, logs every Q&A in real time, resumes mid-interview across sessions, Barbara Walters interview style, smart confirmations from prior context, department finish nudge
+
+- Fix: Skill 23 interview tone completely rewritten -- warm supportive advisor style, specific BAD vs GOOD question examples, guidance when client does not know the answer, never cold form-style questions

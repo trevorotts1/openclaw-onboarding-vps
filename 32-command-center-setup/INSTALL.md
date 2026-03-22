@@ -302,13 +302,25 @@ The agent updates the configuration file with:
 pm2 start ecosystem.config.cjs
 ```
 
-### 6.5 Verify Dashboard is Accessible
+### 6.5 Seed Department Workspaces into Database (MANDATORY)
+
+After the dashboard starts, run the workspace seeding script to populate the database with all 17 department workspaces. Without this step, the workspace selector will only show the default workspace.
+
+```bash
+python3 ~/.openclaw/onboarding/32-command-center-setup/scripts/seed-workspaces.py
+```
+
+Expected output: "Seeding complete. Inserted: 17 | Skipped (already existed): 0"
+
+If it says "Could not find mission-control.db" -- verify the dashboard started correctly in step 6.4 before running this.
+
+### 6.6 Verify Dashboard is Accessible
 The agent checks that the dashboard loads at:
 ```
 http://localhost:3000
 ```
 
-**What you should see:** A Kanban board with all your departments and 5 columns (Backlog, Ready, In Progress, Review, Complete).
+**What you should see:** The workspace selector screen showing all your department workspaces as cards you can click into. Each card shows task counts and agent count for that department.
 
 ---
 
@@ -494,6 +506,25 @@ The agent sends you a summary in Telegram:
 - Which departments are active
 - Dashboard URL
 - How to access each department topic
+
+---
+
+## Persona Integration
+
+The Command Center task cards display which AI persona each agent is using. Personas are coaching blueprints extracted from books (Skill 22 / Book-to-Persona system).
+
+Each agent selects a persona based on the task type:
+- Content tasks: copywriting personas (Russell B., Seth G.)
+- Sales tasks: persuasion personas (Alex H., Dean G.)
+- Creative tasks: storytelling personas (Donald M., Austin K.)
+- Leadership tasks: strategy personas (Simon S., Jim C.)
+
+The persona is displayed as a purple pill on each task card with the format: first name + last initial.
+
+To populate personas for clients:
+- Complete the 70-question business interview
+- Match interview answers to persona trait suggestions in suggested-roles files
+- The department head selects the right persona for each task
 
 ---
 
