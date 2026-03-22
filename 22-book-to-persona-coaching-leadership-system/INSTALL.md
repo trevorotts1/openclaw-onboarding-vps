@@ -40,7 +40,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in /data/downloads/. It may be named:
+   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -50,7 +50,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: /data/downloads/OpenClaw Master Files/
+   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -96,7 +96,7 @@ Run the Teach Yourself Protocol on this skill folder now. Read every .md file in
 3. CHECKLIST.md
 4. GOOD-AND-BAD-EXAMPLES.md
 5. PERSONA-ROUTER.md
-6. GAI-SEARCH-GUIDE.md
+6. GEMINI-RETRIEVAL-GUIDE.md
 7. CORE_UPDATES.md
 8. INSTALL.md (this file - you are reading it now)
 
@@ -112,18 +112,18 @@ Copy this entire skill folder into the standard OpenClaw skills directory so the
 
 Run:
 ```bash
-mkdir -p /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system
-cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+mkdir -p ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system
+cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
 **Note:** If the onboarding package was extracted to a different location, replace `/tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/` with the actual path to this skill folder.
 
 Verify:
 ```bash
-ls /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
-**Expected output:** SKILL.md, INSTALL.md, PIPELINE.md, CHECKLIST.md, CORE_UPDATES.md, GOOD-AND-BAD-EXAMPLES.md, PERSONA-ROUTER.md, GAI-SEARCH-GUIDE.md, personas/, pipeline/, agent-prompts/ all present.
+**Expected output:** SKILL.md, INSTALL.md, PIPELINE.md, CHECKLIST.md, CORE_UPDATES.md, GOOD-AND-BAD-EXAMPLES.md, PERSONA-ROUTER.md, GEMINI-RETRIEVAL-GUIDE.md, personas/, pipeline/, agent-prompts/ all present.
 
 If any files are missing, re-run the copy command above.
 
@@ -133,46 +133,7 @@ If any files are missing, re-run the copy command above.
 
 This step must complete successfully before proceeding. The pipeline will fail if any dependency is missing.
 
-### Gemini (Required)
-
-**Step 1:** Check if Gemini is already installed:
-```bash
-gemini --version
-```
-
-**If you see a version number** (like `gemini 1.1.0`): Gemini is installed. Skip to the next dependency.
-
-**If you see "command not found":** Install Gemini now using this sequence:
-
-```bash
-# Attempt 1: Install via bun (recommended)
-bun install -g https://github.com/tobi/gemini
-```
-
-If bun is not installed or the command fails:
-```bash
-# Attempt 2: Install bun first, then Gemini
-curl -fsSL https://bun.sh/install | bash
-source ~/.bashrc 2>/dev/null || source ~/.zshrc 2>/dev/null
-bun install -g https://github.com/tobi/gemini
-```
-
-If bun install still fails:
-```bash
-# Attempt 3: Fallback to npm
-npm install -g @anthropic/gemini
-```
-
-**After any install attempt, verify:**
-```bash
-gemini --version
-```
-
-This MUST return a version number. If it does not, STOP and report the exact error output. Do not proceed without a working Gemini installation.
-
-Gemini documentation and source: https://github.com/tobi/gemini
-
-### Step 2a - Install All Python Packages (Required)
+### Step 2a - Install All Python Packages
 
 **Run this ONE command to install all required packages:**
 ```bash
@@ -210,15 +171,15 @@ echo "Testing lxml..."; python3 -c "import lxml; print('PASS')" 2>&1 | grep -q "
 
 Calibre is required for Kindle format conversion (MOBI, AZW, AZW3, KFX).
 
+**For Mac (Homebrew):**
+```bash
+brew install --cask calibre
+```
+
 **For Linux/VPS (apt-get):**
 ```bash
 sudo apt-get update
 sudo apt-get install calibre
-```
-
-**For Mac (Homebrew):**
-```bash
-brew install --cask calibre
 ```
 
 **Verify installation:**
@@ -340,18 +301,38 @@ find ~/Downloads -maxdepth 2 -type d -iname "*openclaw*master*" -o \
 
 **If no folder is found:** Create the standard one:
 ```bash
-mkdir -p /data/openclaw-master-files/coaching-personas/books
-mkdir -p /data/openclaw-master-files/coaching-personas/text
-mkdir -p /data/openclaw-master-files/coaching-personas/personas
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/books
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/text
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/personas
 ```
 
 **Record the detected path** - you will use it for all file operations in this session.
 
 ---
 
-## Step 4 - Verify Model Access
+## Step 4 - Verify Installing Agent Model (MANDATORY)
 
-This skill requires three model connections. Check each one:
+Before proceeding, verify YOU (the agent reading this) are running on a high reasoning model. This skill makes architectural decisions about persona structure, quality gates, and embedding configuration that require deep reasoning.
+
+**Approved models for installation:**
+- anthropic/claude-opus-4-6
+- anthropic/claude-sonnet-4-6
+- openrouter/xiaomi/mimo-v2-pro (with thinking enabled)
+- google/gemini-3.1-pro-preview
+- openai-codex/gpt-5.4
+- moonshot/kimi-k2.5 (has built-in reasoning)
+
+**NOT approved:** Gemini Flash, Gemini Flash Lite, MiniMax, or any model without strong reasoning capability.
+
+If you are on a low reasoning model, say: "This skill requires a model with strong reasoning ability. Want me to switch before continuing?"
+
+Do NOT proceed on a low reasoning model.
+
+---
+
+## Step 4b - Verify Pipeline Model Access
+
+This skill requires three model connections for the persona generation pipeline. Check each one:
 
 
 ### Google Gemini (Required for Multimodal Embeddings)
@@ -383,7 +364,7 @@ _find_key() {
 }
 _find_key "MOONSHOT_API_KEY"
 ```
-If missing, add your Moonshot API key to `/data/openclaw/workspace/secrets/.env`.
+If missing, add your Moonshot API key to `~/clawd/secrets/.env`.
 
 ### DeepSeek V3.2-Speciale (Phase 2)
 Routes via OpenRouter. Check across all known env files:
@@ -394,7 +375,7 @@ _find_key "OPENROUTER_API_KEY"
 ### GPT-5.3 Codex (Phase 3)
 Routes via OpenClaw OAuth. Check:
 ```bash
-cat /data/.openclaw/agents/main/agent/auth-profiles.json | python3 -c "
+cat ~/.openclaw/agents/main/agent/auth-profiles.json | python3 -c "
 import json,sys,datetime
 d=json.load(sys.stdin)
 p=d.get('profiles',{}).get('openai-codex:default',{})
@@ -411,20 +392,20 @@ If Codex OAuth is not found or expired: reconnect via OpenClaw settings using yo
 
 ---
 
-## Step 5 - Set Up Gemini Collection (coaching-personas) - DOCUMENTATION ONLY
+## Step 5 - Set Up Gemini Engine Collection (coaching-personas) - DOCUMENTATION ONLY
 
-Pre-built personas are already included in this skill folder. They will be added to Gemini during Skill 23 (AI Workforce Blueprint) installation.
+Pre-built personas are already included in this skill folder. They will be added to Gemini Engine during Skill 23 (AI Workforce Blueprint) installation.
 
-**DO NOT run Gemini embed here.** Skill 23 will run the embedding once after all personas AND workforce files are ready.
+**DO NOT run Gemini Engine embed here.** Skill 23 will run the embedding once after all personas AND workforce files are ready.
 
 **What happens next:**
-- Skill 23 will add the coaching-personas collection to Gemini
-- Skill 23 will run `gemini update && gemini embed` to index all personas + workforce files together
+- Skill 23 will add the coaching-personas collection to Gemini Engine
+- Skill 23 will run `python3 ~/clawd/scripts/gemini-indexer.py` to index all personas + workforce files together
 - This avoids redundant double-embedding (after Skill 22 and again after Skill 23)
 
 **Note:** If you need to verify personas are searchable after Skill 23 completes, run:
 ```bash
-gemini search coaching-personas "negotiation"
+python3 ~/clawd/scripts/gemini-search.py "negotiation"
 ```
 
 ---
@@ -437,8 +418,8 @@ gemini search coaching-personas "negotiation"
 Before allowing Skill 23 to run, verify this Skill 22 installation is complete:
 
 ```bash
-# Check if Gemini collection "coaching-personas" exists
-if gemini status 2>/dev/null | grep -q "coaching-personas"; then
+# Check if Gemini Vector Database "coaching-personas" exists
+if python3 ~/clawd/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
   echo "✅ Skill 22 verified: coaching-personas collection exists"
   echo "Skill 23 may proceed"
 else
@@ -457,12 +438,12 @@ fi
 Run this command now - the agent executes it autonomously:
 
 ```bash
-bash /data/.openclaw/skills/scripts/update-skills.sh --setup-cron
+bash ~/.openclaw/skills/scripts/update-skills.sh --setup-cron
 ```
 
 If the setup script does not exist yet, check the onboarding package:
 ```bash
-mkdir -p /data/.openclaw/skills/scripts
+mkdir -p ~/.openclaw/skills/scripts
 SETUP_SCRIPT=""
 for candidate in \
   "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
@@ -473,9 +454,9 @@ for candidate in \
   fi
 done
 if [ -n "$SETUP_SCRIPT" ]; then
-  cp "$SETUP_SCRIPT" /data/.openclaw/skills/scripts/setup-weekly-update.sh
-  chmod +x /data/.openclaw/skills/scripts/setup-weekly-update.sh
-  bash /data/.openclaw/skills/scripts/setup-weekly-update.sh
+  cp "$SETUP_SCRIPT" ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
 else
   echo "Setup script not found in onboarding package. Skip and note in completion report."
 fi
@@ -510,7 +491,7 @@ Pick any PDF in the books folder (or use a small test PDF) and confirm pdfplumbe
 python3 -c "
 import pdfplumber, os, glob
 
-books_dir = os.path.expanduser('/data/openclaw-master-files/coaching-personas/books')
+books_dir = os.path.expanduser('~/Downloads/openclaw-master-files/coaching-personas/books')
 pdfs = glob.glob(os.path.join(books_dir, '*.pdf'))
 if not pdfs:
     print('NO PDFs found in books/ folder. Add a book PDF to test.')
@@ -537,20 +518,20 @@ If no PDFs exist yet, skip this sub-step - extraction will be tested on the firs
 ```bash
 # Test Moonshot API key with a minimal request
 curl -s https://api.moonshot.cn/v1/chat/completions \
-  -H "Authorization: Bearer $(grep MOONSHOT_API_KEY /data/openclaw/workspace/secrets/.env | cut -d= -f2)" \
+  -H "Authorization: Bearer $(grep MOONSHOT_API_KEY ~/clawd/secrets/.env | cut -d= -f2)" \
   -H "Content-Type: application/json" \
   -d '{"model":"kimi-k2.5","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"max_tokens":10}' \
   | python3 -c "import json,sys; r=json.load(sys.stdin); print('Phase 1 (Kimi):', r.get('choices',[{}])[0].get('message',{}).get('content','FAILED'))"
 ```
 
 **Expected output:** `Phase 1 (Kimi): CONNECTED`
-If it fails, verify MOONSHOT_API_KEY is correct in `/data/openclaw/workspace/secrets/.env`.
+If it fails, verify MOONSHOT_API_KEY is correct in `~/clawd/secrets/.env`.
 
 ### 8c - Verify Phase 2 model connectivity (DeepSeek via OpenRouter)
 
 ```bash
 curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $(grep OPENROUTER_API_KEY /data/openclaw/workspace/secrets/.env | cut -d= -f2)" \
+  -H "Authorization: Bearer $(grep OPENROUTER_API_KEY ~/clawd/secrets/.env | cut -d= -f2)" \
   -H "Content-Type: application/json" \
   -d '{"model":"deepseek/deepseek-chat","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"max_tokens":10}' \
   | python3 -c "import json,sys; r=json.load(sys.stdin); print('Phase 2 (DeepSeek):', r.get('choices',[{}])[0].get('message',{}).get('content','FAILED'))"
@@ -568,7 +549,7 @@ If Codex is unavailable, the pipeline automatically falls back to Kimi K2.5 (Pha
 ### 8e - Verify output directory structure
 
 ```bash
-MASTER_DIR=/data/openclaw-master-files/coaching-personas
+MASTER_DIR=~/Downloads/openclaw-master-files/coaching-personas
 echo "Checking output directories..."
 for dir in books text personas; do
   if [ -d "$MASTER_DIR/$dir" ]; then
@@ -594,7 +575,7 @@ This triggers the full sequence:
 2. **Phase 1 (Kimi K2.5)** - Spawns sub-agent with extraction prompt + book text. Output: `personas/[author]-[book-slug]/extraction-notes.md`
 3. **Phase 2 (DeepSeek V3.2-Speciale)** - Spawns sub-agent with analysis prompt + extraction notes. Output: `personas/[author]-[book-slug]/analysis-notes.md`
 4. **Phase 3 (GPT-5.3 Codex)** - Spawns sub-agent with synthesis prompt + extraction + analysis notes. Output: `personas/[author]-[book-slug]/persona-blueprint.md`. Falls back to Kimi K2.5 on failure.
-5. **Gemini indexing** - Runs `gemini update && gemini embed` to make the new persona searchable.
+5. **Gemini Engine indexing** - Runs `python3 ~/clawd/scripts/gemini-indexer.py` to make the new persona searchable.
 
 **Verify each phase completed** by checking:
 - File exists at the expected path
@@ -603,7 +584,7 @@ This triggers the full sequence:
 
 **Output files land in:**
 ```
-/data/openclaw-master-files/coaching-personas/personas/[author]-[book-slug]/
+~/Downloads/openclaw-master-files/coaching-personas/personas/[author]-[book-slug]/
   ├── extraction-notes.md     (Phase 1 output)
   ├── analysis-notes.md       (Phase 2 output)
   └── persona-blueprint.md    (Phase 3 output - the deployable persona)
@@ -618,13 +599,13 @@ Run one book through the complete 3-phase pipeline to verify the entire system w
 1. Pick any PDF from the books/ folder (or use a provided sample book)
 2. Run the orchestrator:
 ```bash
-python3 /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py --single [book-slug]
+python3 ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py --single [book-slug]
 ```
 Replace `[book-slug]` with the filename slug of the book (e.g., `clear-atomic-habits` for a book by James Clear on Atomic Habits).
 
 3. Verify all three output files were created:
 ```bash
-PERSONA_DIR=/data/openclaw-master-files/coaching-personas/personas/[book-slug]
+PERSONA_DIR=~/Downloads/openclaw-master-files/coaching-personas/personas/[book-slug]
 echo "Checking pipeline output..."
 for file in extraction-notes.md analysis-notes.md persona-blueprint.md; do
   if [ -f "$PERSONA_DIR/$file" ]; then
@@ -675,17 +656,17 @@ When a gateway restart is needed:
 
 Run through this checklist:
 - [ ] All 8 skill .md files read (TYP complete)
-- [ ] Gemini installed and returning version
+- [ ] Gemini Engine installed and returning version
 - [ ] pdfplumber installed
 - [ ] ebooklib installed
 - [ ] Calibre ebook-convert available
 - [ ] Master files folder located or created
-- [ ] Moonshot API key confirmed in /data/openclaw/workspace/secrets/.env
-- [ ] OpenRouter API key confirmed in /data/openclaw/workspace/secrets/.env
+- [ ] Moonshot API key confirmed in ~/clawd/secrets/.env
+- [ ] OpenRouter API key confirmed in ~/clawd/secrets/.env
 - [ ] Codex OAuth token confirmed and not expired
-- [ ] Gemini collection coaching-personas added and embedded (Step 5)
-- [ ] Gemini test query returns results
+- [ ] Gemini Vector Database coaching-personas added and embedded (Step 5)
+- [ ] Gemini Engine test query returns results
 - [ ] Core files updated per CORE_UPDATES.md (Step 7)
 - [ ] Pipeline execution test passed (Step 8)
 
-When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini collection active. Pre-built personas ready (run: gemini status -c coaching-personas to see count). Pipeline verified operational. Ready to process new books or query personas."
+When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini Vector Database active. Pre-built personas ready (run: python3 ~/clawd/scripts/gemini-indexer.py --status to see count). Pipeline verified operational. Ready to process new books or query personas."
