@@ -1,308 +1,101 @@
-## [v5.5.1] - March 20, 2026
-
-### Skill 23: QC Agent Roles for All 17 Departments
-
-#### Added
-- QC-ROLES-MASTER.md: 34KB master reference covering what QC agents do, how they work, reporting structure, and model selection guidance
-- QC agent role added to all 17 department suggested-roles files
-- Department-specific QC checklists and validation procedures
-- QC agents report to department heads. Do not produce deliverables.
-
-#### Notes for Existing Clients
-- No config changes required
-- QC agent roles are optional additions. Existing department setups are not affected.
-- To add a QC agent to any department, read QC-ROLES-MASTER.md first.
-- Risk level: LOW (additive only, no breaking changes)
-
 # Changelog
 
 All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## [v5.5.2] - March 21, 2026
+
+### Skill 3 Fix + Calibre Auto-Install
+
+#### Fixed
+- **Skill 3**: Case-insensitive Gemini detection for Mem0 provider
+- **Skill 3**: Onboarding path detection for Intel vs Apple Silicon Macs
+- **Skill 3**: Calibre auto-installation (brew install --cask calibre)
+- **Skill 3**: Completion confirmation before proceeding
+
+---
+
 ## [v5.5.1] - March 20, 2026
 
-### Skill 23: QC Agent Roles for All 17 Departments
+### QC Agent Roles + Cloudflare Manual Setup
 
 #### Added
-- QC-ROLES-MASTER.md: 34KB master reference covering what QC agents do, how they work, reporting structure, and model selection guidance
-- QC agent role added to all 17 department suggested-roles files
-- Department-specific QC checklists and validation procedures
-- QC agents report to department heads. Do not produce deliverables.
+- **Skill 23**: QC-ROLES-MASTER.md - 34KB master reference for QC agents
+- **Skill 23**: QC agent roles added to all 17 department suggested-roles files
+- **Skill 32**: Phase 8 - Manual Cloudflare Tunnel Setup (9 subsections)
 
-#### Notes for Existing Clients
-- No config changes required
-- QC agent roles are optional additions. Existing department setups are not affected.
-- To add a QC agent to any department, read QC-ROLES-MASTER.md first.
-- Risk level: LOW (additive only, no breaking changes)
+#### Changed
+- **Skill 31**: Mem0 config switched from OpenAI to Gemini (LLM + embedder)
+- **Skill 32**: Phase 6b clarified as agent-automated path
 
 ---
 
 ## [v5.5.0] - March 20, 2026
 
-### Mem0 Gemini Migration + Skill 32 Cloudflare Manual Setup
-
-#### Changed
-- **Skill 31**: All Mem0 config examples switched from OpenAI to Gemini
-  - LLM: `gemini` provider, model `gemini-3-flash-preview`
-  - Embedder: `gemini` provider, model `models/gemini-embedding-001`
-  - Both use `${GEMINI_API_KEY}`, zero OpenAI dependency
-  - Migration warning added for vector store dimension mismatch
-- **Skill 32**: Added Phase 8 (Manual Cloudflare Tunnel Setup)
-  - 9 subsections: install, auth, create tunnel, config, DNS, start, test, persistence, Tailscale alt
-  - macOS (launchctl) and Linux (systemd) persistence
-  - Phase 6b clarified as agent-automated path with cross-reference to Phase 8
-  - Phase numbering fixed (was broken: 6b, 7, 9 with missing 8)
-
-#### Fixed
-- Skill 32 phase numbering corrected
-- Skill 32 sub-numbering in Phase 9 fixed (was using 8.x instead of 9.x)
-
----
-
-## [v5.4.2] - March 19, 2026
-
-### Command Center Hardening
+### Command Center v1.4.0 + Multi-Company
 
 #### Added
-- Approved Option C hostname rule for Skill 32: `[company-slug]-[shortid]`
-- Unique-hostname check requirement before DNS registration completes
-- Free self-hosted Mem0 / GitHub verification requirement during Command Center setup
-- 5-layer memory verification requirement for each department workspace
+- **Skill 34: Intelligent Workspace Staffing** - Auto-hire/fire based on workload
+- Multi-company schema support in Command Center
+- Per-department memory architecture
+- 17 permanent department head agents (54 total agents)
 
 #### Changed
-- Skill 32 INSTALL.md now explains the collision-safe hostname pattern
-- Verification phase now checks free OSS memory mode and 5-layer memory readiness
-- Completion checklist now includes hostname uniqueness and memory verification
-
----
-
-## [v5.4.1] - March 19, 2026
-
-### Cloudflare Tunnel Auto-Setup for Client Onboarding
-
-#### Added
-- Phase 6b to Skill 32: Cloudflare Tunnel and Domain Registration
-- Automated tunnel creation on client machines
-- Webhook registration system for subdomain DNS routes
-- Client registry tracking at ~/clawd/projects/blackceo-command-center/client-registry.json
-- command-center-webhook.sh script for automated DNS route creation
-- Support for both macOS and Linux/VPS cloudflared installation
-- Automated DNS propagation waiting and URL verification
-- Live URL reporting to clients after tunnel setup
-
-#### Changed
-- Skill 32 INSTALL.md now includes Phase 6b between Phase 6 and Phase 7
-- Phase 8 renamed to Phase 9 (manual tunnel setup as fallback)
-- Completion checklist updated with Cloudflare tunnel verification steps
+- **Skill 32**: v1.4.0 with KPI forms, effectiveness tracking, execution queue
+- **Skill 32**: Sparklines, model pills, benchmarks
 
 ---
 
 ## [v5.4.0] - March 19, 2026
 
-### Skill 32: Command Center Setup
+### Command Center Setup
 
 #### Added
-- **Skill 32: Command Center Setup** - Activates AI workforce as a live Command Center
-- Persistent department agents with dedicated Telegram topics
+- **Skill 32: Command Center Setup** - Activates AI workforce as live Command Center
+- Persistent department agents with Telegram topics
 - Visual Kanban dashboard at localhost:3000
-- Integration between Skill 23 (AI Workforce Blueprint) and live operation
-- 8-phase installation process with guided Telegram setup
-- Automated workspace creation for each department
-- Automated agent configuration with memory search setup
-- Topic binding system for department-specific communication
-- Cloudflare tunnel support for remote dashboard access
-- 3-check standup cadence (morning, midday, end of day)
-- Worker spin-up system with persona assignment
+- Cloudflare Tunnel auto-setup (Phase 6b)
 
-#### Files Added
-- `32-command-center-setup/SKILL.md` - Overview and context
-- `32-command-center-setup/INSTALL.md` - Step-by-step installation guide
-- `32-command-center-setup/INSTRUCTIONS.md` - Post-install usage guide
-- `32-command-center-setup/CORE_UPDATES.md` - Core file updates
-- `32-command-center-setup/command-center-setup.skill` - Skill metadata
-
-#### Updated
-- README.md: Added Skill 32 to skill inventory, updated version to v5.4.0
-- Start Here.md: Added Skill 32 to the skill list table
-- install.sh: Updated skill count from 31 to 32
-- scripts/update-skills.sh: Updated skill number range to include 32
-
----
-
-## [v5.3.1] - March 19, 2026
-
-### Updater: Silent Failure Fix
-
-#### Fixed
-- Update script no longer silently exits when onboarding folder is not found
-- Error message is now loud, clear, and tells the user exactly what to do next
-- Includes both "run the install first" and "find your files" instructions
+#### Changed
+- Unique hostname pattern: `[company-slug]-[shortid]`
+- 5-layer memory verification requirement
 
 ---
 
 ## [v5.3.0] - March 19, 2026
 
-### Skill 23: AI Workforce Blueprint
+### Department Heads
 
 #### Added
-- Department heads (Role #0) added to all 15 existing departments
-- Two new departments: Research and Communications
-- All 17 departments now presented equally (removed "optional" tier)
-
-#### Changed
-- INSTALL.md: Updated department list to show all 17 as recommended choices
-- ai-workforce-blueprint-full.md: Replaced tiered department list with flat list of all 17
-- SKILL.md: Updated "Pre-Built Departments Available" to list all 17 departments
-- suggested-roles/README.md: Added Research and Communications to department file list
-
----
-
-## [v5.2.3] - March 19, 2026
-
-### Skill 31: Source-Verified Corrections
-
-#### Fixed
-- **extraPaths must use absolute paths** (e.g., `/Users/USERNAME/Downloads/...`), not tilde paths. OpenClaw `path.isAbsolute()` treats `~` as relative and prepends workspace dir, creating invalid paths. Verified in `src/memory/internal.ts:normalizeExtraMemoryPaths`.
-- **Corrected supported file types** from source code (`src/memory/multimodal.ts`): only `.md` + images (jpg/jpeg/png/webp/gif/heic/heif) + audio (mp3/wav/ogg/opus/m4a/aac/flac) are indexed. Removed false claims about PDF, TXT, MP4, and WebM support.
-- **Added helper command** `echo "$(cd ~/Downloads/openclaw-master-files && pwd)"` so agents can resolve the absolute path correctly.
-
----
-
-## [v5.2.2] - March 19, 2026
-
-### Skill 31: Full Indexing + Embedding of Master Files
-
-#### Added
-- **extraPaths config step** in INSTALL.md: agent must find and add the master files folder to memorySearch.extraPaths so ALL subfolders, personas, AI workforce docs, and knowledge files get indexed
-- **Multimodal indexing config step**: enables Gemini Embedding 2 to embed images, audio, video, and PDFs, not just markdown
-- **Complete Layer 4 config example** showing the full memorySearch block with extraPaths + multimodal + sync + query
-- **Updated checklist** with extraPaths and multimodal verification items
-- **Updated CORE_UPDATES.md** TOOLS.md section to document extraPaths and multimodal settings
-
-#### Fixed
-- The root cause of her agent not indexing master files: sources only covered memory + sessions, extraPaths was never configured
-
----
-
-## [v5.2.1] - March 19, 2026
-
-### Skill 31: 10/10 Release
-
-#### Added
-- **FULL-DOC.md** combined reference document (all skill docs in one file, 1036 lines)
-- **Automated rollback procedure** for Layer 4, Layer 5, and config validation failures
-- **Update result JSON writer** (.update-result.json) for Telegram agent handoff after terminal updates
-- **AGENTS.md flag writer** so agent auto-detects updates and communicates to user in Telegram
-
-#### Changed
-- Rollback rules: restore first, debug second. Never leave user on invalid config.
-- Update script now writes structured status for agent consumption instead of just terminal output
+- **Skill 33: Department Heads** - 17 department head agents with full SOPs
+- Per-department workspace architecture
+- AGENTS.md, MEMORY.md, TOOLS.md templates for each dept
+- agents.list configuration for department orchestration
 
 ---
 
 ## [v5.2.0] - March 19, 2026
 
-### Skill 31: Core Updates Rewrite + Client Education
-
-#### Changed
-- **CORE_UPDATES.md rewritten** with concise, TYP-compliant additions for MEMORY.md, AGENTS.md, TOOLS.md, and HEARTBEAT.md
-- **Explicitly lists which core files to NOT modify** (USER.md, SOUL.md, IDENTITY.md)
-- **HEARTBEAT.md addition** for periodic memory health monitoring
+### Command Center v1.3.0
 
 #### Added
-- **HOW-YOUR-MEMORY-WORKS.md** - plain-English explanation of all 5 memory layers for clients who ask how their system works. No jargon. Written for non-technical users.
-- **Client education checklist item** added to completion checklist
-- **SKILL.md updated** with new file listing and reading order
-
----
-
-## [v5.1.1] - March 19, 2026
-
-### Skill 31: Embedding + Real Layer Testing
-
-#### Fixed
-- **Indexing and embedding are now separate documented steps** with distinct verification for each
-- **Embedding verification** checks for Vector dims: 3072 to confirm Gemini Embedding 2 is generating vectors
-- **Real layer testing** replaces config-only checks: each layer is tested with actual queries/operations
-- **Per-layer test results** reported individually to user in Telegram with pass/fail and diagnostics
-- **Expanded checklist** now has 4 sections: Configuration, Restart, Indexing/Embedding, Live Testing, Reporting
-- **All Gemini-supported file types** explicitly listed for indexing (md, txt, pdf, images, audio, video)
+- KPI submission forms
+- Effectiveness tracking (agent task completion rates)
+- Execution queue system
+- Model pills and sparklines
 
 ---
 
 ## [v5.1.0] - March 19, 2026
 
-### Skill 31 Major Upgrade: Testing, Indexing, Telegram Flow
+### Command Center Setup (Initial)
 
 #### Added
-- **Post-install memory layer testing** with per-layer verification reported to user in Telegram
-- **Config validation gate** before restart (openclaw config validate must pass)
-- **Knowledge base indexing trigger** after restart: indexes all master files, subfolders, personas, AI workforce docs, and multimodal files (images, audio, PDFs)
-- **Telegram-first update flow** design: update progress and approval happen in Telegram, not terminal
-- **Update status file** (.update-result.json) for agent handoff after terminal updates
-- **Expanded completion checklist** with config validation, indexing, live search test, and Telegram reporting steps
-
-#### Fixed
-- Post-install verification now tests each layer individually instead of a single generic search
-- Restart safety: config must validate before user is asked to restart
-
----
-
-## [v5.0.5] - March 19, 2026
-
-### Update Script Safety + Skill Refresh Fix
-
-#### Fixed
-- **Updater now runs `openclaw config validate`** after applying changes. If config is invalid, it warns the user and blocks restart.
-- **Skill folders with content changes are now properly detected** for refresh during updates
-
-#### Changed
-- Changelog is now maintained as an ongoing record of every version with specific changes documented per standard release practice
-
----
-
-## [v5.0.4] - March 19, 2026
-
-### Cache-Busting Fix
-
-#### Fixed
-- **Updater now cache-busts all GitHub requests** so clients always get the latest changelog and files, not stale CDN copies
-
----
-
-## [v5.0.3] - March 19, 2026
-
-### Critical Migration Fix
-
-#### Fixed
-- **memory.backend must be "builtin" not "gemini"** in MIGRATION.md, Skill 31 INSTALL.md, and CORE_UPDATES.md
-- Setting memory.backend to "gemini" crashes the gateway on restart (only "builtin" and "google embedding 2" are valid)
-- All migration instructions now use the correct value
-
----
-
-## [v5.0.2] - March 19, 2026
-
-### Client Approval UX Fix
-
-#### Fixed
-- **Non-interactive update runs now stop with a human explanation** instead of looking like a mysterious cancel
-- **Exact rerun commands shown** when approval is required but the script was launched with `curl ... | bash`
-- **Clearer approval and cancel wording** so clients understand whether anything changed
-
----
-
-## [v5.0.1] - March 19, 2026
-
-### Update System Hardening
-
-#### Changed
-- **update-skills.sh rewritten to v3.0** — works on any machine with dynamic onboarding folder detection
-- **Backup protocol added** — backs up core .md files and openclaw.json before applying updates
-- **Approval workflow added** — shows change plan, risk levels, and waits for explicit user approval
-- **Verification step added** — confirms version marker, skill count, and warns if restart may be needed
-- **No autonomous restarts** — script never triggers a gateway restart; user must do it manually if needed
+- **Skill 32: Command Center Setup** - Initial release
+- Kanban board interface
+- Department agent spawning
+- Telegram topic integration
 
 ---
 
@@ -601,29 +394,3 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 - **Skill 02 - Back Yourself Up Protocol**: Automatic config backups before every change.
 - **Skill 03 - Superpowers**: 4 Iron Laws + 14 sub-skills for systematic problem-solving.
 - README.md and Start Here.md included.
-
-## v5.5.2 - March 21, 2026
-- Fix: gemini-indexer.py now does case-insensitive search for master files folder
-- Fix: install.sh now copies gemini-indexer.py and gemini-search.py to ~/clawd/scripts/ on install
-- Fix: install.sh now writes GOOGLE_API_KEY to ~/clawd/secrets/.env if set in environment during install
-- Fix: Skill 22 docs updated to use correct script paths
-
-- Fix: Skill 22 orchestrator.py now auto-installs Calibre via Homebrew when missing instead of stopping and asking the user
-
-- Fix: Parallel sub-agent install architecture - Wave 0 pre-flight config, Wave 1 via sub-agent (main stays free), Wave 2 with 6 parallel agents, correct sessions_spawn commands replacing invalid openclaw agent spawn, maxConcurrent 20/maxChildren 10/maxDepth 4 config block
-
-- Fix: CRM Specialist added as mandatory role in ALL 17 departments (was only in 4)
-- Feature: Post-install heartbeat triggers - morning (9AM) + afternoon (1PM) nudges added to Wave 5 completion flow
-- Feature: AI Workforce Complete marker disables afternoon nudge automatically on completion
-
-- Fix: Skill 23 no longer treats web-dev and app-dev as secondary/optional departments -- all 17 presented as flat equal list
-
-- Feature: Skill 31 now includes per-department memory architecture -- Tier 1 (CEO full 5 layers), Tier 2 (6 heavy depts full 5 layers, 14-day logs, 500-line cap), Tier 3 (10 light depts layers 1+2+5 only, 14-day logs, 300-line cap), per-department Mem0 namespacing, memory bloat prevention rules
-
-- Feature: Skill 31 per-department memory architecture -- 3 tiers (CEO full 5 layers, 6 heavy depts full 5 layers, 10 light depts 3 layers), 14-day log retention for departments, per-department Mem0 namespace isolation
-
-- Fix: Skill 32 now includes mandatory Step 6.5 to seed all 17 department workspaces into Mission Control DB after install + added seed-workspaces.py script
-
-- Feature: Skill 23 interview log system -- creates AI-Workforce-Interview.md, logs every Q&A in real time, resumes mid-interview across sessions, Barbara Walters interview style, smart confirmations from prior context, department finish nudge
-
-- Fix: Skill 23 interview tone completely rewritten -- warm supportive advisor style, specific BAD vs GOOD question examples, guidance when client does not know the answer, never cold form-style questions
