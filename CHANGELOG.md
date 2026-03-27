@@ -4,6 +4,24 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## [v6.1.0] - March 27, 2026 (Late Evening)
+
+### Skill 23 Persistence Hardening + Version-Proof Update System
+
+#### Added
+- **scripts/setup-weekly-update.sh**: v4.0 rewritten. Installs a Sunday 3:00 AM cron job that uses the GitHub-hosted curl command to stage updates. Version-proof: always pulls the latest updater from GitHub, never a stale local file.
+- **Skill 23 templates/company-discovery/workforce-interview-answers.md**: Default interview answer template for guaranteed persistence.
+- **Skill 23 templates/company-discovery/interview-handoff.md**: Resume state template for long-running interviews.
+
+#### Changed
+- **Skill 23 build-workforce.py**: Persistence hardened. `find_master_files_folder()` now guarantees a valid path and never returns None. If the normal path doesn't exist, it falls back to `~/clawd/data/company-discovery/` with explicit warning. `log_answer()` and `create_handoff()` now print success/error to stderr. No code path where an answer is silently dropped.
+- **Skill 23 SKILL.md**: Brought to v2.0.0 to match Mac repo interview engine standard.
+- **Skill 23 INSTRUCTIONS.md**: Synced to v2.0.0 with dynamic interview behavior, research support, hesitation detection.
+- **Skill 23 CORE_UPDATES.md**: Synced to v2.0.0.
+- **Skill 23 INSTALL.md**: Synced to v2.0.0 with master-files fallback path behavior documented.
+- **UPDATE-PLAYBOOK.md**: Method 1 updated to use GitHub-hosted curl bootstrap command instead of local script reference.
+- **Version file**: v6.0.8 -> v6.1.0
+
 ## [v6.0.8] - March 27, 2026
 
 ### Persona Matching Per-Task + Token-in-Webhook Response
