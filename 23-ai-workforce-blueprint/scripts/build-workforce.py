@@ -334,7 +334,7 @@ ROLE_PERSONAS = {
     "generalist": [],
 }
 
-# Persona "When to Use" guidance - for the governing-personas.md template
+# Persona "When to Use" guidance - for the governing-personas.md reference guide
 PERSONA_USAGE_GUIDANCE = {
     "voss-never-split-difference": {
         "use_when": [
@@ -637,20 +637,37 @@ START_HERE_TEMPLATE = """# {role_title} - Start Here
 - Bad examples: bad-examples.md
 """
 
-GOVERNING_PERSONAS_SECTION = """## Governing Personas
+GOVERNING_PERSONAS_SECTION = """## Persona Reference Guide
 
-This role draws from multiple coaching personas. Choose based on the specific task and context.
+> **IMPORTANT:** Personas are NOT assigned to roles or departments. They are selected fresh per task using 5-layer alignment. See the full protocol in `persona-matching-protocol.md`.
 
 {persona_list}
 
-**How to find the right persona for your task:**
+### How to Find the Right Persona for Your Task
+
+**Step 1:** Read `governing-personas.md` in this folder for suggested starting points based on common task types.
+
+**Step 2:** Run the 5-layer alignment check:
+1. **Company Mission** - Does this persona align with our mission? (checked once at setup)
+2. **Owner Values** - Does this persona match the owner's beliefs and style? (checked once at setup)
+3. **Company Goals/KPIs** - Does this persona support current company goals? (checked every task)
+4. **Department Goals/KPIs** - Does this persona fit this department's objectives? (checked every task)
+5. **Task Fit** - Is this persona the right guide for THIS specific task? (checked every task)
+
+**Step 3:** Query the persona collection:
 ```bash
 gemini search "<describe your task>" -c coaching-personas
 ```
 
-This searches the coaching personas collection and returns the best match. Load that persona's Task Mode and execute through that methodology.
+**For detailed guidance:** See `governing-personas.md` in this folder and `persona-matching-protocol.md` for the full matching protocol.
 
-**For detailed guidance:** See `governing-personas.md` in this folder for decision trees on when to use which persona.
+"""
+
+PERSONA_POOL_HEADER = """## Full Persona Pool Available
+
+The following personas are installed in this system. Any agent or sub-agent can use any persona based on task fit. These are NOT limited to the suggestions below.
+
+{full_persona_list}
 
 """
 
@@ -837,6 +854,64 @@ def load_existing_context():
     return context
 
 
+def build_full_persona_pool_list():
+    """Build a flat list of all personas available in the system from DEPT_PERSONAS data."""
+    seen = set()
+    pool = []
+    for dept_key, personas in DEPT_PERSONAS.items():
+        for folder, description in personas:
+            if folder not in seen:
+                seen.add(folder)
+                pool.append((folder, description))
+    return pool
+
+
+def get_persona_name_display(folder):
+    """Get a clean display name for a persona folder slug."""
+    name_map = {
+        'hormozi-100m-offers': 'Hormozi',
+        'voss-never-split-difference': 'Voss',
+        'jones-exactly-what-to-say': 'Jones',
+        'rackham-spin-selling': 'Rackham',
+        'miller-building-storybrand-2': 'Miller',
+        'miller-building-storybrand-1': 'Miller',
+        'bly-copywriters-handbook': 'Bly',
+        'cialdini-influence': 'Cialdini',
+        'sinek-start-with-why': 'Sinek',
+        'sinek-find-your-why': 'Sinek',
+        'clear-atomic-habits': 'Clear',
+        'grenny-crucial-conversations': 'Grenny',
+        'tawwab-set-boundaries-find-peace': 'Tawwab',
+        'forte-para-method': 'Forte',
+        'forte-building-second-brain': 'Forte',
+        'priestley-oversubscribed': 'Priestley',
+        'kane-hook-point': 'Kane',
+        'wiebe-copy-hackers': 'Wiebe',
+        'godin-this-is-marketing': 'Godin',
+        'collins-good-to-great': 'Collins',
+        'moran-12-week-year': 'Moran',
+        'brown-atlas-of-heart': 'Brown',
+        'michalowicz-profit-first': 'Michalowicz',
+        'pink-drive': 'Pink (Drive)',
+        'pink-to-sell-is-human': 'Pink (Sales)',
+        'pink-when': 'Pink (When)',
+        'robbins-five-second-rule': 'Robbins',
+        'robbins-let-them-theory': 'Robbins',
+        'goggins-cant-hurt-me': 'Goggins',
+        'charvet-words-change-minds': 'Charvet',
+        'obama-becoming': 'Obama',
+        'obama-light-we-carry': 'Obama',
+        'jakes-instinct': 'Jakes',
+        'sharma-5am-club': 'Sharma',
+        'samit-disrupt-yourself': 'Samit',
+        'lakhiani-extraordinary-mind': 'Lakhiani',
+        'grover-relentless': 'Grover',
+        'attwood-passion-test': 'Attwood',
+        'duhigg-power-of-habit': 'Duhigg',
+    }
+    return name_map.get(folder, folder.split('-')[0].title())
+
+
 def ask_interview_style(question, example=None, default=None, context_value=None):
     """Ask a question in interview style with examples."""
     # If we already know the answer from context, skip the question
@@ -983,7 +1058,12 @@ def ask(question, default=None):
 
 
 def build_governing_personas_content(dept_key, for_file=False):
-    """Generate governing personas content for a department."""
+    """Generate governing personas REFERENCE GUIDE content for a department.
+    
+    Personas are NOT assigned to departments. This is a reference guide with 
+    suggested starting points for common task types. Agents select personas 
+    fresh per task using 5-layer alignment.
+    """
     personas = DEPT_PERSONAS.get(dept_key, [])
     if not personas:
         # Try partial match
@@ -995,13 +1075,65 @@ def build_governing_personas_content(dept_key, for_file=False):
         return None, None
 
     if for_file:
-        entries = []
+        # Build the full governing-personas.md REFERENCE GUIDE
+        sections = []
+        sections.append("# Persona Reference Guide - " + dept_key.replace('-', ' ').title() + "\n")
+        sections.append("> **These are SUGGESTIONS, not assignments.** Personas are selected fresh per task using 5-layer alignment. No persona is permanently assigned to this department or any role within it.\n")
+        
+        # Full persona pool
+        full_pool = build_full_persona_pool_list()
+        sections.append("## Full Persona Pool\n")
+        sections.append("Every agent and sub-agent in this system can use ANY of the following personas based on task fit:\n")
+        for folder, description in full_pool:
+            sections.append(f"- **{folder}** - {description}")
+        sections.append("")
+        
+        # Suggested starting points for this department
+        sections.append("## Suggested Starting Points for " + dept_key.replace('-', ' ').title() + "\n")
+        sections.append("The following personas commonly align well with tasks in this department. Use these as your starting search, but always verify with the 5-layer alignment check.\n")
         for folder, description in personas:
-            entries.append(f"### {folder}\n**Focus:** {description}\n**Query:** gemini search \"{description.lower()}\" -c coaching-personas`\n")
-        return '\n'.join(entries), personas
+            sections.append(f"- **{folder}** - {description}")
+        sections.append("")
+        
+        # When to use which persona (from PERSONA_USAGE_GUIDANCE)
+        sections.append("## When to Use Which Persona\n")
+        for folder, description in personas:
+            guidance = PERSONA_USAGE_GUIDANCE.get(folder, {})
+            use_when = guidance.get("use_when", [])
+            persona_name = get_persona_name_display(folder)
+            
+            if use_when:
+                sections.append(f"**{persona_name}** ({folder}):")
+                for use_case in use_when[:3]:
+                    sections.append(f"- {use_case}")
+                sections.append("")
+        
+        # 5-layer alignment instructions
+        sections.append("## How to Select a Persona (5-Layer Alignment)\n")
+        sections.append("Every time a task is assigned, run these 5 checks:\n")
+        sections.append("1. **Company Mission** - Does this persona align with our company mission?")
+        sections.append("2. **Owner Values** - Does this persona match the owner's beliefs and style?")
+        sections.append("3. **Company Goals/KPIs** - Does this persona support current company goals?")
+        sections.append("4. **Department Goals/KPIs** - Does this persona fit this department's objectives?")
+        sections.append("5. **Task Fit** - Is this persona the right guide for THIS specific task?\n")
+        sections.append("Layers 1-2 run once at setup (pre-qualified pool). Layers 3-5 run fresh every task.\n")
+        sections.append("**If no persona scores well on all 5 layers:** pick the one with the strongest Layer 5 (task fit) score.\n")
+        
+        # How to query
+        sections.append("## How to Query\n")
+        sections.append("```bash")
+        sections.append('gemini search "<describe your task>" -c coaching-personas')
+        sections.append("```\n")
+        
+        # Protocol reference
+        sections.append("## Full Protocol\n")
+        sections.append("See `persona-matching-protocol.md` in the 23-ai-workforce-blueprint folder for the complete matching protocol.\n")
+        
+        return '\n'.join(sections), personas
 
-    # For 00-START-HERE.md section
+    # For 00-START-HERE.md section - use reference guide language
     lines = []
+    lines.append("The following personas are **suggested starting points** for common task types in this department. They are NOT permanent assignments. Select the right persona per task using 5-layer alignment.\n")
     for folder, description in personas:
         lines.append(f"- **{folder}**: {description}")
     return '\n'.join(lines), personas
@@ -1022,7 +1154,12 @@ def detect_existing_workspace():
 
 
 def build_role_personas_content(role_key, dept_key, for_file=False):
-    """Generate governing personas content specific to a role."""
+    """Generate governing personas REFERENCE GUIDE content specific to a role.
+    
+    Personas are NOT assigned to roles. This is a reference guide with suggested 
+    starting points based on common task types for this role. Agents select 
+    personas fresh per task using 5-layer alignment.
+    """
     # Try role-specific personas first
     personas = ROLE_PERSONAS.get(role_key, [])
     
@@ -1040,108 +1177,65 @@ def build_role_personas_content(role_key, dept_key, for_file=False):
         return None, None
 
     if for_file:
-        # Build the full governing-personas.md content with "When to Use Which Persona"
+        # Build the full governing-personas.md REFERENCE GUIDE
         sections = []
-        sections.append("# Governing Personas - {role_name}\n".format(role_name=role_key.replace('_', ' ').title()))
-        sections.append("This role can draw from the following coaching personas.")
-        sections.append("Choose based on the specific task and context.\n")
+        sections.append("# Persona Reference Guide - {role_name}\n".format(role_name=role_key.replace('_', ' ').title()))
+        sections.append("> **These are SUGGESTIONS, not assignments.** Personas are selected fresh per task using 5-layer alignment. No persona is permanently assigned to this role.\n")
         
-        sections.append("## Available Personas\n")
+        # Full persona pool
+        full_pool = build_full_persona_pool_list()
+        sections.append("## Full Persona Pool\n")
+        sections.append("Every agent and sub-agent in this system can use ANY of the following personas based on task fit:\n")
+        for folder, description in full_pool:
+            sections.append(f"- **{folder}** - {description}")
+        sections.append("")
+        
+        # Suggested starting points for this role
+        sections.append("## Suggested Starting Points\n")
+        sections.append("The following personas commonly align well with tasks in this role. Use these as your starting search, but always verify with the 5-layer alignment check.\n")
         for folder, description in personas:
             sections.append(f"- **{folder}** - {description}")
         sections.append("")
         
+        # When to use which persona
         sections.append("## When to Use Which Persona\n")
-        
         for folder, description in personas:
             guidance = PERSONA_USAGE_GUIDANCE.get(folder, {})
-            use_when = guidance.get("use_when", ["Tasks related to " + description])
+            use_when = guidance.get("use_when", [])
+            persona_name = get_persona_name_display(folder)
             
-            # Get clean persona name for display
-            persona_name = folder.split('-')[0].title()
-            if 'hormozi' in folder:
-                persona_name = "Hormozi"
-            elif 'voss' in folder:
-                persona_name = "Voss"
-            elif 'jones' in folder:
-                persona_name = "Jones"
-            elif 'rackham' in folder:
-                persona_name = "Rackham"
-            elif 'miller' in folder:
-                persona_name = "Miller"
-            elif 'bly' in folder:
-                persona_name = "Bly"
-            elif 'cialdini' in folder:
-                persona_name = "Cialdini"
-            elif 'sinek' in folder:
-                persona_name = "Sinek"
-            elif 'clear' in folder:
-                persona_name = "Clear"
-            elif 'grenny' in folder:
-                persona_name = "Grenny"
-            elif 'tawwab' in folder:
-                persona_name = "Tawwab"
-            elif 'forte' in folder:
-                persona_name = "Forte"
-            elif 'priestley' in folder:
-                persona_name = "Priestley"
-            elif 'kane' in folder:
-                persona_name = "Kane"
-            elif 'pink' in folder:
-                if 'sell' in folder:
-                    persona_name = "Pink (Sales)"
-                elif 'drive' in folder:
-                    persona_name = "Pink (Drive)"
-                else:
-                    persona_name = "Pink"
-            elif 'wiebe' in folder:
-                persona_name = "Wiebe"
-            elif 'godin' in folder:
-                persona_name = "Godin"
-            elif 'collins' in folder:
-                persona_name = "Collins"
-            elif 'moran' in folder:
-                persona_name = "Moran"
-            elif 'brown' in folder:
-                persona_name = "Brown"
-            elif 'michalowicz' in folder:
-                persona_name = "Michalowicz"
-            elif 'robbins' in folder:
-                persona_name = "Robbins"
-            elif 'goggins' in folder:
-                persona_name = "Goggins"
-            elif 'charvet' in folder:
-                persona_name = "Charvet"
-            elif 'obama' in folder:
-                persona_name = "Obama"
-            elif 'jakes' in folder:
-                persona_name = "Jakes"
-            elif 'sharma' in folder:
-                persona_name = "Sharma"
-            elif 'samit' in folder:
-                persona_name = "Samit"
-            elif 'lakhiani' in folder:
-                persona_name = "Lakhiani"
-            elif 'grover' in folder:
-                persona_name = "Grover"
-            elif 'attwood' in folder:
-                persona_name = "Attwood"
-            
-            sections.append(f"Use **{persona_name}** when:")
-            for use_case in use_when[:3]:  # Top 3 use cases
-                sections.append(f"- {use_case}")
-            sections.append("")
+            if use_when:
+                sections.append(f"**{persona_name}** ({folder}):")
+                for use_case in use_when[:3]:
+                    sections.append(f"- {use_case}")
+                sections.append("")
         
-        sections.append("## How to Query")
-        sections.append("```")
+        # 5-layer alignment instructions
+        sections.append("## How to Select a Persona (5-Layer Alignment)\n")
+        sections.append("Every time a task is assigned, run these 5 checks:\n")
+        sections.append("1. **Company Mission** - Does this persona align with our company mission?")
+        sections.append("2. **Owner Values** - Does this persona match the owner's beliefs and style?")
+        sections.append("3. **Company Goals/KPIs** - Does this persona support current company goals?")
+        sections.append("4. **Department Goals/KPIs** - Does this persona fit this department's objectives?")
+        sections.append("5. **Task Fit** - Is this persona the right guide for THIS specific task?\n")
+        sections.append("Layers 1-2 run once at setup (pre-qualified pool). Layers 3-5 run fresh every task.\n")
+        sections.append("**If no persona scores well on all 5 layers:** pick the one with the strongest Layer 5 (task fit) score.\n")
+        
+        # How to query
+        sections.append("## How to Query\n")
+        sections.append("```bash")
         sections.append('gemini search "<describe your task>" -c coaching-personas')
-        sections.append("```")
-        sections.append("")
+        sections.append("```\n")
+        
+        # Protocol reference
+        sections.append("## Full Protocol\n")
+        sections.append("See `persona-matching-protocol.md` in the 23-ai-workforce-blueprint folder for the complete matching protocol.\n")
         
         return '\n'.join(sections), personas
 
-    # For 00-START-HERE.md section
+    # For 00-START-HERE.md section - use reference guide language
     lines = []
+    lines.append("The following personas are **suggested starting points** for common task types in this role. They are NOT permanent assignments. Select the right persona per task using 5-layer alignment.\n")
     for folder, description in personas:
         lines.append(f"- **{folder}**: {description}")
     return '\n'.join(lines), personas
@@ -1256,8 +1350,8 @@ def audit_mode(workspace, personas_installed):
                     with open(start_here, 'r') as f:
                         content = f.read()
                     
-                    # Check if old or new governing personas section exists
-                    if "Governing Personas" not in content or "Multiple personas govern this role" not in content:
+                    # Check if persona reference guide section exists
+                    if "Persona Reference Guide" not in content and "Governing Personas" not in content:
                         # Use role-specific personas if available, fall back to dept
                         persona_lines, _ = build_role_personas_content(role_key, dept_key, for_file=False)
                         if not persona_lines:
@@ -1267,10 +1361,10 @@ def audit_mode(workspace, personas_installed):
                             gov_section = GOVERNING_PERSONAS_SECTION.format(persona_list=persona_lines)
                             
                             # If old section exists, replace it; otherwise append
-                            if "Governing Personas" in content:
+                            if "Governing Personas" in content or "Persona Reference Guide" in content:
                                 # Find and replace old section
                                 import re
-                                pattern = r'## Governing Personas.*?(?=\n## |\Z)'
+                                pattern = r'## (?:Governing Personas|Persona Reference Guide).*?(?=\n## |\Z)'
                                 content = re.sub(pattern, gov_section.strip(), content, flags=re.DOTALL)
                                 with open(start_here, 'w') as f:
                                     f.write(content)
@@ -1295,12 +1389,54 @@ def audit_mode(workspace, personas_installed):
             telegram_print(f"  ~ {f}")
     if not added and not updated:
         telegram_print("\n✓ Everything looks good - no gaps found.")
+    
+    # Generate departments.json from scanned workspace
+    dept_list = []
+    for item in os.listdir(workspace):
+        dept_path_item = os.path.join(workspace, item)
+        if not os.path.isdir(dept_path_item) or not item.endswith(DEPT_SUFFIX):
+            continue
+        dept_key = item.replace(DEPT_SUFFIX, "")
+        emoji_map = {
+            "marketing": "📣", "sales": "💰", "billing": "💳",
+            "customer-support": "🎧", "operations": "⚙️", "creative": "🎨",
+            "hr-people": "👥", "legal-compliance": "⚖️", "it-tech": "💻",
+            "master-orchestrator": "🧠",
+        }
+        roles = []
+        for role in os.listdir(dept_path_item):
+            role_path = os.path.join(dept_path_item, role)
+            if os.path.isdir(role_path):
+                roles.append(role)
+        dept_list.append({
+            "id": dept_key,
+            "name": dept_key.replace('-', ' ').title(),
+            "emoji": emoji_map.get(dept_key, "📁"),
+            "roles": roles,
+        })
+    
+    if dept_list:
+        departments_json = json.dumps(dept_list, indent=2)
+        config_dir = os.path.join(workspace, "config")
+        os.makedirs(config_dir, exist_ok=True)
+        config_path = os.path.join(config_dir, "departments.json")
+        with open(config_path, 'w') as f:
+            f.write(departments_json)
+        telegram_print(f"\n📄 Generated: {config_path}")
+        
+        cc_config_path = os.path.expanduser("~/projects/command-center/config/departments.json")
+        cc_config_dir = os.path.dirname(cc_config_path)
+        if os.path.exists(os.path.dirname(cc_config_dir)):
+            os.makedirs(cc_config_dir, exist_ok=True)
+            with open(cc_config_path, 'w') as f:
+                f.write(departments_json)
+            telegram_print(f"📄 Copied to: {cc_config_path}")
     if personas_installed:
-        telegram_print("\n✅ Persona wiring complete.")
+        telegram_print("\n✅ Persona reference guides wired.")
         # Auto-run Gemini update after wiring
         run_gemini_update()
     else:
-        telegram_print("\nℹ️ Install Skill 22 and re-run to wire personas.")
+        telegram_print("\nℹ️ Install Skill 22 and re-run to add persona reference guides.")
 
 
 def build_workforce_automated(context, interview_data, departments):
@@ -1483,13 +1619,57 @@ def build_workforce_automated(context, interview_data, departments):
     else:
         telegram_print("ℹ️ Personas not detected - build complete without persona wiring")
 
+    # Generate departments.json for Command Center integration (GAP 1)
+    dept_list = []
+    for dept in departments:
+        dept_entry = {
+            "id": dept,
+            "name": dept.replace('-', ' ').title(),
+            "emoji": PREBUILT_DEPARTMENTS.get(dept, {}).get("emoji", "") if isinstance(PREBUILT_DEPARTMENTS.get(dept), dict) else "",
+            "roles": dept_roles.get(dept, []),
+        }
+        # Look up emoji from a simple map since PREBUILT_DEPARTMENTS has string values
+        emoji_map = {
+            "marketing": "📣",
+            "sales": "💰",
+            "billing": "💳",
+            "customer-support": "🎧",
+            "operations": "⚙️",
+            "creative": "🎨",
+            "hr-people": "👥",
+            "legal-compliance": "⚖️",
+            "it-tech": "💻",
+            "master-orchestrator": "🧠",
+        }
+        dept_entry["emoji"] = emoji_map.get(dept, "📁")
+        dept_list.append(dept_entry)
+    
+    departments_json = json.dumps(dept_list, indent=2)
+    
+    # Write to workspace config
+    config_dir = os.path.join(workspace, "config")
+    os.makedirs(config_dir, exist_ok=True)
+    config_path = os.path.join(config_dir, "departments.json")
+    with open(config_path, 'w') as f:
+        f.write(departments_json)
+    telegram_print(f"\n📄 Generated: {config_path}")
+    
+    # Also write to command-center config if path exists
+    cc_config_path = os.path.expanduser("~/projects/command-center/config/departments.json")
+    cc_config_dir = os.path.dirname(cc_config_path)
+    if os.path.exists(os.path.dirname(cc_config_dir)):
+        os.makedirs(cc_config_dir, exist_ok=True)
+        with open(cc_config_path, 'w') as f:
+            f.write(departments_json)
+        telegram_print(f"📄 Copied to: {cc_config_path}")
+
     telegram_print("\n" + "="*50)
     telegram_print("✅ BUILD COMPLETE")
     telegram_print("="*50)
     telegram_print(f"\n📁 Workforce folder: {workspace}")
     telegram_print(f"📊 Departments built: {len(departments)}")
     if personas_installed or personas_still_installed:
-        telegram_print(f"✅ Governing personas wired to all departments and roles")
+        telegram_print(f"✅ Persona reference guides wired to all departments and roles")
     telegram_print(f"\n🎯 Next steps:")
     telegram_print("  1. Open each 00-START-HERE.md and fill in role details")
     telegram_print("  2. Rename 01-first-task.md to match your actual tasks")
@@ -1551,7 +1731,7 @@ def main():
     # Check for personas
     personas_installed = check_personas_installed()
     if personas_installed:
-        telegram_print("\n✅ Coaching Personas Matrix detected - personas will be wired automatically.")
+        telegram_print("\n✅ Coaching Personas Matrix detected - persona reference guides will be wired automatically.")
     else:
         telegram_print("\nℹ️ Coaching Personas Matrix not detected - building clean structure.")
         telegram_print("   (Install Skill 22 later and re-run to add personas.)")
