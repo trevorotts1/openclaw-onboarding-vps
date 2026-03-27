@@ -225,6 +225,20 @@ If the skill files are already at `~/.openclaw/skills/23-ai-workforce-blueprint/
 
 This is where you build the actual workforce structure. You do all of this yourself.
 
+### 5-PRE. Model Check (MANDATORY)
+
+Before starting any interview or build work, verify you are running on an approved high reasoning model:
+- anthropic/claude-opus-4-6
+- anthropic/claude-sonnet-4-6
+- openrouter/xiaomi/mimo-v2-pro (with thinking enabled)
+- google/gemini-3.1-pro-preview
+- openai-codex/gpt-5.4
+
+If you are on Kimi 2.5, Gemini Flash, Gemini Flash Lite, or any other low reasoning model:
+Say: "For setting up your company, I recommend switching to a model that thinks more deeply so we get the best results. Want me to switch?"
+
+Do NOT proceed on a low reasoning model. The decisions made here shape the entire company.
+
 ### 🔴 5-PRE. COMPLETION SAFETY CHECK (MANDATORY — RUN BEFORE ANYTHING ELSE IN PHASE 5)
 
 Before presenting options, before asking a single question, check if this client has ALREADY completed the AI Workforce Blueprint. Run these checks in order:
@@ -270,162 +284,148 @@ This check is MANDATORY. It prevents re-asking 70 questions that the client alre
 
 ### 5a. Read the Full Blueprint
 
-If you have not already absorbed `ai-workforce-blueprint-full.md` during Phase 1, re-read it now. You need the complete content - all naming conventions, folder structures, file templates, routing logic, and the Master Orchestrator concept.
+If you have not already absorbed `ai-workforce-blueprint-full.md` during Phase 1, re-read it now.
 
-### 5b. Gather Business Information from the User
+### 5b. Check Existing Context
 
-**🔴 MANDATORY OPTION PRESENTATION:** You MUST present all 3 options (A, B, C) to the user and WAIT for them to choose BEFORE doing anything else. Do NOT skip this step. Do NOT auto-select an option. Do NOT proceed to questions until the user has explicitly chosen A, B, or C. If the user says "start" or "begin" without specifying an option, present the 3 options and ask them to choose. NEVER default to any option silently.
+Before asking ANY question, read these files for information you already have:
+- USER.md - personal preferences, name, timezone
+- MEMORY.md - business decisions, prior conversations
+- AGENTS.md - tool configurations, behavior rules
+- TOOLS.md - connected systems
+- workforce-interview-answers.md (in company-discovery/) - previously answered questions if resuming
 
-Ask the user these questions. Wait for answers before building anything:
+If you already know an answer, confirm instead of re-asking:
+"Based on what I already know, your business is in the real estate industry. Is that still correct?"
 
-**Required questions:**
+### 5c. Present Options (MANDATORY - NEVER SKIP)
+
+**🔴 You MUST present all 3 options and WAIT for the user to choose. NEVER skip. NEVER auto-select.**
+
+**Option A - Full Interview (Recommended)**
+"I will ask you about your business and each department. Based on your answers, I will build your entire AI company - departments, team leaders, specialists, and your command center. This is the most personalized option."
+
+**Option B - Quick Setup (Fastest)**
+"I will use what I already know about you plus industry best practices. I will propose a structure, you approve or adjust, then I build everything. Same result, just faster."
+
+**Option C - Audit / Resume**
+"If we started this before and did not finish, or if you already have departments set up, I will scan what exists and fill in any gaps without changing anything that is already there."
+
+### 5d. Core Business Questions (asked once, not per department)
+
 1. "What is the name of your business?"
-2. "What industry are you in?" (coaching, e-commerce, agency, restaurant, law firm, SaaS, etc.)
-3. "Which departments does your business need?" Present ALL 17 departments as a flat equal list. Do NOT group them, do NOT suggest any are optional or secondary. Every department is equal. The client decides which to keep or remove.
+2. "In one sentence, what does your business do?"
+3. "What industry are you in?" (examples: coaching, e-commerce, agency, restaurant, law firm, SaaS)
+4. "What tools do you currently use to run your business?" (examples: Stripe, Convert and Flow, Mailchimp)
+5. "What is your biggest challenge right now?"
 
-   Present this exact list:
-   1. Marketing
-   2. Sales
-   3. Creative
-   4. Graphics
-   5. Video Production
-   6. Audio Production
-   7. Billing / Finance
-   8. Customer Support
-   9. Operations
-   10. Web Development
-   11. App Development
-   12. HR / People
-   13. Legal / Compliance
-   14. IT / Tech
-   15. Research
-   16. Communications
-   17. Master Orchestrator (always included automatically -- do not ask about this one)
+After every question: "If you are not sure, just tell me to research it. I will look up best practices for your industry and suggest something for you to approve."
 
-   🔴 Do NOT pre-select any departments. Do NOT suggest that Web Development or App Development are "only if needed." Present all 16 equally and let the client choose. Master Orchestrator is the only one that is automatic.
-4. "Which setup option do you want?"
-   - **Option A - Full Interview** (recommended): "I will interview you about each department - at least 7 questions per department - so I deeply understand your operations, tools, KPIs, and processes. Then I build everything with real content based on your answers."
-   - **Option B - Quick Setup** (fastest): "I skip the interview and build everything now using what I already know about you from your workspace files (USER.md, MEMORY.md, etc.) plus industry best practices. You can refine later."
-   - **Option C - Review First** (middle ground): "I review everything I know, come back with recommendations for departments and roles, you approve or change them, then I build."
+**After each answered question:**
+1. Update company-discovery/workforce-interview-answers.md with the Q&A
+2. Update company-discovery/interview-handoff.md with progress
+3. Trigger a memory flush
 
-### 5b-PRE. Create the Interview Log File (MANDATORY before asking any questions)
+After core questions: "You are 30% complete."
 
-Before asking the first interview question, create the interview log file:
+### 5e. Department Selection
 
-**File location:** `[master-files-folder]/AI-Workforce-Interview.md`
+Present recommended departments with plain English descriptions. The client can keep all, remove some, add custom ones, or start from scratch. The number of departments is DYNAMIC - could be 5, 17, or 50.
 
-**Create it with this header:**
-```
-# AI Workforce Interview
-Started: [date and time]
-Status: IN PROGRESS
-Client: [business name]
-Departments selected: [list]
+Default to keeping all recommended if the client has no preference. "You can always add more later."
 
----
-```
+### 5f. Per-Department Questions (3-7, dynamic)
 
-**Write a reference to it in MEMORY.md immediately:**
-```
-AI Workforce Interview in progress: [master-files-folder]/AI-Workforce-Interview.md
-Started: [date]
-```
+Questions are NOT a fixed list. Generate questions dynamically based on the client's industry and what you already know. See INSTRUCTIONS.md for the full question framework and 10 industry examples.
 
-This ensures the document is findable even if the session compacts or ends.
+**Question categories (pick from these based on relevance):**
+1. What the department does regularly
+2. Who handles it now
+3. What success looks like
+4. What tools are used (only if not already known)
+5. What is most important about this department
+6. What is not working well right now
+7. How this department connects to other parts of the business
 
----
+NEVER exceed 7 questions per department. Fewer is better when you can infer answers.
 
-### 5b-RESUME. Check for an Existing Interview (MANDATORY at session start)
+**After each answered question:** flush answers and update handoff file.
 
-At the start of every session BEFORE presenting Option A/B/C, check if an interview is already in progress:
+**KPI capture after each department:** "What does success look like for this department?"
+If client hesitates, use Perplexity sonar-pro-search to research and suggest 3 options.
 
-1. Look in MEMORY.md for "AI Workforce Interview in progress"
-2. If found, open that file and read it
-3. Find the last answered question
-4. Tell the user: "I see we started your AI Workforce Interview. We completed [X] departments out of [Y] and we're in the middle of [department name]. Would you like to pick up where we left off?"
-5. If yes: resume from the next unanswered question. Do NOT restart.
-6. If no: ask if they want to start over or continue
+**Detect hesitation:** If client gives short answers or says "I don't know" twice, shift to offering suggestions. The goal is completion, not interrogation.
 
-Only present Option A/B/C if no interview is in progress.
+**If client wants to stop:** Save everything immediately. "No problem. Everything is saved. Say 'Resume my AI workforce setup' when you are ready to continue."
+
+After department creation: "You are 50% complete."
+After KPIs: "You are 70% complete."
+
+### 5g. Option B (Quick Setup)
+Read USER.md, MEMORY.md, SOUL.md, TOOLS.md, and workspace context. Determine departments and roles based on business type and industry best practices. Propose the full structure. Wait for approval. Then build.
+
+### 5h. Option C (Audit / Resume)
+Check for company-discovery/interview-handoff.md. If it exists, resume exactly where the client left off. If not, scan existing workforce folder, find gaps, fill them without overwriting anything.
 
 ---
 
-### 5c. Execute the Chosen Option
+## PHASE 5-BUILD - CREATE WORKSPACES AND AGENTS
 
-#### If Option A (Full Interview):
+After the interview (or Option B proposal approval), build the company.
 
-**Interview style -- MANDATORY:**
-You are not reading from a form. You are a warm, thoughtful advisor who genuinely wants to understand this person's business so you can build something that actually works for them. Many of these clients have never had to think at this level before. That is okay. Your job is to make it feel safe and easy.
+### 5-BUILD-A. Config Safety (MANDATORY BEFORE ANY CONFIG EDIT)
 
-Rules for how to ask questions:
-- Never start a question with "What is your [department] department?" -- that is cold and impersonal
-- Always frame questions around the person and their experience, not the abstract department
-- If they do not know the answer, offer to help: "That is completely okay -- most people have not had to think about this before. Based on what I know about your business, here is what I think might be true. Does this sound right, or would you change anything?"
-- If they give a short or vague answer, gently probe: "That makes sense. Can you tell me a little more about [specific part]? I want to make sure I build this correctly for you."
-- Celebrate their answers: "That is really clear, thank you. That is going to make your [department] incredibly effective."
+Before touching openclaw.json:
+1. Backup to ~/Downloads/openclaw-backups/ with human-readable name
+2. Verify backup exists in that location (NOT in a hidden dot-folder)
+3. If backup ended up in wrong place, re-backup to correct location
+4. Only then proceed with edits
+5. After every edit, validate JSON is parseable
 
-**Examples of BAD vs GOOD questions:**
+### 5-BUILD-B. Create Department Workspaces
 
-BAD: "What does your Marketing department do day to day?"
-GOOD: "Let's talk about how you get the word out. When you think about Marketing for your business -- the content, the ads, the social media -- what does that actually look like for you right now? What are you doing, and what do you wish was happening?"
+For EACH department the client chose, use build-workforce.py create_department_workspace():
 
-BAD: "What are the KPIs for this department?"
-GOOD: "When Marketing is working really well, how do you know? What numbers or results tell you things are moving in the right direction?"
+Create folder: ~/clawd/departments/[dept-name]/
 
-BAD: "What roles exist inside this department?"
-GOOD: "If you had a dedicated Marketing team helping you, who would be on it? What jobs would they each be doing?"
+**Unique files (created new):**
+- SOUL.md - generated from interview answers via generate_soul_md(), NOT a generic template
+- MEMORY.md - empty, ready for use
+- HEARTBEAT.md - department-specific priorities from interview
+- memory/ folder - for daily session logs
 
-**Smart question rule:** Before asking a question, check MEMORY.md, USER.md, and past conversation context. If you already know the answer, confirm it warmly instead of asking:
-- "I remember you mentioned you use Convert and Flow for staying in touch with your clients. Is that still where your Marketing team lives, or has anything changed?"
+**Inherited files (copied from main CEO workspace ~/clawd/):**
+- TOOLS.md - same tools, same credentials
+- AGENTS.md - same behavioral playbook
+- USER.md - same human, same preferences
 
-**When they do not know the answer:**
-Say something like: "No worries at all -- this is exactly the kind of thing most business owners have not had to put into words before. Here is what I see in a lot of businesses like yours: [share best practice]. Does any of that feel right for you, or does your situation look different?"
+**agents.list entry added to openclaw.json via add_agent_to_config():**
+- id: "dept-[name]"
+- name: "[Department] Director"
+- workspace: full path to department folder
+- model: assigned based on department complexity
 
-Never make them feel bad for not knowing. Always give them an out and a starting point.
+Every department gets a permanent director. This is NOT a question. Every department has a head.
 
-**Log every Q&A in real time** -- write to `AI-Workforce-Interview.md` as you go, not after. Do not wait until the end of the session. Format:
+### 5-BUILD-C. Specialist Determination (Silent)
 
-```
-## [Department Name]
-**Q: [exact question asked]**
-A: [client's answer]
+Using determine_specialists() from build-workforce.py, read the interview answers and determine:
 
-**Q: [exact question asked]**
-A: [client's answer]
-```
+**Full-time team member (permanent):**
+- Work is daily/weekly, needs memory of past work, maintains relationships
+- Gets: SOUL.md + MEMORY.md in ~/clawd/departments/[dept]/specialists/[name]/
+- Gets: agents.list entry in openclaw.json
 
-**Department finish rule:** If the client wants to stop mid-session, encourage them to finish the current department first -- gently:
-"We're so close on [department name] -- just [X] more questions and we'll have a complete picture for this one. Want to push through? It'll probably only take another [X] minutes."
-If they need to stop, save everything and end warmly: "No problem at all. Everything is saved. When you come back, I'll pick up right where we left off -- you will not have to repeat anything."
+**On-call specialist:**
+- Work is occasional/one-time, no memory needed
+- Gets: SOUL.md template in ~/clawd/subagents/templates/[name]/
+- No agents.list entry
 
-For EACH department the user selected, explore these areas (but skip anything the AI already knows, and always ask in conversational language -- never use the numbered list format below when speaking to the client):
-1. The purpose of this department in their business
-2. Who would be on the team (roles)
-3. What each person/role actually does
-4. What work comes in from other departments and what goes out
-5. What tools and software they use
-6. How they know when it is working well (KPIs)
-7. The most common tasks that repeat and need clear how-to documents
+The client NEVER hears "permanent agent" or "sub-agent."
 
-**When the full interview is complete:**
-- Mark the file: `Status: COMPLETE`
-- Update MEMORY.md entry to: "AI Workforce Interview COMPLETE: [path]"
-- Proceed to proposing the full structure
+### 5-BUILD-D. Knowledge Base Folder Structure (Pass 1 - Skeleton)
 
-After all interviews complete, propose the full structure to the user. Wait for approval before building.
-
-#### If Option B (Quick Setup):
-Read USER.md, MEMORY.md, SOUL.md, and any existing workspace context. Determine departments and roles based on the user's business type and industry best practices. Propose the structure. Wait for brief approval ("looks good" or changes). Then build.
-
-#### If Option C (Review First):
-Analyze all available information. Present a detailed recommendation document with:
-- Recommended departments and why
-- Recommended roles per department and why
-- Suggested tech stack per department
-- Ask: "Want to add, remove, or change anything?"
-After approval, optionally do the full interview (Option A) or proceed to build (Option B style).
-
-### 5d. Build the Folder Structure (Pass 1 - Skeleton)
+In addition to core workspace files, create the knowledge base file structure inside each department:
 
 Create the complete folder tree inside `$MASTER_FOLDER`:
 
@@ -475,7 +475,7 @@ find "$WORKFORCE_ROOT" -type f -name "*.md" | sort
 ```
 Ask: "Does this structure look correct before I write the content for each file?"
 
-### 5e. Fill Every File with Real Content (Pass 2 - Content)
+### 5-BUILD-E. Fill Every File with Real Content (Pass 2 - Content)
 
 After user approves the skeleton, go file by file and write real content.
 
@@ -512,7 +512,53 @@ Use Source 1 if available. Fall back to Source 2, then Source 3. Combine sources
 
 ---
 
+## PHASE 5-PERSONA - PERSONA ALIGNMENT (Act As If Protocol)
+
+After workspaces are created, run persona alignment using build-workforce.py functions:
+
+1. Load persona-categories.json via load_persona_categories()
+2. For each department, identify relevant domain tags (marketing dept → marketing, copywriting, communication)
+3. Pull pre-qualified personas from those categories via get_personas_for_category()
+4. Create governing-personas.md per department via create_governing_personas_md()
+5. Create ~/clawd/persona-matrix.md with the full company persona pool
+
+Personas are selected PER TASK at runtime via the 5-layer alignment:
+1. Company Mission alignment
+2. Owner Values alignment (from USER.md)
+3. Company Goals/KPI alignment
+4. Department Goals/KPI alignment
+5. Task Fit
+
+Layers 1-2 were determined at this setup step (pre-qualified pool).
+Layers 3-5 run fresh every time an agent picks up a task.
+
+The instruction to the agent is: "Act as if you are [persona name] executing this task."
+
+## PHASE 5-ORG - GENERATE ORG CHART AND COMMAND CENTER CONFIG
+
+### ORG-CHART.md
+Generate ~/clawd/ORG-CHART.md via generate_org_chart() showing:
+- CEO / Master Orchestrator at top
+- Each department director with their model
+- Specialists under each director (full-time or on-call)
+- Add summary reference to MEMORY.md
+
+### Command Center departments.json
+Generate config/departments.json for the BlackCEO Command Center via generate_departments_json().
+Exact format per entry: { "id": slug, "emoji": emoji, "name": display, "headTitle": director title }
+Only include departments the client chose.
+
+### Devil's Advocate
+Auto-create devils-advocate/ folder in every department. Client is NOT asked.
+Each DA gets challenge questions specific to that department's KPIs.
+
+After everything is built: "You are complete! Setting up your AI workforce now."
+
+---
+
 ## PHASE 5f - RE-DETECT SKILL 22 AFTER QUESTIONS
+
+**This checks whether Skill 22 (Book-to-Persona) was installed during the interview. If detected, Phase 5-PERSONA (above) handles the actual persona wiring.**
 
 **After all departments/roles are created, re-check for coaching-personas:**
 
@@ -643,6 +689,8 @@ Rate the build on a scale of 1 to 10:
 
 **Announce to user:** "Build verification complete. Score: [X]/10. [Details of any gaps or confirmation that everything is solid.]"
 
+**Progress Indicator:** After KPI setup is complete, tell the client: "You are 70% complete."
+
 ---
 
 ## PHASE 8 - APPLY CORE_UPDATES.md
@@ -744,28 +792,50 @@ When a gateway restart is needed:
 
 Before reporting done, verify every item:
 
+- [ ] Model check passed (high reasoning model confirmed)
 - [ ] TYP was confirmed installed before starting
-- [ ] All 6 skill files were read completely (SKILL.md, ai-workforce-blueprint-full.md, INSTRUCTIONS.md, EXAMPLES.md, CORE_UPDATES.md, INSTALL.md)
+- [ ] All 6 skill files were read completely
 - [ ] Master files folder located or created
 - [ ] Skill copied to ~/.openclaw/skills/23-ai-workforce-blueprint/
 - [ ] User was asked about business name, industry, departments
 - [ ] User chose Option A, B, or C and that option was fully executed
-- [ ] All department folders created with correct naming (lowercase, hyphens, -dept suffix)
-- [ ] Master Orchestrator department created with all 3 required files
+- [ ] Existing context checked before every question (no redundant asks)
+- [ ] workforce-interview-answers.md created and updated after every answer
+- [ ] interview-handoff.md created and updated after every answer
+- [ ] Config backed up before ANY openclaw.json edit
+- [ ] Backup verified in ~/Downloads/openclaw-backups/ (not hidden folder)
+- [ ] All department workspaces created with FULL core files:
+  - [ ] SOUL.md (unique, generated from interview)
+  - [ ] MEMORY.md (empty)
+  - [ ] HEARTBEAT.md (department priorities)
+  - [ ] memory/ folder
+  - [ ] TOOLS.md (inherited from main workspace)
+  - [ ] AGENTS.md (inherited from main workspace)
+  - [ ] USER.md (inherited from main workspace)
+- [ ] agents.list entries added for all department heads
+- [ ] Specialists determined (permanent vs on-call) silently from interview answers
+- [ ] Permanent specialists have SOUL.md + MEMORY.md + agents.list entry
+- [ ] On-call specialists have template SOUL.md in subagents/templates/
+- [ ] governing-personas.md created per department
+- [ ] persona-matrix.md created in CEO workspace
+- [ ] ORG-CHART.md generated in CEO workspace
+- [ ] departments.json generated for Command Center
+- [ ] Devil's Advocate created per department
+- [ ] All department folders use correct naming (lowercase, hyphens, -dept suffix)
 - [ ] Universal SOPs folder created with 00-ROUTING.md
-- [ ] Every department has a Department Overview file
-- [ ] Every role folder has: Start Here, numbered knowledge base files, intelligent-routing.md, Good Examples, Bad Examples
-- [ ] Every Start Here file has a complete When-to Reference Map
-- [ ] Coaching personas integration checked (wired in if available, noted if not)
-- [ ] Build verified with self-score of 8+ out of 10
+- [ ] Coaching personas integration checked (wired if available, noted if not)
+- [ ] Build verified with self-score of 8.5+ out of 10
 - [ ] AGENTS.md updated per CORE_UPDATES.md
 - [ ] TOOLS.md updated per CORE_UPDATES.md
 - [ ] MEMORY.md updated per CORE_UPDATES.md
 - [ ] Weekly auto-update cron attempted
+- [ ] JSON validated after all config edits
 
 **Final announcement to user:**
 
-> "AI Workforce Blueprint installation complete.
+> "You are complete! Setting up your AI workforce now.
+>
+> AI Workforce Blueprint installation complete.
 >
 > **Business:** [name]
 > **Workforce location:** [path]
