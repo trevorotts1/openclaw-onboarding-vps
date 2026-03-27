@@ -319,14 +319,14 @@ After the dashboard starts, run the workspace seeding script to populate the dat
 python3 ~/.openclaw/onboarding/32-command-center-setup/scripts/seed-workspaces.py
 ```
 
-Expected output: "Seeding complete. Inserted: 17 | Skipped (already existed): 0"
+Expected output: "Seeding complete. Inserted: [count] | Skipped (already existed): 0"
 
 If it says "Could not find mission-control.db" -- verify the dashboard started correctly in step 6.4 before running this.
 
 ### 6.6 Verify Dashboard is Accessible
 The agent checks that the dashboard loads at:
 ```
-http://localhost:3000
+http://localhost:4000
 ```
 
 **What you should see:** The workspace selector screen showing all your department workspaces as cards you can click into. Each card shows task counts and agent count for that department.
@@ -334,7 +334,7 @@ http://localhost:3000
 ---
 
 
-**🔴 GATE CHECK: DO NOT proceed to Phase 6b until the dashboard is running on localhost:3000 and the workspace seeding script has been run. Verify both. DO NOT SKIP THIS PHASE.**
+**🔴 GATE CHECK: DO NOT proceed to Phase 6b until the dashboard is running on localhost:4000 and the workspace seeding script has been run. Verify both. DO NOT SKIP THIS PHASE.**
 
 ## Phase 6b: Domain Registration + Tunnel Connection
 
@@ -458,7 +458,7 @@ The agent verifies that each department workspace has the required memory archit
 
 ### 7.4 Test Dashboard
 The agent verifies:
-- Dashboard loads at localhost:3000
+- Dashboard loads at localhost:4000
 - All departments appear in the sidebar
 - All 5 Kanban columns are visible
 - Task creation works
@@ -539,7 +539,7 @@ After all phases are complete, verify:
 - [ ] Each department has IDENTITY.md, MEMORY.md, and memory/ folder
 - [ ] Agent config entries added for each department
 - [ ] Telegram bindings configured for each topic
-- [ ] Dashboard accessible at localhost:3000
+- [ ] Dashboard accessible at localhost:4000
 - [ ] Cloudflare tunnel created and running
 - [ ] DNS route registered for [clientName].zerohumanworkforce.com
 - [ ] Hostname follows Option C pattern: [company-slug]-[shortid]
@@ -552,7 +552,7 @@ After all phases are complete, verify:
 ## What to Do Next
 
 1. **Read INSTRUCTIONS.md** for how to use your Command Center daily
-2. **Bookmark your dashboard** at http://localhost:3000
+2. **Bookmark your dashboard** at http://localhost:4000
 3. **Pin the Telegram group** for quick access
 4. **Schedule your first standup** with your department heads
 
