@@ -14,13 +14,13 @@ Command Center installed [DATE], [X] departments active, dashboard at [URL]
 
 **Example:**
 ```markdown
-Command Center installed March 19 at 3-45 PM, 5 departments active, dashboard at http://localhost:3000
+Command Center installed March 19 at 3-45 PM, 5 departments active, dashboard at http://localhost:4000
 ```
 
 **What to replace:**
 - `[DATE]` - Use the current date in human-readable format
 - `[X]` - The number of departments you activated
-- `[URL]` - Either `http://localhost:3000` or your Cloudflare tunnel URL if set up
+- `[URL]` - Either `http://localhost:4000` or your Cloudflare tunnel URL if set up
 
 ---
 
@@ -31,7 +31,7 @@ Add this section to TOOLS.md (in the services/tools section):
 ```markdown
 ## Command Center Dashboard
 
-**Local URL:** http://localhost:3000
+**Local URL:** http://localhost:4000
 **Remote URL:** [Your Cloudflare URL if configured]
 **Telegram Group:** [Your Company Name] Command Center
 
@@ -45,7 +45,7 @@ Departments communicate via dedicated topics in the Telegram group. Each departm
 - Cross-Department - For interdepartmental collaboration
 
 ### Accessing the Dashboard
-- Local: http://localhost:3000
+- Local: http://localhost:4000
 - Requires the PM2 process to be running: `pm2 list` to check
 - View logs: `pm2 logs command-center`
 

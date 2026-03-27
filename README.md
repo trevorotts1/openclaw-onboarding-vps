@@ -2,20 +2,21 @@
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent.**
 
-**Current Version: v5.5.1** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
+**Current Version: v6.0.8** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 This repo contains **34 skill folders** (01 through 34, with 13, 33, and 34 archived) plus an install script.
+
+### What's New in v6.0.8 (March 27, 2026)
+- **Persona matching per-task**: Personas are no longer statically assigned to departments. They are matched at runtime using a 5-layer alignment check (Company Mission, Owner Values, Company Goals, Department Goals, Task Fit). New `persona-matching-protocol.md` and `persona-categories.json`.
+- **Token-in-webhook response**: Skill 32 tunnel token is now returned directly in the webhook HTTP response. No more waiting for Trevor to forward the token. Trevor still receives a Telegram backup notification.
+- **cloudflared built into install**: The `create-tunnel.sh` script now installs cloudflared automatically if missing (Mac: `brew`, Linux: `curl`).
+- **Role-level governing-personas.md**: Now a reference guide with suggested starting points, not a static persona assignment.
 
 ### What's New in v5.5.1 (March 20, 2026)
 - **QC Agent Roles** added to all 17 departments - optional quality control agents that report to department heads
 - New QC-ROLES-MASTER.md reference document (34KB) covering QC agent responsibilities, workflows, and model selection
 - Department-specific QC checklists and validation procedures
 - No config changes required for existing clients - purely additive
-
-### What's New in v5.5.1
-- **QC Agent Roles** for all 17 departments with department-specific checklists
-- **QC-ROLES-MASTER.md** (34KB) master reference for QC agent setup
-- Version bump + changelog updated
 
 ### Updating Existing Installs
 If you already have the onboarding system installed, update to the latest version:

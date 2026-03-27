@@ -40,7 +40,7 @@ A Telegram group with topics for each department:
 - Bot promoted to admin with topic management permissions
 
 ### 3. Visual Kanban Dashboard
-A web dashboard accessible at localhost:3000:
+A web dashboard accessible at localhost:4000:
 - All departments visible at a glance
 - 5 Kanban columns: Backlog, Ready, In Progress, Review, Complete
 - Task creation and assignment
@@ -98,7 +98,7 @@ After installation, verify:
 - [ ] Each department has IDENTITY.md, MEMORY.md, and memory/ folder
 - [ ] Agent config entries added for each department
 - [ ] Telegram bindings configured for each topic
-- [ ] Dashboard accessible at localhost:3000
+- [ ] Dashboard accessible at localhost:4000
 - [ ] Dashboard shows all departments and 5 Kanban columns
 - [ ] Test message in one topic gets response from correct department head
 

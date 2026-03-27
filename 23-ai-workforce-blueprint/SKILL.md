@@ -14,7 +14,7 @@ triggers:
   - "build my back office"
   - "build my company"
   - "create my AI company structure"
-version: 1.1.0
+version: 1.2.0
 ---
 
 ## MANDATORY - Teach Yourself Protocol (TYP)
@@ -178,7 +178,7 @@ After all departments/roles are defined, Skill 23 re-checks for coaching-persona
 **If Skill 22 (book-to-persona) is installed:**
 - The scaffold script detects the `coaching-personas` Gemini Vector Database
 - Every role folder gets a `governing-personas.md` reference guide (suggested starting points, NOT static assignments)
-- Personas are matched per-task at runtime using 3-layer alignment (company, role/task, person)
+- Personas are matched per-task at runtime using 5-layer alignment (Company Mission, Owner Values, Company Goals, Department Goals, Task Fit)
 - See `persona-matching-protocol.md` for the complete matching protocol
 - Every `00-START-HERE.md` gets a Governing Personas section with Gemini Engine query instructions
 - **Auto-runs Gemini Engine update after wiring:** `python3 ~/clawd/scripts/gemini-indexer.py`

@@ -4,6 +4,26 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## [v6.0.8] - March 27, 2026
+
+### Persona Matching Per-Task + Token-in-Webhook Response
+
+#### Fixed
+- **Skill 23 SKILL.md**: Corrected "3-layer alignment" to "5-layer alignment" (Company Mission, Owner Values, Company Goals, Department Goals, Task Fit). Matches persona-matching-protocol.md and INSTALL.md.
+- **Skill 32 INSTALL.md**: Port references updated from 3000 to 4000. Removed hardcoded seed count "17" in favor of variable `[count]`.
+
+#### Added
+- **Skill 23**: `persona-matching-protocol.md` - Full 5-layer persona matching protocol. Personas are matched per-task at runtime, not statically assigned to departments. Layers 1-2 (Company Mission, Owner Values) run once at setup. Layers 3-5 (Company Goals, Department Goals, Task Fit) run fresh every task.
+- **Skill 23**: `persona-categories.json` (308 lines) - 40 personas with 12 domain + 6 perspective tags, flat/equal tagging model.
+- **Skill 23 INSTALL.md**: Role-level `governing-personas.md` is now a reference guide (suggested starting points), not a static assignment. Contains persona pool, task-type examples, and pointer to matching protocol.
+- **Skill 32 INSTALL.md**: cloudflared install step moved before webhook call so the script can self-host its own dependency. Both Mac (`brew`) and Linux (`curl`) paths covered.
+- **Skill 32**: Webhook response now contains `tunnelToken` and `subdomain` directly. No more waiting for Trevor to forward a token. Trevor still receives a Telegram backup notification.
+- **Skill 32 `create-tunnel.sh`**: Rewritten from 7-step Cloudflare API script to 5-step webhook-first script. Calls the webhook, captures token from response, saves to `~/.openclaw/.env`, starts tunnel via PM2, verifies URL.
+
+#### Changed
+- **Skill 23 INSTALL.md**: "Governing Personas" section rewritten. Personas are NOT assigned to departments - they are attached to agents at the task level. `governing-personas.md` in each role folder is a reference guide, not a static config.
+- **Skill 32 INSTALL.md**: Phase 6b architecture updated. Token flows directly from webhook response to client agent. "Wait for Trevor's Token" step removed. Token save, tunnel start, and URL verify all use the `$TUNNEL_TOKEN` and `$SUBDOMAIN` variables from the webhook response.
+
 ## [v6.0.2] - March 25, 2026
 
 ### Update System Fix
