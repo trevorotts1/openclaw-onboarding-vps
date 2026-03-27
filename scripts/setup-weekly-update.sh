@@ -1,5 +1,5 @@
 #!/bin/bash
-# OpenClaw Onboarding — Weekly Update Cron Setup (VPS)
+# OpenClaw Onboarding — Weekly Update Cron Setup
 # Version: 4.0 | March 27, 2026
 # Run this ONCE per machine after onboarding install.
 #
@@ -12,7 +12,7 @@
 # - NO changes are applied automatically by the cron job
 # - The agent follows UPDATE-PLAYBOOK.md to apply changes intelligently
 
-REPO_RAW="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh"
+REPO_RAW="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/update-skills.sh"
 LOG_FILE="$HOME/.openclaw/skills/.update-log"
 
 # Check if cron already installed
