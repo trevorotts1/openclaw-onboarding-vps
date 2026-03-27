@@ -177,8 +177,9 @@ After all departments/roles are defined, Skill 23 re-checks for coaching-persona
 
 **If Skill 22 (book-to-persona) is installed:**
 - The scaffold script detects the `coaching-personas` Gemini Vector Database
-- Every department folder gets a `governing-personas.md` file
-- Every role folder gets its own `governing-personas.md` for role-specific tasks
+- Every role folder gets a `governing-personas.md` reference guide (suggested starting points, NOT static assignments)
+- Personas are matched per-task at runtime using 3-layer alignment (company, role/task, person)
+- See `persona-matching-protocol.md` for the complete matching protocol
 - Every `00-START-HERE.md` gets a Governing Personas section with Gemini Engine query instructions
 - **Auto-runs Gemini Engine update after wiring:** `python3 ~/clawd/scripts/gemini-indexer.py`
 - Agents know exactly which persona methodology to follow
