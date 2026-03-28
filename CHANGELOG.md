@@ -6,7 +6,7 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ## [v6.1.0] - March 27, 2026 (Late Evening)
 
-### Skill 23 Persistence Hardening + Version-Proof Update System
+### Skill 23 Persistence Hardening + Version-Proof Update System + Notification Overhaul
 
 #### Added
 - **scripts/setup-weekly-update.sh**: v4.0 rewritten. Installs a Sunday 3:00 AM cron job that uses the GitHub-hosted curl command to stage updates. Version-proof: always pulls the latest updater from GitHub, never a stale local file.
@@ -19,7 +19,8 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 - **Skill 23 INSTRUCTIONS.md**: Synced to v2.0.0 with dynamic interview behavior, research support, hesitation detection.
 - **Skill 23 CORE_UPDATES.md**: Synced to v2.0.0.
 - **Skill 23 INSTALL.md**: Synced to v2.0.0 with master-files fallback path behavior documented.
-- **UPDATE-PLAYBOOK.md**: Method 1 updated to use GitHub-hosted curl bootstrap command instead of local script reference.
+- **UPDATE-PLAYBOOK.md**: Overhauled to v2.0. Added STEP 16: Client Notification Protocol with 3-channel fallback (Telegram → email → SMS). Added 4 message templates (Update Found, Update Applied, Update Blocked, SMS Fallback). Added plain-English guidance on what "staged" means. Added fallback channel protocol with email subject lines and SMS templates. Method 1 updated to use GitHub-hosted curl bootstrap command.
+- **scripts/update-skills.sh**: v4.0 rewritten. Now generates a client-friendly notification message at /tmp/oc-update-notification.md instead of just saying "update staged." The notification explains what was found, what it means, what will happen if they say yes, and what they need to do. AGENTS.md flag now points agent to the notification file.
 - **Version file**: v6.0.8 -> v6.1.0
 
 ## [v6.0.8] - March 27, 2026
