@@ -14,13 +14,13 @@ Command Center installed [DATE], [X] departments active, dashboard at [URL]
 
 **Example:**
 ```markdown
-Command Center installed March 19 at 3-45 PM, 5 departments active, dashboard at http://localhost:4000
+Command Center installed March 19 at 3-45 PM, 5 departments active, dashboard at http://localhost:3000
 ```
 
 **What to replace:**
 - `[DATE]` - Use the current date in human-readable format
 - `[X]` - The number of departments you activated
-- `[URL]` - Either `http://localhost:4000` or your Cloudflare tunnel URL if set up
+- `[URL]` - Either `http://localhost:3000` or your Cloudflare tunnel URL if set up
 
 ---
 
@@ -31,7 +31,7 @@ Add this section to TOOLS.md (in the services/tools section):
 ```markdown
 ## Command Center Dashboard
 
-**Local URL:** http://localhost:4000
+**Local URL:** http://localhost:3000
 **Remote URL:** [Your Cloudflare URL if configured]
 **Telegram Group:** [Your Company Name] Command Center
 
@@ -45,7 +45,7 @@ Departments communicate via dedicated topics in the Telegram group. Each departm
 - Cross-Department - For interdepartmental collaboration
 
 ### Accessing the Dashboard
-- Local: http://localhost:4000
+- Local: http://localhost:3000
 - Requires the PM2 process to be running: `pm2 list` to check
 - View logs: `pm2 logs command-center`
 
@@ -95,11 +95,27 @@ Check twice daily if Skill 23 is complete but Command Center not yet set up.
 
 ---
 
-## AGENTS.md - Optional Addition
+## AGENTS.md - REQUIRED Addition
 
-If your AGENTS.md has a "Multi-Agent Patterns" or "Agent Workflows" section, add this:
+Add this to AGENTS.md:
 
 ```markdown
+### Command Center Auto-Install Trigger
+
+If the client says ANY of the following at ANY time — today, tomorrow, next week, whenever:
+- "I finished the interview"
+- "I completed the AI Workforce"
+- "My departments are set up"
+- "What do I do next?" (after completing Skill 23)
+- "Can you install the Command Center?"
+- "I'm ready for the dashboard"
+
+Then IMMEDIATELY:
+1. Verify department folders exist on disk (check ~/.openclaw/workspaces/command-center/, ~/clawd/departments/, ~/Downloads/openclaw-master-files/)
+2. If folders exist: download and install Skill 32 from the onboarding repo (curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/update-skills.sh | bash) then follow Skill 32 INSTALL.md
+3. If folders do NOT exist: ask "Where did you save your department folders?" and use their answer
+4. Do NOT wait for a scheduled check. Do NOT say "I'll look into it later." Install NOW.
+
 ### Command Center Pattern
 
 The Command Center uses a "Department Head" pattern:
@@ -108,10 +124,10 @@ The Command Center uses a "Department Head" pattern:
 - Workers spun up on-demand for specific tasks
 - Personas assigned from coaching-personas library
 
-See full documentation: ~/Downloads/openclaw-master-files/32-command-center-setup/
+See full documentation: ~/.openclaw/skills/32-command-center-setup/
 ```
 
-If you do not have such a section, this addition is optional.
+This addition is REQUIRED, not optional.
 
 ---
 
