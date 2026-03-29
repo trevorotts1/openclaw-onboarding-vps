@@ -4,6 +4,31 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## [v6.1.4] - March 29, 2026
+
+### Interview Persistence Protocol + Update Flow Fixes + Terminology
+
+#### Added
+- **TERMINOLOGY.md**: New repo-root file defining GHL/Convert and Flow/GoHighLevel naming rules and Private Integration Token (PIT) terminology. Required reading for all agents.
+- **Skill 23 SKILL.md**: Full Interview Persistence Protocol replacing one-line flush note. 4-step mandatory flush after every question (answer to disk first, handoff update, MEMORY.md progress, then next question). Boot-time resume logic with 4-tier fallback. Edge cases: skip/circle-back, answer corrections, stale handoffs (90+ days), crash recovery, resume triggers.
+- **Skill 23 CORE_UPDATES.md**: Interview Resume Protocol section for AGENTS.md — boot-time check for incomplete interviews.
+
+#### Changed
+- **scripts/update-skills.sh**: v6.1.3. Now sends Telegram notification directly to paired user using botToken and allowFrom from openclaw.json. If Telegram fails, prints clear fallback box in Terminal with exact agent instruction. AGENTS.md flag still written as backup layer.
+- **install.sh**: Auto-cleanup of misplaced config keys. If `subagents` or `allow` appear under top-level `models` (where they do not belong), they are deleted automatically. Prevents config validation errors on startup.
+- **UPDATE-PLAYBOOK.md**: v6.1.3. Added explicit JSON paths for subagent config (`agents.defaults.subagents`) and model allow list (`agents.defaults.models`). Added TERMINOLOGY.md reference. Warns agents not to put subagents under `models`.
+- **Start Here.md**: Added TERMINOLOGY.md reference.
+- **All script headers**: Synced to 6.1.3.
+
+#### Removed
+- **Perplexity sonar models** from model allow list (install.sh, deprecated-models.json, UPDATE-PLAYBOOK.md). `openrouter/perplexity/sonar-pro-search` and `openrouter/perplexity/sonar` are web search tools, not models. Allow list is now 8 models.
+
+#### Fixed
+- Script version headers were out of sync with repo version file. All 3 scripts now match `version` file. New rule: every push must bump version + headers in same commit.
+- UPDATE-PLAYBOOK.md told agents to add subagent config but did not specify the JSON path, causing agents to put keys in the wrong place (`models` instead of `agents.defaults`).
+
+---
+
 ## [v6.1.0] - March 27, 2026 (Late Evening)
 
 ### Skill 23 Persistence Hardening + Version-Proof Update System + Notification Overhaul
@@ -15,33 +40,29 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 #### Changed
 - **Skill 23 build-workforce.py**: Persistence hardened. `find_master_files_folder()` now guarantees a valid path and never returns None. If the normal path doesn't exist, it falls back to `~/clawd/data/company-discovery/` with explicit warning. `log_answer()` and `create_handoff()` now print success/error to stderr. No code path where an answer is silently dropped.
-- **Skill 23 SKILL.md**: Brought to v2.0.0 to match Mac repo interview engine standard.
-- **Skill 23 INSTRUCTIONS.md**: Synced to v2.0.0 with dynamic interview behavior, research support, hesitation detection.
-- **Skill 23 CORE_UPDATES.md**: Synced to v2.0.0.
-- **Skill 23 INSTALL.md**: Synced to v2.0.0 with master-files fallback path behavior documented.
 - **UPDATE-PLAYBOOK.md**: Overhauled to v2.0. Added STEP 16: Client Notification Protocol with 3-channel fallback (Telegram → email → SMS). Added 4 message templates (Update Found, Update Applied, Update Blocked, SMS Fallback). Added plain-English guidance on what "staged" means. Added fallback channel protocol with email subject lines and SMS templates. Method 1 updated to use GitHub-hosted curl bootstrap command.
 - **scripts/update-skills.sh**: v4.0 rewritten. Now generates a client-friendly notification message at /tmp/oc-update-notification.md instead of just saying "update staged." The notification explains what was found, what it means, what will happen if they say yes, and what they need to do. AGENTS.md flag now points agent to the notification file.
-- **Version file**: v6.0.8 -> v6.1.0
+- **Version file**: v6.0.7 -> v6.1.0
 
-## [v6.0.8] - March 27, 2026
+## [v6.0.7] - March 27, 2026
 
-### Persona Matching Per-Task + Token-in-Webhook Response
-
-#### Fixed
-- **Skill 23 SKILL.md**: Corrected "3-layer alignment" to "5-layer alignment" (Company Mission, Owner Values, Company Goals, Department Goals, Task Fit). Matches persona-matching-protocol.md and INSTALL.md.
-- **Skill 32 INSTALL.md**: Port references updated from 3000 to 4000. Removed hardcoded seed count "17" in favor of variable `[count]`.
+### Persona Matching Protocol + Skill 32 Token-in-Webhook Architecture
 
 #### Added
-- **Skill 23**: `persona-matching-protocol.md` - Full 5-layer persona matching protocol. Personas are matched per-task at runtime, not statically assigned to departments. Layers 1-2 (Company Mission, Owner Values) run once at setup. Layers 3-5 (Company Goals, Department Goals, Task Fit) run fresh every task.
-- **Skill 23**: `persona-categories.json` (308 lines) - 40 personas with 12 domain + 6 perspective tags, flat/equal tagging model.
-- **Skill 23 INSTALL.md**: Role-level `governing-personas.md` is now a reference guide (suggested starting points), not a static assignment. Contains persona pool, task-type examples, and pointer to matching protocol.
-- **Skill 32 INSTALL.md**: cloudflared install step moved before webhook call so the script can self-host its own dependency. Both Mac (`brew`) and Linux (`curl`) paths covered.
-- **Skill 32**: Webhook response now contains `tunnelToken` and `subdomain` directly. No more waiting for Trevor to forward a token. Trevor still receives a Telegram backup notification.
-- **Skill 32 `create-tunnel.sh`**: Rewritten from 7-step Cloudflare API script to 5-step webhook-first script. Calls the webhook, captures token from response, saves to `~/.openclaw/.env`, starts tunnel via PM2, verifies URL.
+- **persona-matching-protocol.md** (Skill 23): New reference document defining the 5-layer persona alignment check (Company Mission, Owner Values, Company Goals/KPIs, Department Goals/KPIs, Task Fit). Layers 1-2 run once at setup to create a pre-qualified pool. Layers 3-5 run fresh for every task. Personas are matched per-task at runtime, not statically assigned per department.
+- **persona-categories.json** (Skill 22): 40 personas tagged with 12 domain categories (marketing, sales, leadership, finance, operations, communication, copywriting, mindset, productivity-systems, coaching, strategy-innovation, personal-development) and 6 perspective tags (african-american-experience, womens-challenges, mens-challenges, family-relationships, faith-spirituality, love-romantic-relationships). Category-filtered matching enables efficient search across large persona libraries.
 
 #### Changed
-- **Skill 23 INSTALL.md**: "Governing Personas" section rewritten. Personas are NOT assigned to departments - they are attached to agents at the task level. `governing-personas.md` in each role folder is a reference guide, not a static config.
-- **Skill 32 INSTALL.md**: Phase 6b architecture updated. Token flows directly from webhook response to client agent. "Wait for Trevor's Token" step removed. Token save, tunnel start, and URL verify all use the `$TUNNEL_TOKEN` and `$SUBDOMAIN` variables from the webhook response.
+- **Skill 23 INSTALL.md**: Persona alignment section rewritten. governing-personas.md is now a REFERENCE GUIDE in each role folder, not a static department assignment. Added 5-layer alignment description and runtime matching instructions.
+- **Skill 23 SKILL.md**: Corrected persona-matching-protocol.md reference from "3-layer" to "5-layer" (matches the protocol document and all other references).
+- **Skill 32 INSTALL.md Phase 6b**: Architecture rewritten. Tunnel token now returned directly in the webhook HTTP response (JSON: tunnelToken, subdomain, tunnelId). Agent captures token programmatically, saves to ~/.openclaw/.env, starts PM2, verifies URL. Trevor still receives a backup Telegram notification with the same token. No more manual token forwarding step.
+- **Skill 32 INSTALL.md Phase 6b**: cloudflared installation now built into the process. Step 6b.2 installs cloudflared via brew (Mac) or curl (Linux) before the webhook call.
+- **32-command-center-setup/scripts/create-tunnel.sh**: Complete rewrite. Reduced from 147 lines to 59. Removed Cloudflare API calls, credential file management, launchctl plist generation, local tunnel config. Added auto cloudflared install, webhook POST with token capture, PM2 process management, clean verification.
+
+#### Removed
+- **Skill 32**: Manual "Wait for Trevor's Token" step (6b.3). Token now comes in webhook response.
+- **Skill 32**: Manual echo CLOUDFLARE_TUNNEL_TOKEN step. Replaced with automated grep/mv in script.
+- **Skill 32 create-tunnel.sh**: All Cloudflare API code (account ID, bearer token, tunnel creation via API, credential file writing, config-command-center.yml generation, launchctl plist creation). Replaced by single webhook call.
 
 ## [v6.0.2] - March 25, 2026
 
