@@ -1,19 +1,23 @@
 #!/bin/bash
 # OpenClaw Onboarding — Update Staging Script
-# Version: 4.0 | March 27, 2026
+# Version: 5.0 | March 29, 2026
 #
 # This script STAGES an update. It does NOT apply changes.
 # The agent follows UPDATE-PLAYBOOK.md to apply changes intelligently.
 #
-# After staging, this script generates a client-friendly notification message
-# at /tmp/oc-update-notification.md that the agent reads and sends to the client.
+# After staging, this script:
+# 1. Generates a client-friendly notification at /tmp/oc-update-notification.md
+# 2. Sends a Telegram message DIRECTLY to the paired user
+# 3. If Telegram fails, prints clear fallback instructions in Terminal
+# 4. Writes an UPDATE PENDING flag to AGENTS.md so the agent picks it up on restart
 
-REPO_URL="https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip"
+REPO_URL="https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip"
 STAGED_DIR="/tmp/oc-update"
 STAGED_ZIP="/tmp/oc-update.zip"
 FLAG_FILE="$HOME/.openclaw/skills/.update-pending"
 NOTIFICATION_FILE="/tmp/oc-update-notification.md"
 LOG_FILE="$HOME/.openclaw/skills/.update-log"
+OPENCLAW_CONFIG="$HOME/.openclaw/openclaw.json"
 
 echo ""
 echo "============================================"
@@ -41,7 +45,7 @@ fi
 
 # Extract
 unzip -qo "$STAGED_ZIP" -d "$STAGED_DIR"
-if [ ! -d "$STAGED_DIR/openclaw-onboarding-main" ]; then
+if [ ! -d "$STAGED_DIR/openclaw-onboarding-vps-main" ]; then
     echo "[ERROR] Unexpected archive structure."
     rm -rf "$STAGED_DIR" "$STAGED_ZIP"
     exit 1
@@ -49,8 +53,8 @@ fi
 
 # Check remote version
 REMOTE_VERSION="unknown"
-if [ -f "$STAGED_DIR/openclaw-onboarding-main/version" ]; then
-    REMOTE_VERSION=$(cat "$STAGED_DIR/openclaw-onboarding-main/version")
+if [ -f "$STAGED_DIR/openclaw-onboarding-vps-main/version" ]; then
+    REMOTE_VERSION=$(cat "$STAGED_DIR/openclaw-onboarding-vps-main/version")
 fi
 echo "Latest version:  $REMOTE_VERSION"
 
@@ -85,7 +89,7 @@ An update has been downloaded to your system and is ready to install. This updat
 I checked your BlackCEO system against the latest version on GitHub. There are updates available that include improvements, bug fixes, and new features.
 
 To see exactly what changed, check the changelog at:
-https://github.com/trevorotts1/openclaw-onboarding/blob/main/CHANGELOG.md
+https://github.com/trevorotts1/openclaw-onboarding-vps/blob/main/CHANGELOG.md
 
 ## What Happens If You Say Yes
 
@@ -112,33 +116,114 @@ if [ -f "$AGENTS_FILE" ]; then
     if ! grep -q "UPDATE PENDING" "$AGENTS_FILE" 2>/dev/null; then
         cat >> "$AGENTS_FILE" << 'UPDATEFLAG'
 
-## 🔴 UPDATE PENDING — IMMEDIATE ACTION REQUIRED. An update for your BlackCEO system has been downloaded and is ready to install. DO THIS RIGHT NOW: 1) Read the file at /tmp/oc-update-notification.md. 2) SEND that message to your client on Telegram IMMEDIATELY. Do not wait for them to message you first. 3) After sending, follow /tmp/oc-update/openclaw-onboarding-main/UPDATE-PLAYBOOK.md step by step. 4) Remove this flag when complete.
+## 🔴 UPDATE PENDING — IMMEDIATE ACTION REQUIRED. An update for your BlackCEO system has been downloaded and is ready to install. DO THIS RIGHT NOW: 1) Read the file at /tmp/oc-update-notification.md. 2) SEND that message to your client on Telegram IMMEDIATELY. Do not wait for them to message you first. 3) After sending, follow /tmp/oc-update/openclaw-onboarding-vps-main/UPDATE-PLAYBOOK.md step by step. 4) Remove this flag when complete.
 UPDATEFLAG
     fi
 fi
 
+# ============================================
+# SEND TELEGRAM NOTIFICATION DIRECTLY
+# ============================================
+# Read bot token and first allowFrom chat ID from openclaw.json
+# This ensures the user gets notified even if the agent does not pick up the flag
+
+TELEGRAM_SENT=false
+
+if [ -f "$OPENCLAW_CONFIG" ]; then
+    # Extract bot token
+    BOT_TOKEN=$(python3 -c "
+import json
+with open('$OPENCLAW_CONFIG') as f:
+    d = json.load(f)
+tg = d.get('channels', {}).get('telegram', {})
+print(tg.get('botToken', ''))
+" 2>/dev/null)
+
+    # Extract first allowFrom chat ID (the primary paired user)
+    CHAT_ID=$(python3 -c "
+import json
+with open('$OPENCLAW_CONFIG') as f:
+    d = json.load(f)
+tg = d.get('channels', {}).get('telegram', {})
+af = tg.get('allowFrom', [])
+if af:
+    print(af[0])
+" 2>/dev/null)
+
+    if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
+        # Build the Telegram message
+        TG_MESSAGE="🔄 *BlackCEO System Update Available*
+
+Your current version: \`$LOCAL_VERSION\`
+New version available: \`$REMOTE_VERSION\`
+
+An update has been downloaded and is ready to install. Nothing has changed yet — it is waiting for your approval.
+
+*What to do next:*
+Tell your AI agent this exact message:
+
+\`Review the update reports and apply approved changes\`
+
+Or just reply *yes* to start the update."
+
+        # Send via Telegram Bot API
+        TG_RESULT=$(curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d chat_id="$CHAT_ID" \
+            -d text="$TG_MESSAGE" \
+            -d parse_mode="Markdown" 2>/dev/null)
+
+        # Check if send succeeded
+        if echo "$TG_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); exit(0 if d.get('ok') else 1)" 2>/dev/null; then
+            TELEGRAM_SENT=true
+            echo ""
+            echo "[OK] Telegram notification sent to your paired device."
+        else
+            echo ""
+            echo "[WARNING] Could not send Telegram notification."
+            echo "          You may need to tell your agent manually."
+        fi
+    else
+        echo ""
+        echo "[WARNING] Could not read Telegram config from openclaw.json."
+        echo "          You may need to tell your agent manually."
+    fi
+else
+    echo ""
+    echo "[WARNING] openclaw.json not found. Cannot send Telegram notification."
+fi
+
+# ============================================
+# TERMINAL OUTPUT — ALWAYS SHOWN
+# ============================================
 echo ""
 echo "============================================"
-echo "  NEXT STEPS"
+echo "  UPDATE STAGED SUCCESSFULLY"
 echo "============================================"
 echo ""
-echo "  Step 1: Restart your gateway by running this command:"
-echo ""
-echo "    openclaw gateway restart"
-echo ""
-echo "  Step 2: After it restarts, your AI agent will see the"
-echo "          UPDATE PENDING flag in AGENTS.md and will read"
-echo "          the client notification from /tmp/oc-update-notification.md"
-echo ""
-echo "  Step 3: The agent will send you the notification message"
-echo "          and ask if you want to install the update."
-echo ""
-echo "  Step 4: Say 'yes' and the agent will handle everything."
-echo ""
-echo "  You do NOT need to do anything else. Your agent will"
-echo "  take care of the rest."
+
+if [ "$TELEGRAM_SENT" = true ]; then
+    echo "  A notification was sent to your Telegram."
+    echo "  Check your messages and reply to your agent."
+else
+    echo "  Telegram notification could not be sent."
+    echo ""
+    echo "  TELL YOUR AI AGENT THIS EXACT MESSAGE:"
+    echo ""
+    echo "  ┌─────────────────────────────────────────────┐"
+    echo "  │                                             │"
+    echo "  │  Review the update reports and apply        │"
+    echo "  │  approved changes                           │"
+    echo "  │                                             │"
+    echo "  └─────────────────────────────────────────────┘"
+    echo ""
+    echo "  Or restart your gateway and the agent will"
+    echo "  pick it up automatically:"
+    echo ""
+    echo "    openclaw gateway restart"
+fi
+
 echo ""
 echo "============================================"
 
 # Log the check
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Update check: $LOCAL_VERSION → $REMOTE_VERSION (staged, awaiting approval)" >> "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Update check: $LOCAL_VERSION → $REMOTE_VERSION (staged, awaiting approval) telegram_sent=$TELEGRAM_SENT" >> "$LOG_FILE"
