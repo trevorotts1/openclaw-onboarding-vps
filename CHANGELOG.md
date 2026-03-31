@@ -4,6 +4,14 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## v6.2.0 — March 31, 2026
+
+### Fixed
+- **CRITICAL: install.sh was downloading Mac Mini repo instead of VPS repo** — Line 92 pointed to `openclaw-onboarding` (Mac) instead of `openclaw-onboarding-vps`. VPS clients were silently installing Mac skills. Fixed all 4 affected lines (run comment, download URL, archive folder check, copy command).
+- **install.sh progress visibility** — Removed `-s` silent flag from curl. Users now see download progress bar. Added `show_status()` messages before long operations with time estimates. Added `send_telegram_progress()` notifications at 6 key steps.
+
+---
+
 ## v6.1.9 — March 31, 2026
 
 ### Fixed

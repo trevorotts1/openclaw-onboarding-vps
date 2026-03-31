@@ -5,7 +5,7 @@ ONBOARDING_VERSION="v6.1.9"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
-#  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash
+#  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 # ============================================================
 
 # ----------------------------------------------------------
@@ -89,7 +89,7 @@ TEMP_ZIP="/tmp/openclaw-onboarding-pkg.zip"
 TEMP_EXTRACT="/tmp/openclaw-onboarding-extract"
 
 # NOT silent - users see the download progress bar
-curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
+curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
 if [ ! -f "$TEMP_ZIP" ]; then
   echo "ERROR: Failed to download onboarding package."
   send_telegram_progress "ERROR: Download failed. Install aborted."
@@ -107,7 +107,7 @@ show_status "Extracting skills package..."
 echo "[3/5] Extracting to ~/.openclaw/onboarding/..."
 rm -rf "$TEMP_EXTRACT"
 unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
-if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
+if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
   echo "ERROR: Unexpected archive structure."
   rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
   send_telegram_progress "ERROR: Extract failed. Archive structure unexpected."
@@ -115,7 +115,7 @@ if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
 fi
 
 # Clear existing onboarding folder and copy fresh
-cp -r "$TEMP_EXTRACT/openclaw-onboarding-main/"* "$ONBOARDING_DIR/"
+cp -r "$TEMP_EXTRACT/openclaw-onboarding-vps-main/"* "$ONBOARDING_DIR/"
 rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
 echo "  Installed to $ONBOARDING_DIR"
 
