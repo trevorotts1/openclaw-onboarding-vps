@@ -22,7 +22,7 @@ This repo contains **34 skill folders** (01 through 34, with 13, 33, and 34 arch
 If you already have the onboarding system installed, update to the latest version:
 
 ```
-curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps-vps/main/scripts/update-skills.sh | bash
 ```
 
 
@@ -85,7 +85,7 @@ curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps
 Run this one command on the target machine:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 ```
 
 What it does:
@@ -102,7 +102,7 @@ What it does:
 To update an existing installation to the latest version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps-vps/main/scripts/update-skills.sh | bash
 ```
 
 This script will:

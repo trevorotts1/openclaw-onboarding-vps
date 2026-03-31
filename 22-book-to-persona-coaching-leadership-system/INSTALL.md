@@ -113,10 +113,10 @@ Copy this entire skill folder into the standard OpenClaw skills directory so the
 Run:
 ```bash
 mkdir -p ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system
-cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+cp -r /tmp/openclaw-onboarding-vps/22-book-to-persona-coaching-leadership-system/* ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
-**Note:** If the onboarding package was extracted to a different location, replace `/tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/` with the actual path to this skill folder.
+**Note:** If the onboarding package was extracted to a different location, replace `/tmp/openclaw-onboarding-vps/22-book-to-persona-coaching-leadership-system/` with the actual path to this skill folder.
 
 Verify:
 ```bash
@@ -439,7 +439,7 @@ If the setup script does not exist yet, check the onboarding package:
 mkdir -p ~/.openclaw/skills/scripts
 SETUP_SCRIPT=""
 for candidate in \
-  "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
+  "/tmp/openclaw-onboarding-vps/scripts/setup-weekly-update.sh" \
   "$HOME/.openclaw/skills/scripts/setup-weekly-update.sh"; do
   if [ -f "$candidate" ]; then
     SETUP_SCRIPT="$candidate"

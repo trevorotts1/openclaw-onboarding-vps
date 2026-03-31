@@ -10,21 +10,21 @@ This playbook defines how updates are applied to an already-onboarded BlackCEO s
 ### Method 1: Terminal (Manual)
 The client or Trevor runs the universal bootstrap command in Terminal:
 ```
-curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/update-skills.sh | bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash
 ```
 This downloads the latest update script directly from GitHub and runs it. It works regardless of the client's installed version because it always pulls the newest script. The script stages the update and tells the human what to tell their agent next.
 
 ### Method 2: Direct-to-Agent (Trevor sends a message)
 Trevor messages the client's agent on Telegram via Skill 15 (BlackCEO Management):
 
-"There is an update available for your BlackCEO system. Follow the UPDATE-PLAYBOOK.md in the onboarding repo at https://github.com/trevorotts1/openclaw-onboarding to update yourself to the latest version."
+"There is an update available for your BlackCEO system. Follow the UPDATE-PLAYBOOK.md in the onboarding repo at https://github.com/trevorotts1/openclaw-onboarding-vps to update yourself to the latest version."
 
 The agent reads this playbook and executes it. No terminal. No client involvement.
 
 ### Method 3: Remote/Heartbeat (Scheduled)
 Add this to the agent's HEARTBEAT.md:
 
-"Every Sunday at 3 AM, check for updates: Go to https://github.com/trevorotts1/openclaw-onboarding, read the version file, compare it to your installed version. If there is a new version, follow UPDATE-PLAYBOOK.md."
+"Every Sunday at 3 AM, check for updates: Go to https://github.com/trevorotts1/openclaw-onboarding-vps, read the version file, compare it to your installed version. If there is a new version, follow UPDATE-PLAYBOOK.md."
 
 The agent checks automatically on schedule and follows this same playbook.
 
@@ -52,7 +52,7 @@ Before touching anything, run the Back Yourself Up Protocol (Skill 02). This mea
 - If any backup fails, STOP. Do not proceed. Fix the backup first.
 
 ### STEP 2: DOWNLOAD THE LATEST VERSION
-Go to https://github.com/trevorotts1/openclaw-onboarding
+Go to https://github.com/trevorotts1/openclaw-onboarding-vps
 Download the full repository. Save it to a temporary location. Do not overwrite your existing installation yet.
 
 ### STEP 3: READ THE CHANGELOG

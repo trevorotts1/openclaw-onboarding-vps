@@ -202,7 +202,7 @@ Set `$MASTER_FOLDER` to `~/Downloads/openclaw-master-files`.
 # Copy skill to OpenClaw skills directory if not already there
 if [ ! -d ~/.openclaw/skills/23-ai-workforce-blueprint ]; then
   cp -r "$(dirname "$0")/../23-ai-workforce-blueprint" ~/.openclaw/skills/ 2>/dev/null || \
-  cp -r /tmp/openclaw-onboarding/23-ai-workforce-blueprint ~/.openclaw/skills/ 2>/dev/null || \
+  cp -r /tmp/openclaw-onboarding-vps/23-ai-workforce-blueprint ~/.openclaw/skills/ 2>/dev/null || \
   echo "Skill folder already in place or copy from current location"
 fi
 ```
@@ -737,7 +737,7 @@ mkdir -p ~/.openclaw/skills/scripts
 # Use the setup script from the onboarding package if available
 SETUP_SCRIPT=""
 for candidate in \
-  "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
+  "/tmp/openclaw-onboarding-vps/scripts/setup-weekly-update.sh" \
   "$HOME/.openclaw/skills/scripts/setup-weekly-update.sh"; do
   if [ -f "$candidate" ]; then
     SETUP_SCRIPT="$candidate"

@@ -33,5 +33,5 @@ Skills: /data/.openclaw/skills/
 Version: [check /data/.openclaw/skills/.onboarding-version]
 Pending setup: /data/.openclaw/skills/.pending-setup.md (check if any skills need API keys)
 Weekly updates: Sundays 2 AM automatic, logs at /data/.openclaw/skills/.update-log
-Repo: https://github.com/trevorotts1/openclaw-onboarding
+Repo: https://github.com/trevorotts1/openclaw-onboarding-vps
 ```

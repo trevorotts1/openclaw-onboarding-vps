@@ -792,7 +792,7 @@ python3 ~/clawd/scripts/gemini-indexer.py --status   # Verify completion
 
 Once the onboarding package is installed, your agent should check for updates **every Sunday**.
 
-**GitHub repo:** `https://github.com/trevorotts1/openclaw-onboarding`
+**GitHub repo:** `https://github.com/trevorotts1/openclaw-onboarding-vps`
 
 ### What to check
 
@@ -819,7 +819,7 @@ git log HEAD..origin/main --oneline --name-only 2>/dev/null || \
 
 ### If git is not available
 
-Check `https://github.com/trevorotts1/openclaw-onboarding/commits/main` directly and compare the install date against recent commit dates.
+Check `https://github.com/trevorotts1/openclaw-onboarding-vps/commits/main` directly and compare the install date against recent commit dates.
 
 ---
 
