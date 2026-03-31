@@ -48,24 +48,53 @@ RESTART_EOF
 chmod +x "$RESTART_SCRIPT"
 
 (crontab -l 2>/dev/null; echo "0 3 * * 0 $RESTART_SCRIPT") | crontab -
+# Install Saturday 11:59 PM OpenClaw CLI update cron job
+# Updates OpenClaw to the latest version BEFORE the Sunday onboarding check
+OPENCLAW_UPDATE_SCRIPT="$HOME/.openclaw/skills/.openclaw-self-update"
+cat > "$OPENCLAW_UPDATE_SCRIPT" << 'OCUPDATE_EOF'
+#!/bin/bash
+OC_LOG="$HOME/.openclaw/skills/.update-log"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Saturday OpenClaw update check starting" >> "$OC_LOG"
+if [ -f "$HOME/.openclaw/skills/.update-pending" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Update already pending — skipping OpenClaw update" >> "$OC_LOG"
+    exit 0
+fi
+npm update -g openclaw >> "$OC_LOG" 2>&1
+OC_VERSION=$(openclaw --version 2>/dev/null)
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] OpenClaw updated to: $OC_VERSION" >> "$OC_LOG"
+OCUPDATE_EOF
+chmod +x "$OPENCLAW_UPDATE_SCRIPT"
 
-echo "[OK] Weekly update cron installed."
+(crontab -l 2>/dev/null; echo "59 23 * * 6 $OPENCLAW_UPDATE_SCRIPT") | crontab -
+
+echo "[OK] Weekly update crons installed."
 echo ""
-echo "Schedule: Every Sunday at 3:00 AM"
+echo "Schedule 1: Every Saturday at 11:59 PM"
+echo "  -> Updates OpenClaw CLI to latest version"
+echo ""
+echo "Schedule 2: Every Sunday at 3:00 AM"
+echo "  -> Checks for onboarding updates, stages, and restarts gateway"
+echo ""
 echo "Source: GitHub (always latest version)"
 echo "Log: $LOG_FILE"
 echo ""
-echo "What happens each Sunday:"
-echo "  1. Downloads the latest update script from GitHub"
-echo "  2. Checks GitHub for new onboarding versions"
-echo "  3. Compares against your installed version"
-echo "  4. If update available: stages it, creates pending flag,"
-echo "     sends Telegram notification, and restarts gateway"
-echo "  5. Agent boots, sees the flag, reviews changelog"
-echo "  6. Agent tells you what changed and asks for approval"
-echo "  7. If you say yes, agent applies the update and runs QC"
+echo "What happens each week:"
+echo "  Saturday 11:59 PM:"
+echo "    1. Updates OpenClaw CLI (npm update -g openclaw)"
+echo "    2. Logs the new version"
+echo ""
+echo "  Sunday 3:00 AM:"
+echo "    1. Downloads the latest update script from GitHub"
+echo "    2. Checks GitHub for new onboarding versions"
+echo "    3. Compares against your installed version"
+echo "    4. If update available: stages it, creates pending flag,"
+echo "       sends Telegram notification, and restarts gateway"
+echo "    5. Agent boots on latest OpenClaw, sees the flag"
+echo "    6. Agent validates config structure against current OpenClaw docs"
+echo "    7. Agent tells you what changed and asks for approval"
+echo "    8. If you say yes, agent applies the update and runs QC"
 echo ""
 echo "To force a manual check now:"
 echo "  curl -fsSL $REPO_RAW | bash"
 echo "To check logs: cat $LOG_FILE"
-echo "To verify cron: crontab -l | grep update-restart"
+echo "To verify cron: crontab -l"
