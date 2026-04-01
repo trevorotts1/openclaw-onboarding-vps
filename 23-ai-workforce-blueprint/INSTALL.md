@@ -70,11 +70,11 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 ---
 
-## 🔴 PHASE 0a - SKILL 22 PRE-FLIGHT CHECK (MANDATORY)
+## 🔴 PHASE 0a - SKILL 22 PRE-FLIGHT CHECK (GRACEFUL DEGRADATION)
 
-**Skill 23 requires Skill 22 (Book-to-Persona) to be fully installed first.**
+**Skill 22 (Book-to-Persona) is recommended but not required.** If installed, coaching personas are wired into department workspaces automatically. If not installed, the workforce structure builds clean and personas can be added later via Option C.
 
-**Pre-flight check - verify before proceeding:**
+**Pre-flight check - verify and proceed either way:**
 
 ```bash
 # Check if coaching-personas Gemini Vector Database exists
@@ -82,20 +82,22 @@ if python3 ~/clawd/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "ind
   echo "✅ Skill 22 verified: coaching-personas collection found"
   SKILL22_INSTALLED=true
 else
-  echo "❌ Skill 22 NOT installed: coaching-personas collection missing"
+  echo "⚠️  Skill 22 NOT installed: coaching-personas collection not found"
   echo ""
-  echo "STOP: Install Skill 22 (Book-to-Persona) first."
-  echo "Skill 23 cannot run without the coaching-personas collection."
+  echo "Skill 23 will build your AI workforce WITHOUT coaching personas."
+  echo "Your departments, team leaders, and workspaces will be fully functional."
+  echo "The only difference: tasks will not have persona-guided methodology."
   echo ""
-  echo "To install Skill 22:"
-  echo "  1. Navigate to 22-book-to-persona-coaching-leadership-system/"
-  echo "  2. Complete all installation steps"
-  echo "  3. Return here and re-run Skill 23"
-  exit 1
+  echo "When you are ready to add coaching personas:"
+  echo "  1. Install Skill 22 (Book-to-Persona)"
+  echo "  2. Re-run Skill 23 in Option C (Audit/Resume) to wire them in"
+  echo ""
+  SKILL22_INSTALLED=false
+  # Continue — do NOT exit. Graceful degradation.
 fi
 ```
 
-**If this check fails: STOP. Do not proceed.** Install Skill 22 first.
+**If this check fails:** Skill 23 proceeds with generic AI personas. You can add custom coaching personas later by installing Skill 22 and re-running in Option C (audit mode).
 
 ---
 
@@ -202,7 +204,7 @@ Set `$MASTER_FOLDER` to `~/Downloads/openclaw-master-files`.
 # Copy skill to OpenClaw skills directory if not already there
 if [ ! -d ~/.openclaw/skills/23-ai-workforce-blueprint ]; then
   cp -r "$(dirname "$0")/../23-ai-workforce-blueprint" ~/.openclaw/skills/ 2>/dev/null || \
-  cp -r /tmp/openclaw-onboarding-vps/23-ai-workforce-blueprint ~/.openclaw/skills/ 2>/dev/null || \
+  cp -r /tmp/openclaw-onboarding/23-ai-workforce-blueprint ~/.openclaw/skills/ 2>/dev/null || \
   echo "Skill folder already in place or copy from current location"
 fi
 ```
@@ -245,13 +247,13 @@ Before presenting options, before asking a single question, check if this client
 
 **Check 1:** Look for department folders in the workspace:
 ```bash
-ls -d ~/.openclaw/workspace/*-dept/ 2>/dev/null | head -5
+ls -d ~/clawd/departments/*/ 2>/dev/null | head -5
 ```
-If department folders exist (e.g., marketing-dept/, sales-dept/), the build was already completed.
+If department folders exist (e.g., marketing/, sales/), the build was already completed.
 
 **Check 2:** Look for the completed interview answers:
 ```bash
-cat ~/.openclaw/workspace/workforce-interview-answers.md 2>/dev/null | head -5
+cat ~/Downloads/openclaw-master-files/company-discovery/workforce-interview-answers.md 2>/dev/null | head -5
 ```
 If this file exists and has real content (not empty, not a template), the interview was already done.
 
@@ -267,7 +269,7 @@ grep -i "workforce complete\|AI WORKFORCE COMPLETE\|skill 23.*complete\|blueprin
 
 **Check 5:** Look for interview-handoff.md (partial completion):
 ```bash
-cat ~/.openclaw/workspace/interview-handoff.md 2>/dev/null | head -10
+cat ~/Downloads/openclaw-master-files/company-discovery/interview-handoff.md 2>/dev/null | head -10
 ```
 
 **DECISION LOGIC:**
@@ -399,6 +401,28 @@ Create folder: ~/clawd/departments/[dept-name]/
 - AGENTS.md - same behavioral playbook
 - USER.md - same human, same preferences
 
+**🔴 After copying AGENTS.md to each department workspace, APPEND the Persona Operating Protocol:**
+
+Add this section to the BOTTOM of each department's AGENTS.md:
+
+```markdown
+## 🔴🔴🔴 Persona Operating Protocol
+At the start of EVERY task:
+1. Read ~/clawd/departments/[your-dept]/governing-personas.md
+2. Load the Primary Persona from that file
+3. For this entire task, think, communicate, and decide AS THAT PERSONA
+   - Use their vocabulary and communication style
+   - Apply their core frameworks to the problem
+   - Make decisions the way they would make decisions
+4. If the task type matches a Secondary or Tertiary persona better, switch to that one
+5. Never start a task without an active persona loaded
+6. Log which persona you used at the end of each task in memory/
+```
+
+Replace `[your-dept]` with the actual department folder name (e.g., `marketing`, `sales`, `operations`).
+
+**Why this matters:** Without this protocol, department agents inherit the generic AGENTS.md but have no instruction to actually LOAD and APPLY their governing-personas.md at task time. The file sits there unused. This protocol makes persona activation mandatory on every task.
+
 **agents.list entry added to openclaw.json via add_agent_to_config():**
 - id: "dept-[name]"
 - name: "[Department] Director"
@@ -434,19 +458,19 @@ Create the complete folder tree inside `$MASTER_FOLDER`:
 WORKFORCE_ROOT="$MASTER_FOLDER"
 
 # Master Orchestrator (always created)
-mkdir -p "$WORKFORCE_ROOT/master-orchestrator-dept"
+mkdir -p "$WORKFORCE_ROOT/master-orchestrator"
 
 # Universal SOPs (always created)
 mkdir -p "$WORKFORCE_ROOT/universal-sops"
 
 # Department folders (based on user's selections)
-# Example: mkdir -p "$WORKFORCE_ROOT/sales-dept/appointment-setter"
-# Example: mkdir -p "$WORKFORCE_ROOT/sales-dept/closer"
-# Example: mkdir -p "$WORKFORCE_ROOT/marketing-dept/content-creator"
+# Example: mkdir -p "$WORKFORCE_ROOT/sales/appointment-setter"
+# Example: mkdir -p "$WORKFORCE_ROOT/sales/closer"
+# Example: mkdir -p "$WORKFORCE_ROOT/marketing/content-creator"
 ```
 
 **Naming rules (non-negotiable):**
-- All department folders: lowercase, hyphens, end with `-dept`
+- All department folders: lowercase, hyphens, NO suffix (e.g., marketing, sales, operations)
 - All role folders: lowercase, hyphens, descriptive names
 - All files: two-digit numbered prefix (00, 01, 02...), `.md` format
 - No spaces in folder or file names. Ever.
@@ -784,8 +808,8 @@ After the build is complete, run a full audit:
 ### 7a. Structure Verification
 ```bash
 # Check every department has a Department Overview
-for dept in "$WORKFORCE_ROOT"/*-dept; do
-  if [ -d "$dept" ] && [ "$(basename "$dept")" != "master-orchestrator-dept" ]; then
+for dept in "$WORKFORCE_ROOT"/*; do
+  if [ -d "$dept" ] && [ "$(basename "$dept")" != "master-orchestrator" ]; then
     ls "$dept"/00-Department-Overview-*.md 2>/dev/null || echo "MISSING: Department Overview in $(basename "$dept")"
   fi
 done
@@ -801,7 +825,7 @@ find "$WORKFORCE_ROOT" -name "*Bad-Examples*" -type f | sort
 ls "$WORKFORCE_ROOT/universal-sops/00-ROUTING.md" 2>/dev/null || echo "MISSING: Master routing file"
 
 # Check Master Orchestrator
-ls "$WORKFORCE_ROOT/master-orchestrator-dept/00-00-Master-Orchestrator-Start-Here.md" 2>/dev/null || echo "MISSING: Master Orchestrator Start Here"
+ls "$WORKFORCE_ROOT/master-orchestrator/00-00-Master-Orchestrator-Start-Here.md" 2>/dev/null || echo "MISSING: Master Orchestrator Start Here"
 ```
 
 ### 7b. Content Verification
@@ -864,7 +888,7 @@ mkdir -p ~/.openclaw/skills/scripts
 # Use the setup script from the onboarding package if available
 SETUP_SCRIPT=""
 for candidate in \
-  "/tmp/openclaw-onboarding-vps/scripts/setup-weekly-update.sh" \
+  "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
   "$HOME/.openclaw/skills/scripts/setup-weekly-update.sh"; do
   if [ -f "$candidate" ]; then
     SETUP_SCRIPT="$candidate"
@@ -943,12 +967,15 @@ Before reporting done, verify every item:
 - [ ] Specialists determined (permanent vs on-call) silently from interview answers
 - [ ] Permanent specialists have SOUL.md + MEMORY.md + agents.list entry
 - [ ] On-call specialists have template SOUL.md in subagents/templates/
-- [ ] governing-personas.md created per department
+- [ ] governing-personas.md created per department with REAL content (Primary Persona name, book title, why it fits, 3 task types — NOT empty stubs)
+- [ ] Gate check passed: grep -l 'Primary Persona' ~/clawd/departments/*/governing-personas.md | wc -l equals department count
+- [ ] Specialist folders created: each department has specialists/ with at least 2 role files
+- [ ] Each specialist role file contains: Title, Reports to, Responsibilities (5 bullets), Key metrics
 - [ ] persona-matrix.md created in CEO workspace
-- [ ] ORG-CHART.md generated in CEO workspace
+- [ ] ORG-CHART.md generated in CEO workspace (exists and non-empty)
 - [ ] departments.json generated for Command Center
 - [ ] Devil's Advocate created per department
-- [ ] All department folders use correct naming (lowercase, hyphens, -dept suffix)
+- [ ] All department folders use correct naming (lowercase, hyphens, NO -dept suffix)
 - [ ] Universal SOPs folder created with 00-ROUTING.md
 - [ ] Coaching personas integration checked (wired if available, noted if not)
 - [ ] Build verified with self-score of 8.5+ out of 10
@@ -1000,9 +1027,9 @@ After installation is complete, these commands work:
 
 | User Says | What You Do |
 |-----------|-------------|
-| "Add a [name] department" | Create the -dept folder, ask about roles, build all required files |
+| "Add a [name] department" | Create the department folder, ask about roles, build all required files |
 | "Audit my AI workforce" | Run Option C - scan all folders, find gaps, fill them without overwriting |
 | "Add a role to [department]" | Create role subfolder with all required files inside the specified department |
 | "Route this task: [description]" | Read 00-ROUTING.md, find the right department/role/file, execute the task |
-| "What departments do I have?" | List all -dept folders and their roles |
+| "What departments do I have?" | List all department folders and their roles |
 | "Rate my workforce structure" | Run the self-score audit from Phase 7 |

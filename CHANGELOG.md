@@ -4,6 +4,13 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## v6.5.0 — March 31, 2026
+
+### Fixed
+- **Runtime persona wiring**: Persona Operating Protocol added to Skill 23 Phase 5-BUILD-B and Skill 32 Phase 7.4 Persona Runtime Test. Mirror of Mac repo v6.5.0.
+
+---
+
 ## v6.4.0 — March 31, 2026
 
 ### Fixed

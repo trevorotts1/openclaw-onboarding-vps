@@ -38,7 +38,8 @@ npm install -g pm2
 The agent will scan for department folders in your master files area. These folders indicate Skill 23 was completed.
 
 **What the agent looks for:**
-- Folders like `marketing/`, `sales/`, `operations/` in your workforce directory
+- Department folders at `~/clawd/departments/[name]/` (where Skill 23 writes them) — NO -dept suffix
+- Also checks `~/.openclaw/workspaces/command-center/` and `~/Downloads/` for department folders
 - Each folder should contain role definitions
 
 **If Skill 23 is NOT found:**
@@ -179,7 +180,7 @@ For each department, the agent adds an entry to `agents.list[]`:
 
 ```json
 {
-  "id": "cc/marketing",
+  "id": "dept-marketing",
   "name": "Chief Marketing Officer",
   "workspace": "/Users/username/.openclaw/workspaces/command-center/marketing",
   "memorySearch": {
@@ -194,7 +195,7 @@ For each department, the agent adds an entry to `agents.list[]`:
 ```
 
 **Important notes:**
-- Agent ID format: `cc/[dept-name]` (cc stands for Command Center)
+- Agent ID format: `dept-[dept-name]` (matches Skill 23's agent ID format)
 - Workspace paths are absolute (not tilde paths)
 - extraPaths points to your master files folder using absolute path
 - Sandboxing is NOT enabled (department heads need full access)
@@ -265,7 +266,7 @@ For each topic, the agent adds a binding to `openclaw.json`:
 {
   "bindings": [
     {
-      "agentId": "cc/marketing",
+      "agentId": "dept-marketing",
       "peer": {
         "kind": "group",
         "id": "-1001234567890",
@@ -313,20 +314,20 @@ pm2 start ecosystem.config.cjs
 
 ### 6.5 Seed Department Workspaces into Database (MANDATORY)
 
-After the dashboard starts, run the workspace seeding script to populate the database with all 17 department workspaces. Without this step, the workspace selector will only show the default workspace.
+After the dashboard starts, run the workspace seeding script to populate the database with all your department workspaces. Without this step, the workspace selector will only show the default workspace.
 
 ```bash
 python3 ~/.openclaw/onboarding/32-command-center-setup/scripts/seed-workspaces.py
 ```
 
-Expected output: "Seeding complete. Inserted: [count] | Skipped (already existed): 0"
+Expected output: "Seeding complete. Inserted: [count] | Skipped (already existed): 0" (where [count] matches your number of departments)
 
 If it says "Could not find mission-control.db" -- verify the dashboard started correctly in step 6.4 before running this.
 
 ### 6.6 Verify Dashboard is Accessible
 The agent checks that the dashboard loads at:
 ```
-http://localhost:4000
+http://localhost:3000
 ```
 
 **What you should see:** The workspace selector screen showing all your department workspaces as cards you can click into. Each card shows task counts and agent count for that department.
@@ -334,7 +335,7 @@ http://localhost:4000
 ---
 
 
-**🔴 GATE CHECK: DO NOT proceed to Phase 6b until the dashboard is running on localhost:4000 and the workspace seeding script has been run. Verify both. DO NOT SKIP THIS PHASE.**
+**🔴 GATE CHECK: DO NOT proceed to Phase 6b until the dashboard is running on localhost:3000 and the workspace seeding script has been run. Verify both. DO NOT SKIP THIS PHASE.**
 
 ## Phase 6b: Domain Registration + Tunnel Connection
 
@@ -450,7 +451,7 @@ The agent runs tests to verify everything works.
 
 ### 7.2 Test Memory System
 ```bash
-openclaw memory status cc/marketing
+openclaw memory status dept-marketing
 ```
 
 **Expected result:** Status shows memory system active for the department agent.
@@ -470,16 +471,29 @@ The agent verifies that each department workspace has the required memory archit
 
 ### 7.4 Test Dashboard
 The agent verifies:
-- Dashboard loads at localhost:4000
+- Dashboard loads at localhost:3000
 - All departments appear in the sidebar
 - All 5 Kanban columns are visible
 - Task creation works
+
+### 7.4 Persona Runtime Test
+Send each department agent this message:
+> "What persona are you currently operating as and why?"
+
+**Expected:** Agent names the primary persona from their `governing-personas.md` and explains briefly why it fits the department.
+
+**FAIL if:** Agent says "I don't have a persona" or gives a generic response without referencing their `governing-personas.md`.
+
+**Why this matters:** Department agents have `governing-personas.md` files and a Persona Operating Protocol in their AGENTS.md, but if the runtime wiring is broken, agents will ignore both and operate as generic AI. This test catches that failure mode before go-live.
+
+**If an agent fails:** Check that their department AGENTS.md contains the `## 🔴🔴🔴 Persona Operating Protocol` section. If missing, append it manually and re-test.
 
 ### 7.5 Report Results
 The agent sends you a summary in Telegram:
 - Which departments are active
 - Dashboard URL
 - How to access each department topic
+- Persona runtime test results (pass/fail per department)
 
 ---
 
@@ -551,7 +565,7 @@ After all phases are complete, verify:
 - [ ] Each department has IDENTITY.md, MEMORY.md, and memory/ folder
 - [ ] Agent config entries added for each department
 - [ ] Telegram bindings configured for each topic
-- [ ] Dashboard accessible at localhost:4000
+- [ ] Dashboard accessible at localhost:3000
 - [ ] Cloudflare tunnel created and running
 - [ ] DNS route registered for [clientName].zerohumanworkforce.com
 - [ ] Hostname follows Option C pattern: [company-slug]-[shortid]
@@ -564,7 +578,7 @@ After all phases are complete, verify:
 ## What to Do Next
 
 1. **Read INSTRUCTIONS.md** for how to use your Command Center daily
-2. **Bookmark your dashboard** at http://localhost:4000
+2. **Bookmark your dashboard** at http://localhost:3000
 3. **Pin the Telegram group** for quick access
 4. **Schedule your first standup** with your department heads
 
