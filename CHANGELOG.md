@@ -1,3 +1,12 @@
+## v6.5.16 - April 1, 2026
+
+### Added
+- build-workforce.py (Skill 23): Added --non-interactive flag with argparse support for AI agent use
+- build-workforce.py (Skill 23): Added --config-file flag to specify JSON config path (default: workforce-config.json)
+- build-workforce.py (Skill 23): Added build_from_config() function that builds entire workforce from JSON without prompts
+- build-workforce.py (Skill 23): Added workforce-config.json template with all supported department keys and usage comments
+- INSTALL.md (Skill 23): Added Non-Interactive Mode section with usage instructions for AI agents
+
 ## v6.5.15 - April 1, 2026
 
 ### Fixed

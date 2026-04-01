@@ -109,6 +109,20 @@ fi
 
 ---
 
+## NON-INTERACTIVE MODE (AI Agent Use)
+
+If running via AI agent (not terminal): run with --non-interactive flag:
+
+```
+python3 build-workforce.py --non-interactive --config-file workforce-config.json
+```
+
+The agent should create workforce-config.json with answers before running the script.
+
+A template `workforce-config.json` is included in the `scripts/` folder. Copy it, fill in your values, and pass it to the script. All department workspaces, specialists, and supporting files are created without any interactive prompts.
+
+---
+
 ## PHASE 0 - TYP PREREQUISITE CHECK
 
 Before installing this skill, TYP must already be installed.
