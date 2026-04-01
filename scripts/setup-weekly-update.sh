@@ -1,6 +1,6 @@
 #!/bin/bash
 # OpenClaw Onboarding — Weekly Update Cron Setup (VPS)
-# Version: 6.5.4 | April 1, 2026
+# Version: 6.5.6 | April 1, 2026
 # Run this ONCE per machine after onboarding install.
 #
 # What it does:
