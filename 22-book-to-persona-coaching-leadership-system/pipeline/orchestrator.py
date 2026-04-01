@@ -69,10 +69,11 @@ OPENAI_API_KEY     = _KEYS.get("OPENAI_API_KEY") or ""
 
 if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY not found")
-if not MOONSHOT_API_KEY:
-    raise ValueError("MOONSHOT_API_KEY not found")
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY not found in ~/clawd/secrets/.env")
+
+# MOONSHOT_API_KEY is fully optional -- OpenRouter kimi is primary, direct Moonshot is fallback
+HAS_DIRECT_MOONSHOT = bool(MOONSHOT_API_KEY)
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENAI_BASE_URL     = "https://api.openai.com/v1"
@@ -490,7 +491,9 @@ def chunk_text(text: str, chunk_size: int = MAX_CHUNK_SIZE, overlap: int = 2000)
 # ─── API CALLS ────────────────────────────────────────────────────────────────
 
 async def call_moonshot(session: aiohttp.ClientSession, system: str, user: str) -> str:
-    """Call Kimi K2.5 via Moonshot direct API."""
+    """Call Kimi K2.5 via Moonshot direct API (fallback only -- requires MOONSHOT_API_KEY)."""
+    if not MOONSHOT_API_KEY:
+        raise RuntimeError("MOONSHOT_API_KEY is not set -- cannot use direct Moonshot API")
     headers = {
         "Authorization": f"Bearer {MOONSHOT_API_KEY}",
         "Content-Type": "application/json"
@@ -687,16 +690,16 @@ Here is the complete book text. Extract all 20 items as specified in your instru
 
 {text[:900000]}"""  # Kimi K2.5 has 262K context - leave room for system prompt
 
-        # Use OpenRouter as fallback for books that hit Kimi's content filter
-        if folder in OPENROUTER_FALLBACK_FOLDERS:
-            log(f"  Using OpenRouter fallback for {book['title']} (content filter)")
+        # Primary: OpenRouter kimi. Fallback: direct Moonshot (only if key exists).
+        try:
+            log(f"  Using OpenRouter kimi for {book['title']}")
             result = await call_openrouter(session, "moonshotai/kimi-k2.5", EXTRACTION_SYSTEM, user_prompt, max_tokens=16000)
-        else:
-            result = await call_moonshot(
-                session,
-                EXTRACTION_SYSTEM,
-                user_prompt
-            )
+        except Exception as or_err:
+            if HAS_DIRECT_MOONSHOT:
+                log(f"  OpenRouter failed ({or_err}), falling back to direct Moonshot API")
+                result = await call_moonshot(session, EXTRACTION_SYSTEM, user_prompt)
+            else:
+                raise
 
         header = f"# EXTRACTION NOTES - {book['title']}\n**Author:** {book['author']}\n**Extracted:** {datetime.datetime.now().strftime('%B %-d at %-I:%M %p')}\n**Model:** {MODEL_EXTRACTION}\n\n---\n\n"
         output_path.write_text(header + result)

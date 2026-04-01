@@ -1,3 +1,14 @@
+## v6.5.12 - April 1, 2026
+
+### Fixed
+- orchestrator.py (Skill 22): Removed hard crash on missing MOONSHOT_API_KEY -- key is now fully optional
+- orchestrator.py (Skill 22): Changed primary model routing to use OpenRouter kimi (openrouter/moonshotai/kimi-k2.5) first
+- orchestrator.py (Skill 22): Direct Moonshot API is now an optional fallback only when MOONSHOT_API_KEY is set and OpenRouter fails
+
+### Added
+- Skill 31 (Upgraded Memory System): Added QC.md with verification checks for all 5 memory layers
+- Skill 32 (Command Center Setup): Added QC.md with verification checks for scripts, workspace, PM2, and dashboard
+
 ## v6.5.9 - April 1, 2026
 
 ### Changed
