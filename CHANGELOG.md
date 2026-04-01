@@ -1,3 +1,12 @@
+## v6.5.14 - April 1, 2026
+
+### Fixed
+- install.sh: Telegram completion message now fires BEFORE terminal echo block (was firing after, so clients could miss restart instructions)
+- install.sh: Replaced vague "tell your AI agent to begin" with explicit 2-step restart protocol -- STEP 1: restart gateway, STEP 2: send onboarding message
+- install.sh: Terminal Done block now shows "🔴 STEP 1 -- RESTART THE GATEWAY NOW" with `openclaw gateway restart` command and `/restart` Telegram shortcut
+- install.sh: Terminal Done block now shows "🔴 STEP 2 -- AFTER RESTART, SEND THIS MESSAGE" with exact message to send
+- install.sh: Removed redundant Telegram completion summary (was two separate send_telegram_progress calls with conflicting instructions). Now single clear message with restart steps
+
 ## v6.5.13 - April 1, 2026
 
 ### Added

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.5.13"
+ONBOARDING_VERSION="v6.5.14"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
@@ -415,6 +415,16 @@ echo "  Onboarding flag written to: $AGENTS_FILE"
 # ----------------------------------------------------------
 # Done
 # ----------------------------------------------------------
+
+send_telegram_progress "✅ BlackCEO AI System install complete!
+
+IMPORTANT -- Do these 2 steps now:
+
+1️⃣ Restart your AI: type /restart in this chat
+2️⃣ After restart, send: 'Read your AGENTS.md and begin onboarding installation'
+
+Your AI will then install all 34 skills automatically. This takes 10-20 minutes."
+
 echo ""
 echo "============================================"
 echo "  OpenClaw Onboarding Package Ready"
@@ -424,42 +434,25 @@ echo ""
 echo "  📦 34 skills downloaded to:"
 echo "     ~/.openclaw/onboarding/"
 echo ""
-echo "  📋 ONBOARDING FLAG LOCATION:"
-echo "     $AGENTS_FILE"
+echo "  ============================================"
+echo "  🔴 STEP 1 -- RESTART THE GATEWAY NOW"
+echo "  ============================================"
+echo "  Run this command:"
 echo ""
-echo "  📋 Next step: Tell your AI agent to begin."
+echo "     openclaw gateway restart"
 echo ""
-echo "     Send this EXACT message to your OpenClaw agent:"
+echo "  Or tell your AI in Telegram: /restart"
 echo ""
-echo "       'Read $AGENTS_FILE and begin onboarding installation'"
+echo "  WHY: The agent needs to restart to read"
+echo "  the new ONBOARDING PENDING flag in AGENTS.md."
+echo "  Without restart, it may take 30 minutes."
 echo ""
-echo "  The agent will read AGENTS.md, find the"
-echo "  ONBOARDING PENDING flag, and install all"
-echo "  34 skills automatically."
+echo "  ============================================"
+echo "  🔴 STEP 2 -- AFTER RESTART, SEND THIS MESSAGE"
+echo "  ============================================"
+echo "  Send this EXACT message to your OpenClaw agent:"
 echo ""
-echo "  ⚠️  If the agent says it cannot find the flag,"
-echo "     tell it to run:"
-echo "     grep -r 'ONBOARDING PENDING' $AGENTS_FILE"
+echo "     'Read $AGENTS_FILE and begin onboarding installation'"
 echo ""
 echo "============================================"
 echo ""
-
-send_telegram_progress "Install complete! Your AI agent is now installing all 34 skills. This may take 10-20 minutes. You'll get updates as each wave finishes."
-
-# ----------------------------------------------------------
-# Install Completion Summary
-# ----------------------------------------------------------
-send_telegram_progress "✅ BlackCEO AI System Install Complete!
-
-What's ready:
-- 34 skills installed
-- OpenRouter: configured
-- Google AI: configured
-- KIE (image/video): configured
-
-Still needed from you:
-- Tavily API key (for web search in Skill 21)
-  Get it at: https://tavily.com
-  Tell your AI: 'Add my Tavily key: [your-key]'
-
-Your AI is ready to use!"
