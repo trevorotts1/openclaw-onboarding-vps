@@ -1,3 +1,7 @@
+## v6.5.19 — April 1, 2026
+- Wire Video Creator KIE lookup to shared smart API key resolver
+- Resolver now covers Gemini/Google, GHL/GoHighLevel/Convert and Flow, GitHub, OpenAI, OpenRouter, Moonshot, KIE, Telegram, Tavily, n8n, Perplexity, Anthropic variations across env locations
+
 ## v6.5.18 - April 1, 2026
 
 ### Added

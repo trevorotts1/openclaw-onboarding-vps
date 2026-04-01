@@ -10,6 +10,9 @@ import json
 import requests
 from pathlib import Path
 from typing import Optional, Dict, Any
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
+from api_key_utils import find_api_key
 
 
 class AIProvider:
