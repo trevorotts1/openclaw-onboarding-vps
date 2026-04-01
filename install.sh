@@ -5,7 +5,7 @@ ONBOARDING_VERSION="v6.1.9"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
-#  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash
+#  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 # ============================================================
 
 # ----------------------------------------------------------
@@ -89,7 +89,7 @@ TEMP_ZIP="/tmp/openclaw-onboarding-pkg.zip"
 TEMP_EXTRACT="/tmp/openclaw-onboarding-extract"
 
 # NOT silent - users see the download progress bar
-curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
+curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
 if [ ! -f "$TEMP_ZIP" ]; then
   echo "ERROR: Failed to download onboarding package."
   send_telegram_progress "ERROR: Download failed. Install aborted."
