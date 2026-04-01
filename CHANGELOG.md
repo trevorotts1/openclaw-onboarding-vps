@@ -7,28 +7,50 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 ## v6.5.0 — March 31, 2026
 
 ### Fixed
-- **Runtime persona wiring**: Persona Operating Protocol added to Skill 23 Phase 5-BUILD-B and Skill 32 Phase 7.4 Persona Runtime Test. Mirror of Mac repo v6.5.0.
+- **Runtime persona wiring (AGENTS.md)**: Added Persona Operating Protocol to ~/clawd/AGENTS.md. Every department agent now reads governing-personas.md at task start and operates through that persona for the entire task. Applies to all 17 departments via symlinks.
+- **Skill 23 INSTALL.md Phase 5-BUILD-B**: Added instruction to append Persona Operating Protocol to each department's AGENTS.md during setup.
+- **Skill 32 INSTALL.md Phase 7.4**: Added Persona Runtime Test to verification phase. Agents must answer "What persona are you operating as and why?" with a reference to governing-personas.md. Fail = install incomplete.
+
+## v6.5.1 — March 31, 2026
+
+### Fixed (QC-driven, 8→10 round)
+- **Skill 22**: Added gemini-search.py and gemini-indexer.py to pipeline/ directory within the skill folder. Fresh client installs no longer fail at Step 5b (QC: 8→10).
+- **Skill 23**: Documented canonical departments.json path as ~/Downloads/openclaw-master-files/company-discovery/departments.json in both INSTALL.md and CORE_UPDATES.md. Absolute path, not relative (QC: 8→9.5).
+- **Skill 23**: Graceful Skill 22 dependency -- Skill 23 no longer blocks if Skill 22 is not installed. Persona creation falls back to local files.
+- **Skill 32**: Added 10 Telegram progress pings to INSTALL.md covering every long-running command (npm install, PM2, cloudflared tunnel, database seeding). Added 5-minute npm install timeout with retry fallback (QC: 8→9.5).
+- **Skill 32 seed-workspaces.py**: Added canonical departments.json path as first search candidate. Handoff from Skill 23 to Skill 32 now airtight.
 
 ---
 
 ## v6.4.0 — March 31, 2026
 
 ### Fixed
-- **Skill 22 INSTALL.md**: Added Step 5b — deploy gemini-search.py and gemini-indexer.py to ~/clawd/scripts/ so agents can find them at runtime. Without this, search and re-index commands fail silently.
-- **Skill 22 INSTALL.md**: Added graceful degradation note to Step 2d — if GOOGLE_API_KEY is missing or expired, system falls back to PERSONA-ROUTER.md keyword matching instead of crashing with sys.exit(1).
-- **Skill 22 CORE_UPDATES.md**: Added re-indexing trigger to AGENTS.md section — MANDATORY step after adding any new persona to re-run gemini-indexer.py so the search index includes the new persona.
-- **Skill 23 INSTALL.md**: Added governing-personas.md content requirements to Phase 5-PERSONA — each department must have real content (Primary Persona name, book title, why it fits, 3 task types). Added gate check: grep count must equal department count before proceeding.
-- **Skill 23 INSTALL.md**: Added specialist folder creation to Phase 6 — each department must have specialists/ subfolder with at least 2 role files (Title, Reports To, Responsibilities, Key Metrics).
-- **Skill 23 INSTALL.md**: Added ORG-CHART.md creation to Phase 6 — full reporting structure with gate checks for both ORG-CHART.md existence and specialist folder completeness.
-- **Skill 23 CORE_UPDATES.md**: Added governing personas update protocol — 5-step process when new books are added (re-index, review governing-personas.md, update assignments, update ORG-CHART.md, update persona-matrix.md).
+- **Skill 22 INSTALL.md**: Added Step 5b to deploy gemini-search.py and gemini-indexer.py to ~/clawd/scripts/ after indexing. Added graceful degradation when GOOGLE_API_KEY is missing (falls back to PERSONA-ROUTER.md, no sys.exit).
+- **Skill 22 CORE_UPDATES.md**: Added mandatory re-indexing trigger to AGENTS.md section. When a new persona is added, agents must run gemini-indexer.py.
+- **Skill 23 INSTALL.md**: Phase 5-PERSONA now requires explicit content in every governing-personas.md with gate check (grep verification). Phase 6 now has mandatory specialist folder creation (2+ role files per dept) and ORG-CHART.md creation, both with gate checks.
+- **Skill 23 CORE_UPDATES.md**: Added Governing Personas Update Protocol to AGENTS.md section -- re-index, review assignments, update ORG-CHART.md when new books added.
+
+---
+
+## v6.3.0 — March 31, 2026
+
+### Fixed
+- **Skill 23 Phase 0a**: Replaced hard exit if Skill 22 missing with graceful degradation. Workforce build now proceeds with generic personas; client notified they can add custom personas later via Option C.
+- **Skill 23 naming convention**: Removed all -dept suffix references from INSTALL.md (10 edits), CORE_UPDATES.md (1 edit). Standardized to no-suffix folder names matching build-workforce.py actual output.
+- **Skill 32 INSTALL.md**: Removed -dept suffix from department folder references. Consistent with Skill 23.
+- **Interview answer canonical path**: Canonicalized to ~/Downloads/openclaw-master-files/company-discovery/ across INSTALL.md and CORE_UPDATES.md (Skill 23). Removed 3 wrong path references.
+- **Phase 5-PRE check path**: Fixed from ~/.openclaw/workspace/ to ~/clawd/departments/ in Skill 23 INSTALL.md.
 
 ---
 
 ## v6.2.0 — March 31, 2026
 
 ### Fixed
-- **CRITICAL: install.sh was downloading Mac Mini repo instead of VPS repo** — Line 92 pointed to `openclaw-onboarding` (Mac) instead of `openclaw-onboarding-vps`. VPS clients were silently installing Mac skills. Fixed all 4 affected lines (run comment, download URL, archive folder check, copy command).
-- **install.sh progress visibility** — Removed `-s` silent flag from curl. Users now see download progress bar. Added `show_status()` messages before long operations with time estimates. Added `send_telegram_progress()` notifications at 6 key steps.
+- **Command Center (Skill 32) integration with Skill 23**: seed-workspaces.py now scans ~/clawd/departments/ where Skill 23 writes departments. Strips -dept suffix from folder names. DB path corrected to ~/projects/command-center/.
+- **Hardcoded "17 departments" removed**: INSTALL.md Phase 6.5 now uses dynamic count placeholder instead of hardcoded number.
+- **Agent ID format unified**: Changed from cc/[name] to dept-[name] throughout INSTALL.md to match Skill 23 format. Updated Phase 4.2, 5.4, 7.2.
+- **install.sh progress visibility**: Removed -s silent flag from curl. Added show_status() messages with time estimates before long operations. Added send_telegram_progress() notifications at 6 key steps.
+- **Removed __pycache__** from version control, added .gitignore.
 
 ---
 
@@ -53,7 +75,6 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 - **update-skills.sh Terminal output**: Always shows gateway restart command and agent message, regardless of Telegram send status. Previously only showed when Telegram failed.
 - **update-skills.sh Telegram message**: Now includes "openclaw gateway restart" as Step 1 before the agent instruction. Previously did not tell users to restart.
 - **update-skills.sh Telegram errors**: Now logs the actual Telegram API response and config status instead of silently hiding errors.
-- **setup-weekly-update.sh**: Fixed wrong repo URL — was pointing to openclaw-onboarding (Mac) instead of openclaw-onboarding-vps
 
 ### Added
 - **setup-weekly-update.sh**: Saturday 11:59 PM cron job — runs `npm update -g openclaw` to update OpenClaw CLI before Sunday onboarding check. Ensures config structures are validated against the latest OpenClaw version.
@@ -494,9 +515,9 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 ## [v2.1.0] - March 8, 2026
 
 ### Added
-- **install.sh**: One-command autonomous onboarding trigger. Run `curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash`. Downloads package, sets up backup folder, writes onboarding flag to AGENTS.md, fires agent trigger via `openclaw agent --message --deliver`. Zero human action after the curl command.
+- **install.sh**: One-command autonomous onboarding trigger. Run `curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash`. Downloads package, sets up backup folder, writes onboarding flag to AGENTS.md, fires agent trigger via `openclaw agent --message --deliver`. Zero human action after the curl command.
 - **Skill 29 - GHL / Convert and Flow API v2**: Full API reference skill. 12 domain reference files covering 413 endpoints, 35 modules, 106 scopes. Contacts, conversations, calendars, payments, opportunities, locations, users, auth, campaigns, webhooks, phone-numbers. Proper `ghl-convert-and-flow/` archive root. Phone-numbers module includes TREVOR-ONLY safety warning (no autonomous release).
-- **Weekly GitHub update check**: Added to Start Here.md. Every Sunday, agent pulls from `trevorotts1/openclaw-onboarding-vps`, re-runs TYP on any changed skill, notifies via configured messaging channel.
+- **Weekly GitHub update check**: Added to Start Here.md. Every Sunday, agent pulls from `trevorotts1/openclaw-onboarding`, re-runs TYP on any changed skill, notifies via configured messaging channel.
 - **Missing .skill archives built**: 03-agent-browser, 22-book-to-persona, 23-ai-workforce-blueprint were missing archives - all three rebuilt and verified.
 
 ### Fixed

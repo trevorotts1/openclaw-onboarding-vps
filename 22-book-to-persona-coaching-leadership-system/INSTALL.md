@@ -113,10 +113,10 @@ Copy this entire skill folder into the standard OpenClaw skills directory so the
 Run:
 ```bash
 mkdir -p ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system
-cp -r /tmp/openclaw-onboarding-vps/22-book-to-persona-coaching-leadership-system/* ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
-**Note:** If the onboarding package was extracted to a different location, replace `/tmp/openclaw-onboarding-vps/22-book-to-persona-coaching-leadership-system/` with the actual path to this skill folder.
+**Note:** If the onboarding package was extracted to a different location, replace `/tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/` with the actual path to this skill folder.
 
 Verify:
 ```bash
@@ -397,13 +397,13 @@ Pre-built personas are already included in this skill folder. They will be added
 **Run the indexer AFTER Skill 22 completes, before Skill 23.** Skill 23 needs the personas indexed before it can find them.
 
 **What happens next:**
-- Run `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` to index all personas now
-- Skill 23 will run `python3 ~/.openclaw/scripts/gemini-indexer.py` to index all personas + workforce files together
+- Run `python3 ~/clawd/scripts/gemini-indexer.py` to index all personas now
+- Skill 23 will run `python3 ~/clawd/scripts/gemini-indexer.py` to index all personas + workforce files together
 - This ensures Skill 23 can find persona files via the index before assigning them to departments
 
 **Note:** If you need to verify personas are searchable after Skill 23 completes, run:
 ```bash
-python3 ~/.openclaw/scripts/gemini-search.py "negotiation"
+python3 ~/clawd/scripts/gemini-search.py "negotiation"
 ```
 
 ---
@@ -426,7 +426,7 @@ ls ~/clawd/scripts/gemini-*.py
 
 **Expected output:** Both `gemini-search.py` and `gemini-indexer.py` listed.
 
-If either file is missing, re-run the copy command above. Without these files in `~/clawd/scripts/`, agents cannot search or re-index personas.
+If either file is missing, re-run the copy commands above. Without these files in `~/clawd/scripts/`, agents cannot search or re-index personas.
 
 ---
 
@@ -439,7 +439,7 @@ Before allowing Skill 23 to run, verify this Skill 22 installation is complete:
 
 ```bash
 # Check if Gemini Vector Database "coaching-personas" exists
-if python3 ~/.openclaw/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
+if python3 ~/clawd/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
   echo "✅ Skill 22 verified: coaching-personas collection exists"
   echo "Skill 23 may proceed"
 else
@@ -466,7 +466,7 @@ If the setup script does not exist yet, check the onboarding package:
 mkdir -p ~/.openclaw/skills/scripts
 SETUP_SCRIPT=""
 for candidate in \
-  "/tmp/openclaw-onboarding-vps/scripts/setup-weekly-update.sh" \
+  "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
   "$HOME/.openclaw/skills/scripts/setup-weekly-update.sh"; do
   if [ -f "$candidate" ]; then
     SETUP_SCRIPT="$candidate"
@@ -607,7 +607,7 @@ This triggers the full sequence:
 2. **Phase 1 (Kimi K2.5)** - Spawns sub-agent with extraction prompt + book text. Output: `personas/[author]-[book-slug]/extraction-notes.md`
 3. **Phase 2 (DeepSeek V3.2-Speciale)** - Spawns sub-agent with analysis prompt + extraction notes. Output: `personas/[author]-[book-slug]/analysis-notes.md`
 4. **Phase 3 (GPT-5.3 Codex)** - Spawns sub-agent with synthesis prompt + extraction + analysis notes. Output: `personas/[author]-[book-slug]/persona-blueprint.md`. Falls back to Kimi K2.5 on failure.
-5. **Gemini Engine indexing** - Runs `python3 ~/.openclaw/scripts/gemini-indexer.py` to make the new persona searchable.
+5. **Gemini Engine indexing** - Runs `python3 ~/clawd/scripts/gemini-indexer.py` to make the new persona searchable.
 
 **Verify each phase completed** by checking:
 - File exists at the expected path
@@ -701,4 +701,4 @@ Run through this checklist:
 - [ ] Core files updated per CORE_UPDATES.md (Step 7)
 - [ ] Pipeline execution test passed (Step 8)
 
-When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini Vector Database active. Pre-built personas ready (run: python3 ~/.openclaw/scripts/gemini-indexer.py --status to see count). Pipeline verified operational. Ready to process new books or query personas."
+When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini Vector Database active. Pre-built personas ready (run: python3 ~/clawd/scripts/gemini-indexer.py --status to see count). Pipeline verified operational. Ready to process new books or query personas."
