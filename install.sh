@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.4.0"
+ONBOARDING_VERSION="v6.1.9"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
-#  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
+#  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/install.sh | bash
 # ============================================================
 
 # ----------------------------------------------------------
@@ -89,7 +89,7 @@ TEMP_ZIP="/tmp/openclaw-onboarding-pkg.zip"
 TEMP_EXTRACT="/tmp/openclaw-onboarding-extract"
 
 # NOT silent - users see the download progress bar
-curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
+curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
 if [ ! -f "$TEMP_ZIP" ]; then
   echo "ERROR: Failed to download onboarding package."
   send_telegram_progress "ERROR: Download failed. Install aborted."
@@ -107,7 +107,7 @@ show_status "Extracting skills package..."
 echo "[3/5] Extracting to ~/.openclaw/onboarding/..."
 rm -rf "$TEMP_EXTRACT"
 unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
-if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
+if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
   echo "ERROR: Unexpected archive structure."
   rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
   send_telegram_progress "ERROR: Extract failed. Archive structure unexpected."
@@ -115,7 +115,7 @@ if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
 fi
 
 # Clear existing onboarding folder and copy fresh
-cp -r "$TEMP_EXTRACT/openclaw-onboarding-vps-main/"* "$ONBOARDING_DIR/"
+cp -r "$TEMP_EXTRACT/openclaw-onboarding-main/"* "$ONBOARDING_DIR/"
 rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
 echo "  Installed to $ONBOARDING_DIR"
 
@@ -138,11 +138,8 @@ send_telegram_progress "Extracted skills to your OpenClaw ($SKILL_COUNT skills f
 show_status "Installing Gemini Engine scripts..."
 
 echo "[3b/5] Installing Gemini Engine scripts..."
-# Determine the agent's workspace directory
-# Standard OpenClaw workspace: ~/.openclaw/workspace
-WORKSPACE_DIR="$HOME/.openclaw/workspace"
-mkdir -p "$WORKSPACE_DIR"
-SCRIPTS_DIR="$WORKSPACE_DIR/scripts"
+# Scripts go to ~/clawd/scripts/ — this is where ALL skills expect them
+SCRIPTS_DIR="$HOME/clawd/scripts"
 mkdir -p "$SCRIPTS_DIR"
 
 # Copy gemini-indexer.py to the expected location
@@ -152,6 +149,15 @@ if [ -f "$ONBOARDING_DIR/scripts/gemini-indexer.py" ]; then
   echo "  Copied gemini-indexer.py to $SCRIPTS_DIR/"
 else
   echo "  gemini-indexer.py not found in onboarding scripts (will need manual setup)"
+fi
+
+# Copy gemini-search.py to the expected location
+if [ -f "$ONBOARDING_DIR/scripts/gemini-search.py" ]; then
+  cp "$ONBOARDING_DIR/scripts/gemini-search.py" "$SCRIPTS_DIR/gemini-search.py"
+  chmod +x "$SCRIPTS_DIR/gemini-search.py"
+  echo "  Copied gemini-search.py to $SCRIPTS_DIR/"
+else
+  echo "  gemini-search.py not found in onboarding scripts (will need manual setup)"
 fi
 
 # Install google-genai Python package if not present
@@ -177,13 +183,12 @@ fi
 # ----------------------------------------------------------
 echo ""
 echo "[3b.2/5] Checking Cloudflare tunnel token..."
-CF_TOKEN="cfut_k7fGeMtROSYqgbsYCKvtCxqNNZDrEEMW1ncQKUd3678b4d5d"
 ENV_FILE="$HOME/.openclaw/.env"
 if grep -q "CLOUDFLARE_TUNNEL_TOKEN" "$ENV_FILE" 2>/dev/null; then
   echo "  Cloudflare tunnel token already set"
 else
-  echo "CLOUDFLARE_TUNNEL_TOKEN=$CF_TOKEN" >> "$ENV_FILE"
-  echo "  Added Cloudflare tunnel token to $ENV_FILE"
+  echo "  No Cloudflare tunnel token found."
+  echo "  To add one: echo 'CLOUDFLARE_TUNNEL_TOKEN=your-token-here' >> $ENV_FILE"
 fi
 
 
