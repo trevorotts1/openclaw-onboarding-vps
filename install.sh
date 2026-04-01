@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.5.10"
+ONBOARDING_VERSION="v6.5.11"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
@@ -107,15 +107,26 @@ show_status "Extracting skills package..."
 echo "[3/5] Extracting to ~/.openclaw/onboarding/..."
 rm -rf "$TEMP_EXTRACT"
 unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
-if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
+# Auto-detect extracted folder name (GitHub names it [repo-name]-main)
+EXTRACTED_DIR=""
+if [ -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
+  EXTRACTED_DIR="$TEMP_EXTRACT/openclaw-onboarding-vps-main"
+elif [ -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
+  EXTRACTED_DIR="$TEMP_EXTRACT/openclaw-onboarding-main"
+else
+  # Last resort: find any directory inside the extract folder
+  EXTRACTED_DIR=$(find "$TEMP_EXTRACT" -maxdepth 1 -mindepth 1 -type d | head -1)
+fi
+if [ -z "$EXTRACTED_DIR" ] || [ ! -d "$EXTRACTED_DIR" ]; then
   echo "ERROR: Unexpected archive structure."
   rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
   send_telegram_progress "ERROR: Extract failed. Archive structure unexpected."
   exit 1
 fi
+echo "  Detected archive folder: $(basename $EXTRACTED_DIR)"
 
 # Clear existing onboarding folder and copy fresh
-cp -r "$TEMP_EXTRACT/openclaw-onboarding-vps-main/"* "$ONBOARDING_DIR/"
+cp -r "$EXTRACTED_DIR/"* "$ONBOARDING_DIR/"
 rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
 echo "  Installed to $ONBOARDING_DIR"
 
