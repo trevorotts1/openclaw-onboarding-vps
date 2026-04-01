@@ -32,7 +32,11 @@ from typing import Optional, List, Dict, Tuple
 # Priority order for env file locations
 ENV_FILE_PATHS = [
     "~/.openclaw/.env",
+    "/data/.openclaw/.env",
     "~/clawd/secrets/.env",
+    "/data/clawd/secrets/.env",
+    "~/.env",
+    "/data/.env",
     "~/.clawdbot/.env",
 ]
 
@@ -40,7 +44,7 @@ ENV_FILE_PATHS = [
 KEY_PATTERNS = {
     "openai": ["OPENAI_API_KEY", "OPENAI_KEY", "OPEN_AI_KEY"],
     "anthropic": ["ANTHROPIC_API_KEY", "ANTHROPIC_KEY", "CLAUDE_API_KEY"],
-    "google": ["GOOGLE_API_KEY", "GCP_API_KEY", "GOOGLE_CLOUD_API_KEY"],
+    "google": ["GOOGLE_API_KEY", "GOOGLE_AI_STUDIO_API_KEY", "GOOGLE_GEMINI_API_KEY", "GEMINI_API_KEY", "GOOGLE_AI_KEY", "GCP_API_KEY", "GOOGLE_CLOUD_API_KEY"],
     "gemini": ["GEMINI_API_KEY", "GOOGLE_GEMINI_API_KEY"],
     "github": ["GITHUB_TOKEN", "GITHUB_API_TOKEN", "GH_TOKEN"],
     "slack": ["SLACK_BOT_TOKEN", "SLACK_TOKEN", "SLACK_API_TOKEN"],
@@ -64,9 +68,9 @@ KEY_PATTERNS = {
     "tavily": ["TAVILY_API_KEY", "TAVILY_KEY"],
     "context7": ["CONTEXT7_API_KEY", "CONTEXT7_KEY"],
     "rtrvr": ["RTRVR_API_KEY", "RTRVR_KEY"],
-    "kie": ["KIE_API_KEY", "KIE_KEY"],
-    "n8n": ["N8N_API_KEY", "N8N_WEBHOOK_KEY"],
-    "ghl": ["GOHIGHLEVEL_API_KEY", "GHL_API_KEY", "GOHIGHLEVEL_KEY"],
+    "kie": ["KIE_API_KEY", "KIE_KEY", "KIE_VIDEO_API_KEY", "KIE_API_KEY_IAFS"],
+    "n8n": ["N8N_API_KEY", "N8N_WEBHOOK_KEY", "N8N_KEY", "N8N_TOKEN"],
+    "ghl": ["GOHIGHLEVEL_API_KEY", "GHL_API_KEY", "GOHIGHLEVEL_KEY", "GHL_TOKEN", "GHL_PIT", "GHL_PIT_TOKEN", "PRIVATE_INTEGRATION_TOKEN", "PIT_TOKEN", "GOHIGHLEVEL_AGENCY_PIT", "CONVERT_FLOW_KEY", "CONVERTANDFLOW_API_KEY"],
     "convertflow": ["CONVERTFLOW_API_KEY", "CF_API_KEY"],
     "zoom": ["ZOOM_API_KEY", "ZOOM_JWT_TOKEN"],
     "nounproject": ["NOUN_PROJECT_API_KEY", "NOUNPROJECT_API_KEY"],
@@ -132,12 +136,34 @@ def _parse_env_file(filepath: Path) -> Dict[str, str]:
     return env_vars
 
 
+def _load_openclaw_json_env() -> Dict[str, str]:
+    """Load env.vars from openclaw.json."""
+    env_vars = {}
+    json_paths = [
+        Path.home() / '.openclaw' / 'openclaw.json',
+        Path('/data/.openclaw/openclaw.json'),
+    ]
+    for filepath in json_paths:
+        if not filepath.exists():
+            continue
+        try:
+            import json
+            with open(filepath, 'r', encoding='utf-8') as f:
+                cfg = json.load(f)
+            env_vars.update(cfg.get('env', {}).get('vars', {}))
+        except Exception:
+            pass
+    return env_vars
+
+
 def _load_all_env_files() -> Dict[str, str]:
     """
     Load all env files in priority order.
     Later files override earlier ones.
     """
     all_vars = {}
+    
+    all_vars.update(_load_openclaw_json_env())
     
     for path in ENV_FILE_PATHS:
         filepath = _expand_path(path)

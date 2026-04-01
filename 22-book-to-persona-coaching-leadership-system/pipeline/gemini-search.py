@@ -5,6 +5,8 @@ import sqlite3
 import argparse
 import time
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
+from api_key_utils import get_google_key
 
 try:
     from google import genai
@@ -15,15 +17,8 @@ except ImportError:
     sys.exit(1)
 
 def _get_google_api_key():
-    """Find Google API key regardless of env var name."""
-    for name in ['GOOGLE_API_KEY','GOOGLE_AI_STUDIO_API_KEY','GOOGLE_GEMINI_API_KEY','GEMINI_API_KEY']:
-        val = os.environ.get(name)
-        if val:
-            return val
-    for k, v in os.environ.items():
-        if 'GOOGLE' in k.upper() and ('API' in k.upper() or 'KEY' in k.upper()) and v:
-            return v
-    return None
+    return get_google_key()
+
 
 
 def _load_openclaw_env():
@@ -61,7 +56,7 @@ def get_client():
                 if api_key:
                     break
     if not api_key:
-        print("WARNING: GOOGLE_API_KEY not set. Using keyword fallback.")
+        print("WARNING: Google API key not found in any supported env location. Using keyword fallback.")
         sys.exit(2)
     return genai.Client(api_key=api_key)
 
@@ -112,7 +107,7 @@ def main():
         query_vector = embed_query(client, args.query)
     except Exception as e:
         if "api key" in str(e).lower() or "permission" in str(e).lower() or "401" in str(e) or "403" in str(e):
-            print("WARNING: GOOGLE_API_KEY not set. Using keyword fallback.")
+            print("WARNING: Google API key not found in any supported env location. Using keyword fallback.")
             sys.exit(2)
         raise
 

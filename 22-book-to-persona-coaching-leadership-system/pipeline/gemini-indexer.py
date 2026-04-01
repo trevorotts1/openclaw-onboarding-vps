@@ -14,17 +14,12 @@ Usage:
 """
 import os, sys, time, sqlite3, hashlib, json, shutil
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
+from api_key_utils import get_google_key
 
 def _get_google_api_key():
-    """Find Google API key regardless of env var name."""
-    for name in ['GOOGLE_API_KEY','GOOGLE_AI_STUDIO_API_KEY','GOOGLE_GEMINI_API_KEY','GEMINI_API_KEY']:
-        val = os.environ.get(name)
-        if val:
-            return val
-    for k, v in os.environ.items():
-        if 'GOOGLE' in k.upper() and ('API' in k.upper() or 'KEY' in k.upper()) and v:
-            return v
-    return None
+    return get_google_key()
+
 
 
 def _load_openclaw_env():
@@ -367,7 +362,7 @@ def main():
     def get_client():
         api_key = get_api_key()
         if not api_key:
-            print("WARNING: GOOGLE_API_KEY not found. Checked ~/clawd/secrets/.env, "
+            print("WARNING: Google API key not found in any supported env location. Checked ~/clawd/secrets/.env, "
                   "~/.openclaw/.env, ~/.openclaw/secrets/.env, and environment variables. "
                   "Set GOOGLE_API_KEY and try again.")
             sys.exit(2)

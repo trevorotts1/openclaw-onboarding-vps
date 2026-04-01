@@ -1,3 +1,7 @@
+## v6.5.18 — April 1, 2026
+- Upgrade shared-utils/api_key_utils.py to load openclaw.json env.vars, extra VPS env file paths, and expanded service aliases
+- Wire Gemini scripts to use shared Google key resolver instead of hardcoded GOOGLE_API_KEY-only logic
+
 ## v6.5.17 - April 1, 2026
 
 ### Fixed

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os, sys, time, sqlite3, hashlib
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
+from api_key_utils import get_google_key
 
 try:
     from google import genai
@@ -12,15 +14,8 @@ except ImportError:
     sys.exit(1)
 
 def _get_google_api_key():
-    """Find Google API key regardless of env var name."""
-    for name in ['GOOGLE_API_KEY','GOOGLE_AI_STUDIO_API_KEY','GOOGLE_GEMINI_API_KEY','GEMINI_API_KEY']:
-        val = os.environ.get(name)
-        if val:
-            return val
-    for k, v in os.environ.items():
-        if 'GOOGLE' in k.upper() and ('API' in k.upper() or 'KEY' in k.upper()) and v:
-            return v
-    return None
+    return get_google_key()
+
 
 
 def _load_openclaw_env():
@@ -63,7 +58,7 @@ def get_client():
                 if api_key:
                     break
     if not api_key:
-        print("ERROR: GOOGLE_API_KEY not found in any env source")
+        print("ERROR: Google API key not found in any supported env location in any env source")
         sys.exit(1)
     return genai.Client(api_key=api_key)
 
