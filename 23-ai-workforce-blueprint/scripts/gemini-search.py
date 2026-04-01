@@ -4,6 +4,7 @@ import os
 import sqlite3
 import argparse
 import time
+from pathlib import Path
 
 try:
     from google import genai
@@ -13,51 +14,52 @@ except ImportError:
     print("CRITICAL ERROR: Missing dependencies.")
     sys.exit(1)
 
+def _get_google_api_key():
+    """Find Google API key regardless of env var name."""
+    for name in ['GOOGLE_API_KEY','GOOGLE_AI_STUDIO_API_KEY','GOOGLE_GEMINI_API_KEY','GEMINI_API_KEY']:
+        val = os.environ.get(name)
+        if val:
+            return val
+    for k, v in os.environ.items():
+        if 'GOOGLE' in k.upper() and ('API' in k.upper() or 'KEY' in k.upper()) and v:
+            return v
+    return None
+
+
+def _load_openclaw_env():
+    import json
+    for path in ['/data/.openclaw/openclaw.json', str(Path.home()/'.openclaw'/'openclaw.json')]:
+        try:
+            cfg = json.load(open(path))
+            for k,v in cfg.get('env',{}).get('vars',{}).items():
+                os.environ.setdefault(k, v)
+        except:
+            pass
+
 DB_PATH = os.path.expanduser("~/clawd/data/coaching-personas/gemini-index.sqlite")
 GEMINI_MODEL = "gemini-embedding-2-preview"
 TOP_K = 3
 
-def get_google_api_key():
-    """Find Google API key regardless of env var name."""
-    # Check common names in order
-    for key_name in [
-        'GOOGLE_API_KEY',
-        'GOOGLE_AI_STUDIO_API_KEY',
-        'GOOGLE_GEMINI_API_KEY',
-        'GEMINI_API_KEY',
-    ]:
-        val = os.environ.get(key_name)
-        if val:
-            return val
-    # Check common .env files for common key names
-    env_files = [
-        os.path.expanduser("~/.openclaw/.env"),
-        os.path.expanduser("~/.openclaw/secrets/.env"),
-        os.path.expanduser("~/clawd/secrets/.env"),
-        os.path.expanduser("~/.config/openclaw/.env"),
-    ]
-    for env_path in env_files:
-        if os.path.exists(env_path):
-            with open(env_path, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if "=" in line and not line.startswith("#"):
-                        k, v = line.split("=", 1)
-                        if k.strip() in [
-                            'GOOGLE_API_KEY',
-                            'GOOGLE_AI_STUDIO_API_KEY',
-                            'GOOGLE_GEMINI_API_KEY',
-                            'GEMINI_API_KEY',
-                        ]:
-                            return v.strip().strip('"\'')
-    # Last resort: find any env var containing GOOGLE and API
-    for k, v in os.environ.items():
-        if 'GOOGLE' in k.upper() and ('API' in k.upper() or 'KEY' in k.upper()):
-            return v
-    return None
-
 def get_client():
-    api_key = get_google_api_key()
+    _load_openclaw_env()
+    api_key = _get_google_api_key()
+    if not api_key:
+        env_paths = [
+            os.path.expanduser("~/clawd/secrets/.env"),
+            os.path.expanduser("~/.openclaw/.env"),
+            os.path.expanduser("~/.openclaw/secrets/.env"),
+            "/data/clawd/secrets/.env",
+            "/data/.openclaw/.env",
+        ]
+        for env_path in env_paths:
+            if os.path.exists(env_path):
+                with open(env_path, "r") as f:
+                    for line in f:
+                        if line.startswith("GOOGLE_API_KEY=") or line.startswith("GOOGLE_AI_STUDIO_API_KEY=") or line.startswith("GOOGLE_GEMINI_API_KEY=") or line.startswith("GEMINI_API_KEY="):
+                            api_key = line.strip().split("=", 1)[1].strip('"\'')
+                            break
+                if api_key:
+                    break
     if not api_key:
         print("WARNING: GOOGLE_API_KEY not set. Using keyword fallback.")
         sys.exit(2)
@@ -86,6 +88,7 @@ def cosine_similarity(v1, v2):
     return dot_product / (norm_v1 * norm_v2)
 
 def main():
+    _load_openclaw_env()
     parser = argparse.ArgumentParser()
     parser.add_argument("query", type=str, help="Search keyword")
     parser.add_argument("--limit", type=int, default=TOP_K)

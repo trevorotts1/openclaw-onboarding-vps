@@ -1,3 +1,12 @@
+## v6.5.17 - April 1, 2026
+
+### Fixed
+- scripts/gemini-indexer.py: Added smart Google API key detection with fallback for GOOGLE_API_KEY, GOOGLE_AI_STUDIO_API_KEY, GOOGLE_GEMINI_API_KEY, and GEMINI_API_KEY
+- 22-book-to-persona-coaching-leadership-system/pipeline/gemini-indexer.py: Added OpenClaw env.vars loading from openclaw.json before Gemini key lookup
+- 22-book-to-persona-coaching-leadership-system/pipeline/gemini-search.py: Added smart Google API key detection so VPS installs work with alternate Google key names
+- 23-ai-workforce-blueprint/scripts/gemini-indexer.py: Added OpenClaw env.vars loading plus smart Google key fallback
+- 23-ai-workforce-blueprint/scripts/gemini-search.py: Added OpenClaw env.vars loading plus smart Google key fallback
+
 ## v6.5.16 - April 1, 2026
 
 ### Fixed
