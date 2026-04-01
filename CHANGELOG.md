@@ -1,3 +1,11 @@
+## v6.5.15 - April 1, 2026
+
+### Fixed
+- install.sh: send_telegram_progress now reads client's Telegram chat ID from openclaw.json allowFrom list and passes it explicitly via --target and --channel telegram
+- install.sh: Previously the function had no --target or --channel, so messages silently failed on fresh installs where no active Telegram session existed yet
+- install.sh: Added python3-based allowFrom parser as primary path, with fallback to bare openclaw message send (no target), then terminal echo as last resort
+- install.sh: All three code paths now show [TELEGRAM FALLBACK] prefix for visibility when delivery fails
+
 ## v6.5.14 - April 1, 2026
 
 ### Fixed

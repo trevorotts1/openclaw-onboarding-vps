@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.5.14"
+ONBOARDING_VERSION="v6.5.15"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
@@ -13,10 +13,32 @@ ONBOARDING_VERSION="v6.5.14"
 # ----------------------------------------------------------
 send_telegram_progress() {
     local message="$1"
-    if command -v openclaw &>/dev/null; then
-        openclaw message send --message "$message" 2>/dev/null || echo "[TELEGRAM] $message"
+    # On VPS, HOME=/data so openclaw.json is at /data/.openclaw/openclaw.json
+    local OCJSON="$HOME/.openclaw/openclaw.json"
+    local TELEGRAM_TARGET=""
+
+    # Try to read the first allowFrom ID from openclaw.json
+    if [ -f "$OCJSON" ] && command -v python3 &>/dev/null; then
+        TELEGRAM_TARGET=$(python3 -c "
+import json, sys
+try:
+    cfg = json.load(open('$OCJSON'))
+    allow = cfg.get('channels', {}).get('telegram', {}).get('allowFrom', [])
+    if allow:
+        print(allow[0])
+except:
+    pass
+" 2>/dev/null)
+    fi
+
+    if command -v openclaw &>/dev/null && [ -n "$TELEGRAM_TARGET" ]; then
+        openclaw message send --channel telegram --target "$TELEGRAM_TARGET" --message "$message" 2>/dev/null \
+            || echo "[TELEGRAM FALLBACK] $message"
+    elif command -v openclaw &>/dev/null; then
+        openclaw message send --message "$message" 2>/dev/null \
+            || echo "[TELEGRAM FALLBACK] $message"
     else
-        echo "[TELEGRAM] $message"
+        echo "[TELEGRAM FALLBACK] $message"
     fi
 }
 
