@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.5.6"
+ONBOARDING_VERSION="v6.5.10"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
@@ -107,7 +107,7 @@ show_status "Extracting skills package..."
 echo "[3/5] Extracting to ~/.openclaw/onboarding/..."
 rm -rf "$TEMP_EXTRACT"
 unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
-if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
+if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
   echo "ERROR: Unexpected archive structure."
   rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
   send_telegram_progress "ERROR: Extract failed. Archive structure unexpected."
@@ -115,7 +115,7 @@ if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
 fi
 
 # Clear existing onboarding folder and copy fresh
-cp -r "$TEMP_EXTRACT/openclaw-onboarding-main/"* "$ONBOARDING_DIR/"
+cp -r "$TEMP_EXTRACT/openclaw-onboarding-vps-main/"* "$ONBOARDING_DIR/"
 rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
 echo "  Installed to $ONBOARDING_DIR"
 
