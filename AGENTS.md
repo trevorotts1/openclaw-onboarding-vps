@@ -200,3 +200,19 @@ Don't wait for permission to improve. If you learned something, write it down no
 ---
 
 *Document version: 2026-03-13*
+
+---
+
+## 🔴 VPS API KEY PERSISTENCE -- HOW TO SAVE KEYS (Added April 2026)
+
+On VPS, there is no .env file. When a client gives you an API key via Telegram:
+
+1. Add it to openclaw.json under env.vars:
+   ```bash
+   python3 -c "import json; cfg=json.load(open('/data/.openclaw/openclaw.json')); cfg['env']['vars']['KEY_NAME']='value'; open('/data/.openclaw/openclaw.json','w').write(json.dumps(cfg,indent=2))"
+   ```
+2. Restart the gateway so the new key loads: tell Trevor to type /restart in Telegram
+3. Confirm the key is now available: `printenv KEY_NAME`
+
+**DO NOT** save keys to .env files -- they do not persist on VPS Docker restarts.
+The **ONLY** persistent location is `/data/.openclaw/openclaw.json` under `env.vars`.

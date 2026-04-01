@@ -1,3 +1,9 @@
+## v6.5.13 - April 1, 2026
+
+### Added
+- AGENTS.md: Added VPS API Key Persistence rule -- teaches agents to save keys to /data/.openclaw/openclaw.json env.vars (the only persistent location on VPS Docker)
+- install.sh: Added Telegram completion summary after install finishes -- lists what's configured and what API keys are still needed (Tavily)
+
 ## v6.5.12 - April 1, 2026
 
 ### Fixed

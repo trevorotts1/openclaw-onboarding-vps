@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.5.11"
+ONBOARDING_VERSION="v6.5.13"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
@@ -445,3 +445,21 @@ echo "============================================"
 echo ""
 
 send_telegram_progress "Install complete! Your AI agent is now installing all 34 skills. This may take 10-20 minutes. You'll get updates as each wave finishes."
+
+# ----------------------------------------------------------
+# Install Completion Summary
+# ----------------------------------------------------------
+send_telegram_progress "✅ BlackCEO AI System Install Complete!
+
+What's ready:
+- 34 skills installed
+- OpenRouter: configured
+- Google AI: configured
+- KIE (image/video): configured
+
+Still needed from you:
+- Tavily API key (for web search in Skill 21)
+  Get it at: https://tavily.com
+  Tell your AI: 'Add my Tavily key: [your-key]'
+
+Your AI is ready to use!"
