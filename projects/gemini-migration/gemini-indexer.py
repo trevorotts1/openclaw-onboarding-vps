@@ -2,7 +2,7 @@
 import os, sys, time, sqlite3, hashlib
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
-from api_key_utils import get_google_key
+from key_resolver import resolve_key
 
 try:
     from google import genai
@@ -47,9 +47,7 @@ CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
 def get_google_api_key():
-    return get_google_key()
-
-
+    return resolve_key("google")
 def get_client():
     api_key = get_google_api_key()
     if not api_key:

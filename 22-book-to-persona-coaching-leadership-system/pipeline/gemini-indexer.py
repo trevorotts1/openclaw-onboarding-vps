@@ -15,7 +15,7 @@ Usage:
 import os, sys, time, sqlite3, hashlib, json, shutil
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
-from api_key_utils import get_google_key
+from key_resolver import resolve_key
 
 def _get_google_api_key():
     return get_google_key()

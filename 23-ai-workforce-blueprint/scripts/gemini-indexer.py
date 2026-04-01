@@ -2,7 +2,7 @@
 import os, sys, time, sqlite3, hashlib
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
-from api_key_utils import get_google_key
+from key_resolver import resolve_key
 
 try:
     from google import genai

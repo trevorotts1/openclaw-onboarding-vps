@@ -1,3 +1,11 @@
+## v6.5.18 - April 1, 2026
+
+### Added
+- shared-utils/key_resolver.py: Added a dedicated smart API key resolver that reads OpenClaw env.vars from openclaw.json, common .env files, live environment variables, service aliases, and fuzzy service-name fallbacks
+
+### Changed
+- Refactored Gemini scripts to use smart key_resolver instead of hardcoded api_key_utils or legacy lookups.
+
 ## v6.5.18 — April 1, 2026
 - Upgrade shared-utils/api_key_utils.py to load openclaw.json env.vars, extra VPS env file paths, and expanded service aliases
 - Wire Gemini scripts to use shared Google key resolver instead of hardcoded GOOGLE_API_KEY-only logic
