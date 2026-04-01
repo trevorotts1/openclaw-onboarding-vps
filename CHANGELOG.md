@@ -1,3 +1,13 @@
+## v6.5.21 - April 1, 2026
+
+### Changed
+- **install.sh - Exec security comments**: Updated doc-reference comments for tools.exec and exec-approvals.json sections to cite https://docs.openclaw.ai/tools/exec-approvals as the source of truth
+- **install.sh - Re-verify note**: Added explicit comment reminding to re-verify exec security config if OpenClaw version is bumped
+- **version**: Bumped to v6.5.21
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.21
+
+---
+
 ## v6.5.19 — April 1, 2026
 - Wire Video Creator KIE lookup to shared smart API key resolver
 - Resolver now covers Gemini/Google, GHL/GoHighLevel/Convert and Flow, GitHub, OpenAI, OpenRouter, Moonshot, KIE, Telegram, Tavily, n8n, Perplexity, Anthropic variations across env locations

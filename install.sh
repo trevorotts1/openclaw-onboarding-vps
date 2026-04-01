@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.5.20"
+ONBOARDING_VERSION="v6.5.21"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
@@ -336,8 +336,10 @@ try:
     agents['defaults'] = defaults
     config['agents'] = agents
 
-    # Exec security — allow agent to run shell commands without approval prompts
-    # Required for autonomous operation (QC, scripts, installs, etc.)
+    # Exec security — verified against docs.openclaw.ai/tools/exec-approvals
+    # Re-verify this section if OpenClaw version is bumped
+    # Allows agent to run shell commands without per-command approval prompts
+    
     config.setdefault('tools', {})['exec'] = {
         'security': 'full',
         'ask': 'off'
