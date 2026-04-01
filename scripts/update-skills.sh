@@ -1,6 +1,6 @@
 #!/bin/bash
 # OpenClaw Onboarding — Update Staging Script
-# Version: 6.4.0 | March 31, 2026
+# Version: 6.5.4 | April 1, 2026
 #
 # This script STAGES an update. It does NOT apply changes.
 # The agent follows UPDATE-PLAYBOOK.md to apply changes intelligently.

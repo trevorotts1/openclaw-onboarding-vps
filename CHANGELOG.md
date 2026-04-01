@@ -4,6 +4,15 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 
 ---
 
+## v6.5.4 — April 1, 2026
+
+### Fixed
+- Version file synced to match HEAD commit (was stuck at v6.4.0)
+- All Mac repo mirrors confirmed
+- Script headers updated to v6.5.4 (3 scripts still referenced v6.4.0)
+
+---
+
 ## v6.5.0 — March 31, 2026
 
 ### Fixed
