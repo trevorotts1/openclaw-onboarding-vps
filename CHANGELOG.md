@@ -1,5 +1,12 @@
 ## v6.5.16 - April 1, 2026
 
+### Fixed
+- All Gemini scripts: Implemented smart API key detection that checks environment variations (GOOGLE_API_KEY, GOOGLE_AI_STUDIO_API_KEY, etc.) and multiple .env locations
+- build-workforce.py: Added support for --non-interactive builds via JSON config
+- INSTALL.md: Documented non-interactive setup
+
+## v6.5.16 - April 1, 2026
+
 ### Added
 - build-workforce.py (Skill 23): Added --non-interactive flag with argparse support for AI agent use
 - build-workforce.py (Skill 23): Added --config-file flag to specify JSON config path (default: workforce-config.json)

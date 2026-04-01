@@ -49,26 +49,44 @@ KEEP_REASON_LOG_ENTRIES = 20
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-def get_api_key():
-    # Priority 1: OpenClaw standard location
-    openclaw_env = os.path.expanduser("~/.openclaw/.env")
-    # Priority 2: OpenClaw secrets folder
-    secrets_env = os.path.expanduser("~/.openclaw/secrets/.env")
-    # Priority 3: Clawd secrets (Trevor's machine only)
-    clawd_env = os.path.expanduser("~/clawd/secrets/.env")
-    # Priority 4: User's workspace
-    workspace_env = os.path.expanduser("~/.config/openclaw/.env")
-
-    for env_path in [openclaw_env, secrets_env, clawd_env, workspace_env]:
+def get_google_api_key():
+    """Find Google API key regardless of env var name."""
+    # Check common names in order
+    for key_name in [
+        'GOOGLE_API_KEY',
+        'GOOGLE_AI_STUDIO_API_KEY',
+        'GOOGLE_GEMINI_API_KEY',
+        'GEMINI_API_KEY',
+    ]:
+        val = os.environ.get(key_name)
+        if val:
+            return val
+    # Check common .env files for common key names
+    env_files = [
+        os.path.expanduser("~/.openclaw/.env"),
+        os.path.expanduser("~/.openclaw/secrets/.env"),
+        os.path.expanduser("~/clawd/secrets/.env"),
+        os.path.expanduser("~/.config/openclaw/.env"),
+    ]
+    for env_path in env_files:
         if os.path.exists(env_path):
             with open(env_path, "r") as f:
                 for line in f:
                     line = line.strip()
-                    if line.startswith("GOOGLE_API_KEY=") or line.startswith("GEMINI_API_KEY="):
-                        return line.split("=", 1)[1].strip('"\'')
-
-    # Priority 5: Environment variables
-    return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+                    if "=" in line and not line.startswith("#"):
+                        k, v = line.split("=", 1)
+                        if k.strip() in [
+                            'GOOGLE_API_KEY',
+                            'GOOGLE_AI_STUDIO_API_KEY',
+                            'GOOGLE_GEMINI_API_KEY',
+                            'GEMINI_API_KEY',
+                        ]:
+                            return v.strip().strip('"\'')
+    # Last resort: find any env var containing GOOGLE and API
+    for k, v in os.environ.items():
+        if 'GOOGLE' in k.upper() and ('API' in k.upper() or 'KEY' in k.upper()):
+            return v
+    return None
 
 def resolve_dir(config):
     if os.path.isdir(config["primary"]):

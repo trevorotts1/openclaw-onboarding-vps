@@ -20,18 +20,49 @@ GEMINI_MODEL = "gemini-embedding-2-preview"
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 
+def get_google_api_key():
+    """Find Google API key regardless of env var name."""
+    # Check common names in order
+    for key_name in [
+        'GOOGLE_API_KEY',
+        'GOOGLE_AI_STUDIO_API_KEY',
+        'GOOGLE_GEMINI_API_KEY',
+        'GEMINI_API_KEY',
+    ]:
+        val = os.environ.get(key_name)
+        if val:
+            return val
+    # Check common .env files for common key names
+    env_files = [
+        os.path.expanduser("~/.openclaw/.env"),
+        os.path.expanduser("~/.openclaw/secrets/.env"),
+        os.path.expanduser("~/clawd/secrets/.env"),
+        os.path.expanduser("~/.config/openclaw/.env"),
+    ]
+    for env_path in env_files:
+        if os.path.exists(env_path):
+            with open(env_path, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if "=" in line and not line.startswith("#"):
+                        k, v = line.split("=", 1)
+                        if k.strip() in [
+                            'GOOGLE_API_KEY',
+                            'GOOGLE_AI_STUDIO_API_KEY',
+                            'GOOGLE_GEMINI_API_KEY',
+                            'GEMINI_API_KEY',
+                        ]:
+                            return v.strip().strip('"\'')
+    # Last resort: find any env var containing GOOGLE and API
+    for k, v in os.environ.items():
+        if 'GOOGLE' in k.upper() and ('API' in k.upper() or 'KEY' in k.upper()):
+            return v
+    return None
+
 def get_client():
-    env_path = os.path.expanduser("~/clawd/secrets/.env")
-    api_key = None
-    if os.path.exists(env_path):
-        with open(env_path, "r") as f:
-            for line in f:
-                if line.startswith("GOOGLE_API_KEY="):
-                    api_key = line.strip().split("=", 1)[1].strip('"\'')
-                    break
-    if not api_key: api_key = os.environ.get("GOOGLE_API_KEY")
+    api_key = get_google_api_key()
     if not api_key:
-        print("ERROR: GOOGLE_API_KEY not found in ~/clawd/secrets/.env")
+        print("ERROR: Google API key not found. Checked common env var names, .env files, and matching GOOGLE* env vars.")
         sys.exit(1)
     return genai.Client(api_key=api_key)
 
