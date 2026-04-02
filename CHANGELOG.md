@@ -1,3 +1,14 @@
+## v6.5.27 - April 1, 2026
+
+### Fixed
+- **install.sh - Telegram notification**: Removed "Reply YES when ready to proceed." from client-facing Telegram message. This was developer scaffolding that should not appear in production notifications.
+
+### Changed
+- **version**: Bumped to v6.5.27
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.27
+
+---
+
 ## v6.5.26 - April 1, 2026
 
 ### Added
