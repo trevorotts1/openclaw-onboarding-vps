@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.5.27"
+ONBOARDING_VERSION="v6.5.28"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)

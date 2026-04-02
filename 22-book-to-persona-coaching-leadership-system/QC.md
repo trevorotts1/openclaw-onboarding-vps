@@ -18,7 +18,7 @@ Verify all required files and folders exist at the correct paths.
 - [ ] `CORE_UPDATES.md` present in skill root
 - [ ] `GOOD-AND-BAD-EXAMPLES.md` present in skill root
 - [ ] `PERSONA-ROUTER.md` present in skill root
-- [ ] `GAI-SEARCH-GUIDE.md` present in skill root
+- [ ] `GEMINI-RETRIEVAL-GUIDE.md` present in skill root
 - [ ] `CHANGELOG.md` present in skill root
 
 ### Agent Prompts
@@ -47,8 +47,10 @@ Confirm these specific folders exist inside the personas directory:
 
 ### Secrets
 - [ ] `~/clawd/secrets/.env` exists
-- [ ] `MOONSHOT_API_KEY` entry present in `.env` (value does not need to be verified here)
-- [ ] `OPENROUTER_API_KEY` entry present in `.env`
+- [ ] `GOOGLE_API_KEY` entry present in `.env` (Gemini indexing / retrieval)
+- [ ] `MOONSHOT_API_KEY` entry present in `.env` (Phase 1 extraction)
+- [ ] `OPENROUTER_API_KEY` entry present in `.env` (Phase 2 analysis)
+- [ ] `OPENAI_API_KEY` entry present in `.env` (Phase 3 synthesis)
 
 **HARD FAIL:** Any missing file from skill root, agent-prompts, or pre-built personas folder = installation incomplete.
 
@@ -61,25 +63,24 @@ Verify that AGENTS.md, TOOLS.md, MEMORY.md, SOUL.md, and HEARTBEAT.md received t
 ### AGENTS.md
 - [ ] Contains section heading `## Book-to-Persona Skill (Installed)`
 - [ ] Section includes the phrase `Persona Reflex (DEFAULT BEHAVIOR)`
-- [ ] Section includes `gemini search coaching-personas "<task keywords>"` as the runtime query pattern
+- [ ] Section includes `python3 ~/clawd/scripts/gemini-search.py "<task keywords>"` as the runtime query pattern
 - [ ] Key paths block is present (skill path, personas path, router path, orchestrator path)
 - [ ] Contains section `## Pending Skill Setup - Check and Remind` with `.pending-setup.md` reference
 - [ ] Full PIPELINE.md content was NOT pasted into AGENTS.md (rule: reference only)
 
 ### TOOLS.md
-- [ ] Contains section heading `## Book-to-Persona - Model Routing and Gemini`
+- [ ] Contains section heading `## Book-to-Persona - Model Routing and Gemini Engine`
 - [ ] Phase 1 routing entry: `moonshot/kimi-k2.5` with `MOONSHOT_API_KEY` and `https://api.moonshot.cn/v1` and `temperature MUST be 1.0`
 - [ ] Phase 2 routing entry: `deepseek/deepseek-v3.2-speciale` via `OpenRouter`
-- [ ] Phase 3 routing entry: `openai/gpt-5.3-codex` via `OpenClaw OAuth`
+- [ ] Phase 3 routing entry: `openai-codex/gpt-5.4` (or `GPT-5.4 Codex via OpenClaw OAuth`, matching current docs)
 - [ ] Fallback model listed: `OpenRouter moonshotai/kimi-k2.5`
-- [ ] Gemini setup commands block present (`gemini collection add`, `gemini update`, `gemini embed`)
 - [ ] Prompt templates were NOT pasted into TOOLS.md (rule: reference only)
 
 ### MEMORY.md
 - [ ] Contains section heading `## Book-to-Persona Persona Library`
 - [ ] Entry includes skill path and personas path
-- [ ] Entry references `gemini status -c coaching-personas` for live count
-- [ ] Entry references Persona Reflex behavior (query Gemini before professional tasks)
+- [ ] Entry references `python3 ~/clawd/scripts/gemini-indexer.py --status` for live count
+- [ ] Entry references Persona Reflex behavior (query Gemini Engine before professional tasks)
 - [ ] "Add new book SOP" is referenced
 
 ### SOUL.md
@@ -90,7 +91,7 @@ Verify that AGENTS.md, TOOLS.md, MEMORY.md, SOUL.md, and HEARTBEAT.md received t
 
 ### HEARTBEAT.md (if section exists in file)
 - [ ] Contains `## Persona Reflex - ACTIVE`
-- [ ] References `coaching-personas` collection and the Gemini pre-task query pattern
+- [ ] References `coaching-personas` collection and the Gemini Engine pre-task query pattern
 
 **HARD FAIL:** Missing `## Book-to-Persona Skill (Installed)` in AGENTS.md = installation incomplete.
 **HARD FAIL:** Persona Coaching Voice Rule missing from SOUL.md = identity confusion risk at runtime.
@@ -102,16 +103,16 @@ Verify that AGENTS.md, TOOLS.md, MEMORY.md, SOUL.md, and HEARTBEAT.md received t
 Answer each question without looking at the files. These confirm the agent has internalized the skill, not just installed it.
 
 **Q1: What are the three pipeline phases and which model handles each?**
-- Expected: Phase 1 = Kimi K2.5 (Moonshot direct API), Phase 2 = DeepSeek V3.2-Speciale (OpenRouter), Phase 3 = GPT-5.3 Codex (OpenClaw OAuth)
+- Expected: Phase 1 = Kimi K2.5 (Moonshot direct API), Phase 2 = DeepSeek V3.2-Speciale (OpenRouter), Phase 3 = GPT-5.4 Codex (OpenClaw OAuth)
 
-**Q2: What triggers a Phase 3 fallback from GPT-5.3 Codex to Kimi K2.5?**
+**Q2: What triggers a Phase 3 fallback from GPT-5.4 Codex to Kimi K2.5?**
 - Expected: Any of — API error, rate limit (429), timeout after 15 minutes, output under 5,000 characters, any error message in the response
 
 **Q3: How many sections does a complete persona-blueprint.md have, and what are sections 3, 6, and 14?**
 - Expected: 14 sections total. Section 3 = Signature Framework, Section 6 = Coaching Mode: How to Respond, Section 14 = Quick Reference Card
 
 **Q4: What is the Persona Reflex and when does the agent skip it?**
-- Expected: Before any professional task, run `gemini search coaching-personas "<task keywords>"`, load the returned persona's Task Mode, and execute through that methodology. Skip ONLY if the user explicitly says so.
+- Expected: Before any professional task, run `python3 ~/clawd/scripts/gemini-search.py "<task keywords>"`, load the returned persona's Task Mode, and execute through that methodology. Skip ONLY if the user explicitly says so.
 
 **Q5: What is the author name rule in Coaching Mode?**
 - Expected: The author's name appears ONLY inside attribution-flagged direct quotes. Never use the author's name unprompted in the coaching voice.
@@ -128,8 +129,8 @@ Answer each question without looking at the files. These confirm the agent has i
 **Q9: What is the minimum character length for a complete persona-blueprint.md output?**
 - Expected: Over 10,000 characters (blueprints are much larger in practice)
 
-**Q10: After adding a new persona blueprint, what two Gemini commands must be run?**
-- Expected: `gemini update` then `gemini embed`
+**Q10: After adding a new persona blueprint, what two Gemini Engine commands must be run?**
+- Expected: `python3 ~/clawd/scripts/gemini-indexer.py` then `# Handled by gemini-indexer.py`
 
 **Passing threshold:** 8/10 correct. Score below 8 = re-read PIPELINE.md, PERSONA-ROUTER.md, CORE_UPDATES.md, and GOOD-AND-BAD-EXAMPLES.md.
 
@@ -143,12 +144,12 @@ Run these prompts and evaluate the agent's actual output against the expected be
 **Prompt:** "Review this sales email before I send it."
 
 **Expected behavior:**
-1. Agent runs `gemini search coaching-personas "sales email review outreach quality standard"` BEFORE writing any output
+1. Agent runs `python3 ~/clawd/scripts/gemini-search.py "sales email review outreach quality standard"` BEFORE writing any output
 2. Agent loads a relevant persona (e.g., `hormozi-100m-offers`, `bly-copywriters-handbook`, or `jones-exactly-what-to-say`)
 3. Agent applies that persona's execution standard and non-negotiable rules
 4. Agent output includes specific rule checks with ✅ / ❌ verdicts, not generic feedback
 
-**FAIL signal:** Agent says "This looks good! Make sure it's friendly and clear." with no persona loaded, no Gemini query, no rule-based evaluation.
+**FAIL signal:** Agent says "This looks good! Make sure it's friendly and clear." with no persona loaded, no Gemini Engine query, no rule-based evaluation.
 
 ---
 
@@ -168,8 +169,8 @@ Run these prompts and evaluate the agent's actual output against the expected be
 
 ---
 
-### Test 4C — Gemini Collection Status
-**Run:** `gemini status -c coaching-personas` or `gemini status`
+### Test 4C — Gemini Engine Collection Status
+**Run:** `python3 ~/clawd/scripts/gemini-indexer.py --status` 
 
 **Expected output:**
 - Collection named `coaching-personas` is listed
@@ -180,8 +181,8 @@ Run these prompts and evaluate the agent's actual output against the expected be
 
 ---
 
-### Test 4D — Gemini Query Returns Relevant Results
-**Run:** `gemini query "habit building systems behavior change consistency"`
+### Test 4D — Gemini Engine Query Returns Relevant Results
+**Run:** `python3 ~/clawd/scripts/gemini-search.py "habit building systems behavior change consistency"`
 
 **Expected output:**
 - Returns at least one result from a persona blueprint (e.g., `clear-atomic-habits` or `duhigg-power-of-habit`)
@@ -305,9 +306,9 @@ These are failure modes the skill is specifically designed to prevent. Verify no
 - HARD FAIL if response contains no framework, no questions, no governance rules
 
 ### Anti-Pattern 4: Skipping Persona Reflex
-**Check:** When given a professional task (write, review, plan, analyze), does the agent query Gemini before starting?
-- [ ] Confirmed: Agent queries `gemini search coaching-personas` before executing professional tasks
-- HARD FAIL if agent proceeds with a task without Gemini query and no explicit user instruction to skip
+**Check:** When given a professional task (write, review, plan, analyze), does the agent query Gemini Engine before starting?
+- [ ] Confirmed: Agent queries `python3 ~/clawd/scripts/gemini-search.py` before executing professional tasks
+- HARD FAIL if agent proceeds with a task without Gemini Engine query and no explicit user instruction to skip
 
 ### Anti-Pattern 5: Pasting Full Docs Into Core Files
 **Check:** Are PIPELINE.md, prompt templates, or the 14-section blueprint format pasted into AGENTS.md, TOOLS.md, or MEMORY.md?
@@ -322,11 +323,11 @@ These are failure modes the skill is specifically designed to prevent. Verify no
 ### Anti-Pattern 7: Missing Fallback Awareness
 **Check:** Does the agent know that Phase 3 has a fallback model, and can it state the fallback trigger conditions?
 - [ ] Confirmed: Agent can state the 4 fallback triggers (429, timeout, <5000 chars, any error)
-- FAIL if agent believes GPT-5.3 Codex is the only option with no fallback
+- FAIL if agent believes GPT-5.4 Codex is the only option with no fallback
 
-### Anti-Pattern 8: Gemini Not Used for Retrieval
-**Check:** Does the agent try to load entire persona files into context rather than using Gemini surgical queries?
-- [ ] Confirmed: Agent uses `gemini query` and `gemini get [path]:[line] -l [count]` for retrieval
+### Anti-Pattern 8: Gemini Engine Not Used for Retrieval
+**Check:** Does the agent try to load entire persona files into context rather than using Gemini Engine surgical queries?
+- [ ] Confirmed: Agent uses `python3 ~/clawd/scripts/gemini-search.py` for semantic retrieval for retrieval
 - FAIL if agent attempts to read entire persona-blueprint.md files into context for routine tasks
 
 ---
@@ -341,7 +342,7 @@ To declare this skill **INSTALLED AND OPERATIONAL**, ALL of the following must b
 - [ ] All skill root files present
 - [ ] All 3 agent prompt files present
 - [ ] Personas folder exists with at least 5 pre-built personas, each containing all 3 required files
-- [ ] Secrets `.env` file contains both required API key entries
+- [ ] Secrets `.env` file contains all required API key entries (`GOOGLE_API_KEY`, `MOONSHOT_API_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`)
 
 **Core File Updates (Section 2)**
 - [ ] AGENTS.md updated with `## Book-to-Persona Skill (Installed)` and Persona Reflex
@@ -356,8 +357,8 @@ To declare this skill **INSTALLED AND OPERATIONAL**, ALL of the following must b
 **Live Behavior (Section 4)**
 - [ ] Test 4A: Task Mode applies persona execution standard with rule-based evaluation
 - [ ] Test 4B: Coaching Mode applies methodology without author impersonation
-- [ ] Test 4C: Gemini collection `coaching-personas` is registered and shows files
-- [ ] Test 4D: Gemini query returns relevant persona content
+- [ ] Test 4C: Gemini Vector Database `coaching-personas` is registered and shows files
+- [ ] Test 4D: Gemini Engine query returns relevant persona content
 - [ ] Test 4E: Persona Router correctly routes a marketing task to StoryBrand
 
 **Anti-Patterns (Section 5)**
@@ -375,8 +376,8 @@ After completing this checklist, mark one:
 [ ] PASS — All sections complete, zero HARD FAILs, knowledge score ≥ 8/10
     Skill is operational. Persona Reflex is active.
 
-[ ] PARTIAL — File structure complete, but Gemini not yet embedded or core files not yet updated
-    Action: Complete Gemini setup (gemini update && gemini embed) and apply CORE_UPDATES.md
+[ ] PARTIAL — File structure complete, but Gemini Engine not yet embedded or core files not yet updated
+    Action: Complete Gemini Engine setup (python3 ~/clawd/scripts/gemini-indexer.py) and apply CORE_UPDATES.md
 
 [ ] FAIL — One or more HARD FAILs present, or knowledge score below 8/10
     Action: Re-read all 7 skill .md files and repeat failed sections
@@ -386,18 +387,17 @@ After completing this checklist, mark one:
 
 ### Quick Repair Commands
 
-If Gemini collection is missing or broken:
+If Gemini Vector Database is missing or broken:
 ```bash
-gemini collection add ~/Downloads/openclaw-master-files/coaching-personas/personas \
   --name coaching-personas \
   --mask "**/*.md"
-gemini update
-gemini embed
+python3 ~/clawd/scripts/gemini-indexer.py
+# Handled by gemini-indexer.py
 ```
 
-If Gemini results are stale:
+If Gemini Engine results are stale:
 ```bash
-gemini cleanup && gemini update && gemini embed
+python3 ~/clawd/scripts/gemini-indexer.py --rebuild && python3 ~/clawd/scripts/gemini-indexer.py
 ```
 
 If unsure whether core files were updated:
