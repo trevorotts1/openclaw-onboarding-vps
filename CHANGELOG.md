@@ -1,3 +1,14 @@
+## v6.5.25 - April 1, 2026
+
+### Fixed
+- **markitdown-skill**: Added missing markitdown-skill folder with SKILL.md and INSTALL.md files. This skill was entirely missing from VPS repo and blocking client installs.
+
+### Changed
+- **version**: Bumped to v6.5.25
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.25
+
+---
+
 ## v6.5.24 - April 1, 2026
 
 ### Fixed
