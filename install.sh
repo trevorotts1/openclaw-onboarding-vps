@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ONBOARDING_VERSION="v6.5.28"
+ONBOARDING_VERSION="v6.5.29"
 
 # ============================================================
 #  OpenClaw Onboarding Installer (IMPROVED)
@@ -871,6 +871,17 @@ echo "  the UPDATE_PENDING section from your AGENTS.md."
 echo ""
 echo "============================================"
 echo ""
+echo "============================================"
+echo "  📋 SEND THIS MESSAGE TO YOUR AGENT:"
+echo ""
+echo "  You have just received an OpenClaw update."
+echo "  Read the UPDATE_PENDING section in your"
+echo "  AGENTS.md, process it, confirm you are"
+echo "  ready, then remove the UPDATE_PENDING"
+echo "  section from your AGENTS.md."
+echo ""
+echo "============================================"
+echo ""
 
 # ----------------------------------------------------------
 # Auto-restart gateway and send confirmation to client
@@ -900,7 +911,7 @@ if command -v openclaw &>/dev/null; then
     if [ -n "$TELEGRAM_CHAT_ID" ]; then
         echo "  📱 Sending Telegram confirmation to client..."
         # Use a background process that waits for gateway to come back
-        (sleep 8; openclaw message send --channel telegram --target "$TELEGRAM_CHAT_ID" --message "✅ OpenClaw setup complete! Your agent is live. Go to Telegram and send your agent the message shown in your terminal to finish setup." 2>/dev/null || echo "  📱 Telegram confirmation queued") &
+        (sleep 8; openclaw message send --channel telegram --target "$TELEGRAM_CHAT_ID" --message "✅ OpenClaw setup complete! Your agent is live. Send your agent this message in Telegram: You have just received an OpenClaw update. Read the UPDATE_PENDING section in your AGENTS.md, process it, confirm you are ready, then remove the UPDATE_PENDING section from your AGENTS.md." 2>/dev/null || echo "  📱 Telegram confirmation queued") &
     else
         echo "  ⚠️  No Telegram ID found — skipping notification"
     fi
