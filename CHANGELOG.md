@@ -1,3 +1,14 @@
+## v6.5.30 - April 3, 2026
+
+### Fixed
+- **VPS Gemini scripts path fix**: Fixed gemini-search.py and gemini-indexer.py in Skill 22 to use shared-utils paths, resolve_key() function, and /data/ paths for VPS compatibility. Resolves hardcoded Mac paths and NameError bugs that broke persona discovery pipeline on VPS deployments.
+
+### Changed
+- **version**: Bumped to v6.5.30
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.30
+
+---
+
 ## v6.5.29 - April 3, 2026
 
 ### Fixed
