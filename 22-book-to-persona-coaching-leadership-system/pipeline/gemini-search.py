@@ -17,7 +17,7 @@ except ImportError:
     sys.exit(1)
 
 def _get_google_api_key():
-    return get_google_key()
+    return resolve_key("GEMINI_API_KEY")
 
 
 
@@ -31,7 +31,7 @@ def _load_openclaw_env():
         except:
             pass
 
-DB_PATH = os.path.expanduser("~/clawd/data/coaching-personas/gemini-index.sqlite")
+DB_PATH = os.path.expanduser("/data/clawd/data/coaching-personas/gemini-index.sqlite")
 GEMINI_MODEL = "gemini-embedding-2-preview"
 TOP_K = 3
 

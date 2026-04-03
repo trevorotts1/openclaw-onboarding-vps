@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
 from key_resolver import resolve_key
 
 def _get_google_api_key():
-    return get_google_key()
+    return resolve_key("GEMINI_API_KEY")
 
 
 
@@ -35,12 +35,12 @@ def _load_openclaw_env():
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-DB_PATH = os.path.expanduser("~/clawd/data/coaching-personas/gemini-index.sqlite")
-PERSONAS_DIR_PRIMARY = os.path.expanduser("~/clawd/data/coaching-personas/personas")
-PERSONAS_DIR_FALLBACK = os.path.expanduser("~/Downloads/openclaw-master-files/coaching-personas/personas")
-BOOKS_WATCH_DIR = os.path.expanduser("~/Downloads/openclaw-master-files/coaching-personas/books")
-MEMORY_DIR = os.path.expanduser("~/clawd/memory")
-PERSONA_SELECTIONS_DIR = os.path.expanduser("~/clawd/memory/persona-selections")
+DB_PATH = os.path.expanduser("/data/clawd/data/coaching-personas/gemini-index.sqlite")
+PERSONAS_DIR_PRIMARY = os.path.expanduser("/data/clawd/data/coaching-personas/personas")
+PERSONAS_DIR_FALLBACK = os.path.expanduser("/data/Downloads/openclaw-master-files/coaching-personas/personas")
+BOOKS_WATCH_DIR = os.path.expanduser("/data/Downloads/openclaw-master-files/coaching-personas/books")
+MEMORY_DIR = os.path.expanduser("/data/clawd/memory")
+PERSONA_SELECTIONS_DIR = os.path.expanduser("/data/clawd/memory/persona-selections")
 
 COLLECTIONS = {
     "coaching-personas": {
@@ -49,8 +49,8 @@ COLLECTIONS = {
         "glob": "**/*.md",
     },
     "master-files": {
-        "primary": os.path.expanduser("~/clawd/data/master-files"),
-        "fallback": os.path.expanduser("~/Downloads/openclaw-master-files"),
+        "primary": os.path.expanduser("/data/clawd/data/master-files"),
+        "fallback": os.path.expanduser("/data/Downloads/openclaw-master-files"),
         "glob": "**/*.md",
     },
 }
