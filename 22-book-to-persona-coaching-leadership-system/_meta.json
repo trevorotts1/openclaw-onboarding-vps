@@ -1,7 +1,7 @@
 {
   "name": "book-to-persona",
   "displayName": "Book Intelligence Pipeline",
-  "description": "Converts any bestselling book PDF into a dual-purpose persona blueprint — coaches humans AND governs AI agents. 3-phase pipeline: Kimi K2.5 extracts, DeepSeek V3.2-Speciale analyzes, GPT-5.3 Codex synthesizes. Gemini-indexed for retrieval.",
+  "description": "Converts any bestselling book PDF into a dual-purpose persona blueprint — coaches humans AND governs AI agents. 3-phase pipeline: Kimi K2.5 extracts, DeepSeek V3.2-Speciale analyzes, GPT-5.3 Codex synthesizes. Gemini Engine-indexed for retrieval. Wiki-enabled for unified knowledge access.",
   "version": "1.0.0",
   "author": "BlackCEO / Trevor Otts",
   "requires": {

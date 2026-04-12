@@ -8,11 +8,11 @@ This is the combined reference document for Skill 31. It contains all documentat
 
 # === SKILL.md ===
 
-# Skill 31: Upgraded Memory System (5-Layer Architecture)
+# Skill 31: Upgraded Memory System (8-Layer Architecture)
 
 ## What This Skill Is About
 
-This skill upgrades your OpenClaw agent from the default memory system to a 5-layer architecture that makes your agent genuinely remember everything, find information accurately, and improve over time. The default memory system works okay at first but degrades as memory grows. This fixes that.
+This skill upgrades your OpenClaw agent from the default memory system to an 8-layer architecture that makes your agent genuinely remember everything, find information accurately, and improve over time. The default memory system works okay at first but degrades as memory grows. This fixes that.
 
 ## When to Use This Skill
 
@@ -23,7 +23,7 @@ This skill upgrades your OpenClaw agent from the default memory system to a 5-la
 - You want your agent to automatically capture and recall memory without being told
 - You are migrating from the old Google Embedding 2 retrieval query system to Google Gemini Embedding 2
 
-## The 5 Layers
+## The 8 Layers
 
 | Layer | What It Does | How It Works |
 |-------|-------------|--------------|
@@ -31,17 +31,19 @@ This skill upgrades your OpenClaw agent from the default memory system to a 5-la
 | 2. Memory flush | Saves important context before compaction | Custom prompt with 8 categories tells the agent exactly what to capture |
 | 3. Session indexing | Makes past conversations searchable | Agent can search what you talked about last week, not just today |
 | 4. Gemini Embedding 2 | Finds information by meaning | Google's multimodal embedding API replaces the old local search |
-| 5. Mem0 | Auto-captures and auto-recalls memory | Memory lives outside the context window, survives compaction |
+| 5. memory-core | Auto-captures and auto-recalls memory | Native OpenClaw memory system - survives compaction, no external dependencies |
+| 6. Cognee | Graph-based knowledge relationships | Connects facts, people, projects in a graph database for complex queries |
+| 7. Obsidian Vault | Structured knowledge base | Obsidian-compatible markdown with wikilinks, frontmatter, and daily notes |
+| 8. Wiki System | Collaborative documentation | Memory wiki with deterministic pages, managed blocks, and source-backed updates |
 
 ## Files in This Folder and Reading Order
 
 1. **SKILL.md** - You are here. Overview and context.
-2. **INSTALL.md** - Step-by-step installation for all 5 layers.
+2. **INSTALL.md** - Step-by-step installation for all 8 layers.
 3. **INSTRUCTIONS.md** - How to use and maintain the memory system after installation.
 4. **EXAMPLES.md** - Example searches, flush outputs, and memory operations.
-5. **CORE_UPDATES.md** - Exact additions for AGENTS.md, TOOLS.md, MEMORY.md, and HEARTBEAT.md.
-6. **HOW-YOUR-MEMORY-WORKS.md** - Plain-English explanation for clients. If the user ever asks "how does my memory work" or "explain the memory system," reference this file.
-7. **upgraded-memory-system.skill** - Skill metadata file.
+5. **CORE_UPDATES.md** - What to add to AGENTS.md, TOOLS.md, and MEMORY.md.
+6. **upgraded-memory-system.skill** - Skill metadata file.
 
 ## Prerequisites
 
@@ -61,57 +63,20 @@ This skill upgrades your OpenClaw agent from the default memory system to a 5-la
 
 ## Key Things the AI Agent Must Know
 
-1. All 5 layers run simultaneously. They do not compete. Each solves a different problem.
+1. All 8 layers run simultaneously. They do not compete. Each solves a different problem.
 2. Layer 4 (Gemini Embedding 2) replaces the old Google Embedding 2 retrieval query engine. Google Embedding 2 is deprecated.
-3. Layer 5 (Mem0) installs as an OpenClaw plugin. It occupies the memory plugin slot.
+3. Layer 5 (memory-core) is the native OpenClaw memory system. It replaces the legacy memory plugin.
+4. Layers 6-8 (Cognee, Obsidian Vault, Wiki System) are advanced add-ons that extend memory capabilities.
 4. The memory flush prompt must include explicit categories or it saves junk.
 5. Session indexing adds noise, so the flush prompt is even more important as a filter.
 6. If migrating from Google Embedding 2: run the migration steps in INSTALL.md before enabling Layer 4.
-7. Do NOT install Cognee (Layer 6) as part of this skill. That is a separate advanced add-on requiring Docker.
+7. Cognee (Layer 6) requires Docker. Install only if you need graph-based knowledge relationships.
 
 ---
 
 # === INSTALL.md ===
 
-╔══════════════════════════════════════════════════════════════╗
-  MANDATORY TYP CHECK - READ THIS BEFORE ANYTHING ELSE
-DO NOT SKIP. DO NOT PROCEED UNTIL THIS CHECK IS COMPLETE.
-
-STEP 1: CHECK IF YOU HAVE BEEN TAUGHT THE TEACH YOURSELF PROTOCOL (TYP)
-
-Before you read, learn, or execute ANY instruction in this document, you must
-verify that you have already been taught the Teach Yourself Protocol (TYP).
-
-HOW TO CHECK:
-- Look in your AGENTS.md, TOOLS.md, or MEMORY.md for any mention of:
-  "Teach Yourself Protocol" or "TYP"
-- Look in your session context for prior TYP training
-- Look for a tab called "Teach Yourself Protocol" in this same document
-
-IF YOU HAVE BEEN TAUGHT TYP:
-Proceed to the instructions below. Follow the TYP file storage structure.
-
-IF YOU HAVE NOT BEEN TAUGHT TYP:
-STOP IMMEDIATELY. Do not read further. Do not attempt to learn or execute
-anything in this document. Stop and report to the user:
-
-  "Teach Yourself Protocol (TYP) is not installed yet. This skill cannot
-   be safely installed without TYP. Navigate to 01-teach-yourself-protocol/
-   in the onboarding package and complete that installation first.
-   Without TYP, core .md files will be bloated and tokens wasted."
-
-DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
-
-CONFLICT RULE (applies to all skill installs):
-If THIS skill file says one thing, and TYP says another, TYP wins.
-Skill docs override generic instructions. TYP overrides skill docs.
-User's explicit override is highest priority. Chain:
-  User Override > TYP > Skill Docs > Generic Instructions
-╚══════════════════════════════════════════════════════════════╝
-
----
-
-# Upgraded Memory System - Installation
+# Upgraded Memory System - Installation (8-Layer)
 
 ## Prerequisite Check
 
@@ -289,78 +254,9 @@ Find the top-level `memory` section in openclaw.json and set:
 }
 ```
 
-**Important:** There may be TWO places where the backend is configured. The top-level `memory.backend` AND the `agents.defaults.memorySearch.provider`. The top-level must say "builtin" and memorySearch.provider must say "gemini". If the top-level still says "google embedding 2", the search will fall back to Google Embedding 2 instead of using Gemini Embedding 2.
+**Important:** There may be TWO places where the backend is configured. The top-level `memory.backend` AND the `agents.defaults.memorySearch.provider`. The `memory.backend` should be "builtin" (for memory-core) and `memorySearch.provider` should be "gemini". If the top-level still says "google embedding 2", the search will fail even if memorySearch says "gemini".
 
-### 4.3 Add knowledge folders to the index (extraPaths)
-
-By default, OpenClaw only indexes the workspace memory files and session transcripts. To index the full knowledge base (master files, personas, AI workforce docs, and all subfolders), you MUST configure `extraPaths`.
-
-**Step 1: Find the master files folder.**
-
-Search the user's machine for any folder matching these names (case-insensitive):
-- openclaw-master-files
-- OpenClaw Master Files
-- openclaw master files
-- Any folder in ~/Downloads/ containing "openclaw" and "master" or "onboarding"
-
-```bash
-find ~/Downloads -maxdepth 2 -type d -iname "*openclaw*master*" -o -iname "*openclaw*onboarding*" 2>/dev/null
-```
-
-**Step 2: Add the path to memorySearch.extraPaths.**
-
-In `~/.openclaw/openclaw.json`, inside the `agents.defaults.memorySearch` section, add:
-
-```json
-"extraPaths": [
-  "/Users/USERNAME/Downloads/openclaw-master-files"
-]
-```
-
-**CRITICAL: Use the FULL ABSOLUTE path, not a tilde (~).** OpenClaw resolves non-absolute paths relative to the workspace directory, so `~/Downloads/...` becomes `~/clawd/~/Downloads/...` which does not exist.
-
-To get the absolute path:
-```bash
-# This prints the full absolute path
-echo "$(cd ~/Downloads/openclaw-master-files && pwd)"
-```
-
-Use the ACTUAL path found in Step 1. If the folder is named differently (e.g., "OpenClaw Master Files" with spaces), use that exact name with the full absolute path:
-
-```json
-"extraPaths": [
-  "/Users/USERNAME/Downloads/OpenClaw Master Files"
-]
-```
-
-This tells OpenClaw to index EVERYTHING in that folder and ALL subfolders, including:
-- Coaching personas
-- AI Workforce Blueprint docs
-- Department SOPs
-- All skill documentation
-- Any other knowledge docs
-
-### 4.4 Enable multimodal indexing
-
-Gemini Embedding 2 supports images, audio, and video, not just text. To index ALL file types, enable multimodal in the `memorySearch` section:
-
-```json
-"multimodal": {
-  "enabled": true,
-  "modalities": ["all"]
-}
-```
-
-This tells OpenClaw to embed:
-- `.md` (markdown documents - always indexed, even without multimodal)
-- `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.heic`, `.heif` (images - requires multimodal)
-- `.mp3`, `.wav`, `.ogg`, `.opus`, `.m4a`, `.aac`, `.flac` (audio - requires multimodal)
-
-**Not supported by the current indexer:** `.pdf`, `.txt`, `.mp4`, `.webm`, `.sh`, `.py`, `.json`. These file types are skipped during indexing. Only markdown and multimodal media files are indexed.
-
-Do NOT skip this step. Without multimodal enabled, images and audio files in the master files folder will NOT be embedded.
-
-### 4.5 Configure search quality
+### 4.3 Configure search quality
 
 In the `memorySearch` section, add:
 
@@ -377,119 +273,177 @@ In the `memorySearch` section, add:
 }
 ```
 
-### 4.6 Complete Layer 4 config example
+---
 
-After all Layer 4 steps, the full `memorySearch` section should look like this:
+## Layer 5: memory-core (Native Memory System)
+
+Layer 5 uses OpenClaw's built-in memory-core instead of the legacy memory plugin.
+
+### 5.1 Verify memory-core is enabled
+
+In `~/.openclaw/openclaw.json`, verify the memory backend:
 
 ```json
-"memorySearch": {
-  "enabled": true,
-  "sources": ["memory", "sessions"],
-  "experimental": {
-    "sessionMemory": true
-  },
-  "provider": "gemini",
-  "model": "models/gemini-embedding-2-preview",
-  "extraPaths": [
-    "/Users/USERNAME/Downloads/openclaw-master-files"
-  ],
-  "multimodal": {
-    "enabled": true,
-    "modalities": ["all"]
-  },
-  "sync": {
-    "onSessionStart": true,
-    "onSearch": true,
-    "watch": true,
-    "watchDebounceMs": 1200,
-    "sessions": {
-      "deltaBytes": 20000,
-      "deltaMessages": 10
-    }
-  },
-  "query": {
-    "maxResults": 50,
-    "minScore": 0.18,
-    "hybrid": {
-      "enabled": true,
-      "vectorWeight": 0.75,
-      "textWeight": 0.25,
-      "candidateMultiplier": 8
-    }
-  }
+"memory": {
+  "backend": "builtin"
 }
 ```
 
-Replace the `extraPaths` value with the actual path found on the user's machine.
+### 5.2 Configure auto-capture
+
+In `~/.openclaw/openclaw.json`, under `agents.defaults`, add:
+
+```json
+"memory": {
+  "autoCapture": true,
+  "autoRecall": true
+}
+```
+
+### 5.3 Verify memory-core status
+
+```bash
+openclaw memory status
+```
+
+Expected output should show:
+- Backend: builtin
+- Provider: gemini
+- Auto-capture: enabled
+- Auto-recall: enabled
 
 ---
 
-## Layer 5: Mem0 (Auto-Capture and Auto-Recall)
+## Layer 6: Cognee (Graph-Based Knowledge)
 
-### 5.1 Install the Mem0 plugin
+**Requires Docker. Skip if Docker is not available.**
+
+### 6.1 Check Docker availability
 
 ```bash
-openclaw plugins install @mem0/openclaw-mem0
+docker --version
 ```
 
-### 5.2 Set the memory slot
+If Docker is not installed, Layer 6 will be marked as PENDING.
 
-In `~/.openclaw/openclaw.json`, set:
+### 6.2 Install Cognee
 
-```json
-"plugins": {
-  "slots": {
-    "memory": "openclaw-mem0"
-  }
-}
+```bash
+openclaw plugins install @openclaw/cognee
 ```
 
-### 5.3 Configure Mem0
+### 6.3 Configure Cognee
 
-In the plugins.entries section:
+In `~/.openclaw/openclaw.json`, under `plugins.entries`:
 
 ```json
-"openclaw-mem0": {
+"cognee": {
   "enabled": true,
   "config": {
-    "mode": "open-source",
-    "userId": "[USERNAME]",
-    "oss": {
-      "llm": {
-        "provider": "gemini",
-        "config": {
-          "apiKey": "${GEMINI_API_KEY}",
-          "model": "gemini-3-flash-preview"
-        }
-      },
-      "embedder": {
-        "provider": "gemini",
-        "config": {
-          "apiKey": "${GEMINI_API_KEY}",
-          "model": "models/gemini-embedding-001"
-        }
-      }
-    }
+    "connection_string": "sqlite:///data/cognee.db",
+    "llm_provider": "gemini",
+    "llm_model": "gemini-3-flash-preview"
   }
 }
 ```
 
-Replace [USERNAME] with the user's Telegram username or preferred identifier.
-
-**Important technical notes:**
-- The `llm` and `embedder` blocks must be nested inside `config.oss`, NOT directly under `config`
-- The embedder model requires the "models/" prefix (e.g., "models/gemini-embedding-001")
-- The LLM model does NOT use the "models/" prefix (e.g., "gemini-3-flash-preview")
-- The same GEMINI_API_KEY is used for both LLM and embedder
-- If you previously used OpenAI for Mem0, existing vectors may be incompatible after switching to Gemini embedder and may require a vector store reset/rebuild
-
-### 5.4 Verify Mem0 is loaded
+### 6.4 Start Cognee container
 
 ```bash
-openclaw plugins list | grep -i "mem0"
+openclaw cognee start
 ```
 
-Expected output should show Mem0 as "loaded" with autoRecall and autoCapture both true.
+### 6.5 Verify Cognee is running
+
+```bash
+openclaw cognee status
+```
+
+Expected: Status shows "connected" with graph statistics.
+
+---
+
+## Layer 7: Obsidian Vault (Structured Knowledge Base)
+
+### 7.1 Check if Obsidian is installed (Linux)
+
+```bash
+which obsidian 2>/dev/null || flatpak list 2>/dev/null | grep -i obsidian
+```
+
+If Obsidian is not installed, you can download it from https://obsidian.md or install via flatpak: `flatpak install flathub md.obsidian.Obsidian`
+
+### 7.2 Create or identify vault location
+
+Default vault location:
+```bash
+mkdir -p ~/Documents/ObsidianVault
+```
+
+Or use an existing vault:
+```bash
+ls ~/Documents/ | grep -i obsidian
+```
+
+### 7.3 Configure Obsidian integration
+
+In `~/.openclaw/openclaw.json`, add:
+
+```json
+"obsidian": {
+  "enabled": true,
+  "vaultPath": "/home/USERNAME/Documents/ObsidianVault",
+  "dailyNotes": true,
+  "wikilinks": true
+}
+```
+
+Replace USERNAME with your actual username.
+
+### 7.4 Verify vault access
+
+```bash
+openclaw obsidian status
+```
+
+Expected: Shows vault path, note count, and daily notes status.
+
+---
+
+## Layer 8: Wiki System (Collaborative Documentation)
+
+### 8.1 Enable wiki system
+
+In `~/.openclaw/openclaw.json`, add:
+
+```json
+"wiki": {
+  "enabled": true,
+  "vaultPath": "/home/USERNAME/.openclaw/wiki",
+  "backend": "sqlite"
+}
+```
+
+### 8.2 Initialize wiki vault
+
+```bash
+openclaw wiki init
+```
+
+### 8.3 Configure wiki sync
+
+```bash
+openclaw wiki config set autoSync true
+openclaw wiki config set syncInterval 300
+```
+
+### 8.4 Verify wiki system
+
+```bash
+openclaw wiki status
+```
+
+Expected: Shows vault initialized, sync enabled, page count.
 
 ---
 
@@ -506,7 +460,7 @@ ls ~/.cache/google embedding 2/index.sqlite 2>/dev/null && echo "Google Embeddin
 
 ### M.2 If Google Embedding 2 is present, update the backend
 
-The config change in Layer 4 (Step 4.2) handles this. Verify `memory.backend is "builtin", not "google embedding 2".
+The config change in Layer 4 (Step 4.2) handles this. Verify `memory.backend` is "builtin", not "google embedding 2".
 
 ### M.3 Clean up old Google Embedding 2 (optional)
 
@@ -522,239 +476,54 @@ rm -rf ~/.cache/google embedding 2/
 
 ## Post-Installation Verification
 
-After all layers are configured, verify each one before asking for a restart.
-
-### Config Validation (MANDATORY)
-
-Before asking the user to restart, validate the config:
+After all layers are installed, run these checks:
 
 ```bash
-openclaw config validate
+# Layer 1: Markdown files exist
+ls ~/clawd/MEMORY.md ~/clawd/memory/
+
+# Layer 2: Flush prompt is configured
+grep "memoryFlush" ~/.openclaw/openclaw.json | head -1
+
+# Layer 3: Session indexing is on
+grep "sessionMemory" ~/.openclaw/openclaw.json
+
+# Layer 4: Gemini provider is set (skip if GOOGLE_API_KEY not set)
+grep '"backend"' ~/.openclaw/openclaw.json
+grep '"provider"' ~/.openclaw/openclaw.json | grep gemini
+
+# Layer 5: memory-core is enabled
+openclaw memory status | grep -E "Backend|autoCapture|autoRecall"
+
+# Layer 6: Cognee is running (if Docker available)
+openclaw cognee status 2>/dev/null || echo "Cognee not running (may need Docker)"
+
+# Layer 7: Obsidian is installed (Linux)
+which obsidian 2>/dev/null || flatpak list 2>/dev/null | grep -i obsidian && echo "Obsidian installed" || echo "Obsidian not installed"
+
+# Layer 8: Wiki system is initialized
+openclaw wiki status 2>/dev/null || echo "Wiki not initialized"
 ```
-
-If it says "Config valid", proceed. If it says "Invalid input" or any error, DO NOT ask for a restart. Fix the config issue first.
-
-### Layer-by-Layer Verification
-
-Run these checks and report the results to the user in Telegram:
-
-```bash
-# Layer 1: Markdown files
-echo "Layer 1:" && ls ~/clawd/MEMORY.md 2>/dev/null && echo "MEMORY.md OK" || echo "MEMORY.md MISSING"
-ls ~/clawd/memory/ 2>/dev/null | wc -l | xargs -I{} echo "Daily logs: {} files"
-
-# Layer 2: Flush prompt
-echo "Layer 2:" && grep -c "memoryFlush" ~/.openclaw/openclaw.json | xargs -I{} echo "Flush config entries: {}"
-
-# Layer 3: Session indexing
-echo "Layer 3:" && grep "sessionMemory" ~/.openclaw/openclaw.json | xargs echo
-
-# Layer 4: Gemini search
-echo "Layer 4:" && grep '"backend"' ~/.openclaw/openclaw.json | head -1
-grep '"provider"' ~/.openclaw/openclaw.json | grep gemini | head -1
-
-# Layer 5: Mem0
-echo "Layer 5:" && openclaw plugins list 2>/dev/null | grep -i "mem0" || echo "Mem0 not detected"
-```
-
-**Send the results to the user in Telegram** in plain language:
-
-> Memory system verification:
-> - Layer 1 (Markdown files): [OK/MISSING]
-> - Layer 2 (Memory flush): [CONFIGURED/NOT SET]
-> - Layer 3 (Session indexing): [ENABLED/DISABLED]
-> - Layer 4 (Gemini search): [READY/PENDING - needs API key]
-> - Layer 5 (Mem0): [LOADED/NOT LOADED]
->
-> Config validation: [PASSED/FAILED]
 
 ### Gateway Restart
 
-After verification passes, send this message to the user in Telegram:
+After all configuration changes:
 
-> All 5 memory layers are configured. I need you to restart the gateway for the changes to take effect. Please type /restart when you are ready.
-
-Do NOT restart the gateway yourself. Wait for the user to do it.
-
-### Post-Restart: Knowledge Indexing and Embedding
-
-After the user restarts the gateway, TWO things must happen:
-
-1. **Indexing**: discovering and reading all knowledge files
-2. **Embedding**: converting those files into vector representations via the Gemini Embedding 2 API
-
-These are separate operations. Indexing without embedding means the files are known but not searchable. Both must complete.
-
-#### Step 1: Discover knowledge folders
-
-Search the user's machine for all knowledge folders. Check these locations (case-insensitive):
-
-```bash
-# Find all candidate knowledge folders
-find ~/Downloads -maxdepth 2 -type d -iname "*openclaw*master*" -o -iname "*openclaw*onboarding*" 2>/dev/null
+```
+Tell the user: "I need you to restart the OpenClaw gateway for the memory upgrades to take effect. Please type /restart in Telegram or run: openclaw gateway restart"
 ```
 
-Also include:
-- The workspace directory (check `agents.defaults.workspace` in openclaw.json, typically ~/clawd/ or ~/.openclaw/workspace)
-- The memory/ subdirectory inside the workspace
-- Any coaching-personas, AI-workforce-blueprint, or department folders inside the master files folder
+Do NOT restart the gateway yourself. Ask the user to do it.
 
-Report to the user what you found:
+### Final Test
 
-> I found these knowledge folders to index and embed:
-> - [list each folder and approximate file count]
+After restart, test the memory system:
 
-#### Step 2: Trigger indexing
-
-OpenClaw's builtin memory backend indexes files in the workspace directory and configured paths automatically after restart. Verify indexing has started:
-
-```bash
-openclaw memory status 2>&1 | grep -E 'Indexed|Provider|Model|Vector|Batch'
+```
+Ask the agent: "Search your memory for [any topic the user has discussed before]"
 ```
 
-If the indexed count is 0 or very low and the restart happened more than 60 seconds ago, something is wrong. Check:
-- Is GOOGLE_API_KEY / GEMINI_API_KEY set in the environment?
-- Is memory.backend = "builtin"?
-- Is memorySearch.provider = "gemini"?
-
-#### Step 3: Verify embedding
-
-Embedding happens automatically as part of the indexing pipeline when the provider is Gemini. Verify embeddings are being generated:
-
-```bash
-openclaw memory status 2>&1 | grep -E 'Vector dims|Embedding cache|chunks'
-```
-
-Expected output should show:
-- Vector dims: 3072 (this confirms Gemini Embedding 2 is generating vectors)
-- Embedding cache: enabled with entries
-- Chunks: growing number (files being split and embedded)
-
-If Vector dims shows 0 or is missing, the embedding pipeline is not running. Check the API key.
-
-#### Step 4: Monitor progress
-
-For large knowledge bases, indexing and embedding may take several minutes. Check progress:
-
-```bash
-# Run this every 30 seconds until counts stabilize
-openclaw memory status 2>&1 | grep 'Indexed'
-```
-
-When the indexed file count stops growing and matches the expected file count, indexing and embedding are complete.
-
-#### Step 5: Report to user in Telegram
-
-Send a progress update, then a completion message:
-
-During indexing:
-> Indexing and embedding your knowledge base with Gemini Embedding 2...
-> - [X] files found across [Y] folders
-> - [Z] files indexed so far, [N] chunks embedded
-> - Vector dimensions: 3072 (Gemini Embedding 2 confirmed)
-> - Status: in progress...
-
-After completion:
-> Knowledge base indexing and embedding complete.
-> - [X] files indexed
-> - [N] chunks embedded
-> - Vector dimensions: 3072
-> - All knowledge files are now searchable.
-
-**File types indexed by OpenClaw memory search:**
-- `.md` (markdown - always indexed)
-- `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.heic`, `.heif` (images - requires multimodal enabled)
-- `.mp3`, `.wav`, `.ogg`, `.opus`, `.m4a`, `.aac`, `.flac` (audio - requires multimodal enabled)
-
-**NOT indexed:** `.pdf`, `.txt`, `.mp4`, `.webm`, `.sh`, `.py`, `.json`, `.skill`. The current OpenClaw indexer only supports markdown + multimodal media files.
-
----
-
-### Post-Restart: Live Memory Layer Testing
-
-After indexing and embedding are confirmed complete, run a REAL test of each memory layer. Do not just check config values. Actually test whether each layer works.
-
-#### Test Layer 1: Markdown Files
-
-```bash
-# Verify MEMORY.md exists and has real content
-wc -l ~/clawd/MEMORY.md
-# Expected: more than 10 lines of real content, not just a template header
-
-# Verify daily logs exist
-ls ~/clawd/memory/*.md 2>/dev/null | wc -l
-# Expected: at least 1 daily log file
-```
-
-Report: "Layer 1: MEMORY.md has [X] lines. [Y] daily log files found."
-
-#### Test Layer 2: Memory Flush
-
-This layer cannot be tested directly without triggering a compaction event. Verify the config is set correctly:
-
-```bash
-grep -A2 '"memoryFlush"' ~/.openclaw/openclaw.json | head -3
-```
-
-Confirm: enabled = true, softThresholdTokens is set, prompt contains category-based capture instructions.
-
-Report: "Layer 2: Memory flush configured with [X]-category capture prompt."
-
-#### Test Layer 3: Session Indexing
-
-```bash
-# Check if past sessions are being indexed
-openclaw memory status 2>&1 | grep -A2 'sessions'
-```
-
-Expected: shows session source with indexed count > 0 (if there have been previous conversations).
-
-Report: "Layer 3: Session indexing active. [X] past sessions indexed."
-
-#### Test Layer 4: Gemini Embedding 2 Search
-
-Run an actual search query, not just a config check:
-
-```bash
-openclaw memory search "the user" 2>&1 | head -20
-```
-
-Expected: returns actual search results with content from the user's files.
-
-If this returns nothing:
-1. Check if GOOGLE_API_KEY is set: `echo $GOOGLE_API_KEY`
-2. Check if indexing completed: `openclaw memory status`
-3. Check if backend is correct: `grep '"backend"' ~/.openclaw/openclaw.json`
-
-Report: "Layer 4: Gemini search returned [X] results. Search is operational." or "Layer 4: Search returned no results. [diagnosis]."
-
-#### Test Layer 5: Mem0
-
-```bash
-openclaw status 2>&1 | grep -i 'mem0'
-```
-
-Expected: shows openclaw-mem0 registered with autoRecall: true, autoCapture: true.
-
-Report: "Layer 5: Mem0 loaded. Auto-capture: [on/off]. Auto-recall: [on/off]."
-
-#### Final Report to User in Telegram
-
-After testing ALL 5 layers, send ONE comprehensive message:
-
-> Memory system test results:
->
-> Layer 1 (Markdown files): [PASS/FAIL] - MEMORY.md has [X] lines, [Y] daily logs
-> Layer 2 (Memory flush): [PASS/FAIL] - Category-based capture prompt configured
-> Layer 3 (Session indexing): [PASS/FAIL] - [X] past sessions indexed
-> Layer 4 (Gemini search): [PASS/FAIL] - Search returned [X] results from [Y] indexed files
-> Layer 5 (Mem0): [PASS/FAIL] - Auto-capture [on/off], auto-recall [on/off]
->
-> Overall: [X]/5 layers operational.
-> [If all pass]: Your upgraded memory system is fully installed and working.
-> [If any fail]: [Specific layer] needs attention: [what to fix].
-
-Do NOT say "all layers working" unless you ran real tests and every one passed.
+If results come back, all layers are working.
 
 ---
 
@@ -762,29 +531,37 @@ Do NOT say "all layers working" unless you ran real tests and every one passed.
 
 If any layer test fails after the config changes and restart:
 
+#### Pre-Surgery Backup
+
+Before making any config changes, create a backup:
+```bash
+mkdir -p ~/.openclaw/backups
+cp ~/.openclaw/openclaw.json ~/.openclaw/backups/openclaw-$(date +%Y%m%d-%H%M%S).json
+```
+
 #### Layer 4 failure (search returns nothing, wrong provider, or config crash)
 
 1. Restore the config backup you created before making changes:
    ```bash
-   cp [BACKUP_PATH]/openclaw.json ~/.openclaw/openclaw.json
+   cp ~/.openclaw/backups/openclaw-*.json ~/.openclaw/openclaw.json
    ```
 2. Ask the user to type /restart
 3. Report to the user what failed and what was rolled back
 4. Do NOT attempt to re-apply the changes until the root cause is diagnosed
 
-#### Layer 5 failure (Mem0 not loading)
+#### Layer 5 failure (memory-core not enabled)
 
-1. Check if the plugin is installed: `openclaw plugins list`
-2. If missing, reinstall: `openclaw plugins install @mem0/openclaw-mem0`
-3. Verify the memory slot is set correctly in openclaw.json
-4. Ask the user to type /restart
+1. Check memory backend config: `openclaw memory status`
+2. Verify openclaw.json has `"memory": { "backend": "builtin" }`
+3. If config is wrong, correct it and ask the user to type /restart
+4. memory-core is built-in; no plugin installation needed
 
 #### Config validation failure (openclaw config validate says invalid)
 
 1. Do NOT ask the user to restart
 2. Immediately restore from backup:
    ```bash
-   cp [BACKUP_PATH]/openclaw.json ~/.openclaw/openclaw.json
+   cp ~/.openclaw/backups/openclaw-*.json ~/.openclaw/openclaw.json
    ```
 3. Re-validate: `openclaw config validate`
 4. Report to the user exactly what value caused the failure
@@ -799,200 +576,22 @@ If any layer test fails after the config changes and restart:
 
 ---
 
-## Update Flow (for future updates)
-
-When the onboarding package is updated (via the weekly Sunday check or manual update), the agent should communicate the entire update process to the user in Telegram, not in the terminal.
-
-### Update Status File
-
-After an update runs, it writes a status file at:
-`~/.openclaw/onboarding/.update-result.json`
-
-The agent should check for this file on each heartbeat. If it exists, read it and send a summary to the user in Telegram:
-
-> Your system was updated from [old version] to [new version].
-> Here is what changed: [summary from status file]
-> Backup saved to: [path]
-> [If restart needed]: Type /restart when you are ready.
-
-After sending, rename the file to `.update-result-sent.json` so it is not sent again.
-
-### Update Progress
-
-During an update, progress should be communicated in Telegram, not buried in terminal output. The agent should send brief status messages:
-
-> Checking for updates...
-> Update available: [old] to [new]. Reviewing impact...
-> [X] changes found. Applying approved changes...
-> Update complete. [details]
-
----
-
 ## Completion Checklist
 
 ```
-CONFIGURATION
-[ ] Layer 1: MEMORY.md exists and has real content (not just template)
-[ ] Layer 1: memory/ directory exists
-[ ] Layer 2: Flush prompt updated with category-based capture
+[ ] Layer 1: MEMORY.md exists and has content
+[ ] Layer 1: memory/ directory exists with daily logs
+[ ] Layer 2: Flush prompt updated with 8 categories
 [ ] Layer 3: sessionMemory enabled
 [ ] Layer 4: memory.backend set to "builtin" (or PENDING if no API key)
 [ ] Layer 4: memorySearch.provider set to "gemini" (or PENDING if no API key)
-[ ] Layer 4: extraPaths configured with master files folder path
-[ ] Layer 4: multimodal.enabled = true, modalities = ["all"]
-[ ] Layer 5: Mem0 plugin installed and loaded
-[ ] Layer 5: autoCapture and autoRecall both true
-[ ] Config validated with openclaw config validate - MUST PASS
-
-RESTART
-[ ] Gateway restarted by user (agent asked in Telegram, user typed /restart)
-
-INDEXING AND EMBEDDING
-[ ] Knowledge folders discovered (master files, subfolders, workspace, memory)
-[ ] All supported file types included (md, txt, pdf, images, audio, video)
-[ ] Indexing confirmed running (openclaw memory status shows file count growing)
-[ ] Embedding confirmed (Vector dims: 3072 visible in memory status)
-[ ] Indexing and embedding complete (file count stabilized)
-
-LIVE TESTING (must run real queries, not just config checks)
-[ ] Layer 1 tested: MEMORY.md readable with real content
-[ ] Layer 2 tested: Flush prompt config verified
-[ ] Layer 3 tested: Session indexing shows past sessions
-[ ] Layer 4 tested: openclaw memory search returned real results
-[ ] Layer 5 tested: Mem0 shows registered with autoCapture + autoRecall on
-
-REPORTING
-[ ] All layer test results reported to user in Telegram
-[ ] Indexing/embedding status reported to user in Telegram
-[ ] If any layer failed, specific diagnosis sent to user
-[ ] Core files updated per CORE_UPDATES.md (using TYP rules)
-
-CLIENT EDUCATION
-[ ] HOW-YOUR-MEMORY-WORKS.md is available in the skill folder
-[ ] If user asks how their memory works, reference this file for a plain-English explanation
-```
-
----
-
-# === INSTRUCTIONS.md ===
-
-# Upgraded Memory System - Usage Instructions
-
-## How the 5 Layers Work Together
-
-Every time you interact with your agent, all 5 layers are active:
-
-1. **You say something.** The agent receives your message.
-2. **Layer 5 (Mem0) auto-recalls** relevant memories before the agent responds.
-3. **Layer 3 (Session indexing)** lets the agent search past conversations if needed.
-4. **Layer 4 (Gemini search)** finds relevant content from your memory files by meaning.
-5. **The agent responds** using all that context.
-6. **Layer 5 (Mem0) auto-captures** important facts from the conversation.
-7. **When context gets full, Layer 2 (flush)** saves important information to daily logs before compaction clears the context window.
-8. **Layer 1 (markdown files)** stores everything permanently on disk.
-
-You do not need to do anything special. The system works automatically.
-
-## Maintaining Your Memory
-
-### Weekly: Clean up MEMORY.md
-
-At least once a week, open ~/clawd/MEMORY.md and:
-- Remove entries that are no longer relevant
-- Correct any information that has changed
-- Consolidate duplicate entries
-
-Use Obsidian if you want a nice UI for editing markdown files.
-
-### Monthly: Review daily logs
-
-Check ~/clawd/memory/ for old daily logs. Delete logs older than 90 days that contain only routine information. Keep logs that document important decisions.
-
-### When things feel off: Test the search
-
-If the agent seems to be forgetting things or returning bad search results:
-
-```
-Ask: "Search your memory for [topic]"
-```
-
-If results are poor, the index may need refreshing. This happens automatically but you can force it by restarting the gateway.
-
-## Manual Memory Operations
-
-### Save something important right now
-Just tell your agent: "Remember that [fact]"
-
-### Search for something specific
-Ask: "Search your memory for [topic]"
-
-### Review what was saved today
-Ask: "Show me today's memory log" or check ~/clawd/memory/YYYY-MM-DD.md
-
-### List key decisions from a conversation
-At the end of an important session, say: "List the key decisions from this session that we should save to memory"
-Then pick the ones you want saved.
-
----
-
-# === EXAMPLES.md ===
-
-# Upgraded Memory System - Examples
-
-## Example: Memory Flush Output
-
-When the context window fills up, the agent automatically writes a note like this:
-
-```markdown
-## Session Note - March 18, 2026
-
-- **Decision:** Replaced Google Embedding 2 retrieval query engine with Google Gemini Embedding 2 across both repos
-- **People:** Trevor approved the migration, wants it tested on VPS next
-- **Credentials:** GOOGLE_API_KEY is set in ~/.zshrc
-- **Project status:** Mac repo pushed (commit 478e7be), VPS repo pushed (5d450b3)
-- **Open question:** Whether to add Cognee (Layer 6) as optional skill for clients
-- **Deadline:** Migration guide needs to be ready before next client onboarding (March 25)
-```
-
-Notice the categories: decisions, people, credentials, project status, open questions, deadlines. The improved flush prompt tells the agent to look for these specifically.
-
-## Example: Memory Search
-
-User asks: "What did we decide about the Cognee layer?"
-
-The agent searches memory and finds:
-- From MEMORY.md: "Layer 6 (Cognee) is optional. Layers 1-5 are the core package."
-- From memory/2026-03-18.md: "Cognee runs as sibling Docker container. Not Docker-in-Docker."
-- From a past session: Discussion about Cognee auth tokens and the bridge script.
-
-The agent synthesizes all three sources into one answer.
-
-## Example: Mem0 Auto-Capture
-
-During a conversation, you mention: "My sister Lykisha's number changed to 240-555-1234."
-
-You did not tell the agent to remember this. But Mem0 auto-captured it. Next week when you say "Text my sister," the agent already knows the new number.
-
-## Example: Session Indexing
-
-You had a conversation two weeks ago about setting up a Zoom meeting with a specific client. Today you ask: "What was that Zoom meeting we set up for Dr. Tola?"
-
-Without session indexing, the agent would have no idea. With it enabled, the agent searches past sessions and finds the exact conversation with meeting details.
-
-## Example: Prerequisite Pending
-
-If GOOGLE_API_KEY is not set during installation:
-
-```
-Agent: "I've installed the Upgraded Memory System skill files. Layers 1, 2, 3, and 5
-are active. Layer 4 (Gemini search) is PENDING because GOOGLE_API_KEY is not set.
-
-To complete Layer 4:
-1. Go to https://aistudio.google.com/app/apikey
-2. Create a key
-3. Add to ~/.zshrc: export GOOGLE_API_KEY='AIza...'
-4. Run: source ~/.zshrc
-5. Tell me 'Layer 4 is ready' and I will finish the setup."
+[ ] Layer 5: memory-core enabled with autoCapture and autoRecall
+[ ] Layer 6: Cognee installed and running (or PENDING if no Docker)
+[ ] Layer 7: Obsidian vault configured (app check: which obsidian || flatpak list | grep -i obsidian)
+[ ] Layer 8: Wiki system initialized and syncing
+[ ] Gateway restarted by user
+[ ] Memory search test returned results
+[ ] Core files updated (see CORE_UPDATES.md)
 ```
 
 ---
@@ -1001,72 +600,63 @@ To complete Layer 4:
 
 # Upgraded Memory System - Core File Updates
 
-These are the EXACT additions to make to each core .md file.
-Follow TYP rules: append only, never overwrite existing content.
-
----
-
 ## Add to MEMORY.md
 
 ```markdown
-## Upgraded Memory System (5 Layers) - Installed [DATE]
-- Layer 1: Markdown files (MEMORY.md + daily logs) - Active
-- Layer 2: Memory flush (8-category capture) - Active
-- Layer 3: Session indexing - Active
-- Layer 4: Gemini Embedding 2 search - Active / PENDING
-- Layer 5: Mem0 auto-capture + auto-recall - Active
-- Maintenance: trim MEMORY.md at 1500 lines. Prune daily logs older than 90 days.
-```
+## Upgraded Memory System (8 Layers) - Installed [DATE]
 
----
+| Layer | Component | Status |
+|-------|-----------|--------|
+| 1 | Markdown files (MEMORY.md + daily logs) | Active |
+| 2 | Memory flush (8-category capture prompt) | Active |
+| 3 | Session indexing (past conversations searchable) | Active |
+| 4 | Gemini Embedding 2 (semantic search) | Active / PENDING |
+| 5 | memory-core (native auto-capture + auto-recall) | Active |
+| 6 | Cognee (graph-based knowledge) | Active / PENDING |
+| 7 | Obsidian Vault (structured knowledge base) | Active |
+| 8 | Wiki System (collaborative documentation) | Active |
+
+- Layer 4 provider: gemini, model: models/gemini-embedding-2-preview
+- Layer 5: memory-core backend (replaces the legacy memory plugin)
+- Layer 6: Cognee requires Docker; marked PENDING if unavailable
+- Layer 7: Obsidian app check via `which obsidian || flatpak list | grep -i obsidian` (Linux)
+- Layer 8: Wiki vault with deterministic pages and managed blocks
+- All 8 layers run simultaneously. They solve different problems.
+- Weekly maintenance: clean MEMORY.md, remove stale entries
+- Monthly maintenance: prune daily logs older than 90 days
+```
 
 ## Add to AGENTS.md
 
 ```markdown
 ## Memory System Rules
-- 5 memory layers are active. Do not disable any without explicit permission.
-- Memory flush captures: people, credentials, project status, decisions, preferences, errors, finances, deadlines.
+- Do NOT disable any of the 8 memory layers without explicit permission
+- Memory flush captures 8 categories: people, credentials, project status, decisions, preferences, errors, finances, deadlines
+- Session indexing is enabled. Past conversations are searchable.
+- Search backend is Gemini Embedding 2 (not Google Embedding 2). Config: memory.backend = "builtin", memorySearch.provider = "gemini"
+- memory-core (Layer 5) handles auto-capture and auto-recall. Do not rely on manual memory saves alone.
 - MEMORY.md is the long-term source of truth. Daily logs are session-specific.
-- Do not rely on manual memory saves alone. Mem0 handles auto-capture.
-- If MEMORY.md exceeds 1500 lines, consolidate and trim old entries.
+- If MEMORY.md gets longer than 1500 lines, consolidate and trim old entries.
+- Cognee (Layer 6) provides graph-based knowledge relationships for complex queries.
+- Obsidian Vault (Layer 7) maintains structured knowledge with wikilinks and frontmatter.
+- Wiki System (Layer 8) enables collaborative documentation with source-backed updates.
 ```
-
----
 
 ## Add to TOOLS.md
 
 ```markdown
 ## Memory Search
-- Backend: builtin (memory.backend = "builtin")
-- Provider: gemini (memorySearch.provider = "gemini")
+- Backend: Google Gemini Embedding 2 (API, no local database)
+- Provider config: agents.defaults.memorySearch.provider = "gemini"
+- Top-level config: memory.backend = "builtin"
 - Model: models/gemini-embedding-2-preview
-- Requires: GOOGLE_API_KEY
-- extraPaths: points to master files folder (indexes all subfolders and files)
-- Multimodal: enabled for all modalities (text, images, audio, video)
-- Hybrid search: 75% vector / 25% text
-- Mem0 plugin: openclaw-mem0 (auto-capture on, auto-recall on)
-  - LLM provider: gemini (model: gemini-3-flash-preview)
-  - Embedder provider: gemini (model: models/gemini-embedding-001)
-  - Requires: GEMINI_API_KEY
-  - Note: Embedder uses "models/" prefix, LLM does not
+- Requires: GOOGLE_API_KEY environment variable
+- Hybrid search: 75% vector weight, 25% text weight
+- memory-core (Layer 5): Native OpenClaw memory with auto-capture and auto-recall
+- Cognee (Layer 6): Graph-based knowledge relationships (requires Docker)
+- Obsidian Vault (Layer 7): Structured knowledge base with wikilinks
+- Wiki System (Layer 8): Collaborative docs with deterministic pages
 ```
-
----
-
-## Add to HEARTBEAT.md
-
-```markdown
-## Memory Health Check
-- Periodic: verify openclaw memory status shows Provider: gemini and indexed file count > 0
-- If indexing drops to 0 or provider shows wrong value, flag for investigation
-```
-
----
-
-## Do NOT modify these files:
-- USER.md (no memory system content belongs here)
-- SOUL.md (no memory system content belongs here)
-- IDENTITY.md (no memory system content belongs here)
 
 ---
 
@@ -1074,7 +664,7 @@ Follow TYP rules: append only, never overwrite existing content.
 
 # How Your AI Memory System Works
 
-Your AI assistant has a 5-layer memory system. Each layer solves a different problem. They all work together automatically. Here is what each one does and why it matters.
+Your AI assistant has an 8-layer memory system. Each layer solves a different problem. They all work together automatically. Here is what each one does and why it matters.
 
 ---
 
@@ -1130,19 +720,51 @@ It works with markdown documents, images, and audio files.
 
 ---
 
-## Layer 5: Automatic Memory
+## Layer 5: Automatic Memory (memory-core)
 
 Your assistant automatically notices and remembers important information during conversations. It does not wait for you to say "remember this." It captures things like preferences, decisions, and facts on its own.
 
 When you start a new conversation, it automatically recalls relevant memories before responding. You do not need to remind it.
 
+This layer uses OpenClaw's native memory-core system, which replaced the legacy memory plugin.
+
 **Why it matters:** Without this, you would have to repeat yourself every time you start a new conversation.
+
+---
+
+## Layer 6: Graph Knowledge (Cognee)
+
+Cognee creates a graph database of relationships between facts, people, projects, and concepts. Instead of just finding documents, it can answer complex questions like "What projects is Sarah working on that involve marketing budgets?"
+
+It connects the dots between separate pieces of information that might never appear in the same document.
+
+**Why it matters:** Simple search finds documents. Graph knowledge finds answers that span multiple documents and relationships.
+
+---
+
+## Layer 7: Obsidian Vault (Structured Notes)
+
+Your assistant maintains an Obsidian-compatible vault with structured notes, wikilinks between related concepts, and frontmatter metadata. This makes it easy to browse and explore your knowledge base visually.
+
+Daily notes capture what happened each day. Topic notes organize information by subject. Wikilinks connect related ideas.
+
+**Why it matters:** A well-organized vault makes your knowledge browseable and discoverable, not just searchable.
+
+---
+
+## Layer 8: Wiki System (Collaborative Docs)
+
+The wiki system provides deterministic pages with managed blocks and source-backed updates. Unlike free-form notes, wiki pages follow a structure that ensures consistency and enables collaboration.
+
+Changes are tracked, sources are cited, and updates follow a predictable pattern. This is ideal for documentation that multiple people (or agents) might edit.
+
+**Why it matters:** Structured documentation with provenance tracking ensures information stays accurate and attributable.
 
 ---
 
 ## How They Work Together
 
-Here is an example of all 5 layers working at once:
+Here is an example of all 8 layers working at once:
 
 You ask your assistant: "What did we decide about the marketing budget last week?"
 
@@ -1151,6 +773,9 @@ You ask your assistant: "What did we decide about the marketing budget last week
 3. **Layer 3** searches through last week's actual conversation transcript
 4. **Layer 4** uses intelligent search to find related notes across all your files
 5. **Layer 5** automatically recalled relevant memories before you even finished typing
+6. **Layer 6** (Cognee) checks if there are related projects, people, or budget connections
+7. **Layer 7** (Obsidian Vault) looks for any linked notes about marketing or budgets
+8. **Layer 8** (Wiki System) checks for any formal documentation about budget decisions
 
 Your assistant combines all of this to give you a complete, accurate answer.
 
@@ -1177,3 +802,4 @@ If your assistant seems to be forgetting things or not finding information it sh
 
 If a restart does not fix it, ask your assistant to run a full memory diagnostic.
 
+<!-- Breadcrumb: skill-31-vps | FULL-DOC.md | Updated to v7.0.0 8-layer architecture with Linux Obsidian check by skill-31-vps on 2026-04-12 -->

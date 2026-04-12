@@ -7,7 +7,7 @@ Run these checks before every pipeline start. Do not proceed if any check fails.
 ```
 [ ] Python 3.8+ installed (run: python3 --version)
 [ ] All pip dependencies installed (run verify command in INSTALL.md Step 2b)
-[ ] GOOGLE_API_KEY set (run: grep GOOGLE_API_KEY ~/clawd/secrets/.env)
+[ ] GOOGLE_API_KEY set (run: grep GOOGLE_API_KEY secrets/.env)
 [ ] Calibre installed - ebook-convert available (run: ebook-convert --version)
 [ ] At least one book file available (PDF, EPUB, MOBI, AZW3 in books/ folder)
 [ ] Moonshot API key OR OpenRouter access configured
@@ -85,10 +85,10 @@ python3 -c "import google.genai, numpy, pdfplumber, pypdf, ebooklib, aiohttp, bs
 
 ## Gemini Multimodal Indexing Checklist
 
-- [ ] coaching-personas collection exists (`python3 ~/clawd/scripts/gemini-indexer.py --status`)
-- [ ] `python3 ~/clawd/scripts/gemini-indexer.py` run after persona saved
-- [ ] `# Handled by gemini-indexer.py` run to generate vector embeddings
-- [ ] Test query returns relevant results: `python3 ~/clawd/scripts/gemini-search.py "[book topic]"`
+- [ ] coaching-personas collection exists (`gemini status -c coaching-personas`)
+- [ ] `gemini update` run after persona saved
+- [ ] `gemini embed` run to generate vector embeddings
+- [ ] Test query returns relevant results: `gemini search coaching-personas "[book topic]"`
 - [ ] At minimum 3 test queries return accurate chunks
 
 ---

@@ -205,6 +205,29 @@ For each department, the agent adds an entry to `agents.list[]`:
 - extraPaths points to your master files folder using absolute path
 - Sandboxing is NOT enabled (department heads need full access)
 
+### 4.2b Wiki Context Injection
+Each department agent is configured to use the Memory Wiki for structured knowledge retrieval:
+
+```json
+{
+  "wiki": {
+    "enabled": true,
+    "autoSearch": true,
+    "contextInjection": {
+      "onStartup": true,
+      "onTaskSwitch": true,
+      "maxResults": 5
+    }
+  }
+}
+```
+
+This enables department heads to:
+- Search coaching theories via `wiki_search`
+- Retrieve SOPs and playbooks via `wiki_get`
+- Access persona blueprints from the Book-to-Persona system
+- Maintain consistent methodology across all department work
+
 ### 4.3 Add Telegram Group to Channels
 The agent adds your Telegram group to the channels configuration:
 
@@ -483,7 +506,7 @@ openclaw memory status dept-marketing
 
 **Expected result:** Status shows memory system active for the department agent.
 
-**Important requirement:** The Command Center must use the free self-hosted Mem0 / GitHub version, not a paid hosted account path. The agent must confirm the memory layer is running in the free OSS path and must fail the install if memory falls back to an inactive billed account.
+**Important requirement:** The Command Center must use memory-core (builtin backend), not an external paid memory service. The agent must confirm the memory layer is running with `memory.backend: builtin` and must fail the install if memory falls back to a different backend.
 
 ### 7.3 Verify the 5-Layer Memory Setup
 The agent verifies that each department workspace has the required memory architecture:
@@ -491,7 +514,7 @@ The agent verifies that each department workspace has the required memory archit
 1. Memory Flush
 2. Session indexing
 3. Google Embedding 2 or equivalent local retrieval layer
-4. Mem0 semantic memory in free self-hosted mode
+4. memory-core semantic memory (builtin backend)
 5. Cognee / graph layer when enabled for the workspace
 
 **Expected result:** Each department workspace is isolated and ready to store its own memory without mixing with Trevor's private memory or another client's workspace.
@@ -518,9 +541,9 @@ Ask the agent: "How did you select this persona? Did you search the persona libr
 **FAIL if:** Agent says "I always use [same persona]" or "I default to the primary persona every time" -- this means the Dynamic Persona Selection Engine is not firing. The agent must perform a per-task search, not reuse the same persona every time.
 
 **Layer 2 - 5-Layer Alignment:**
-Ask the agent: "Explain the 5-layer alignment you used to select this persona."
+Ask the agent: "Explain the 8-layer alignment you used to select this persona."
 
-**Expected:** Agent names and scores at least 3 of these 5 layers:
+**Expected:** Agent names and scores at least 3 of these 8 layers:
 1. Owner values alignment
 2. Company mission alignment
 3. Business KPI alignment
@@ -625,13 +648,13 @@ After all phases are complete, verify:
 - [ ] Cloudflare tunnel created and running
 - [ ] DNS route registered for [clientName].zerohumanworkforce.com
 - [ ] Hostname follows Option C pattern: [company-slug]-[shortid]
-- [ ] Free self-hosted Mem0 path verified (not hosted billed mode)
-- [ ] 5-layer memory setup verified per department workspace
+- [ ] memory-core verified with builtin backend (not external paid service)
+- [ ] 8-layer memory setup verified per department workspace
 - [ ] Live URL accessible from the internet
 - [ ] Test message received response from correct department head
 - [ ] Memory status shows all department agents active
 - [ ] Persona runtime test: dynamic search confirmed per department
-- [ ] Persona runtime test: 5-layer alignment explained per department
+- [ ] Persona runtime test: 8-layer alignment explained per department
 - [ ] Persona runtime test: reason log entry exists in today's memory file
 
 ## What to Do Next
@@ -642,3 +665,6 @@ After all phases are complete, verify:
 4. **Schedule your first standup** with your department heads
 
 Your AI workforce is now live and ready to work.
+
+---
+<!-- BREADCRUMB: skill-32-vps | 2026-04-12 | v6.5.7 | INSTALL.md updated with wiki context injection | Memory Surgery Playbook v3.5 -->

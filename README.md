@@ -27,9 +27,9 @@ curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps
 
 
 ### What's New in v5.5.0 (March 20, 2026)
-- **Mem0 switched to Gemini (Skill 31), Cloudflare manual setup added (Skill 32)
+- **memory-core switched to Gemini (Skill 31), Cloudflare manual setup added (Skill 32)
 - Added client-hostname uniqueness requirement before DNS registration
-- Added explicit requirement to verify the free self-hosted Mem0 / GitHub path during Command Center setup
+- Added explicit requirement to verify the free self-hosted memory-core / GitHub path during Command Center setup
 - Added 5-layer memory verification requirement for each department workspace
 
 ### What's New in v5.4.1 (March 19, 2026)
@@ -64,7 +64,7 @@ curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps
 - **Never restarts automatically** — user must trigger /restart manually if required
 
 ### What's New in v5.0.0 (March 19, 2026)
-- **Skill 31: Upgraded Memory System** - 5-layer architecture (markdown files, improved flush, session indexing, Gemini Embedding 2 search, Mem0 auto-capture)
+- **Skill 31: Upgraded Memory System** - 8-layer architecture (markdown files, improved flush, session indexing, Gemini Embedding 2 search, memory-core auto-capture, Cognee graph knowledge, Obsidian Vault, Wiki System)
 - **Skill 14 rewritten:** Google Workspace CLI (gws) replaces google-api.js and gog - single tool for Gmail and Workspace
 - **Skill 23 fixed:** AI Workforce Blueprint now properly presents options A, B, C before asking questions
 - **Skill 15 fixed:** BlackCEO Team Management now requires real Telegram IDs, not placeholders

@@ -50,8 +50,8 @@ Key paths:
 To add a new book: follow SOP in MEMORY.md under "Add New Book to Coaching Personas Matrix"
 
 Re-indexing trigger (MANDATORY after adding any new persona):
-When a new book persona is added to ~/Downloads/openclaw-master-files/coaching-personas/personas/:
-Run: python3 ~/clawd/scripts/gemini-indexer.py
+When a new book persona is added to /data/openclaw-master-files/coaching-personas/personas/:
+Run: gemini update
 This updates the Gemini embedding index with the new persona.
 Do NOT skip this step -- the search will not find the new persona until re-indexed.
 ```

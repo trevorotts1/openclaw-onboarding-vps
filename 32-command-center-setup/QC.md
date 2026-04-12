@@ -208,3 +208,6 @@ Fail the skill if any of these happen:
 - test message in a department topic is answered by the wrong agent or no agent
 
 **Pass criteria:** zero anti-patterns triggered.
+
+---
+<!-- BREADCRUMB: skill-32-vps | 2026-04-12 | v6.5.7 | QC.md verified | Memory Surgery Playbook v3.5 -->

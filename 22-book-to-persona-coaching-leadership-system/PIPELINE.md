@@ -81,7 +81,7 @@ Run all books in parallel using ThreadPoolExecutor for maximum speed.
 
 **Model:** `deepseek/deepseek-v3.2` (via OpenRouter)
 **Route:** `https://openrouter.ai/api/v1/chat/completions`
-**API Key:** `OPENROUTER_API_KEY` in `~/clawd/secrets/.env`
+**API Key:** `OPENROUTER_API_KEY` in `secrets/.env` (in your agent workspace)
 **OpenRouter model ID:** `deepseek/deepseek-v3.2` or `openrouter/deepseek/deepseek-v3.2`
 **Context:** 128K tokens
 **Max output:** 8K tokens
@@ -170,7 +170,7 @@ After Phase 3 completes for a book:
   --mask "**/*.md"
 
 # Update index with new blueprint
-python3 ~/clawd/scripts/gemini-indexer.py
+gemini update
 
 # Generate vector embeddings
 # Handled by gemini-indexer.py

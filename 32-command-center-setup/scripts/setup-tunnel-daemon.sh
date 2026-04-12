@@ -53,3 +53,5 @@ launchctl load "$PLIST_PATH" 2>&1
 
 echo "Tunnel daemon loaded. It auto-restarts if it dies."
 echo "Check status: ps aux | grep ${TUNNEL_UUID}"
+
+# BREADCRUMB: skill-32-vps | 2026-04-12 | v6.5.7 | setup-tunnel-daemon.sh verified | Memory Surgery Playbook v3.5

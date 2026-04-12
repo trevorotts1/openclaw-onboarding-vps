@@ -57,3 +57,5 @@ if [ "$HTTP_CODE" = "200" ]; then
 else
   echo "WARNING: URL not live yet. Check: pm2 status cloudflare-tunnel"
 fi
+
+# BREADCRUMB: skill-32-vps | 2026-04-12 | v6.5.7 | create-tunnel.sh verified | Memory Surgery Playbook v3.5

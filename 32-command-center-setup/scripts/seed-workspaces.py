@@ -211,6 +211,7 @@ if __name__ == "__main__":
     if not db:
         print("ERROR: Could not find mission-control.db. Is the Command Center installed?")
         sys.exit(1)
+    # BREADCRUMB: skill-32-vps | 2026-04-12 | v6.5.7 | seed-workspaces.py verified | Memory Surgery Playbook v3.5
 
     # Try departments.json first, fall back to scanning folders
     departments, source = find_departments_config()
