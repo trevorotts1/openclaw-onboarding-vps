@@ -11,6 +11,18 @@
 - Added discover_skills_dir function for old install migration
 - Bumped version to v8.2.1
 
+## v8.3.0 - April 13, 2026 - Skill 35: Google Sheet Webhook Integration
+
+### Changed
+- **Skill 35 (Social Media Planner)**: Updated to v1.1.0
+  - Google Sheet creation now uses n8n webhook instead of Google Workspace API
+  - Webhook: `POST https://main.blackceoautomations.com/webhook/social-planner-sheet-create`
+  - Fields: `brandName`, `clientEmail` → Response: `sheetUrl`, `sheetId`, `sheetName`
+  - No client credentials required for sheet creation
+  - Updated playbook.md, SKILL.md, INSTALL.md, CORE_UPDATES.md, README.md, QC.md
+  - Added Google Sheet Verification checklist to QC.md
+- Bumped ONBOARDING_VERSION to v8.3.0
+
 ## v8.2.0 - April 13, 2026 (Update System Fix Applied)
 - Fixed install.sh and update-skills.sh: dynamic skill discovery, applies updates instead of staging, surgical core .md handling, real Telegram messages, full UPDATE PENDING instructions, flag auto-removal after processing
 
