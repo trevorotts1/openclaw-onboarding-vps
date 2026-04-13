@@ -1,3 +1,1 @@
-v7.0.0
-
-<!-- Breadcrumb: skill-31-vps | skill-version.txt | Bumped to v7.0.0 to match Mac by skill-31-vps on 2026-04-12 -->
+v6.5.7
