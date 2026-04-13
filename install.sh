@@ -79,6 +79,43 @@ declare -a SKILLS_SKIPPED=()
 declare -A SKILL_DESCRIPTIONS
 declare -A SKILL_QC_STATUS
 
+# ----------------------------------------------------------
+# Discover skills directory - checks multiple locations for old installs
+# ----------------------------------------------------------
+discover_skills_dir() {
+  # Primary VPS location first (no Downloads folder on VPS)
+  local CANDIDATES=(
+    "$HOME/openclaw-master-files"
+    "$HOME/.openclaw/skills"
+    "$HOME/.openclaw/onboarding"
+    "$HOME/openclaw-onboarding"
+  )
+  
+  # Check exact known paths first
+  for DIR in "${CANDIDATES[@]}"; do
+    if [ -d "$DIR" ]; then
+      local SKILL_COUNT=$(ls -d "$DIR"/[0-9]*/ 2>/dev/null | wc -l | tr -d ' ')
+      if [ "$SKILL_COUNT" -gt "0" ]; then
+        echo "$DIR"
+        return
+      fi
+    fi
+  done
+  
+  # Fuzzy search for folders with "openclaw" and "master" in name (case-insensitive)
+  local FUZZY_DIR=$(find "$HOME" -maxdepth 2 -type d -iname "*openclaw*" 2>/dev/null | grep -i "master" | head -1)
+  if [ -n "$FUZZY_DIR" ] && [ -d "$FUZZY_DIR" ]; then
+    local SKILL_COUNT=$(ls -d "$FUZZY_DIR"/[0-9]*/ 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$SKILL_COUNT" -gt "0" ]; then
+      echo "$FUZZY_DIR"
+      return
+    fi
+  fi
+  
+  # Default to VPS canonical location (no Downloads on VPS)
+  echo "$HOME/openclaw-master-files"
+}
+
 if [ -f "$INSTALL_FLAG" ]; then
   echo ""
   echo "============================================"
@@ -129,7 +166,7 @@ discover_skills() {
   local skill_md_count
   skill_md_count=$(find "$base_dir" -maxdepth 2 -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
   local installed_count
-  installed_count=$(find "$HOME/.openclaw/skills" -maxdepth 1 -type d 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')
+  installed_count=$(find "${SKILLS_DIR:-$HOME/openclaw-master-files}" -maxdepth 1 -type d 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')'
   local max_count=$numbered_count
   [ "$skill_md_count" -gt "$max_count" ] 2>/dev/null && max_count=$skill_md_count
   [ "$installed_count" -gt "$max_count" ] 2>/dev/null && max_count=$installed_count
@@ -259,7 +296,7 @@ send_telegram_progress "Starting BlackCEO Command Center install..."
 
 # Diagnostic output for skill paths
 echo "  📂 Skills source: $HOME/.openclaw/onboarding"
-echo "  📂 Skills destination: $HOME/.openclaw/skills/"
+echo "  📂 Skills destination: $SKILLS_DIR/"
 echo ""
 
 # ----------------------------------------------------------
@@ -372,7 +409,7 @@ SKILL_COUNT=$(discover_skills "$ONBOARDING_DIR")
 echo "  Skills found: $SKILL_COUNT"
 
 # Record version
-SKILLS_DIR="$HOME/.openclaw/skills"
+SKILLS_DIR="${SKILLS_DIR:-$HOME/openclaw-master-files}"
 mkdir -p "$SKILLS_DIR"
 echo "$ONBOARDING_VERSION" > "$SKILLS_DIR/.onboarding-version"
 echo "$ONBOARDING_VERSION" > "$ONBOARDING_DIR/.onboarding-version"
