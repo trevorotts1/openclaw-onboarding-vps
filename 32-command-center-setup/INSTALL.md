@@ -375,117 +375,63 @@ http://localhost:4000
 
 **🔴 GATE CHECK: DO NOT proceed to Phase 6b until the dashboard is running on localhost:4000 and the workspace seeding script has been run. Verify both. DO NOT SKIP THIS PHASE.**
 
-## Phase 6b: Domain Registration + Tunnel Connection
+## Phase 6b: VPS Deployment - Nginx Reverse Proxy + SSL
 
-**Architecture:** Trevor owns the Cloudflare account. When the client registers, Trevor's system creates a DEDICATED tunnel inside Trevor's Cloudflare account, generates a machine-specific tunnel token, returns that token directly in the webhook HTTP response, and also sends Trevor a Telegram backup notification with the same token. The client runs cloudflared on their machine to connect their local dashboard to that tunnel. The client never touches Cloudflare's website or creates their own account.
+On VPS, we use nginx with certbot for SSL instead of cloudflared tunnels.
 
-### 6b.1 Choose the Client Subdomain Name
-
-Use the company slug from the Skill 23 build. Follow this naming pattern:
-- Format: [company-slug]-[shortid] (Example: acme-dental-a7f3, coaching-biz-m42k)
-- All lowercase, hyphens only, no spaces
-- The short ID prevents collisions if two clients have similar company names
-
-Generate the short ID:
-```bash
-openssl rand -hex 2
-```
-
-### 6b.2 Install cloudflared (if not already installed)
-
-💬 Send Telegram message: "⏳ [Phase 6b] Installing Cloudflare tunnel client... this may take 1-3 minutes."
-
-**Mac:**
-```bash
-brew install cloudflared
-```
-
-**Linux/VPS:**
-```bash
-curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
-```
-
-Check:
-```bash
-cloudflared --version
-```
-
-### 6b.3 Send Webhook to Trevor's System and Capture the Token Response
-
-💬 Send Telegram message: "⏳ [Phase 6b] Registering your tunnel with Trevor's system..."
+### 6b.1 Install nginx and certbot
 
 ```bash
-RESPONSE=$(curl -s -X POST https://main.blackceoautomations.com/webhook/command-center-register-v3   -H "Content-Type: application/json"   -d '{
-    "clientName": "[company-slug-shortid]",
-    "companyName": "[full company name]",
-    "contactEmail": "[client email]"
-  }')
-
-TUNNEL_TOKEN=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['tunnelToken'])")
-SUBDOMAIN=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['subdomain'])")
+sudo apt-get update
+sudo apt-get install -y nginx certbot python3-certbot-nginx
 ```
 
-**Expected webhook response:**
-```json
-{
-  "status": "success",
-  "subdomain": "[clientName].zerohumanworkforce.com",
-  "tunnelToken": "[token]",
-  "tunnelId": "[uuid]"
+### 6b.2 Configure nginx reverse proxy
+
+Create /etc/nginx/sites-available/command-center:
+```nginx
+server {
+    listen 80;
+    server_name _;  # Accept any hostname
+    
+    location / {
+        proxy_pass http://localhost:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
 }
 ```
 
-**What Trevor's system does automatically:**
-1. Creates a dedicated Cloudflare tunnel for this client inside Trevor's Cloudflare account
-2. Routes [clientName].zerohumanworkforce.com to that tunnel
-3. Generates a tunnel token specific to this client's machine
-4. Returns the token directly in the webhook response to the client agent
-5. Sends Trevor a Telegram backup notification with the same token
-
-### 6b.4 Save the Token Locally
-
+Enable the site:
 ```bash
-grep -v '^CLOUDFLARE_TUNNEL_TOKEN=' ~/.openclaw/.env 2>/dev/null > /tmp/openclaw-env.tmp || true
-echo "CLOUDFLARE_TUNNEL_TOKEN=$TUNNEL_TOKEN" >> /tmp/openclaw-env.tmp
-mv /tmp/openclaw-env.tmp ~/.openclaw/.env
+sudo ln -sf /etc/nginx/sites-available/command-center /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl restart nginx
 ```
 
-### 6b.5 Connect This Machine to the Tunnel
-
-💬 Send Telegram message: "⏳ [Phase 6b] Connecting to the Cloudflare tunnel... this may take 15-30 seconds."
+### 6b.3 Obtain SSL certificate
 
 ```bash
-cloudflared tunnel run --token "$TUNNEL_TOKEN"
+sudo certbot --nginx -d $(curl -s ifconfig.me) --non-interactive --agree-tos --email admin@localhost
 ```
 
-Run this in a background process or via PM2:
+### 6b.4 Verify HTTPS access
 
 ```bash
-pm2 delete cloudflare-tunnel 2>/dev/null || true
-pm2 start "cloudflared tunnel run --token $TUNNEL_TOKEN" --name cloudflare-tunnel
-pm2 save
+curl -s -o /dev/null -w "%{http_code}" https://$(curl -s ifconfig.me)
 ```
 
-### 6b.6 Verify the URL is Live
-
-💬 Send Telegram message: "⏳ [Phase 6b] Verifying your Command Center is live... waiting 15 seconds for tunnel to stabilize."
-
-```bash
-sleep 15
-curl -s -o /dev/null -w "%{http_code}" "https://$SUBDOMAIN"
-```
-
-Expected: 200. If not 200 after 30 seconds, check that PM2 shows the cloudflare-tunnel process as online. If still failing after 2 minutes, message Trevor.
-
-💬 Send Telegram message: "✅ [Phase 6b] Command Center is live and responding!"
-
-### 6b.7 Report the Live URL to the Client
-
-> "Your Command Center is now live at: https://$SUBDOMAIN"
+Expected: 200
 
 ---
 
-**🔴 GATE CHECK: DO NOT proceed to Phase 7 until the URL returns 200. The cloudflare-tunnel PM2 process must be running. Do NOT create a Cloudflare account. Do NOT go to the Cloudflare website. The tunnel is created inside Trevor's Cloudflare account. The token comes directly from Trevor's system in the webhook response.**
+**🔴 GATE CHECK: DO NOT proceed to Phase 7 until nginx returns 200. Verify with curl. The VPS uses nginx + certbot, NOT cloudflared tunnels.**
 
 ## Phase 7: Verification (Agent Does This Automatically)
 
@@ -645,9 +591,9 @@ After all phases are complete, verify:
 - [ ] Agent config entries added for each department
 - [ ] Telegram bindings configured for each topic
 - [ ] Dashboard accessible at localhost:4000
-- [ ] Cloudflare tunnel created and running
-- [ ] DNS route registered for [clientName].zerohumanworkforce.com
-- [ ] Hostname follows Option C pattern: [company-slug]-[shortid]
+- [ ] nginx installed and configured
+- [ ] SSL certificate obtained via certbot
+- [ ] Reverse proxy forwarding to localhost:4000
 - [ ] memory-core verified with builtin backend (not external paid service)
 - [ ] 8-layer memory setup verified per department workspace
 - [ ] Live URL accessible from the internet
