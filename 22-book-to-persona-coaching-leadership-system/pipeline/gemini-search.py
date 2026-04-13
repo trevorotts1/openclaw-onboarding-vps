@@ -40,7 +40,7 @@ def get_client():
     api_key = _get_google_api_key()
     if not api_key:
         env_paths = [
-            os.path.expanduser("~/clawd/secrets/.env"),
+            os.path.expanduser("/data/clawd/secrets/.env"),
             os.path.expanduser("~/.openclaw/.env"),
             os.path.expanduser("~/.openclaw/secrets/.env"),
             "/data/clawd/secrets/.env",

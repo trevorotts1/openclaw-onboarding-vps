@@ -70,7 +70,7 @@ OPENAI_API_KEY     = _KEYS.get("OPENAI_API_KEY") or ""
 if not OPENROUTER_API_KEY:
     raise ValueError("OPENROUTER_API_KEY not found")
 if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY not found in ~/clawd/secrets/.env")
+    raise ValueError("OPENAI_API_KEY not found in /data/clawd/secrets/.env")
 
 # MOONSHOT_API_KEY is fully optional -- OpenRouter kimi is primary, direct Moonshot is fallback
 HAS_DIRECT_MOONSHOT = bool(MOONSHOT_API_KEY)
@@ -377,7 +377,7 @@ def _extract_via_calibre(book_path: Path) -> str:
     from Amazon Kindle, Adobe Adept, Barnes & Noble, and Mobipocket.
 
     DRM removal is for personal use only (books you legally purchased and own).
-    Calibre + DeDRM plugin installed at: ~/clawd/skills/book-to-persona/drm-tools/
+    Calibre + DeDRM plugin installed at: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/drm-tools/
 
     Conversion chain: source format -> TXT via ebook-convert
     """

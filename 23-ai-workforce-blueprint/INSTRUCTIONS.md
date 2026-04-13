@@ -235,7 +235,7 @@ If the client wants a department that is not in the recommended list:
 
 ### Department Workspaces
 The build-workforce.py script handles all workspace creation via `create_department_workspace()`.
-For each department chosen, create a workspace at ~/clawd/departments/[dept-name]/ with:
+For each department chosen, create a workspace at /data/clawd/departments/[dept-name]/ with:
 
 **Unique files:**
 - SOUL.md - generated from interview answers (NOT a generic template)
@@ -243,7 +243,7 @@ For each department chosen, create a workspace at ~/clawd/departments/[dept-name
 - HEARTBEAT.md - department-specific priorities from interview
 - memory/ folder - for daily session logs
 
-**Inherited files (copied from main CEO workspace ~/clawd/):**
+**Inherited files (copied from main CEO workspace /data/clawd/):**
 - TOOLS.md
 - AGENTS.md
 - USER.md
@@ -276,13 +276,13 @@ After workspaces are created, persona alignment runs using the 5-layer check:
 5. Task Fit
 
 Results stored in:
-- ~/clawd/persona-matrix.md (master pre-qualified pool)
-- ~/clawd/departments/[dept]/governing-personas.md (department-specific pool)
+- /data/clawd/persona-matrix.md (master pre-qualified pool)
+- /data/clawd/departments/[dept]/governing-personas.md (department-specific pool)
 
 Personas are selected PER TASK at runtime, not locked to roles.
 
 ### ORG-CHART.md
-Generated at ~/clawd/ORG-CHART.md via `generate_org_chart()` showing the full company structure: CEO at top, each department director below, specialists under each director with their type (full-time or on-call). Summary reference added to MEMORY.md.
+Generated at /data/clawd/ORG-CHART.md via `generate_org_chart()` showing the full company structure: CEO at top, each department director below, specialists under each director with their type (full-time or on-call). Summary reference added to MEMORY.md.
 
 ### Command Center Config
 departments.json generated via `generate_departments_json()` for the BlackCEO Command Center. Exact schema per entry: id (slug), emoji, name (display), headTitle (director title). Only includes departments the client actually chose.
@@ -291,6 +291,16 @@ departments.json generated via `generate_departments_json()` for the BlackCEO Co
 Auto-created in every department after all workspaces are built. Client is NOT asked about this. Each DA gets a unique set of challenge questions based on that department's KPIs from the interview. The CEO gets a plain-English explanation: "Your AI workforce includes a quality checker in every department whose job is to make sure your team is actually delivering results, not just saying they are."
 
 After everything is built: "You are complete! Setting up your AI workforce now."
+
+### Memory Wiki Documentation
+
+After the workforce is built, generate wiki source pages for:
+- Company structure
+- Department responsibilities
+- Role assignments
+- Persona alignment decisions
+
+These pages are compiled by Memory Wiki for structured knowledge retrieval.
 
 ---
 

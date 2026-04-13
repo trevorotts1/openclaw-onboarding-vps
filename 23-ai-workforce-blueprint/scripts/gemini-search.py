@@ -31,7 +31,7 @@ def _load_openclaw_env():
         except:
             pass
 
-DB_PATH = os.path.expanduser("~/clawd/data/coaching-personas/gemini-index.sqlite")
+DB_PATH = os.path.expanduser("/data/clawd/data/coaching-personas/gemini-index.sqlite")
 GEMINI_MODEL = "gemini-embedding-2-preview"
 TOP_K = 3
 
@@ -40,7 +40,7 @@ def get_client():
     api_key = _get_google_api_key()
     if not api_key:
         env_paths = [
-            os.path.expanduser("~/clawd/secrets/.env"),
+            os.path.expanduser("/data/clawd/secrets/.env"),
             os.path.expanduser("~/.openclaw/.env"),
             os.path.expanduser("~/.openclaw/secrets/.env"),
             "/data/clawd/secrets/.env",

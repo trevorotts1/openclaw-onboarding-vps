@@ -49,8 +49,8 @@ echo "GOOGLE_API_KEY length: ${#GOOGLE_API_KEY}"
 ### Layer 1: Markdown memory files
 
 ```bash
-[ -f ~/clawd/MEMORY.md ] && echo "PASS: MEMORY.md exists" || echo "FAIL: MEMORY.md missing"
-[ -d ~/clawd/memory ] && echo "PASS: memory/ directory exists" || echo "FAIL: memory/ directory missing"
+[ -f /data/clawd/MEMORY.md ] && echo "PASS: MEMORY.md exists" || echo "FAIL: MEMORY.md missing"
+[ -d /data/clawd/memory ] && echo "PASS: memory/ directory exists" || echo "FAIL: memory/ directory missing"
 ```
 
 ### Layer 2: memoryFlush configured
@@ -153,7 +153,7 @@ openclaw config validate
 ### 4.2 Daily-memory presence
 
 ```bash
-COUNT=$(ls ~/clawd/memory/*.md 2>/dev/null | wc -l | tr -d ' ')
+COUNT=$(ls /data/clawd/memory/*.md 2>/dev/null | wc -l | tr -d ' ')
 echo "Daily memory files: $COUNT"
 [ "$COUNT" -ge 1 ] && echo "PASS: daily memory exists" || echo "WARN: no daily memory files yet"
 ```

@@ -39,7 +39,7 @@ Add this section to TOOLS.md (in the services/tools section):
 ```markdown
 ## Command Center Dashboard
 
-**Local URL:** http://localhost:3000
+**Local URL:** http://localhost:4000
 **Remote URL:** [Your Cloudflare URL if configured]
 **Telegram Group:** [Your Company Name] Command Center
 
@@ -53,7 +53,7 @@ Departments communicate via dedicated topics in the Telegram group. Each departm
 - Cross-Department - For interdepartmental collaboration
 
 ### Accessing the Dashboard
-- Local: http://localhost:3000
+- Local: http://localhost:4000
 - Requires the PM2 process to be running: `pm2 list` to check
 - View logs: `pm2 logs command-center`
 
@@ -119,7 +119,7 @@ If the client says ANY of the following at ANY time — today, tomorrow, next we
 - "I'm ready for the dashboard"
 
 Then IMMEDIATELY:
-1. Verify department folders exist on disk (check ~/.openclaw/workspaces/command-center/, ~/clawd/departments/, ~/Downloads/openclaw-master-files/)
+1. Verify department folders exist on disk (check ~/.openclaw/workspaces/command-center/, /data/clawd/departments/, ~/Downloads/openclaw-master-files/)
 2. If folders exist: download and install Skill 32 from the onboarding repo (curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash) then follow Skill 32 INSTALL.md
 3. If folders do NOT exist: ask "Where did you save your department folders?" and use their answer
 4. Do NOT wait for a scheduled check. Do NOT say "I'll look into it later." Install NOW.

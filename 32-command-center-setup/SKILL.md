@@ -125,7 +125,7 @@ After installation, verify:
 **Issue: Dashboard not loading**
 - Verify PM2 process is running: `pm2 list`
 - Check logs: `pm2 logs command-center`
-- Ensure port 3000 is not in use by another service
+- Ensure port 4000 is not in use by another service
 
 ## Support
 

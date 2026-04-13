@@ -160,3 +160,14 @@ Pick the one with the strongest Layer 5 (task fit) score. The task must get done
 
 **What if Skill 22 is not installed?**
 No persona matching happens. The agent operates without persona guidance. This is a valid state. When Skill 22 is installed later, persona matching activates automatically.
+
+---
+
+## Memory Wiki Integration
+
+After every 50 tasks with persona selection, compile a wiki source page summarizing:
+- Most-used personas per department
+- Task types that consistently match certain personas
+- Persona diversity scores
+
+This data helps tune the 5-layer alignment over time.

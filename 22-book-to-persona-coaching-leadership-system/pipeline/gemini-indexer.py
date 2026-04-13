@@ -71,7 +71,7 @@ def get_api_key():
     env_paths = [
         os.path.expanduser("~/.openclaw/.env"),
         os.path.expanduser("~/.openclaw/secrets/.env"),
-        os.path.expanduser("~/clawd/secrets/.env"),
+        os.path.expanduser("/data/clawd/secrets/.env"),
         os.path.expanduser("~/.config/openclaw/.env"),
         "/data/clawd/secrets/.env",
         "/data/.openclaw/.env",
@@ -109,7 +109,7 @@ def cmd_status():
     if api_key:
         print(f"✅ API key: found ({api_key[:8]}...)")
     else:
-        print("❌ API key: NOT FOUND (add GOOGLE_API_KEY to ~/clawd/secrets/.env)")
+        print("❌ API key: NOT FOUND (add GOOGLE_API_KEY to /data/clawd/secrets/.env)")
 
     # Python deps
     try:
@@ -219,7 +219,7 @@ def cmd_rotate_logs():
     today = time.strftime("%Y-%m-%d")
     rotated_count = 0
 
-    # Check all daily memory files in ~/clawd/memory/
+    # Check all daily memory files in /data/clawd/memory/
     if not os.path.isdir(MEMORY_DIR):
         print("⚠️  Memory directory not found.")
         return
@@ -362,7 +362,7 @@ def main():
     def get_client():
         api_key = get_api_key()
         if not api_key:
-            print("WARNING: Google API key not found in any supported env location. Checked ~/clawd/secrets/.env, "
+            print("WARNING: Google API key not found in any supported env location. Checked /data/clawd/secrets/.env, "
                   "~/.openclaw/.env, ~/.openclaw/secrets/.env, and environment variables. "
                   "Set GOOGLE_API_KEY and try again.")
             sys.exit(2)
