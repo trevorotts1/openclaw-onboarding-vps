@@ -380,6 +380,52 @@ echo "  Version: $ONBOARDING_VERSION"
 
 send_telegram_progress "Extracted skills to your OpenClaw ($SKILL_COUNT skills found)"
 
+# ── Install all skills dynamically ──
+echo "Installing skills..."
+SKILLS_INSTALLED=0
+for SKILL_DIR in "$ONBOARDING_DIR"/[0-9]*/; do
+ [ -d "$SKILL_DIR" ] || continue
+ SKILL_NAME=$(basename "$SKILL_DIR")
+ # Skip archived skills
+ case "$SKILL_NAME" in *ARCHIVED*) echo " Skipped (archived): $SKILL_NAME"; continue ;; esac
+ 
+ mkdir -p "$SKILLS_DIR/$SKILL_NAME"
+ 
+ # Copy all skill files EXCEPT core .md files
+ # Core .md files are handled surgically by the agent via CORE_UPDATES.md
+ for ITEM in "$SKILL_DIR"/*; do
+ ITEM_NAME=$(basename "$ITEM")
+ case "$ITEM_NAME" in
+ AGENTS.md|MEMORY.md|SOUL.md|USER.md|IDENTITY.md|HEARTBEAT.md|TOOLS.md)
+ # Do not copy these from repo to client workspace
+ # The agent handles these surgically after Teach Yourself Protocol
+ ;;
+ *)
+ if [ -d "$ITEM" ]; then
+ cp -r "$ITEM" "$SKILLS_DIR/$SKILL_NAME/"
+ else
+ cp "$ITEM" "$SKILLS_DIR/$SKILL_NAME/"
+ fi
+ ;;
+ esac
+ done
+ 
+ SKILLS_INSTALLED=$((SKILLS_INSTALLED + 1))
+ echo " Installed: $SKILL_NAME"
+done
+echo " Total skills installed: $SKILLS_INSTALLED"
+
+# ── Copy root files ──
+for ROOT_FILE in "Start Here.md" README.md CHANGELOG.md version; do
+ if [ -f "$ONBOARDING_DIR/$ROOT_FILE" ]; then
+ cp "$ONBOARDING_DIR/$ROOT_FILE" "$SKILLS_DIR/../"
+ fi
+done
+# Copy scripts folder
+if [ -d "$ONBOARDING_DIR/scripts" ]; then
+ cp -r "$ONBOARDING_DIR/scripts" "$SKILLS_DIR/../"
+fi
+
 # ----------------------------------------------------------
 # Step 3b: Copy Gemini Engine scripts (indexing runs after Skill 22)
 # ----------------------------------------------------------
@@ -872,34 +918,6 @@ else
     echo "⚠️  WARNING: Manifest file was not created"
 fi
 
-# ----------------------------------------------------------
-# Step 6: Write UPDATE_PENDING flag to AGENTS.md
-# ----------------------------------------------------------
-write_update_pending_flag() {
-  echo ""
-  echo "[6/5] Writing UPDATE_PENDING flag to AGENTS.md..."
-
-  AGENTS_FILE="$HOME/.openclaw/workspace/AGENTS.md"
-  if [ -f "$AGENTS_FILE" ]; then
-    # Only add flag if not already present
-    if ! grep -q "UPDATE_PENDING" "$AGENTS_FILE" 2>/dev/null; then
-      echo "" >> "$AGENTS_FILE"
-      echo "## 🔴 UPDATE_PENDING — DO NOT REMOVE UNTIL PROCESSED" >> "$AGENTS_FILE"
-      echo "An OpenClaw onboarding update was just installed. On your next boot:" >> "$AGENTS_FILE"
-      echo "1. Read this flag" >> "$AGENTS_FILE"
-      echo "2. Read your updated SOUL.md, AGENTS.md, TOOLS.md, and MEMORY.md" >> "$AGENTS_FILE"
-      echo "3. Confirm you are ready with: 'Update processed. Running ${ONBOARDING_VERSION}. All core files read.'" >> "$AGENTS_FILE"
-      echo "4. Remove this UPDATE_PENDING section from AGENTS.md" >> "$AGENTS_FILE"
-      echo "## END UPDATE_PENDING" >> "$AGENTS_FILE"
-      echo "  ✅ Update flag written to AGENTS.md"
-    else
-      echo "  ℹ️  Update flag already present in AGENTS.md"
-    fi
-  fi
-}
-
-write_update_pending_flag
-
 # ── Final version verification ──
 INSTALLED_VER=$(cat "$HOME/.openclaw/skills/.onboarding-version" 2>/dev/null | tr -d '[:space:]')
 if [ "$INSTALLED_VER" = "$ONBOARDING_VERSION" ]; then
@@ -910,6 +928,45 @@ else
  echo " Found: $INSTALLED_VER"
  echo " Forcing correct version..."
  echo "$ONBOARDING_VERSION" > "$HOME/.openclaw/skills/.onboarding-version"
+fi
+
+# ── Write UPDATE PENDING flag to AGENTS.md ──
+WORKSPACE_ROOT="$HOME/clawd"
+if [ ! -d "$WORKSPACE_ROOT" ]; then
+ WORKSPACE_ROOT="$HOME/.openclaw/workspace"
+fi
+AGENTS_FILE="$WORKSPACE_ROOT/AGENTS.md"
+
+if [ -f "$AGENTS_FILE" ]; then
+ if ! grep -q "UPDATE PENDING" "$AGENTS_FILE" 2>/dev/null; then
+ cat >> "$AGENTS_FILE" << 'FLAGEOF'
+
+## UPDATE PENDING - PROCESS NOW
+
+The BlackCEO onboarding system was just installed.
+
+SEND YOUR OWNER THIS MESSAGE IMMEDIATELY:
+"Your BlackCEO system has been installed. I am going to review all the skills and set everything up. Would you like me to proceed?"
+
+WAIT for the owner to say yes before continuing.
+
+When they approve, for EACH skill folder in ~/.openclaw/skills/:
+1. Read SKILL.md to understand what the skill does
+2. Read INSTALL.md and follow the setup steps (check prerequisites, collect API keys if needed)
+3. Run QC.md checks to verify the skill installed correctly
+4. Read CORE_UPDATES.md and surgically add the skill-specific sections to AGENTS.md, TOOLS.md, and MEMORY.md
+ - Add new entries that do not exist yet
+ - Update entries that have changed
+ - Do NOT duplicate entries that already exist
+ - Do NOT touch the owner's personal content in those files
+ - Skill sections are identified by headers like "### [Skill Name] (Skill [Number])"
+
+After ALL skills are processed, REMOVE this entire UPDATE PENDING section from AGENTS.md.
+
+Add one line to MEMORY.md under "## System Updates":
+"[DATE]: Initial install, version [VERSION]. [X] skills installed. All QC passed."
+FLAGEOF
+ fi
 fi
 
 # ----------------------------------------------------------
