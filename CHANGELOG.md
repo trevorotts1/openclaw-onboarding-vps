@@ -1,3 +1,8 @@
+## v8.6.0 - April 14, 2026 - Skill 35 v1.4.0 Video Pipeline
+
+### Updated
+- **Skill 35 Social Media Planner v1.4.0**: Full video production pipeline (kie.ai Veo + FFmpeg crossfades/post-processing), 8-platform video posting (Facebook/Instagram/LinkedIn/YouTube/TikTok/Pinterest/Threads/X), HTML email newsletters, scaled to 15 production sub-agents + 6 QC agents, Podbean podcast publishing
+
 ## v8.4.0 - April 13, 2026 - Skill Activation Instructions Fix
 
 ### Fixed
@@ -31,19 +36,6 @@
   - Updated install.sh headers
   - Updated update-skills.sh headers
 
-## v8.2.1 - April 13, 2026 - Comprehensive Repo Instruction Fixes
-- Added SOURCE OF TRUTH rule to Start Here.md - skill files are authority over generic docs
-- Added SOURCE OF TRUTH header to Skill 31 - all 8 layers required, DREAMS.md required
-- Rewrote UPDATE PENDING flag with EXECUTION MODE - do not ask permission, just execute
-- Added 9-step processing protocol: search data → interview detection → process skills → verify memory → verify persona → cleanup config → surgical updates → report → cleanup
-- Added smart credential discovery - searches all .env files, syncs to canonical location
-- Added Gemini scripts copy logic - copies gemini-indexer.py and gemini-search.py to workspace
-- Fixed read -p with /dev/tty in update-skills.sh
-- Verified skill-version.txt files clean (v6.5.7) in Skills 22 and 23
-- Verified Skill 35 exists on GitHub
-- Added discover_skills_dir function for old install migration
-- Bumped version to v8.2.1
-
 ## v8.3.0 - April 13, 2026 - Skill 35: Google Sheet Webhook Integration
 
 ### Changed
@@ -55,6 +47,19 @@
   - Updated playbook.md, SKILL.md, INSTALL.md, CORE_UPDATES.md, README.md, QC.md
   - Added Google Sheet Verification checklist to QC.md
 - Bumped ONBOARDING_VERSION to v8.3.0
+
+## v8.2.1 - April 13, 2026 - Comprehensive Repo Instruction Fixes
+- Added SOURCE OF TRUTH rule to Start Here.md (both repos) - skill files are authority over generic docs
+- Added SOURCE OF TRUTH header to Skill 31 (both repos) - all 8 layers required, DREAMS.md required
+- Rewrote UPDATE PENDING flag with EXECUTION MODE - do not ask permission, just execute
+- Added 9-step processing protocol: search data → interview detection → process skills → verify memory → verify persona → cleanup config → surgical updates → report → cleanup
+- Added smart credential discovery - searches all .env files, syncs to canonical location
+- Added Gemini scripts copy logic - copies gemini-indexer.py and gemini-search.py to workspace
+- Fixed read -p with /dev/tty in update-skills.sh
+- Verified skill-version.txt files clean (v6.5.7) in Skills 22 and 23
+- Verified Skill 35 exists on GitHub
+- Added discover_skills_dir function for old install migration
+- Bumped version to v8.2.1
 
 ## v8.2.0 - April 13, 2026 (Update System Fix Applied)
 - Fixed install.sh and update-skills.sh: dynamic skill discovery, applies updates instead of staging, surgical core .md handling, real Telegram messages, full UPDATE PENDING instructions, flag auto-removal after processing
@@ -101,15 +106,22 @@ Major overhaul addressing 29 broken items across 6 workstreams (Personas, Workfo
 ### Changed
 - **Skill 22**: Replaced hardcoded PERSONA_DETAILS with runtime persona-categories.json loader; added category filtering, auto re-index, auto persona-categories.json update; added anti-staleness guards; added post-task persona verification; added Memory Wiki integration
 - **Skill 23**: Fixed determine_specialists() to populate actual roles; added create_role_workspace() with SOP stubs; added Devil's Advocate SOUL.md + SOP.md generation; added persona-matrix.md auto-generation; added deeper interview questions; added "I don't know" 6-step flow; added 1800s timeout override; added Memory Wiki integration
-- **Skill 32**: Updated tunnel documentation for token-in-response n8n webhook; all port references confirmed 4000
-- **All skills**: Fixed 303 hardcoded ~/clawd/ paths to /data/clawd/ or relative paths (VPS-specific)
-- **Documentation**: All port references standardized to 4000
+- **Skill 32**: Updated tunnel documentation for token-in-response n8n webhook; all port references confirmed 4000; create-tunnel.sh created in Command Center
+- **Command Center**: Replaced hardcoded PERSONA_DETAILS with runtime loader; added grade-calculator.ts (40/30/15/15 formula); wired company-config.json; created DepartmentBrowser.tsx (sidebar + Kanban); created /ceo-board/[dept]/focus/ view; fixed task API department filtering; added Breadcrumb component to all pages; unified /workspace/ and /ceo-board/ route families; added "Business KPIs" / "Agent Performance" / "Proactive Intelligence" lens labels; replaced synthetic data with real API calls
+- **All skills**: Fixed 303 hardcoded ~/clawd/ paths to ~/.openclaw/workspace/ or relative paths
+- **Documentation**: All port references standardized to 4000 across 11 files
 
 ### Added
-- department-naming-map.json (17 canonical departments)
+- department-naming-map.json (17 canonical departments, both repos)
 - persona-selection-log.md template
+- resolve-department.ts (shared department resolution)
+- PRD.md, CHECKLIST.md (Command Center)
+- DECISION-LOG.md (overhaul decisions)
+- create-tunnel.sh (Command Center)
 
 ### Removed
+- Hardcoded PERSONA_DETAILS map (~40 entries) from Command Center
+- Synthetic/seeded placeholder data from CEO Board components
 - Hardcoded ~/clawd/ paths from all client-facing skill documentation
 
 ### QC Scores
@@ -138,29 +150,52 @@ Major overhaul addressing 29 broken items across 6 workstreams (Personas, Workfo
 ### Removed
 - All skills: Removed all references to openclaw-mem0 / Mem0 (except migration guides)
 
-## v6.5.30 - April 3, 2026
+## v6.5.26 - April 3, 2026
 
-### Fixed
-- **VPS Gemini scripts path fix**: Fixed gemini-search.py and gemini-indexer.py in Skill 22 to use shared-utils paths, resolve_key() function, and /data/ paths for VPS compatibility. Resolves hardcoded Mac paths and NameError bugs that broke persona discovery pipeline on VPS deployments.
+### Merged
+- **fix/skill22-auto-reindex**: Merged branch containing Skill 22 Phase 5 auto-reindex functionality for automated persona index refresh after synthesis.
+- **fix/skill23-department-write-path**: Merged branch containing Skill 23 Mac backport parity with `--non-interactive` flag and `build_from_config()`.
 
 ### Changed
-- **version**: Bumped to v6.5.30
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.30
+- **version**: Bumped to v6.5.26
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.26
 
 ---
 
-## v6.5.29 - April 3, 2026
+## v6.5.25 - April 3, 2026
+
+### Fixed
+- **Skill 23 - Mac backport parity**: Backported VPS v2.1.0 functionality to Mac. Added `--non-interactive` flag and `build_from_config()` for automated `departments.json` generation in Skill 23.
+
+### Changed
+- **version**: Bumped to v6.5.25
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.25
+
+---
+
+## v6.5.24 - April 3, 2026
+
+### Added
+- **Skill 22 - Phase 5 auto-reindex**: Added Phase 5 auto-reindex after persona generation in orchestrator.py so the Gemini persona index is refreshed automatically after synthesis.
+
+### Changed
+- **version**: Bumped to v6.5.24
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.24
+
+---
+
+## v6.5.23 - April 3, 2026
 
 ### Fixed
 - **install.sh - Agent message visibility**: Fixed bug where Telegram confirmation told users to "send your agent the message shown in your terminal" but the terminal never printed the exact message. Added clearly formatted "📋 SEND THIS MESSAGE TO YOUR AGENT" block to terminal output. Updated Telegram confirmation message to include the actual text instead of referencing the terminal.
 
 ### Changed
-- **version**: Bumped to v6.5.29
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.29
+- **version**: Bumped to v6.5.23
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.23
 
 ---
 
-## v6.5.28 - April 1, 2026
+## v6.5.22 - April 1, 2026
 
 ### Added
 - **QC.md - Skill-specific checklists**: Added comprehensive QC.md files for all 34 skills with skill-specific criteria. Each QC.md includes:
@@ -174,24 +209,24 @@ Major overhaul addressing 29 broken items across 6 workstreams (Personas, Workfo
 - **QC.md - Mac/VPS parity**: Ensured QC.md files are synchronized between Mac and VPS repositories with platform-specific path adjustments
 
 ### Changed
-- **version**: Bumped to v6.5.28
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.28
+- **version**: Bumped to v6.5.22
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.22
 
 ---
 
-## v6.5.27 - April 1, 2026
+## v6.5.21 - April 1, 2026
 
 ### Fixed
 - **install.sh - Smart skill discovery**: Fixed critical bug where installer counted skills from `skills/` subdirectory (only 3 .skill packages) instead of root (34 numbered skill folders). Added `discover_skills()` function that searches multiple locations (numbered folders, SKILL.md files, installed skills) and returns the highest count. Replaced hardcoded `ls | grep | wc -l` with smart discovery. Added diagnostic output showing skills source/destination paths at start and final count at end.
 - **install.sh - Telegram notification**: Removed "Reply YES when ready to proceed." from client-facing Telegram message. This was developer scaffolding that should not appear in production notifications.
 
 ### Changed
-- **version**: Bumped to v6.5.27
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.27
+- **version**: Bumped to v6.5.21
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.21
 
 ---
 
-## v6.5.26 - April 1, 2026
+## v6.5.20 - April 1, 2026
 
 ### Added
 - **install.sh - Post-install skill summary**: Added terminal output showing every skill installed/updated with name, description from SKILL.md, and QC rating (PASS/FAIL)
@@ -200,46 +235,47 @@ Major overhaul addressing 29 broken items across 6 workstreams (Personas, Workfo
 - **install.sh - Telegram summary**: Sends concise install summary to client's Telegram after completion
 
 ### Changed
-- **version**: Bumped to v6.5.26
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.26
+- **version**: Bumped to v6.5.20
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.20
 
 ---
 
-## v6.5.25 - April 1, 2026
+## v6.5.19 - April 1, 2026
 
 ### Fixed
-- **markitdown-skill**: Added missing markitdown-skill folder with SKILL.md and INSTALL.md files. This skill was entirely missing from VPS repo and blocking client installs.
+- **markitdown-skill**: Added missing SKILL.md and INSTALL.md files to the empty markitdown-skill folder. This was blocking client installs with "empty source folder" error.
 
 ### Changed
-- **version**: Bumped to v6.5.25
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.25
+- **version**: Bumped to v6.5.19
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.19
 
 ---
 
-## v6.5.24 - April 1, 2026
+## v6.5.18 - April 1, 2026
 
 ### Fixed
 - **install.sh - backup_config_file() protocol compliance**: Fixed backup_config_file() to save backups to ~/Downloads/openclaw-backups/ with .txt extension per AGENTS.md protocol. Previously backed up to same directory as original with .bak-timestamp extension.
+- **install.sh - Skill count reporting**: Fixed misleading Telegram progress message that reported skills extracted to "OpenClaw" (ambiguous) instead of specifying the actual path `~/.openclaw/onboarding/`. Added Step 3a to copy .skill packages from the skills/ subdirectory to `~/.openclaw/skills/` so the agent finds skills in the expected location. Prevents "only 3 skills found" confusion caused by empty skills directory.
 
 ### Changed
-- **version**: Bumped to v6.5.24
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.24
+- **version**: Bumped to v6.5.18
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.18
 
 ---
 
-## v6.5.23 - April 1, 2026
+## v6.5.17 - April 1, 2026
 
 ### Added
 - **install.sh - UPDATE_PENDING flag mechanism**: Added `write_update_pending_flag()` function that writes an UPDATE_PENDING section to AGENTS.md at the end of every install/update. This ensures the agent detects and processes updates on next boot.
 - **install.sh - Exact agent message restored**: Terminal and Telegram messages now show the exact message: "You have just received an OpenClaw update. Read the UPDATE_PENDING section in your AGENTS.md, process it, confirm you are ready, then remove the UPDATE_PENDING section from your AGENTS.md."
 
 ### Changed
-- **version**: Bumped to v6.5.23
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.23
+- **version**: Bumped to v6.5.17
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.17
 
 ---
 
-## v6.5.22 - April 1, 2026
+## v6.5.16 - April 1, 2026
 
 ### Added
 - **install.sh - Mandatory backup-before-edit protocol**: Added `backup_config_file()` function that creates timestamped backups before any openclaw.json or exec-approvals.json edit
@@ -250,95 +286,63 @@ Major overhaul addressing 29 broken items across 6 workstreams (Personas, Workfo
 - **install.sh - Exec security unconditional application**: Added `apply_exec_security_config()` function that runs at the end of every installer execution (both fresh install AND update). Previously, exec security config was only inside Step 3c which could be skipped if openclaw.json didn't exist yet. Now exec security is applied unconditionally after all skill installs.
 
 ### Changed
-- **version**: Bumped to v6.5.22
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.22
+- **version**: Bumped to v6.5.16
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.16
 
 ---
 
-## v6.5.21 - April 1, 2026
+## v6.5.15 - April 1, 2026
 
 ### Changed
 - **install.sh - Exec security comments**: Updated doc-reference comments for tools.exec and exec-approvals.json sections to cite https://docs.openclaw.ai/tools/exec-approvals as the source of truth
 - **install.sh - Re-verify note**: Added explicit comment reminding to re-verify exec security config if OpenClaw version is bumped
-- **version**: Bumped to v6.5.21
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.21
+- **version**: Bumped to v6.5.15
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.15
 
 ---
 
-## v6.5.19 — April 1, 2026
-- Wire Video Creator KIE lookup to shared smart API key resolver
-- Resolver now covers Gemini/Google, GHL/GoHighLevel/Convert and Flow, GitHub, OpenAI, OpenRouter, Moonshot, KIE, Telegram, Tavily, n8n, Perplexity, Anthropic variations across env locations
-
-## v6.5.18 - April 1, 2026
-
-### Added
-- shared-utils/key_resolver.py: Added a dedicated smart API key resolver that reads OpenClaw env.vars from openclaw.json, common .env files, live environment variables, service aliases, and fuzzy service-name fallbacks
-
-### Changed
-- Refactored Gemini scripts to use smart key_resolver instead of hardcoded api_key_utils or legacy lookups.
-
-## v6.5.18 — April 1, 2026
-- Upgrade shared-utils/api_key_utils.py to load openclaw.json env.vars, extra VPS env file paths, and expanded service aliases
-- Wire Gemini scripts to use shared Google key resolver instead of hardcoded GOOGLE_API_KEY-only logic
-
-## v6.5.17 - April 1, 2026
-
-### Fixed
-- scripts/gemini-indexer.py: Added smart Google API key detection with fallback for GOOGLE_API_KEY, GOOGLE_AI_STUDIO_API_KEY, GOOGLE_GEMINI_API_KEY, and GEMINI_API_KEY
-- 22-book-to-persona-coaching-leadership-system/pipeline/gemini-indexer.py: Added OpenClaw env.vars loading from openclaw.json before Gemini key lookup
-- 22-book-to-persona-coaching-leadership-system/pipeline/gemini-search.py: Added smart Google API key detection so VPS installs work with alternate Google key names
-- 23-ai-workforce-blueprint/scripts/gemini-indexer.py: Added OpenClaw env.vars loading plus smart Google key fallback
-- 23-ai-workforce-blueprint/scripts/gemini-search.py: Added OpenClaw env.vars loading plus smart Google key fallback
-
-## v6.5.16 - April 1, 2026
-
-### Fixed
-- All Gemini scripts: Implemented smart API key detection that checks environment variations (GOOGLE_API_KEY, GOOGLE_AI_STUDIO_API_KEY, etc.) and multiple .env locations
-- build-workforce.py: Added support for --non-interactive builds via JSON config
-- INSTALL.md: Documented non-interactive setup
-
-## v6.5.16 - April 1, 2026
-
-### Added
-- build-workforce.py (Skill 23): Added --non-interactive flag with argparse support for AI agent use
-- build-workforce.py (Skill 23): Added --config-file flag to specify JSON config path (default: workforce-config.json)
-- build-workforce.py (Skill 23): Added build_from_config() function that builds entire workforce from JSON without prompts
-- build-workforce.py (Skill 23): Added workforce-config.json template with all supported department keys and usage comments
-- INSTALL.md (Skill 23): Added Non-Interactive Mode section with usage instructions for AI agents
-
-## v6.5.15 - April 1, 2026
-
-### Fixed
-- install.sh: send_telegram_progress now reads client's Telegram chat ID from openclaw.json allowFrom list and passes it explicitly via --target and --channel telegram
-- install.sh: Previously the function had no --target or --channel, so messages silently failed on fresh installs where no active Telegram session existed yet
-- install.sh: Added python3-based allowFrom parser as primary path, with fallback to bare openclaw message send (no target), then terminal echo as last resort
-- install.sh: All three code paths now show [TELEGRAM FALLBACK] prefix for visibility when delivery fails
-
-## v6.5.14 - April 1, 2026
-
-### Fixed
-- install.sh: Telegram completion message now fires BEFORE terminal echo block (was firing after, so clients could miss restart instructions)
-- install.sh: Replaced vague "tell your AI agent to begin" with explicit 2-step restart protocol -- STEP 1: restart gateway, STEP 2: send onboarding message
-- install.sh: Terminal Done block now shows "🔴 STEP 1 -- RESTART THE GATEWAY NOW" with `openclaw gateway restart` command and `/restart` Telegram shortcut
-- install.sh: Terminal Done block now shows "🔴 STEP 2 -- AFTER RESTART, SEND THIS MESSAGE" with exact message to send
-- install.sh: Removed redundant Telegram completion summary (was two separate send_telegram_progress calls with conflicting instructions). Now single clear message with restart steps
-
 ## v6.5.13 - April 1, 2026
 
-### Added
-- AGENTS.md: Added VPS API Key Persistence rule -- teaches agents to save keys to /data/.openclaw/openclaw.json env.vars (the only persistent location on VPS Docker)
-- install.sh: Added Telegram completion summary after install finishes -- lists what's configured and what API keys are still needed (Tavily)
+### Fixed
+- **install.sh - send_telegram_progress function**: Replaced the broken function that had no `--target` or `--channel` flags. The old version silently failed on every fresh install because there was no active Telegram session and no recipient specified. The new version reads the client's Telegram chat ID from `openclaw.json` allowFrom list via python3, passes it explicitly via `--target` and `--channel telegram`, and falls back to terminal output if the ID can't be found or the send fails.
+
+### Changed
+- **version**: Bumped to v6.5.13
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.13
+
+---
 
 ## v6.5.12 - April 1, 2026
 
 ### Fixed
-- orchestrator.py (Skill 22): Removed hard crash on missing MOONSHOT_API_KEY -- key is now fully optional
-- orchestrator.py (Skill 22): Changed primary model routing to use OpenRouter kimi (openrouter/moonshotai/kimi-k2.5) first
-- orchestrator.py (Skill 22): Direct Moonshot API is now an optional fallback only when MOONSHOT_API_KEY is set and OpenRouter fails
+- **install.sh - Gateway restart instruction**: Replaced the Done section with a clear two-step restart flow. Terminal output now shows STEP 1 (restart the gateway) and STEP 2 (send the onboarding message after restart). Without a restart, the agent won't see the ONBOARDING PENDING flag for up to 30 minutes.
+- **install.sh - Telegram timing**: Moved send_telegram_progress call to BEFORE the terminal output block so the notification fires before the script completes. Updated the Telegram message to include restart instructions (`/restart`) and the exact message to send after restart. Previously the Telegram fired silently and the client was never told to restart.
+
+### Changed
+- **version**: Bumped to v6.5.12
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.12
+
+---
+
+## v6.5.11 - April 1, 2026
+
+### Fixed
+- **install.sh - Primary model protection**: Sub-agent model config now checks for existing `agents.defaults.subagents.model.primary` before writing. If the client already has a primary model set, it is preserved exactly. Only sets the default (`openrouter/google/gemini-3.1-flash-lite-preview`) on fresh installs. Prevents overwriting client-customized model choices on re-runs.
+- **install.sh - ONBOARDING_FLAG heredoc**: Added critical wave ordering rule: Skill 12 (openrouter-setup) MUST be installed first in Wave 1 before any other skill. Other skills spawn sub-agents that need OpenRouter configured first. Skipping or delaying Skill 12 causes cascading sub-agent failures.
+- **install.sh - ONBOARDING_FLAG heredoc**: Added MiMo V2 Pro thinking level rule. Main agent uses medium (default). All sub-agents spawned via sessions_spawn() must explicitly pass `thinking: "high"`. Never rely on default thinking for sub-agents.
+
+### Changed
+- **version**: Bumped to v6.5.11
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.11 (was v6.5.6, out of sync)
+
+---
+
+## v6.5.10 - April 1, 2026
 
 ### Added
-- Skill 31 (Upgraded Memory System): Added QC.md with verification checks for all 5 memory layers
-- Skill 32 (Command Center Setup): Added QC.md with verification checks for scripts, workspace, PM2, and dashboard
+- Skill 31 (Upgraded Memory System): Added QC.md with quality control checks (mirrored from VPS v6.5.12)
+- Skill 32 (Command Center Setup): Added QC.md with quality control checks (mirrored from VPS v6.5.12)
+
 
 ## v6.5.9 - April 1, 2026
 
@@ -386,19 +390,16 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 ## v6.5.5 — April 1, 2026
 
 ### Fixed
-- Skill 22 folder name references updated from `22-book-to-persona/` to `22-book-to-persona-coaching-leadership-system/` — prevents fresh install failures
+- Skill 22 folder name references updated from `22-book-to-persona/` to `22-book-to-persona-coaching-leadership-system/` in all scripts and docs — prevents "directory not found" errors on fresh installs
 
 ---
 
-## v6.5.4 — April 1, 2026
+## v6.5.4 — March 31, 2026
 
 ### Fixed
-- Version file synced to match HEAD commit (was stuck at v6.4.0)
-- All Mac repo mirrors confirmed
-- Script headers updated to v6.5.4 (3 scripts still referenced v6.4.0)
+- **Version file sync**: Updated version file from v6.5.2 to v6.5.4 to match HEAD commit (0243586d). Version file was not bumped in v6.5.3 or v6.5.4 commits.
 
 ---
-
 ## v6.5.0 — March 31, 2026
 
 ### Fixed
@@ -1036,14 +1037,14 @@ All notable changes to the OpenClaw Onboarding package are documented here.
 - **Skill 03 - Superpowers**: 4 Iron Laws + 14 sub-skills for systematic problem-solving.
 - README.md and Start Here.md included.
 
-## v6.5.23 - 2026-04-01
+## v6.5.17 - 2026-04-01
 ### Fixed
 - **install.sh - Auto-restart and Telegram confirmation**: Added automatic gateway restart at end of install. Previously, clients had to manually run `openclaw gateway restart`. Now the installer triggers the restart automatically and queues a Telegram confirmation message to be sent after the gateway comes back up. The notification uses a background process with an 8-second delay to ensure delivery after reconnect.
 
 ### Changed
-- **version**: Bumped to v6.5.23
-- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.23
+- **version**: Bumped to v6.5.17
+- **ONBOARDING_VERSION**: Updated install.sh header to v6.5.17
 
-## v6.5.20 - 2026-04-01
+## v6.5.14 - 2026-04-01
 - Set tools.exec security=full and ask=off in openclaw.json during install
 - Write exec-approvals.json with askFallback=full — eliminates approval wall for autonomous agent operation
