@@ -25,8 +25,6 @@ grep '"backend"' ~/.openclaw/openclaw.json
 cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.backup.$(date +%Y%m%d)
 ```
 
-**VPS/Docker Note:** On Hostinger VPS deployments, config is stored in `/data/.openclaw/openclaw.json` (persistent storage). The `~/.openclaw/` path is a symlink to `/data/.openclaw/` inside the container.
-
 ## Migration Steps
 
 ### Step 1: Remove Mem0 Plugin Slot

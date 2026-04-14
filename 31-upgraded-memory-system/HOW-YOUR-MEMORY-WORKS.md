@@ -137,5 +137,3 @@ If your assistant seems to be forgetting things or not finding information it sh
 3. Most issues are fixed by typing `/restart` in Telegram
 
 If a restart does not fix it, ask your assistant to run a full memory diagnostic.
-
-<!-- Breadcrumb: skill-31-vps | HOW-YOUR-MEMORY-WORKS.md | Updated to v7.0.0 8-layer architecture by skill-31-vps on 2026-04-12 -->

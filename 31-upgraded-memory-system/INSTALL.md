@@ -70,13 +70,13 @@ openclaw status | grep "Gateway service"
 ### 1.1 Verify MEMORY.md exists
 
 ```bash
-ls -la /data/clawd/MEMORY.md
+ls -la ~/.openclaw/workspace/MEMORY.md
 ```
 
 If MEMORY.md does not exist, create it:
 
 ```bash
-cat > /data/clawd/MEMORY.md << 'EOF'
+cat > ~/.openclaw/workspace/MEMORY.md << 'EOF'
 # MEMORY.md
 
 > This file contains persistent state, lessons learned, and project status ONLY.
@@ -91,20 +91,20 @@ EOF
 ### 1.2 Verify daily log directory exists
 
 ```bash
-mkdir -p /data/clawd/memory
+mkdir -p ~/.openclaw/workspace/memory
 ```
 
 ### 1.3 Verify core files exist
 
 Check that these files are present. If any are missing, create them from the templates in the onboarding package:
 
-- /data/clawd/MEMORY.md
-- /data/clawd/AGENTS.md
-- /data/clawd/TOOLS.md
-- /data/clawd/USER.md
-- /data/clawd/SOUL.md
-- /data/clawd/IDENTITY.md
-- /data/clawd/HEARTBEAT.md
+- ~/.openclaw/workspace/MEMORY.md
+- ~/.openclaw/workspace/AGENTS.md
+- ~/.openclaw/workspace/TOOLS.md
+- ~/.openclaw/workspace/USER.md
+- ~/.openclaw/workspace/SOUL.md
+- ~/.openclaw/workspace/IDENTITY.md
+- ~/.openclaw/workspace/HEARTBEAT.md
 
 ---
 
@@ -214,7 +214,7 @@ Find the top-level `memory` section in openclaw.json and set:
 }
 ```
 
-**Important:** There may be TWO places where the backend is configured. The top-level `memory.backend` AND the `agents.defaults.memorySearch.provider`. The `memory.backend` should be "builtin" (for memory-core) and `memorySearch.provider` should be "gemini". If the top-level still says "google embedding 2", the search will fail even if memorySearch says "gemini".
+**Important:** There may be TWO places where the backend is configured. The top-level `memory.backend` AND the `agents.defaults.memorySearch.provider`. The `memory.backend` should be "builtin" (for memory-core), and `memorySearch.provider` should be "gemini" (for embedding search). If the top-level still says "google embedding 2", the search will fail even if memorySearch says "gemini".
 
 ### 4.3 Configure search quality
 
@@ -325,13 +325,13 @@ Expected: Status shows "connected" with graph statistics.
 
 ## Layer 7: Obsidian Vault (Structured Knowledge Base)
 
-### 7.1 Check if Obsidian is installed (Linux)
+### 7.1 Check if Obsidian is installed (Mac)
 
 ```bash
-which obsidian 2>/dev/null || flatpak list 2>/dev/null | grep -i obsidian
+ls /Applications/Obsidian.app
 ```
 
-If Obsidian is not installed, you can download it from https://obsidian.md or install via flatpak: `flatpak install flathub md.obsidian.Obsidian`
+If Obsidian is not installed, you can download it from https://obsidian.md
 
 ### 7.2 Create or identify vault location
 
@@ -352,7 +352,7 @@ In `~/.openclaw/openclaw.json`, add:
 ```json
 "obsidian": {
   "enabled": true,
-  "vaultPath": "/home/USERNAME/Documents/ObsidianVault",
+  "vaultPath": "/Users/USERNAME/Documents/ObsidianVault",
   "dailyNotes": true,
   "wikilinks": true
 }
@@ -370,7 +370,51 @@ Expected: Shows vault path, note count, and daily notes status.
 
 ---
 
-## Layer 8: Wiki System (Collaborative Documentation)
+## Layer 8: Active Memory + Wiki System (REQUIRED)
+
+Layer 8 consists of two integrated components:
+1. **Active Memory** (REQUIRED) - Native memory-core with auto-capture and auto-recall
+2. **Wiki System** - Collaborative documentation with deterministic pages
+
+### 8.0 Configure Active Memory (REQUIRED)
+
+Active Memory MUST be enabled for the 8-layer system to function.
+
+In `~/.openclaw/openclaw.json`, ensure these settings exist:
+
+```json
+"memory": {
+  "backend": "builtin"
+},
+"agents": {
+  "defaults": {
+    "memory": {
+      "autoCapture": true,
+      "autoRecall": true
+    },
+    "activeMemory": {
+      "enabled": true,
+      "flushIntervalMinutes": 30,
+      "contextInjection": {
+        "memoryWiki": true,
+        "cognee": true
+      }
+    }
+  }
+}
+```
+
+**Verify Active Memory is configured:**
+```bash
+openclaw memory status
+```
+
+Expected output should show:
+- Backend: builtin
+- Auto-capture: enabled
+- Auto-recall: enabled
+
+### 8.1 Enable Wiki System
 
 ### 8.1 Enable wiki system
 
@@ -379,7 +423,7 @@ In `~/.openclaw/openclaw.json`, add:
 ```json
 "wiki": {
   "enabled": true,
-  "vaultPath": "/home/USERNAME/.openclaw/wiki",
+  "vaultPath": "/Users/USERNAME/.openclaw/wiki",
   "backend": "sqlite"
 }
 ```
@@ -440,7 +484,7 @@ After all layers are installed, run these checks:
 
 ```bash
 # Layer 1: Markdown files exist
-ls /data/clawd/MEMORY.md /data/clawd/memory/
+ls ~/.openclaw/workspace/MEMORY.md ~/.openclaw/workspace/memory/
 
 # Layer 2: Flush prompt is configured
 grep "memoryFlush" ~/.openclaw/openclaw.json | head -1
@@ -458,8 +502,8 @@ openclaw memory status | grep -E "Backend|autoCapture|autoRecall"
 # Layer 6: Cognee is running (if Docker available)
 openclaw cognee status 2>/dev/null || echo "Cognee not running (may need Docker)"
 
-# Layer 7: Obsidian is installed (Linux)
-which obsidian 2>/dev/null || flatpak list 2>/dev/null | grep -i obsidian && echo "Obsidian installed" || echo "Obsidian not installed"
+# Layer 7: Obsidian is installed (Mac)
+ls /Applications/Obsidian.app 2>/dev/null && echo "Obsidian installed" || echo "Obsidian not installed"
 
 # Layer 8: Wiki system is initialized
 openclaw wiki status 2>/dev/null || echo "Wiki not initialized"
@@ -498,7 +542,7 @@ If results come back, all layers are working.
 [ ] Layer 4: memorySearch.provider set to "gemini" (or PENDING if no API key)
 [ ] Layer 5: memory-core enabled with autoCapture and autoRecall
 [ ] Layer 6: Cognee installed and running (or PENDING if no Docker)
-[ ] Layer 7: Obsidian vault configured (app check: which obsidian || flatpak list | grep -i obsidian)
+[ ] Layer 7: Obsidian vault configured (app check: ls /Applications/Obsidian.app)
 [ ] Layer 8: Wiki system initialized and syncing
 [ ] Gateway restarted by user
 [ ] Memory search test returned results
@@ -598,5 +642,4 @@ Send confirmation:
 - ⚠️ Any pending items (missing API keys, etc.)
 
 **ACTIVATION IS COMPLETE when all steps are done.**
-
-<!-- Breadcrumb: skill-31-vps | INSTALL.md | Updated to v7.0.0 8-layer architecture with Linux Obsidian check by skill-31-vps on 2026-04-12 -->
+```
