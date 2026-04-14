@@ -189,8 +189,8 @@ Follow these 8 activation steps in order:
 curl -X POST "https://main.blackceoautomations.com/webhook/social-planner-sheet-create" \
   -H "Content-Type: application/json" \
   -d '{
-    "brandName": "[CLIENT_BRAND_NAME]",
-    "clientEmail": "[CLIENT_EMAIL]"
+    "brandName": "[from identity.md: brand name]",
+    "clientEmail": "[from identity.md: owner email]"
   }'
 ```
 Store the returned `sheetUrl` and `sheetId` in MEMORY.md.
