@@ -1,11 +1,24 @@
 # Changelog - Social Media Planner (Skill 35)
 
+## v1.4.0 - April 14, 2026
+
+### Added/Updated
+- Complete video production pipeline: kie.ai Veo 3.1 Lite generation + FFmpeg crossfade transitions and spec conformance (1080x1920, 9:16, H.264/AAC/30fps)
+- Expanded to 8 platforms for video posts: Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, Threads, X (Twitter)
+- HTML email newsletters with embedded images/links
+- Scaled production to 15 sub-agents + 6 dedicated QC agents
+- Podbean podcast publishing webhook integration
+- FFmpeg for all video post-processing (crossfades, specs, optimization)
+
 ## v1.3.0 - April 13, 2026
 
 ### Changed
 - Updated all webhook payload examples to use explicit variable references from identity.md
 - Google Sheet webhook: `brandName` now references "[from identity.md: brand name]"
 - Google Sheet webhook: `clientEmail` now references "[from identity.md: owner email]"
+- Skill 32 tunnel webhook: `clientName` now references "[company slug from identity.md, lowercase, no spaces]"
+- Skill 32 tunnel webhook: `companyName` now references "[from identity.md: company display name]"
+- Skill 32 tunnel webhook: `contactEmail` now references "[from identity.md: owner email]"
 
 ### Added
 - Full Podbean Podcast Publishing webhook documentation in CORE_UPDATES.md TOOLS.md section

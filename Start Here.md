@@ -1,6 +1,8 @@
 # START HERE - OpenClaw Onboarding
 **READ THIS ENTIRE FILE BEFORE TOUCHING ANYTHING ELSE.**
 
+**ALSO READ:** `TERMINOLOGY.md` in this repo root. It defines GHL/Convert and Flow/GoHighLevel terminology and Private Integration Token (PIT) rules that apply across all skills.
+
 ---
 
 ## 🔴 SOURCE OF TRUTH RULE - SKILL FILES ARE AUTHORITY
@@ -29,8 +31,6 @@
 **Active Memory is REQUIRED** - memory-core layer must be enabled and configured.
 
 ---
-
-**ALSO READ:** `TERMINOLOGY.md` in this repo root. It defines GHL/Convert and Flow/GoHighLevel terminology and Private Integration Token (PIT) rules that apply across all skills.
 
 ---
 
@@ -821,7 +821,7 @@ python3 ~/clawd/scripts/gemini-indexer.py --status   # Verify completion
 
 Once the onboarding package is installed, your agent should check for updates **every Sunday**.
 
-**GitHub repo:** `https://github.com/trevorotts1/openclaw-onboarding-vps`
+**GitHub repo:** `https://github.com/trevorotts1/openclaw-onboarding`
 
 ### What to check
 
@@ -848,7 +848,7 @@ git log HEAD..origin/main --oneline --name-only 2>/dev/null || \
 
 ### If git is not available
 
-Check `https://github.com/trevorotts1/openclaw-onboarding-vps/commits/main` directly and compare the install date against recent commit dates.
+Check `https://github.com/trevorotts1/openclaw-onboarding/commits/main` directly and compare the install date against recent commit dates.
 
 ---
 
@@ -2021,7 +2021,7 @@ label: "wave4-agent-f"
 
 5. **Install Skill 31** (Upgraded Memory System): Read SKILL.md, check prerequisites, follow INSTALL.md
 
-6. **Install Skill 35** (Social Media Planner): Read SKILL.md, check prerequisites (Skills 22, 30, 31), follow INSTALL.md
+6. **Install Skill 35** v1.4.0 | Content Publishing with Video Pipeline | 8 platforms, HTML email, FFmpeg: Read SKILL.md, check prerequisites (Skills 22, 30, 31), follow INSTALL.md
 
 6. **Skill 32 triggers automatically after Skill 23**
    - Skill 32 (Command Center Setup) is triggered automatically when Skill 23 completes. See Skill 23 INSTALL.md for the handoff.
