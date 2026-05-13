@@ -43,7 +43,7 @@ npm install -g pm2
 The agent will scan for department folders in your master files area. These folders indicate Skill 23 was completed.
 
 **What the agent looks for:**
-- Department folders at `/data/clawd/departments/[name]/` (where Skill 23 writes them) — NO -dept suffix
+- Department folders at `~/.openclaw/workspace/departments/[name]/` (where Skill 23 writes them) — NO -dept suffix
 - Also checks `~/.openclaw/workspaces/command-center/` and `~/Downloads/` for department folders
 - Each folder should contain role definitions
 
@@ -162,7 +162,7 @@ Each department workspace will have symlinks to shared files from your main work
 - HEARTBEAT.md
 - SOUL.md
 
-**Important:** The agent uses absolute paths (like `/Users/username/clawd/TOOLS.md`), not tilde paths (`/data/clawd/TOOLS.md`). This ensures symlinks work correctly.
+**Important:** The agent uses absolute paths (like `/Users/username/clawd/TOOLS.md`), not tilde paths (`~/.openclaw/workspace/TOOLS.md`). This ensures symlinks work correctly.
 
 ---
 
@@ -199,12 +199,6 @@ For each department, the agent adds an entry to `agents.list[]`:
 }
 ```
 
-**Important notes:**
-- Agent ID format: `dept-[dept-name]` (matches Skill 23's agent ID format)
-- Workspace paths are absolute (not tilde paths)
-- extraPaths points to your master files folder using absolute path
-- Sandboxing is NOT enabled (department heads need full access)
-
 ### 4.2b Wiki Context Injection
 Each department agent is configured to use the Memory Wiki for structured knowledge retrieval:
 
@@ -227,6 +221,12 @@ This enables department heads to:
 - Retrieve SOPs and playbooks via `wiki_get`
 - Access persona blueprints from the Book-to-Persona system
 - Maintain consistent methodology across all department work
+
+**Important notes:**
+- Agent ID format: `dept-[dept-name]` (matches Skill 23's agent ID format)
+- Workspace paths are absolute (not tilde paths)
+- extraPaths points to your master files folder using absolute path
+- Sandboxing is NOT enabled (department heads need full access)
 
 ### 4.3 Add Telegram Group to Channels
 The agent adds your Telegram group to the channels configuration:
@@ -375,63 +375,121 @@ http://localhost:4000
 
 **🔴 GATE CHECK: DO NOT proceed to Phase 6b until the dashboard is running on localhost:4000 and the workspace seeding script has been run. Verify both. DO NOT SKIP THIS PHASE.**
 
-## Phase 6b: VPS Deployment - Nginx Reverse Proxy + SSL
+## Phase 6b: Domain Registration + Tunnel Connection
 
-On VPS, we use nginx with certbot for SSL instead of cloudflared tunnels.
+**Architecture:** Trevor owns the Cloudflare account. When the client registers, Trevor's system creates a DEDICATED tunnel inside Trevor's Cloudflare account, generates a machine-specific tunnel token, returns that token directly in the webhook HTTP response, and also sends Trevor a Telegram backup notification with the same token. The client runs cloudflared on their machine to connect their local dashboard to that tunnel. The client never touches Cloudflare's website or creates their own account.
 
-### 6b.1 Install nginx and certbot
+### 6b.1 Choose the Client Subdomain Name
 
+Use the company slug from the Skill 23 build. Follow this naming pattern:
+- Format: [company-slug]-[shortid] (Example: acme-dental-a7f3, coaching-biz-m42k)
+- All lowercase, hyphens only, no spaces
+- The short ID prevents collisions if two clients have similar company names
+
+Generate the short ID:
 ```bash
-sudo apt-get update
-sudo apt-get install -y nginx certbot python3-certbot-nginx
+openssl rand -hex 2
 ```
 
-### 6b.2 Configure nginx reverse proxy
+### 6b.2 Install cloudflared (if not already installed)
 
-Create /etc/nginx/sites-available/command-center:
-```nginx
-server {
-    listen 80;
-    server_name _;  # Accept any hostname
-    
-    location / {
-        proxy_pass http://localhost:4000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
+💬 Send Telegram message: "⏳ [Phase 6b] Installing Cloudflare tunnel client... this may take 1-3 minutes."
+
+**Mac:**
+```bash
+brew install cloudflared
+```
+
+**Linux/VPS:**
+```bash
+curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared
+```
+
+Check:
+```bash
+cloudflared --version
+```
+
+### 6b.3 Send Webhook to Trevor's System and Capture the Token Response
+
+💬 Send Telegram message: "⏳ [Phase 6b] Registering your tunnel with Trevor's system..."
+
+The agent calls the n8n webhook. The webhook returns JSON: `{status, subdomain, tunnelToken}`. The agent reads the `tunnelToken` from the response and uses it to configure cloudflared. No manual token forwarding needed.
+
+```bash
+RESPONSE=$(curl -s -X POST https://main.blackceoautomations.com/webhook/command-center-register-v3   -H "Content-Type: application/json"   -d '{
+    "clientName": "[company slug from identity.md, lowercase, no spaces]",
+    "companyName": "[from identity.md: company display name]",
+    "contactEmail": "[from identity.md: owner email]"
+  }')
+
+TUNNEL_TOKEN=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['tunnelToken'])")
+SUBDOMAIN=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['subdomain'])")
+```
+
+**Expected webhook response:**
+```json
+{
+  "status": "success",
+  "subdomain": "[clientName].zerohumanworkforce.com",
+  "tunnelToken": "[token]",
+  "tunnelId": "[uuid]"
 }
 ```
 
-Enable the site:
-```bash
-sudo ln -sf /etc/nginx/sites-available/command-center /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl restart nginx
-```
+**Important note:** If the webhook returns the old format (`'Workflow was started'`), tell the owner: "The tunnel automation needs updating. Please ask Trevor to update the n8n workflow."
 
-### 6b.3 Obtain SSL certificate
+**What Trevor's system does automatically:**
+1. Creates a dedicated Cloudflare tunnel for this client inside Trevor's Cloudflare account
+2. Routes [clientName].zerohumanworkforce.com to that tunnel
+3. Generates a tunnel token specific to this client's machine
+4. Returns the token directly in the webhook response to the client agent
+5. Sends Trevor a Telegram backup notification with the same token
 
-```bash
-sudo certbot --nginx -d $(curl -s ifconfig.me) --non-interactive --agree-tos --email admin@localhost
-```
-
-### 6b.4 Verify HTTPS access
+### 6b.4 Save the Token Locally
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" https://$(curl -s ifconfig.me)
+grep -v '^CLOUDFLARE_TUNNEL_TOKEN=' ~/.openclaw/.env 2>/dev/null > /tmp/openclaw-env.tmp || true
+echo "CLOUDFLARE_TUNNEL_TOKEN=$TUNNEL_TOKEN" >> /tmp/openclaw-env.tmp
+mv /tmp/openclaw-env.tmp ~/.openclaw/.env
 ```
 
-Expected: 200
+### 6b.5 Connect This Machine to the Tunnel
+
+💬 Send Telegram message: "⏳ [Phase 6b] Connecting to the Cloudflare tunnel... this may take 15-30 seconds."
+
+```bash
+cloudflared tunnel run --token "$TUNNEL_TOKEN"
+```
+
+Run this in a background process or via PM2:
+
+```bash
+pm2 delete cloudflare-tunnel 2>/dev/null || true
+pm2 start "cloudflared tunnel run --token $TUNNEL_TOKEN" --name cloudflare-tunnel
+pm2 save
+```
+
+### 6b.6 Verify the URL is Live
+
+💬 Send Telegram message: "⏳ [Phase 6b] Verifying your Command Center is live... waiting 15 seconds for tunnel to stabilize."
+
+```bash
+sleep 15
+curl -s -o /dev/null -w "%{http_code}" "https://$SUBDOMAIN"
+```
+
+Expected: 200. If not 200 after 30 seconds, check that PM2 shows the cloudflare-tunnel process as online. If still failing after 2 minutes, message Trevor.
+
+💬 Send Telegram message: "✅ [Phase 6b] Command Center is live and responding!"
+
+### 6b.7 Report the Live URL to the Client
+
+> "Your Command Center is now live at: https://$SUBDOMAIN"
 
 ---
 
-**🔴 GATE CHECK: DO NOT proceed to Phase 7 until nginx returns 200. Verify with curl. The VPS uses nginx + certbot, NOT cloudflared tunnels.**
+**🔴 GATE CHECK: DO NOT proceed to Phase 7 until the URL returns 200. The cloudflare-tunnel PM2 process must be running. Do NOT create a Cloudflare account. Do NOT go to the Cloudflare website. The tunnel is created inside Trevor's Cloudflare account. The token comes directly from Trevor's system in the webhook response.**
 
 ## Phase 7: Verification (Agent Does This Automatically)
 
@@ -452,7 +510,7 @@ openclaw memory status dept-marketing
 
 **Expected result:** Status shows memory system active for the department agent.
 
-**Important requirement:** The Command Center must use memory-core (builtin backend), not an external paid memory service. The agent must confirm the memory layer is running with `memory.backend: builtin` and must fail the install if memory falls back to a different backend.
+**Important requirement:** The Command Center must use the built-in memory-core backend (free, local storage), not an external hosted memory service. The agent must confirm the memory layer is running with `"backend": "builtin"` and must fail the install if memory falls back to an external hosted service.
 
 ### 7.3 Verify the 5-Layer Memory Setup
 The agent verifies that each department workspace has the required memory architecture:
@@ -460,7 +518,7 @@ The agent verifies that each department workspace has the required memory archit
 1. Memory Flush
 2. Session indexing
 3. Google Embedding 2 or equivalent local retrieval layer
-4. memory-core semantic memory (builtin backend)
+4. memory-core semantic memory (built-in backend, no external dependencies)
 5. Cognee / graph layer when enabled for the workspace
 
 **Expected result:** Each department workspace is isolated and ready to store its own memory without mixing with Trevor's private memory or another client's workspace.
@@ -482,14 +540,14 @@ Send each department agent this message:
 **Layer 1 - Search Evidence:**
 Ask the agent: "How did you select this persona? Did you search the persona library or just pick a default?"
 
-**Expected:** Agent describes running `gemini-search.py` (or a similar dynamic search) against the 40-persona library to find the top candidates. If the agent says "I always use [same persona]" without searching, the selection is static.
+**Expected (v9.6.2+):** Agent describes running `select-persona-for-task.py` from `~/.openclaw/skills/23-ai-workforce-blueprint/scripts/`. That script combines THREE things in one call: (1) Gemini Embeddings 2 semantic search via `gemini-search.py`, (2) keyword filter by dept domain tags, (3) full 5-layer alignment scoring. The agent should be able to show the JSON output containing `model_id`, `score`, `mode`, `top_3` candidates, and the 5-layer `breakdown`.
 
-**FAIL if:** Agent says "I always use [same persona]" or "I default to the primary persona every time" -- this means the Dynamic Persona Selection Engine is not firing. The agent must perform a per-task search, not reuse the same persona every time.
+**FAIL if:** Agent says "I always use [same persona]", "I default to the primary persona every time", OR "I only ran `gemini-search.py` directly without scoring" -- the Dynamic Persona Selection Engine must call the unified `select-persona-for-task.py` for full 5-layer scoring, not just raw semantic search.
 
 **Layer 2 - 5-Layer Alignment:**
-Ask the agent: "Explain the 8-layer alignment you used to select this persona."
+Ask the agent: "Explain the 5-layer alignment you used to select this persona."
 
-**Expected:** Agent names and scores at least 3 of these 8 layers:
+**Expected:** Agent names and scores at least 3 of these 5 layers:
 1. Owner values alignment
 2. Company mission alignment
 3. Business KPI alignment
@@ -501,17 +559,17 @@ Ask the agent: "Explain the 8-layer alignment you used to select this persona."
 **Layer 3 - Reason Log:**
 Ask the agent: "Did you log your persona selection to today's daily memory file?"
 
-**Expected:** Agent confirms it appended a reason log entry to `/data/clawd/memory/YYYY-MM-DD.md` (where YYYY-MM-DD is today's date). Then verify the file directly:
+**Expected:** Agent confirms it appended a reason log entry to `~/.openclaw/workspace/memory/YYYY-MM-DD.md` (where YYYY-MM-DD is today's date). Then verify the file directly:
 
 ```bash
-cat /data/clawd/memory/$(date +%Y-%m-%d).md | grep -i "selected.*persona"
+cat ~/.openclaw/workspace/memory/$(date +%Y-%m-%d).md | grep -i "selected.*persona"
 ```
 
 **FAIL if:** No matching line exists in today's memory file. The Persona Operating Protocol requires a reason log entry for every task.
 
 **Why this matters:** Department agents have `governing-personas.md` files and a Persona Operating Protocol in their AGENTS.md. But if the runtime wiring is broken, agents will skip the search, skip the alignment, skip the log, and just default to the same persona every time. This test catches all three failure modes before go-live.
 
-**If an agent fails:** Check that their department AGENTS.md contains the `## 🔴🔴🔴 Persona Operating Protocol` section. If missing, append it manually and re-test. Also verify `scripts/gemini-search.py` exists and is executable.
+**If an agent fails:** Check that their department AGENTS.md contains the `## 🔴🔴🔴 Persona Operating Protocol` section. If missing, append it manually and re-test. Also verify BOTH `scripts/gemini-search.py` AND `~/.openclaw/skills/23-ai-workforce-blueprint/scripts/select-persona-for-task.py` exist and are executable. The agent calls the latter for every task; the latter internally calls the former for semantic search.
 
 ### 7.6 Report Results
 The agent sends you a summary in Telegram:
@@ -591,16 +649,16 @@ After all phases are complete, verify:
 - [ ] Agent config entries added for each department
 - [ ] Telegram bindings configured for each topic
 - [ ] Dashboard accessible at localhost:4000
-- [ ] nginx installed and configured
-- [ ] SSL certificate obtained via certbot
-- [ ] Reverse proxy forwarding to localhost:4000
-- [ ] memory-core verified with builtin backend (not external paid service)
-- [ ] 8-layer memory setup verified per department workspace
+- [ ] Cloudflare tunnel created and running
+- [ ] DNS route registered for [clientName].zerohumanworkforce.com
+- [ ] Hostname follows Option C pattern: [company-slug]-[shortid]
+- [ ] memory-core backend verified (builtin, not external hosted service)
+- [ ] 5-layer memory setup verified per department workspace
 - [ ] Live URL accessible from the internet
 - [ ] Test message received response from correct department head
 - [ ] Memory status shows all department agents active
 - [ ] Persona runtime test: dynamic search confirmed per department
-- [ ] Persona runtime test: 8-layer alignment explained per department
+- [ ] Persona runtime test: 5-layer alignment explained per department
 - [ ] Persona runtime test: reason log entry exists in today's memory file
 
 ## What to Do Next
@@ -668,14 +726,16 @@ npm run db:push
 npm run db:seed
 ```
 
-#### Step 6: CONFIGURE nginx and SSL
+#### Step 6: CREATE Cloudflare tunnel
 ```bash
-# Install nginx if needed
-sudo apt-get install nginx
-
-# Obtain SSL certificate
-sudo certbot --nginx -d [your-domain.com]
+# Use the create-tunnel.sh script
+bash scripts/create-tunnel.sh
 ```
+This will:
+- Install cloudflared if needed
+- Call n8n webhook to create tunnel
+- Receive tunnel token in response
+- Start PM2 process
 
 #### Step 7: START Command Center
 ```bash
@@ -685,8 +745,7 @@ pm2 save
 
 #### Step 8: VERIFY installation
 - Dashboard accessible at http://localhost:4000
-- Nginx reverse proxy forwarding correctly
-- SSL certificate valid
+- Cloudflare tunnel URL accessible from internet
 - Telegram topics created for each department
 
 #### Step 9: APPLY CORE_UPDATES.md
@@ -698,14 +757,14 @@ Add entries from CORE_UPDATES.md to:
 #### Step 10: RUN QC checks
 Execute ALL checks in QC.md:
 - Verify dashboard loads at localhost:4000
-- Test nginx reverse proxy is accessible
+- Test Cloudflare tunnel is accessible
 - Verify all department topics exist in Telegram
 - Test message routing to at least 3 departments
 
 #### Step 11: CONFIRM to client
 Send confirmation:
 - ✅ Command Center installed at [localhost:4000]
-- ✅ Nginx configured with SSL
+- ✅ Cloudflare tunnel active: [https://xxx.zerohumanworkforce.com]
 - ✅ PM2 process running
 - ✅ [N] departments wired to dashboard
 - ✅ Telegram topics created
@@ -714,4 +773,4 @@ Send confirmation:
 **ACTIVATION IS COMPLETE when all steps are done.**
 
 ---
-<!-- BREADCRUMB: skill-32-vps | 2026-04-12 | v6.5.7 | INSTALL.md updated with wiki context injection | Memory Surgery Playbook v3.5 -->
+<!-- BREADCRUMB: skill-32-mac | 2026-04-12 | v6.5.7 | INSTALL.md updated with wiki context injection | Memory Surgery Playbook v3.5 -->
