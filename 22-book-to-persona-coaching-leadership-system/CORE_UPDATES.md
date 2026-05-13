@@ -27,31 +27,31 @@ python3 -c "import google.genai, numpy, pdfplumber, pypdf, ebooklib, aiohttp, bs
 ```
 ## Book-to-Persona Skill (Installed)
 Converts any book (PDF/EPUB/MOBI/AZW3) into a dual-purpose persona blueprint.
-Pre-built personas already included. Run: gemini status -c coaching-personas to see total count. Pipeline runs on new books only.
+Pre-built personas already included. Run: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status to see total count. Pipeline runs on new books only.
 
-Pipeline:
-- Phase 1: kimi-k2.5 via api.moonshot.ai/v1 (temp 1.0) → extraction-notes.md
-- Phase 2: deepseek/deepseek-v3.2 via OpenRouter → analysis-notes.md
-- Phase 3: openai-codex/gpt-5.4 via OpenClaw OAuth → persona-blueprint.md (all 14 sections)
-- Content filter fallback: openrouter/moonshotai/kimi-k2.5
+Pipeline (model selection is DYNAMIC via shared-utils/select_model.py — Anthropic FORBIDDEN):
+- Phase 1: Latest Kimi (Ollama Cloud preferred) → OpenRouter Kimi → OAuth GPT → DeepSeek V4+ → ask owner. Temperature 1.0. → extraction-notes.md
+- Phase 2: Same Kimi-first chain as Phase 1 (was hardcoded deepseek/deepseek-v3.2 prior to v9.5.0). → analysis-notes.md
+- Phase 3: OAuth GPT preferred → latest Kimi fallback. → persona-blueprint.md (all 14 sections)
+- Runtime fallback: selector re-runs with failed model excluded, walks down tier list. Never selects Anthropic.
 
 Persona Reflex (DEFAULT BEHAVIOR):
-Before any professional task, run: gemini search coaching-personas "<task keywords>"
+Before any professional task, run: python3 ~/.openclaw/workspace/scripts/gemini-search.py "<task keywords>"
 Load returned persona's Task Mode. Execute the task through that methodology.
 Skip only if the user explicitly says so.
 
 Key paths:
-- Skill: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
-- Personas: /data/openclaw-master-files/coaching-personas/personas/
-- Router: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md
-- Orchestrator: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py
-- Gemini collection: coaching-personas [run: gemini status -c coaching-personas to get current counts]
+- Skill: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+- Personas: ~/Downloads/openclaw-master-files/coaching-personas/personas/
+- Router: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md
+- Orchestrator: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py
+- Gemini Vector Database: coaching-personas [run: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status to get current counts]
 
 To add a new book: follow SOP in MEMORY.md under "Add New Book to Coaching Personas Matrix"
 
 Re-indexing trigger (MANDATORY after adding any new persona):
-When a new book persona is added to /data/openclaw-master-files/coaching-personas/personas/:
-Run: gemini update
+When a new book persona is added to ~/Downloads/openclaw-master-files/coaching-personas/personas/:
+Run: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
 This updates the Gemini embedding index with the new persona.
 Do NOT skip this step -- the search will not find the new persona until re-indexed.
 ```
@@ -60,29 +60,30 @@ Do NOT skip this step -- the search will not find the new persona until re-index
 
 ## TOOLS.md
 
-**Where:** Add a new section under model routing titled `## Book-to-Persona - Model Routing and Gemini`
+**Where:** Add a new section under model routing titled `## Book-to-Persona - Model Routing and Gemini Engine`
 
 **Exact text to add:**
 ```
-## Book-to-Persona - Model Routing and Gemini
-Pipeline model routing:
-- Phase 1: moonshot/kimi-k2.5 — MOONSHOT_API_KEY in /data/openclaw/workspace/secrets/.env — endpoint: https://api.moonshot.cn/v1 — temperature MUST be 1.0
-- Phase 2: deepseek/deepseek-v3.2-speciale via OpenRouter ONLY (OPENROUTER_API_KEY)
-- Phase 3: openai/gpt-5.3-codex via OpenClaw OAuth (ChatGPT subscription)
-- Fallback (content filter): OpenRouter moonshotai/kimi-k2.5 for flagged books
+## Book-to-Persona - Model Routing and Gemini Engine
+Pipeline model routing (DYNAMIC selection via shared-utils/select_model.py — never hardcoded):
+- Phase 1: latest Kimi (Ollama Cloud preferred) → OpenRouter Kimi → OAuth GPT → DeepSeek V4+. Temperature 1.0.
+- Phase 2: same Kimi-first chain as Phase 1. (Was hardcoded deepseek/deepseek-v3.2-speciale prior to v9.5.0.)
+- Phase 3: OAuth GPT preferred (subscription, no per-call cost) → latest Kimi fallback.
+- Runtime fallback: selector re-runs with failed model excluded.
+- ABSOLUTE: Anthropic models (anthropic/claude-*) are FORBIDDEN. Filter applied at every tier.
+- Auto-adapts: when client adds a new Kimi or GPT version, selector picks the higher number automatically.
 
-Gemini collection: coaching-personas
+Gemini Vector Database: coaching-personas
 Setup commands (run once on fresh install):
-  gemini collection add /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/personas --name coaching-personas --mask "**/*.md"
-  gemini update
-  gemini embed  (takes 3-8 min first time, downloads local model, runs offline after)
+  python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
+  # Handled by gemini-indexer.py  (takes 3-8 min first time, downloads local model, runs offline after)
 
-Runtime query: gemini search coaching-personas "<task keywords>"
-After adding new book: gemini update (no need to re-embed everything)
-If stale/broken: gemini cleanup && gemini update && gemini embed
+Runtime query: python3 ~/.openclaw/workspace/scripts/gemini-search.py "<task keywords>"
+After adding new book: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py (no need to re-embed everything)
+If stale/broken: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --rebuild && python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
 
-Full pipeline reference: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PIPELINE.md
-Full Gemini guide: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/GAI-SEARCH-GUIDE.md
+Full pipeline reference: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PIPELINE.md
+Full Gemini Engine guide: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/GEMINI-RETRIEVAL-GUIDE.md
 ```
 
 ---
@@ -94,11 +95,11 @@ Full Gemini guide: /data/.openclaw/skills/22-book-to-persona-coaching-leadership
 **Exact text to add:**
 ```
 ## Book-to-Persona Persona Library (Installed [DATE])
-- Skill: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
-- Pre-built personas (see gemini status -c coaching-personas for count): /data/openclaw-master-files/coaching-personas/personas/
-- Gemini collection: coaching-personas [run: gemini status -c coaching-personas to get current counts]
+- Skill: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+- Pre-built personas (see python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status for count): ~/Downloads/openclaw-master-files/coaching-personas/personas/
+- Gemini Vector Database: coaching-personas [run: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status to get current counts]
 - Source: Available at your onboarding package repo.
-- Persona Reflex: query Gemini before every professional task (see AGENTS.md)
+- Persona Reflex: query Gemini Engine before every professional task (see AGENTS.md)
 - Add new book SOP: see "Add New Book to Coaching Personas Matrix" section in this file
 ```
 
@@ -139,8 +140,8 @@ No update required unless you are setting up a persona as your primary operating
 **Exact text to add:**
 ```
 ## Persona Reflex - ACTIVE
-Gemini collection coaching-personas loaded [run: gemini status -c coaching-personas to get current counts].
-Before professional tasks: gemini search coaching-personas "<task>" → load persona Task Mode.
+Gemini Vector Database coaching-personas loaded [run: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status to get current counts].
+Before professional tasks: python3 ~/.openclaw/workspace/scripts/gemini-search.py "<task>" → load persona Task Mode.
 ```
 
 ---
@@ -161,9 +162,9 @@ Before professional tasks: gemini search coaching-personas "<task>" → load per
 **Exact text to add:**
 ```
 ## Pending Skill Setup - Check and Remind
-File: /data/.openclaw/skills/.pending-setup.md
+File: ~/.openclaw/skills/.pending-setup.md
 If this file exists with entries marked Status: PENDING, proactively remind the user.
 When relevant to what they are working on, say: "You have a pending skill setup for [key] - want to add that now?"
-When user provides the key: save it to /data/openclaw/workspace/secrets/.env and mark the entry Status: COMPLETE.
+When user provides the key: save it to ~/.openclaw/workspace/secrets/.env and mark the entry Status: COMPLETE.
 Never nag - bring it up once per session max, only when relevant.
 ```

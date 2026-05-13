@@ -94,24 +94,24 @@ The Command Center reads:
 
 ## Model Requirements
 
-**This skill MUST run on a high reasoning model.** The decisions it makes (department structure, specialist determination, persona alignment) shape the entire company. Wrong choices cascade into everything.
+**This skill MUST run on a heavy-reasoning model.** The decisions it makes (department structure, specialist determination, persona alignment) shape the entire company. Wrong choices cascade into everything.
 
-**Approved models:**
-- anthropic/claude-opus-4-6
-- anthropic/claude-sonnet-4-6
-- openrouter/xiaomi/mimo-v2-pro (with thinking enabled)
-- google/gemini-3.1-pro-preview
-- openai-codex/gpt-5.4
+**Model selection is DYNAMIC** via `shared-utils/select_model.py --purpose-tier heavy`. The selector resolves the best available model in this priority order, walking down only if the higher one is missing from the client's `openclaw.json`:
 
-**Forbidden for this skill:**
-- moonshot/kimi-k2.5
-- google/gemini-3-flash-preview
-- google/gemini-3.1-flash-lite-preview
+1. **Ollama Cloud Kimi** (`ollama/kimi-k*:cloud`, latest version, thinking=high) — PREFERRED, lowest cost per call
+2. **OpenRouter Kimi** (`openrouter/moonshot/kimi-k*`, thinking=high)
+3. **Ollama Cloud DeepSeek V*-pro** (`ollama/deepseek-v*-pro:cloud`)
+4. **OpenRouter DeepSeek V*-pro** (`openrouter/deepseek/deepseek-v*-pro`, thinking=high)
+5. **OAuth GPT** (`codex/gpt-*` or `openai-codex/gpt-*`, whatever the client's latest version is — 5.3, 5.4, 5.5, 5.10, etc.)
 
-**If the client is on a low reasoning model:**
-Say: "For setting up your company, I recommend switching to a model that thinks more deeply so we get the best results. Want me to switch?"
+The selector auto-picks the highest version number in each chain entry. When a new Kimi or GPT version ships and the client adds it to their config, this skill picks it up automatically — no edit needed.
 
-**Research model:** When the AI offers to research industry best practices, it uses openrouter/perplexity/sonar-pro-search.
+**ABSOLUTE RULE:** Anthropic models (`anthropic/claude-*`) are FORBIDDEN by policy. Filter applied at every tier of the selector.
+
+**If the selector returns Tier 5 (owner-input-required):**
+The install agent shows the owner a plain-English prompt asking which model to use. The skill is still installed; only the model-binding waits on the owner's reply.
+
+**Research model:** When the AI offers to research industry best practices, it uses `openrouter/perplexity/sonar-pro-search` for the research pass — that model is purpose-built for live web research and is kept separate from the reasoning chain above.
 
 ## The Three Options
 
@@ -299,7 +299,7 @@ The CEO gets a plain-English explanation: "Your AI workforce includes a quality 
 
 After Skill 23 finishes, a Marketing department workspace looks like this:
 
-/data/clawd/departments/marketing/
+~/.openclaw/workspace/departments/marketing/
 - SOUL.md (unique - Marketing Director identity, generated from interview)
 - MEMORY.md (unique - empty, ready for use)
 - HEARTBEAT.md (unique - department priorities from interview)
@@ -311,13 +311,13 @@ After Skill 23 finishes, a Marketing department workspace looks like this:
 - devils-advocate/ (DA config and challenge questions)
 
 If a specialist was determined to be full-time (e.g., Social Media Manager):
-/data/clawd/departments/marketing/specialists/social-media-manager/
+~/.openclaw/workspace/departments/marketing/specialists/social-media-manager/
 - SOUL.md (unique - generated from interview, reflects what the client said about social media)
 - MEMORY.md (unique - tracks campaigns run, engagement data, brand voice decisions)
 - agents.list entry in openclaw.json (makes it a permanent team member that survives restarts)
 
 If a specialist was determined to be on-call (e.g., one-time logo design):
-/data/clawd/subagents/templates/logo-designer/
+~/.openclaw/workspace/subagents/templates/logo-designer/
 - SOUL.md (task template only - no persistent memory, spawned by department head when needed)
 
 ## Config Safety
@@ -365,10 +365,10 @@ The AI Workforce Blueprint integrates with the OpenClaw Memory Wiki system for s
 
 | Page | Purpose | Location |
 |------|---------|----------|
-| Company Org Chart | Live organizational structure | `/data/clawd/ORG-CHART.md` |
-| Department Config | Per-department KPIs and assignments | `/data/clawd/departments/[dept]/department-config.json` |
-| Persona Matrix | Pre-qualified coaching persona pool | `/data/clawd/persona-matrix.md` |
-| Governing Personas | Per-department persona matching guide | `/data/clawd/departments/[dept]/governing-personas.md` |
+| Company Org Chart | Live organizational structure | `~/.openclaw/workspace/ORG-CHART.md` |
+| Department Config | Per-department KPIs and assignments | `~/.openclaw/workspace/departments/[dept]/department-config.json` |
+| Persona Matrix | Pre-qualified coaching persona pool | `~/.openclaw/workspace/persona-matrix.md` |
+| Governing Personas | Per-department persona matching guide | `~/.openclaw/workspace/departments/[dept]/governing-personas.md` |
 | Interview Answers | Permanent record of workforce interview | `~/Downloads/openclaw-master-files/company-discovery/workforce-interview-answers.md` |
 | Interview Handoff | Progress tracker for resume capability | `~/Downloads/openclaw-master-files/company-discovery/interview-handoff.md` |
 
@@ -390,5 +390,5 @@ The workforce structure auto-updates the wiki:
 For full wiki capabilities, see Skill 31 (Upgraded Memory System).
 
 ---
-<!-- BREADCRUMB: skill-23-vps | 2026-04-12 | Memory Surgery Phase 2 Wave B -->
+<!-- BREADCRUMB: skill-23-mac | 2026-04-12 | Memory Surgery Phase 2 Wave A -->
 <!-- SKILL.md updated: Added Memory Wiki Integration section, updated Interview Persistence Protocol with layer references -->
