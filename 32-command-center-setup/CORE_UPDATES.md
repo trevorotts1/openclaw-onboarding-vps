@@ -119,8 +119,8 @@ If the client says ANY of the following at ANY time — today, tomorrow, next we
 - "I'm ready for the dashboard"
 
 Then IMMEDIATELY:
-1. Verify department folders exist on disk (check ~/.openclaw/workspaces/command-center/, /data/clawd/departments/, ~/Downloads/openclaw-master-files/)
-2. If folders exist: download and install Skill 32 from the onboarding repo (curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/update-skills.sh | bash) then follow Skill 32 INSTALL.md
+1. Verify department folders exist on disk (check ~/.openclaw/workspaces/command-center/, ~/.openclaw/workspace/departments/, ~/Downloads/openclaw-master-files/)
+2. If folders exist: download and install Skill 32 from the onboarding repo (curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/update-skills.sh | bash) then follow Skill 32 INSTALL.md
 3. If folders do NOT exist: ask "Where did you save your department folders?" and use their answer
 4. Do NOT wait for a scheduled check. Do NOT say "I'll look into it later." Install NOW.
 
@@ -139,6 +139,59 @@ This addition is REQUIRED, not optional.
 
 ---
 
+## AGENTS.md Addition — Kanban Done-Gate Protocol (v9.6.5)
+
+**Where:** Append at the bottom of `~/clawd/AGENTS.md` after the existing Skill 32 sections.
+
+**Exact text to add:**
+```
+## 🔴🔴🔴 Kanban Done-Gate Protocol (Skill 32, v9.6.5+)
+
+A task card cannot move from the "Review" column to the "Complete" column
+until the department's Devil's Advocate has VALIDATED the measurable Done
+criteria from the SOP's DEFINE section.
+
+Workflow:
+  Backlog → Ready → In Progress → REVIEW → (DA validates) → Complete
+
+When a worker (specialist sub-agent or director) finishes a task:
+  1. Move the card to Review (NOT Complete).
+  2. Tag the card with `da_pending=true`.
+  3. Invoke the dept's Devil's Advocate. The DA reads:
+     - The task description
+     - The SOP that was followed (DEFINE section — what "done" means)
+     - The artifact produced (file, message, blueprint, etc.)
+  4. DA returns one of:
+     - PASS: card moves to Complete, log entry to dept/memory/<date>.md
+     - FAIL: card stays in Review, DA writes specific failure reasons
+       to the card's notes, worker iterates and re-submits.
+     - INDETERMINATE: DA cannot verify (e.g. data not available yet).
+       Card stays in Review with `da_indeterminate=true` and a
+       follow-up date. DA re-runs on that date.
+
+Worker rules:
+  - NEVER move a card directly from In Progress to Complete (must pass
+    through Review).
+  - NEVER mark a card Complete on your own behalf — only the DA does.
+  - If you disagree with a DA FAIL: log your disagreement in the card
+    notes, escalate to the department head, do NOT override the gate.
+
+DA rules:
+  - Validate against MEASURABLE criteria only (numbers, presence of
+    specific artifacts, KPI threshold). NOT against subjective taste.
+  - If the SOP's DEFINE section doesn't have measurable criteria, return
+    INDETERMINATE + log that the SOP needs updating.
+  - One PASS per card. Do not re-PASS the same card after a failure unless
+    the worker has changed the artifact.
+
+Why: prevents "task completion theater" where workers self-mark Done
+without anyone validating. The DA is the quality gate.
+```
+
+This addition is REQUIRED for v9.6.5+ Command Center installs.
+
+---
+
 ## Verification
 
 After making these additions, verify:
@@ -146,7 +199,8 @@ After making these additions, verify:
 1. MEMORY.md shows your Command Center status
 2. TOOLS.md has the dashboard information
 3. HEARTBEAT.md has the activation check task
-4. All paths and URLs are correct for your setup
+4. AGENTS.md has the Kanban Done-Gate Protocol section
+5. All paths and URLs are correct for your setup
 
 ---
 
@@ -158,4 +212,4 @@ After making these additions, verify:
 - Update the dashboard URL in TOOLS.md if you change from localhost to Cloudflare
 
 ---
-<!-- BREADCRUMB: skill-32-vps | 2026-04-12 | v6.5.7 | CORE_UPDATES.md updated with memory references | Memory Surgery Playbook v3.5 -->
+<!-- BREADCRUMB: skill-32-mac | 2026-04-12 | v6.5.7 | CORE_UPDATES.md updated with memory references | Memory Surgery Playbook v3.5 -->
