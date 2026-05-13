@@ -306,9 +306,9 @@ find ~/Downloads -maxdepth 2 -type d -iname "*openclaw*master*" -o \
 
 **If no folder is found:** Create the standard one:
 ```bash
-mkdir -p /data/openclaw-master-files/coaching-personas/books
-mkdir -p /data/openclaw-master-files/coaching-personas/text
-mkdir -p /data/openclaw-master-files/coaching-personas/personas
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/books
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/text
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/personas
 ```
 
 **Record the detected path** - you will use it for all file operations in this session.
@@ -397,37 +397,36 @@ Pre-built personas are already included in this skill folder. They will be added
 **Run the indexer AFTER Skill 22 completes, before Skill 23.** Skill 23 needs the personas indexed before it can find them.
 
 **What happens next:**
-- Run `gemini update && gemini embed` to index all personas now
-- Skill 23 will run `gemini update && gemini embed` to index all personas + workforce files together
+- Run `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` to index all personas now
+- Skill 23 will run `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` to index all personas + workforce files together
 - This ensures Skill 23 can find persona files via the index before assigning them to departments
 
 **Note:** If you need to verify personas are searchable after Skill 23 completes, run:
 ```bash
-gemini search coaching-personas "negotiation"
+python3 ~/.openclaw/workspace/scripts/gemini-search.py "negotiation"
 ```
 
 ---
 
-## Step 5b - Verify Gemini CLI Installation
+## Step 5b - Deploy Search Scripts to Agent Workspace
 
-The `gemini` CLI must be installed and available for agents to use at runtime. Verify installation:
+The Gemini search and indexer scripts must be in `~/.openclaw/workspace/scripts/` for agents to find them at runtime. Copy them from the skill folder now:
 
 ```bash
-gemini --version
+mkdir -p ~/.openclaw/workspace/scripts
+cp ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/gemini-search.py ~/.openclaw/workspace/scripts/gemini-search.py
+cp ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/gemini-indexer.py ~/.openclaw/workspace/scripts/gemini-indexer.py
+chmod +x ~/.openclaw/workspace/scripts/gemini-search.py ~/.openclaw/workspace/scripts/gemini-indexer.py
 ```
 
-Expected output: Version number of the gemini CLI tool.
-
-If not installed, run the Gemini setup from your onboarding package.
-
-Verify the coaching-personas collection will be created:
+Verify both files are deployed:
 ```bash
-gemini collection add /data/openclaw-master-files/coaching-personas/personas --name coaching-personas --mask "**/*.md"
+ls ~/.openclaw/workspace/scripts/gemini-*.py
 ```
 
 **Expected output:** Both `gemini-search.py` and `gemini-indexer.py` listed.
 
-If the gemini CLI is not installed, run the setup from your onboarding package. Without gemini CLI, agents cannot search or re-index personas.
+If either file is missing, re-run the copy commands above. Without these files in `~/.openclaw/workspace/scripts/`, agents cannot search or re-index personas.
 
 ---
 
@@ -440,7 +439,7 @@ Before allowing Skill 23 to run, verify this Skill 22 installation is complete:
 
 ```bash
 # Check if Gemini Vector Database "coaching-personas" exists
-if gemini update --status 2>/dev/null | grep -q "indexed"; then
+if python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
   echo "✅ Skill 22 verified: coaching-personas collection exists"
   echo "Skill 23 may proceed"
 else
@@ -512,7 +511,7 @@ Pick any PDF in the books folder (or use a small test PDF) and confirm pdfplumbe
 python3 -c "
 import pdfplumber, os, glob
 
-books_dir = os.path.expanduser('/data/openclaw-master-files/coaching-personas/books')
+books_dir = os.path.expanduser('~/Downloads/openclaw-master-files/coaching-personas/books')
 pdfs = glob.glob(os.path.join(books_dir, '*.pdf'))
 if not pdfs:
     print('NO PDFs found in books/ folder. Add a book PDF to test.')
@@ -577,12 +576,12 @@ If it fails, verify OPENROUTER_API_KEY is correct.
 
 Phase 3 uses OpenClaw OAuth routing, so the connectivity test is confirming the token is valid and not expired (already done in Step 4). If the Codex OAuth check in Step 4 returned a future expiration date, Phase 3 is ready.
 
-If Codex is unavailable, the pipeline automatically falls back to Kimi K2.5 (Phase 1 model) for synthesis. The fallback triggers on: API error, rate limit (429), timeout after 15 minutes, or output under 5,000 characters.
+If the primary Phase 3 model is unavailable, the pipeline auto-falls-back through the heavy chain via `select_model.py`. Fallback triggers: API error, rate limit (429), HTTP timeout (60 min for Phase 3 as of v9.5.2, 30 min for Phases 1/2), or output under 5,000 characters.
 
 ### 8e - Verify output directory structure
 
 ```bash
-MASTER_DIR=/data/openclaw-master-files/coaching-personas
+MASTER_DIR=~/Downloads/openclaw-master-files/coaching-personas
 echo "Checking output directories..."
 for dir in books text personas; do
   if [ -d "$MASTER_DIR/$dir" ]; then
@@ -608,7 +607,7 @@ This triggers the full sequence:
 2. **Phase 1 (Kimi K2.5)** - Spawns sub-agent with extraction prompt + book text. Output: `personas/[author]-[book-slug]/extraction-notes.md`
 3. **Phase 2 (DeepSeek V3.2-Speciale)** - Spawns sub-agent with analysis prompt + extraction notes. Output: `personas/[author]-[book-slug]/analysis-notes.md`
 4. **Phase 3 (GPT-5.3 Codex)** - Spawns sub-agent with synthesis prompt + extraction + analysis notes. Output: `personas/[author]-[book-slug]/persona-blueprint.md`. Falls back to Kimi K2.5 on failure.
-5. **Gemini Engine indexing** - Runs `gemini update` to make the new persona searchable.
+5. **Gemini Engine indexing** - Runs `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` to make the new persona searchable.
 
 **Verify each phase completed** by checking:
 - File exists at the expected path
@@ -617,7 +616,7 @@ This triggers the full sequence:
 
 **Output files land in:**
 ```
-/data/openclaw-master-files/coaching-personas/personas/[author]-[book-slug]/
+~/Downloads/openclaw-master-files/coaching-personas/personas/[author]-[book-slug]/
   ├── extraction-notes.md     (Phase 1 output)
   ├── analysis-notes.md       (Phase 2 output)
   └── persona-blueprint.md    (Phase 3 output - the deployable persona)
@@ -638,7 +637,7 @@ Replace `[book-slug]` with the filename slug of the book (e.g., `clear-atomic-ha
 
 3. Verify all three output files were created:
 ```bash
-PERSONA_DIR=/data/openclaw-master-files/coaching-personas/personas/[book-slug]
+PERSONA_DIR=~/Downloads/openclaw-master-files/coaching-personas/personas/[book-slug]
 echo "Checking pipeline output..."
 for file in extraction-notes.md analysis-notes.md persona-blueprint.md; do
   if [ -f "$PERSONA_DIR/$file" ]; then
@@ -702,7 +701,7 @@ Run through this checklist:
 - [ ] Core files updated per CORE_UPDATES.md (Step 7)
 - [ ] Pipeline execution test passed (Step 8)
 
-When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini Vector Database active. Pre-built personas ready (run: gemini update --status to see count). Pipeline verified operational. Ready to process new books or query personas."
+When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini Vector Database active. Pre-built personas ready (run: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status to see count). Pipeline verified operational. Ready to process new books or query personas."
 
 ---
 
