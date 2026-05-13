@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # ============================================================
-#  OpenClaw Skills Updater — VPS Version
-#  Updates skills from GitHub to ~/openclaw-master-files/
+#  OpenClaw Skills Updater — Mac Version
+#  Updates skills from GitHub to ~/Downloads/openclaw-master-files/
 # ============================================================
 
-ONBOARDING_VERSION="v9.3.7"
+ONBOARDING_VERSION="v9.3.8"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -102,13 +102,43 @@ For each new skill folder under \`~/.openclaw/skills/\`:
 
 FLAGCONTENT
   echo "  ✓ UPDATE PENDING flag written to $AGENTS_FILE"
+
+  # Seed Core.md terminology into MEMORY.md (idempotent)
+  local MEMORY_FILE="$WORKSPACE_DIR/MEMORY.md"
+  touch "$MEMORY_FILE"
+  if ! grep -q "## Terminology — Core.md Files" "$MEMORY_FILE" 2>/dev/null; then
+    cat >> "$MEMORY_FILE" << 'COREMDEOF'
+
+## Terminology — Core.md Files
+
+When the owner says **"Core.md files"** they mean the OpenClaw bootstrap files loaded every session — not a literal file called `core.md`. The Core.md files are:
+
+- **IDENTITY.md** — the role the agent is playing. It contains the **experiences and the skills they need to embody** that role. Not just surface metadata (name / vibe / emoji) — the lived background and capability set of the character being played.
+- **SOUL.md** — the **personality** of the agent, its **true mission**, its **beliefs**, its **rules**, its **goals**, its **belief systems**, its **principles**. Who the agent IS, not who they are playing. First file injected each session.
+- **AGENTS.md** — operating procedures, protocols, workflows, memory rules. *What the agent does and how*
+- **USER.md** — the human being helped (name, timezone, preferences, communication style)
+- **TOOLS.md** — local tool notes and conventions (camera names, SSH aliases, environment-specific specifics) — NOT a permissions registry
+- **MEMORY.md** — curated long-term durable facts, decisions, preferences. Loaded in main private sessions; paired with daily logs at `memory/YYYY-MM-DD.md`
+
+When the owner says "update the Core.md files" or "this needs to live in the Core.md files," choose the right one of these six based on its purpose:
+- Personality / principle → SOUL.md
+- Procedure / workflow → AGENTS.md
+- Tool note → TOOLS.md
+- Durable fact / decision → MEMORY.md
+- User info → USER.md
+- Identity metadata → IDENTITY.md
+
+Never interpret "Core.md" as a literal filename.
+
+COREMDEOF
+    echo "  ✓ Core.md terminology seeded into MEMORY.md"
+  fi
 }
 
 # ----------------------------------------------------------
-# SKILLS DIRECTORY SECTION — How to find skills on VPS
+# SKILLS DIRECTORY SECTION — How to find skills on Mac
 # ----------------------------------------------------------
-# Primary VPS location:   ~/openclaw-master-files/
-# (VPS has no ~/Downloads folder — uses ~/ directly)
+# Primary Mac location:   ~/Downloads/openclaw-master-files/
 # Secondary location:     ~/.openclaw/skills/
 # Fallback search:        Any folder matching *openclaw* + *master*
 #
@@ -124,7 +154,7 @@ FLAGCONTENT
 discover_skills_dir() {
   # Primary Mac location first
   local CANDIDATES=(
-    "$HOME/openclaw-master-files"
+    "$HOME/Downloads/openclaw-master-files"
     "$HOME/.openclaw/skills"
     "$HOME/.openclaw/onboarding"
     "$HOME/openclaw-onboarding"
@@ -228,7 +258,7 @@ main() {
   done
 
   echo "============================================"
-  echo "   OpenClaw Skills Updater (VPS)"
+  echo "   OpenClaw Skills Updater (Mac)"
   echo "   Version: ${ONBOARDING_VERSION}"
   if [ -n "$ONLY_SKILLS" ]; then
     echo "   Mode: SELECTIVE — only [$ONLY_SKILLS]"
@@ -318,7 +348,7 @@ main() {
 
   # Backup existing skills
   if [ -d "$SKILLS_DIR" ] && [ "$(ls -A "$SKILLS_DIR" 2>/dev/null)" ]; then
-    BACKUP_DIR="$HOME/openclaw-backups/skills-backup-$(date +%Y%m%d-%H%M%S)"
+    BACKUP_DIR="$HOME/Downloads/openclaw-backups/skills-backup-$(date +%Y%m%d-%H%M%S)"
     echo "  Creating backup: $BACKUP_DIR"
     mkdir -p "$BACKUP_DIR"
     cp -r "$SKILLS_DIR"/* "$BACKUP_DIR/" 2>/dev/null || true
