@@ -27,7 +27,7 @@ Verify all required files and folders exist at the correct paths.
 - [ ] `agent-prompts/synthesis-agent-prompt.md` exists
 
 ### Pre-Built Personas Folder
-- [ ] `/data/openclaw-master-files/coaching-personas/personas/` exists (or equivalent master-files path)
+- [ ] `~/Downloads/openclaw-master-files/coaching-personas/personas/` exists (or equivalent master-files path)
 - [ ] At least one persona folder present with all 3 files:
   - [ ] `extraction-notes.md`
   - [ ] `analysis-notes.md`
@@ -63,7 +63,7 @@ Verify that AGENTS.md, TOOLS.md, MEMORY.md, SOUL.md, and HEARTBEAT.md received t
 ### AGENTS.md
 - [ ] Contains section heading `## Book-to-Persona Skill (Installed)`
 - [ ] Section includes the phrase `Persona Reflex (DEFAULT BEHAVIOR)`
-- [ ] Section includes `gemini search coaching-personas "<task keywords>"` as the runtime query pattern
+- [ ] Section includes `python3 ~/.openclaw/workspace/scripts/gemini-search.py "<task keywords>"` as the runtime query pattern
 - [ ] Key paths block is present (skill path, personas path, router path, orchestrator path)
 - [ ] Contains section `## Pending Skill Setup - Check and Remind` with `.pending-setup.md` reference
 - [ ] Full PIPELINE.md content was NOT pasted into AGENTS.md (rule: reference only)
@@ -79,7 +79,7 @@ Verify that AGENTS.md, TOOLS.md, MEMORY.md, SOUL.md, and HEARTBEAT.md received t
 ### MEMORY.md
 - [ ] Contains section heading `## Book-to-Persona Persona Library`
 - [ ] Entry includes skill path and personas path
-- [ ] Entry references `gemini status -c coaching-personas` for live count
+- [ ] Entry references `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status` for live count
 - [ ] Entry references Persona Reflex behavior (query Gemini Engine before professional tasks)
 - [ ] "Add new book SOP" is referenced
 
@@ -112,7 +112,7 @@ Answer each question without looking at the files. These confirm the agent has i
 - Expected: 14 sections total. Section 3 = Signature Framework, Section 6 = Coaching Mode: How to Respond, Section 14 = Quick Reference Card
 
 **Q4: What is the Persona Reflex and when does the agent skip it?**
-- Expected: Before any professional task, run `gemini search coaching-personas "<task keywords>"`, load the returned persona's Task Mode, and execute through that methodology. Skip ONLY if the user explicitly says so.
+- Expected: Before any professional task, run `python3 ~/.openclaw/workspace/scripts/gemini-search.py "<task keywords>"`, load the returned persona's Task Mode, and execute through that methodology. Skip ONLY if the user explicitly says so.
 
 **Q5: What is the author name rule in Coaching Mode?**
 - Expected: The author's name appears ONLY inside attribution-flagged direct quotes. Never use the author's name unprompted in the coaching voice.
@@ -130,7 +130,7 @@ Answer each question without looking at the files. These confirm the agent has i
 - Expected: Over 10,000 characters (blueprints are much larger in practice)
 
 **Q10: After adding a new persona blueprint, what two Gemini Engine commands must be run?**
-- Expected: `gemini update` then `gemini embed`
+- Expected: `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` then `# Handled by gemini-indexer.py`
 
 **Passing threshold:** 8/10 correct. Score below 8 = re-read PIPELINE.md, PERSONA-ROUTER.md, CORE_UPDATES.md, and GOOD-AND-BAD-EXAMPLES.md.
 
@@ -144,7 +144,7 @@ Run these prompts and evaluate the agent's actual output against the expected be
 **Prompt:** "Review this sales email before I send it."
 
 **Expected behavior:**
-1. Agent runs `gemini search coaching-personas "sales email review outreach quality standard"` BEFORE writing any output
+1. Agent runs `python3 ~/.openclaw/workspace/scripts/gemini-search.py "sales email review outreach quality standard"` BEFORE writing any output
 2. Agent loads a relevant persona (e.g., `hormozi-100m-offers`, `bly-copywriters-handbook`, or `jones-exactly-what-to-say`)
 3. Agent applies that persona's execution standard and non-negotiable rules
 4. Agent output includes specific rule checks with ✅ / ❌ verdicts, not generic feedback
@@ -170,7 +170,7 @@ Run these prompts and evaluate the agent's actual output against the expected be
 ---
 
 ### Test 4C — Gemini Engine Collection Status
-**Run:** `gemini update --status` 
+**Run:** `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status` 
 
 **Expected output:**
 - Collection named `coaching-personas` is listed
@@ -182,7 +182,7 @@ Run these prompts and evaluate the agent's actual output against the expected be
 ---
 
 ### Test 4D — Gemini Engine Query Returns Relevant Results
-**Run:** `gemini search coaching-personas "habit building systems behavior change consistency"`
+**Run:** `python3 ~/.openclaw/workspace/scripts/gemini-search.py "habit building systems behavior change consistency"`
 
 **Expected output:**
 - Returns at least one result from a persona blueprint (e.g., `clear-atomic-habits` or `duhigg-power-of-habit`)
@@ -307,7 +307,7 @@ These are failure modes the skill is specifically designed to prevent. Verify no
 
 ### Anti-Pattern 4: Skipping Persona Reflex
 **Check:** When given a professional task (write, review, plan, analyze), does the agent query Gemini Engine before starting?
-- [ ] Confirmed: Agent queries `gemini search coaching-personas` before executing professional tasks
+- [ ] Confirmed: Agent queries `python3 ~/.openclaw/workspace/scripts/gemini-search.py` before executing professional tasks
 - HARD FAIL if agent proceeds with a task without Gemini Engine query and no explicit user instruction to skip
 
 ### Anti-Pattern 5: Pasting Full Docs Into Core Files
@@ -327,7 +327,7 @@ These are failure modes the skill is specifically designed to prevent. Verify no
 
 ### Anti-Pattern 8: Gemini Engine Not Used for Retrieval
 **Check:** Does the agent try to load entire persona files into context rather than using Gemini Engine surgical queries?
-- [ ] Confirmed: Agent uses `gemini search coaching-personas` for semantic retrieval
+- [ ] Confirmed: Agent uses `python3 ~/.openclaw/workspace/scripts/gemini-search.py` for semantic retrieval for retrieval
 - FAIL if agent attempts to read entire persona-blueprint.md files into context for routine tasks
 
 ---
@@ -377,7 +377,7 @@ After completing this checklist, mark one:
     Skill is operational. Persona Reflex is active.
 
 [ ] PARTIAL — File structure complete, but Gemini Engine not yet embedded or core files not yet updated
-    Action: Complete Gemini Engine setup (gemini update) and apply CORE_UPDATES.md
+    Action: Complete Gemini Engine setup (python3 ~/.openclaw/workspace/scripts/gemini-indexer.py) and apply CORE_UPDATES.md
 
 [ ] FAIL — One or more HARD FAILs present, or knowledge score below 8/10
     Action: Re-read all 7 skill .md files and repeat failed sections
@@ -391,13 +391,13 @@ If Gemini Vector Database is missing or broken:
 ```bash
   --name coaching-personas \
   --mask "**/*.md"
-gemini update
+python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
 # Handled by gemini-indexer.py
 ```
 
 If Gemini Engine results are stale:
 ```bash
-gemini update --rebuild && gemini update
+python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --rebuild && python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
 ```
 
 If unsure whether core files were updated:
@@ -406,3 +406,49 @@ grep -n "Book-to-Persona" ~/.openclaw/AGENTS.md
 grep -n "Persona Coaching Voice Rule" ~/.openclaw/SOUL.md
 grep -n "Book-to-Persona" ~/.openclaw/TOOLS.md
 ```
+
+---
+
+## 🔴 INSTALL-TIME QC RUBRIC (v9.3.0+ standard — added automatically)
+
+After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 minimum.** Below 8.5 = loop back and fix until passing (max 5 loops, then escalate to owner).
+
+### Score breakdown (10 points)
+
+| Section | Points | What it tests |
+|---|---|---|
+| Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
+| All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
+| INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
+| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
+| CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
+| Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |
+| Security | 0.5 | No PIT or other secret leaked into chat / logs / commits / .md files. Secrets file chmod 600. |
+| Owner-facing confirmation message sent | 0.5 | The final summary was sent in plain English with structure: "Skill NN active. Anything pending your attention: [list]." |
+
+### Loop-until-passing rule
+
+If score < 8.5:
+1. Identify the lowest-scoring section
+2. Apply the smallest fix possible
+3. Re-run only the failed checks
+4. Re-score
+5. After 5 loops, STOP and escalate to owner via Telegram with: which sections failed, what you tried, what's blocking
+
+### Bundled `qc-skill-NN.sh`
+
+If a `qc-skill-NN.sh` script exists in this skill folder, run it. Exit 0 is required in addition to the rubric score. The script catches mechanical items the rubric assumes (file modes, env-var format, network reachability).
+
+### Self-audit before declaring done
+
+Recite in your work log:
+1. INSTALL-CONTRACT.md acknowledged for this skill: ✓ / ✗
+2. All .md files read before execution: ✓ / ✗
+3. INSTALL.md step order followed verbatim: ✓ / ✗
+4. QC rubric score: __/10 (≥ 8.5 to pass)
+5. Bundled qc-*.sh exited 0: ✓ / ✗ / N/A
+6. No shortcuts taken (no `--force`, etc.): ✓ / ✗
+7. Owner confirmation message sent: ✓ / ✗
+
+If any answer is ✗, this skill is NOT done. Loop back.
