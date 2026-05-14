@@ -1,3 +1,33 @@
+## v10.0.2 - May 14, 2026 - Durable logs + actionable terminal error summary
+
+### Durable log location
+Install log moved from `/tmp/` (can be wiped on container rebuild) to:
+
+```
+/data/.openclaw/logs/install/openclaw-install-YYYYMMDD-HHMMSS.log
+```
+
+The log directory is created automatically at install start. Lives on the `/data` persistent volume so logs survive container restarts and rebuilds.
+
+### Terminal error summary at end of install
+At the very end of every install, after the gateway restart, a new summary block prints to the terminal that scans the log for warnings/errors and reports them in one visible place.
+
+**If clean:** prints "✅ INSTALL COMPLETED CLEANLY" + log path.
+
+**If issues found:** prints count, first 10 issues with line numbers, log path, `cat` command to print the log for reporting, and the GitHub issues URL. All in one terminal block, no scrolling.
+
+### Patterns detected
+Scans the log for:
+- `^  ✗ ERROR:` — anything printed via the `error()` helper
+- `^  ⚠️` — anything printed via the `warn()` helper
+- `GatewayClientRequestError` / `GatewayTransportError` / `gateway connect failed`
+- `scope upgrade pending` / `pairing required`
+
+### No functional changes to the install itself
+v10.0.1's removal of the rotation/approval helpers stays. v10.0.2 is purely about observability.
+
+---
+
 ## v10.0.1 - May 14, 2026 - Stop breaking Telegram with rotation
 
 ### The bug

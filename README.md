@@ -2,13 +2,19 @@
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent on Hostinger's hvps-openclaw Docker container.**
 
-**Current Version: v10.0.1** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
+**Current Version: v10.0.2** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 This repo is **Hostinger Docker VPS-only**. The Mac mini installer lives at https://github.com/trevorotts1/openclaw-onboarding.
 
 This repo contains **36 skill folders** (01 through 36, with 13, 33, and 34 archived) plus an install script and update script.
 
 > **First time installing or updating?** Read **[ONBOARDING-TRIGGERS.md](ONBOARDING-TRIGGERS.md)** — it shows exactly how to start a fresh install or run an update via Terminal or Telegram.
+
+### What's New in v10.0.2 (May 14, 2026) — Durable logs + terminal error summary
+
+Install logs now live at `/data/.openclaw/logs/install/` instead of `/tmp/` — durable, survives container restart, sits on the persistent volume.
+
+At the very end of every install, a summary block prints with either "✅ INSTALL COMPLETED CLEANLY" or a count of errors/warnings, first 10 issues with line numbers, log path, `cat` command, and the GitHub issues URL.
 
 ### What's New in v10.0.1 (May 14, 2026) — Stop breaking Telegram with rotation
 

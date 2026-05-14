@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================
-#  OpenClaw Onboarding Installer v10.0.1 — Hostinger Docker VPS
+#  OpenClaw Onboarding Installer v10.0.2 — Hostinger Docker VPS
 #  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 #
 #  This installer is for the Hostinger Docker VPS deployment of OpenClaw.
@@ -24,9 +24,7 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.0.1"
-LOG_FILE="/tmp/openclaw-install-$(date +%Y%m%d-%H%M%S).log"
-exec 1> >(tee -a "$LOG_FILE") 2>&1
+ONBOARDING_VERSION="v10.0.2"
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)
@@ -39,6 +37,7 @@ OC_AGENTS="/data/.openclaw/agents"
 OC_SKILLS_DIR="/data/.openclaw/skills"
 OC_LOGS="/data/.openclaw/logs"
 OC_BACKUPS="/data/.openclaw/backups"
+OC_INSTALL_LOG_DIR="/data/.openclaw/logs/install"
 OC_AUTH_PROFILES="/data/.openclaw/agents/main/agent/auth-profiles.json"
 
 # Hard fail early if not on Hostinger Docker VPS — this script ONLY runs there
@@ -49,7 +48,13 @@ if [ ! -d "$OC_CONFIG" ]; then
     exit 1
 fi
 
-mkdir -p "$OC_BACKUPS"
+mkdir -p "$OC_BACKUPS" "$OC_INSTALL_LOG_DIR"
+
+# Durable log location (v10.0.2): /tmp can be wiped on container rebuild.
+# Persist install logs on the /data volume so they survive container restarts
+# and can be referenced when reporting issues.
+LOG_FILE="$OC_INSTALL_LOG_DIR/openclaw-install-$(date +%Y%m%d-%H%M%S).log"
+exec 1> >(tee -a "$LOG_FILE") 2>&1
 
 # ----------------------------------------------------------
 # Bash 3.2 Compatible UI Helpers
@@ -2046,15 +2051,12 @@ install_weekly_cron
 # ----------------------------------------------------------
 # Telegram diagnostic note (v10.0.1)
 # ----------------------------------------------------------
-# Safety net only. Existing clients have working paired Telegram; this should
-# never fire. If `message send` did fail somewhere, point to the log so the
-# install team can debug. User takes no action — their daily Telegram is
-# already paired and unaffected by this install.
+# Surfaces just the Telegram-specific outcome — the full install summary
+# below will also show any errors/warnings from the entire run.
 case "$TELEGRAM_LAST_RESULT" in
     sent:*|"") : ;;
     *)
         warn "Telegram progress messages didn't all go through (this install's notifications only — your daily Telegram chats are unaffected)."
-        warn "Install log: $LOG_FILE"
         ;;
 esac
 
@@ -2068,3 +2070,47 @@ if command -v openclaw >/dev/null 2>&1; then
 else
     warn "openclaw command not found - restart manually: openclaw gateway restart"
 fi
+
+# ----------------------------------------------------------
+# Install summary (v10.0.2) — scan log for warnings/errors, print actionable
+# report block right in the terminal so issues are visible without scrolling.
+# ----------------------------------------------------------
+print_install_summary() {
+    local err_pat='^  ✗ ERROR:|GatewayClientRequestError|GatewayTransportError|gateway connect failed|scope upgrade pending|pairing required'
+    local warn_pat='^  ⚠️'
+
+    local err_count warn_count
+    err_count=$(grep -cE "$err_pat" "$LOG_FILE" 2>/dev/null | head -1)
+    warn_count=$(grep -cE "$warn_pat" "$LOG_FILE" 2>/dev/null | head -1)
+    err_count=${err_count:-0}
+    warn_count=${warn_count:-0}
+
+    echo ""
+    echo "══════════════════════════════════════════════════════════════════════"
+    if [ "$err_count" -eq 0 ] && [ "$warn_count" -eq 0 ]; then
+        echo "  ✅ INSTALL COMPLETED CLEANLY — no warnings or errors detected"
+        echo ""
+        echo "     Log (durable, survives container restart):"
+        echo "       $LOG_FILE"
+        echo "══════════════════════════════════════════════════════════════════════"
+        return 0
+    fi
+
+    echo "  ⚠️  PLEASE REPORT THE FOLLOWING TO THE TRACKER"
+    echo "     ${err_count} error(s), ${warn_count} warning(s) detected during install."
+    echo ""
+    echo "  ─── First 10 issues (most recent first) ──────────────────────────────"
+    grep -nE "$err_pat|$warn_pat" "$LOG_FILE" 2>/dev/null | tail -10 | sed 's/^/     /'
+    echo ""
+    echo "  ─── Full log (durable, survives container restart) ───────────────────"
+    echo "     $LOG_FILE"
+    echo ""
+    echo "  ─── To print the full log for reporting ──────────────────────────────"
+    echo "     cat \"$LOG_FILE\""
+    echo ""
+    echo "  ─── Report at ────────────────────────────────────────────────────────"
+    echo "     https://github.com/trevorotts1/openclaw-onboarding-vps/issues/new"
+    echo "     (paste the log contents into the issue body)"
+    echo "══════════════════════════════════════════════════════════════════════"
+}
+print_install_summary
