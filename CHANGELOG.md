@@ -1,3 +1,38 @@
+## v10.0.3 - May 14, 2026 - CLI scope auto-repair (the real root cause)
+
+### The real bug Floyd found
+A Mac client (Floyd) hit it first: his CLI device was paired with only `[operator.read, operator.pairing]` scopes — missing `operator.write`. Without that, EVERY `openclaw message send` and `openclaw cron create` call from the CLI was rejected by the gateway with `scope upgrade pending approval`. The same issue can occur on Hostinger Docker VPS installs.
+
+### Detection
+`openclaw gateway status --verbose | grep "Capability:"` reports:
+- `admin-capable` or `write-capable` → healthy
+- `read-only` → CLI device is missing write scope
+
+### What v10.0.3 does
+Adds `auto_repair_cli_scopes()` that runs BEFORE the first Telegram send. It:
+
+1. Detects read-only state via the capability check.
+2. **Plan A (sanctioned CLI path):** read master gateway token from `gateway.auth.token` in openclaw.json. Try `openclaw devices rotate --token <master>` then `openclaw devices approve <pendingId> --token <master>` to upgrade the CLI device. Restart gateway. Re-check.
+3. **Plan B (proven direct edit):** if Plan A didn't work, edit `/data/.openclaw/devices/paired.json` directly — add write/admin/pairing/approvals/read to every CLI device's scopes/approvedScopes/tokens.operator.scopes. Clear `pending.json`. Restart gateway. Re-check.
+4. Both plans back up the JSON files before editing (timestamped `.bak-*`).
+
+### Self-healing guide added to AGENTS.md flag
+The UPDATE PENDING block now includes a self-healing guide with the diagnostic command, auto-repair instructions, and manual repair steps for the Hostinger Docker context.
+
+### Web research grounding
+- https://docs.openclaw.ai/gateway/operator-scopes.md
+- https://docs.openclaw.ai/cli/devices.md
+- https://docs.openclaw.ai/gateway/troubleshooting.md
+- Live `openclaw` CLI output on Mac dev box (2026.5.12)
+- Floyd's reproduction document (2026.5.7)
+
+### Net effect
+- Healthy clients → auto-repair is a no-op.
+- Affected clients → auto-repair grants missing scopes, Telegram + cron work.
+- Edge case → install continues, install summary at end shows warnings, self-healing guide in AGENTS.md gives manual steps.
+
+---
+
 ## v10.0.2 - May 14, 2026 - Durable logs + actionable terminal error summary
 
 ### Durable log location

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================
-#  OpenClaw Onboarding Installer v10.0.2 — Hostinger Docker VPS
+#  OpenClaw Onboarding Installer v10.0.3 — Hostinger Docker VPS
 #  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 #
 #  This installer is for the Hostinger Docker VPS deployment of OpenClaw.
@@ -24,7 +24,7 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.0.2"
+ONBOARDING_VERSION="v10.0.3"
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)
@@ -955,17 +955,189 @@ echo "╚═══════════════════════�
 echo ""
 note "Log file: $LOG_FILE"
 
-# v10.0.1 — REMOVED rotate_all_devices_to_full_scopes() + approve_pending_scopes_early().
-# Per https://docs.openclaw.ai/gateway/operator-scopes.md:
-#   "Already paired devices do not get broader access silently: reconnects
-#   that ask for a broader role or broader scopes create a new pending
-#   upgrade request."
-# The previous rotation call asked for 5 scopes — when the device didn't
-# already have all 5, rotation CREATED a pending upgrade request, which
-# then blocked every gateway call (including the Telegram send the rotation
-# was supposed to enable). Self-inflicted deadlock.
-# Every existing client has a paired device with operator.write — that's the
-# only scope needed for `openclaw message send`. We just call it directly.
+# ----------------------------------------------------------
+# CLI Scope Auto-Repair (v10.0.3)
+# ----------------------------------------------------------
+# Per Mac client (Floyd) reproduction: fresh OpenClaw pairings can leave the
+# CLI device with [operator.read, operator.pairing] only — missing
+# operator.write/admin. Result: `openclaw message send` + `openclaw cron create`
+# fail with "scope upgrade pending approval" and gateway status reports
+# "Capability: read-only".
+#
+# Detection: `openclaw gateway status --verbose | grep "Capability:"`
+# Healthy = "admin-capable" | "write-capable". Broken = "read-only".
+#
+# Auto-repair strategy:
+#   PLAN A: openclaw devices rotate --token <master> (sanctioned CLI path)
+#   PLAN B: direct edit of /data/.openclaw/devices/paired.json (proven approach)
+# Both end with `openclaw gateway restart` + Capability verification.
+
+get_master_token() {
+    python3 -c "
+import json, os, sys
+try:
+    cfg = json.load(open('$OC_JSON'))
+    print(cfg.get('gateway',{}).get('auth',{}).get('token','') or '')
+except Exception: pass
+" 2>/dev/null
+}
+
+get_gateway_capability() {
+    openclaw gateway status --verbose 2>/dev/null | grep -E "^Capability:" | awk '{print $2}' | head -1
+}
+
+auto_repair_cli_scopes() {
+    local capability master_token cli_id paired_file pending_file
+
+    capability=$(get_gateway_capability)
+    if [ -z "$capability" ]; then
+        note "Gateway capability check skipped (could not query)."
+        return 0
+    fi
+    if [ "$capability" != "read-only" ]; then
+        success "Gateway capability OK: $capability — no scope repair needed."
+        return 0
+    fi
+
+    warn "Gateway reports Capability: read-only — CLI device is missing operator.write."
+    warn "This blocks Telegram, cron, and every CLI-side gateway call. Auto-repairing..."
+
+    master_token=$(get_master_token)
+    if [ -z "$master_token" ]; then
+        warn "Cannot read gateway.auth.token from $OC_JSON — auto-repair not possible."
+        warn "Manual fix: see https://github.com/trevorotts1/openclaw-onboarding-vps/blob/main/docs/scope-repair.md"
+        return 1
+    fi
+
+    cli_id=$(openclaw devices list --token "$master_token" --json 2>/dev/null | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    paired = d.get('paired', []) if isinstance(d, dict) else (d if isinstance(d, list) else [])
+    for p in paired:
+        if not isinstance(p, dict): continue
+        if p.get('clientId') != 'cli': continue
+        scopes = set(p.get('scopes', []) or [])
+        if 'operator.write' not in scopes and 'operator.admin' not in scopes:
+            print(p.get('deviceId') or ''); break
+except Exception: pass
+" 2>/dev/null)
+
+    # ─── PLAN A: CLI rotate + approve with master token ───
+    if [ -n "$cli_id" ]; then
+        note "Plan A: trying CLI rotate with master token for device ${cli_id:0:20}..."
+        local rotate_out=""
+        rotate_out=$(openclaw devices rotate --device "$cli_id" --role operator \
+            --scope operator.read --scope operator.write --scope operator.admin \
+            --scope operator.pairing --scope operator.approvals \
+            --token "$master_token" 2>&1)
+        echo "$rotate_out" >> "$LOG_FILE"
+        sleep 2
+
+        local pending_id=""
+        pending_id=$(openclaw devices list --token "$master_token" --json 2>/dev/null | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    items = d.get('pending', []) or []
+    for it in items:
+        if not isinstance(it, dict): continue
+        rid = it.get('requestId') or it.get('id')
+        if rid: print(rid); break
+except Exception: pass
+" 2>/dev/null)
+
+        if [ -n "$pending_id" ]; then
+            note "Plan A: pending request $pending_id created — approving with master token..."
+            if openclaw devices approve "$pending_id" --token "$master_token" >> "$LOG_FILE" 2>&1; then
+                openclaw gateway restart >> "$LOG_FILE" 2>&1
+                sleep 5
+                capability=$(get_gateway_capability)
+                if [ "$capability" != "read-only" ] && [ -n "$capability" ]; then
+                    success "Plan A succeeded — capability now: $capability"
+                    return 0
+                fi
+            fi
+        fi
+        warn "Plan A insufficient. Falling through to Plan B."
+    fi
+
+    # ─── PLAN B: direct paired.json edit (Floyd's proven approach) ───
+    note "Plan B: editing /data/.openclaw/devices/paired.json directly..."
+    paired_file="/data/.openclaw/devices/paired.json"
+    pending_file="/data/.openclaw/devices/pending.json"
+
+    if [ ! -f "$paired_file" ]; then
+        warn "$paired_file not found — cannot auto-repair."
+        return 1
+    fi
+
+    cp "$paired_file" "$paired_file.bak-$(date +%Y%m%d-%H%M%S)"
+    note "Backed up paired.json"
+
+    PAIRED_FILE="$paired_file" python3 - <<'PYEOF'
+import json, os, sys
+paired_file = os.environ['PAIRED_FILE']
+TARGET = {'operator.read', 'operator.write', 'operator.admin', 'operator.pairing', 'operator.approvals'}
+
+try:
+    with open(paired_file) as f:
+        data = json.load(f)
+except Exception as e:
+    print(f"READ_ERR:{e}"); sys.exit(0)
+
+def upgrade(device):
+    if device.get('clientId') != 'cli': return False
+    changed = False
+    for field in ('scopes', 'approvedScopes'):
+        cur = set(device.get(field, []) or [])
+        if not TARGET.issubset(cur):
+            device[field] = sorted(cur | TARGET); changed = True
+    tokens = device.get('tokens', {})
+    op_token = tokens.get('operator', {}) if isinstance(tokens, dict) else {}
+    if isinstance(op_token, dict):
+        cur = set(op_token.get('scopes', []) or [])
+        if not TARGET.issubset(cur):
+            op_token['scopes'] = sorted(cur | TARGET); changed = True
+    return changed
+
+fixed_count = 0
+if isinstance(data, dict):
+    for did, device in data.items():
+        if isinstance(device, dict) and upgrade(device): fixed_count += 1
+elif isinstance(data, list):
+    for device in data:
+        if isinstance(device, dict) and upgrade(device): fixed_count += 1
+
+if fixed_count:
+    with open(paired_file, 'w') as f:
+        json.dump(data, f, indent=2)
+    print(f"FIXED:{fixed_count}")
+else:
+    print("NO_CHANGE")
+PYEOF
+
+    if [ -f "$pending_file" ]; then
+        cp "$pending_file" "$pending_file.bak-$(date +%Y%m%d-%H%M%S)"
+        echo '{}' > "$pending_file"
+        note "Cleared pending.json"
+    fi
+
+    note "Restarting gateway to apply scope repair..."
+    openclaw gateway restart >> "$LOG_FILE" 2>&1
+    sleep 6
+
+    capability=$(get_gateway_capability)
+    if [ "$capability" = "read-only" ] || [ -z "$capability" ]; then
+        warn "Auto-repair completed but capability check returned '$capability'."
+        warn "Manual fix: https://docs.openclaw.ai/gateway/operator-scopes"
+        return 1
+    fi
+    success "Plan B succeeded — capability now: $capability"
+    return 0
+}
+
+auto_repair_cli_scopes || warn "Scope auto-repair did not complete successfully — Telegram/cron may fail (install will continue)."
 
 send_telegram_progress "Starting OpenClaw Onboarding install ${ONBOARDING_VERSION}..."
 
@@ -1683,6 +1855,44 @@ Send summary:
 - Remove this entire UPDATE PENDING section from AGENTS.md
 - Add to MEMORY.md under "## System Updates":
   "[DATE]: Install ${ONBOARDING_VERSION}. [X] skills activated. All 8 memory layers verified."
+
+---
+
+## 🛠️ If This Install Had Errors — Self-Healing Guide
+
+If Telegram/cron didn't work during install, or you see "scope upgrade pending
+approval" errors in the install log, the CLI device is missing
+operator.write/admin scopes. Here's how to fix it on the Hostinger Docker VPS:
+
+### Quick diagnostic
+```bash
+docker exec <openclaw-container> openclaw gateway status --verbose | grep "Capability:"
+```
+- `admin-capable` or `write-capable` = healthy
+- `read-only` = CLI device is missing write scope (this is the bug)
+
+### Auto-repair (one command)
+Just re-run the install — it detects read-only state and repairs it:
+```bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
+```
+
+### Manual repair (if auto-repair didn't work)
+Inside the container:
+1. Backup: `cp /data/.openclaw/devices/paired.json /data/.openclaw/devices/paired.json.bak`
+2. Edit `/data/.openclaw/devices/paired.json` — find the entry where
+   `clientId == "cli"` and add `operator.write` + `operator.admin` to:
+   - `scopes` array
+   - `approvedScopes` array
+   - `tokens.operator.scopes` array
+3. Clear pending: `echo '{}' > /data/.openclaw/devices/pending.json`
+4. Restart: `openclaw gateway restart`
+5. Verify: `openclaw gateway status --verbose | grep "Capability:"` → admin-capable
+
+### Documentation
+- Operator scopes: https://docs.openclaw.ai/gateway/operator-scopes
+- Device management: https://docs.openclaw.ai/cli/devices
+- Troubleshooting: https://docs.openclaw.ai/gateway/troubleshooting
 
 ---
 FLAGCONTENT

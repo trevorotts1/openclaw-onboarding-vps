@@ -2,13 +2,19 @@
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent on Hostinger's hvps-openclaw Docker container.**
 
-**Current Version: v10.0.2** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
+**Current Version: v10.0.3** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 This repo is **Hostinger Docker VPS-only**. The Mac mini installer lives at https://github.com/trevorotts1/openclaw-onboarding.
 
 This repo contains **36 skill folders** (01 through 36, with 13, 33, and 34 archived) plus an install script and update script.
 
 > **First time installing or updating?** Read **[ONBOARDING-TRIGGERS.md](ONBOARDING-TRIGGERS.md)** — it shows exactly how to start a fresh install or run an update via Terminal or Telegram.
+
+### What's New in v10.0.3 (May 14, 2026) — CLI scope auto-repair
+
+Fresh OpenClaw pairings can leave the CLI device with `[operator.read, operator.pairing]` only — missing `operator.write` and `operator.admin`. Without those, every `openclaw message send` and `openclaw cron create` call gets rejected with `scope upgrade pending approval`. Gateway reports `Capability: read-only`.
+
+v10.0.3 adds `auto_repair_cli_scopes()` that detects this at install start and repairs it via two strategies: (Plan A) `openclaw devices rotate` + `approve` using master token, or (Plan B) direct edit of `/data/.openclaw/devices/paired.json`. Both back up state and verify capability afterwards.
 
 ### What's New in v10.0.2 (May 14, 2026) — Durable logs + terminal error summary
 
