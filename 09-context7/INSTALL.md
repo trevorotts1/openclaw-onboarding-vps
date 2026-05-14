@@ -23,7 +23,7 @@ Proceed to agent execution steps below. Follow TYP file storage structure.
 
 IF TYP TRAINING NOT FOUND:
 Proceed with caution using default TYP rules:
-- Save full documentation to ~/Downloads/OpenClaw Master Files/ (create if needed)
+- Save full documentation to /data/.openclaw/master-files/OpenClaw Master Files/ (create if needed)
 - Add only brief summaries and file path references to core .md files
 - Never paste full content into AGENTS.md, TOOLS.md, or MEMORY.md
 
@@ -51,13 +51,13 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
    Agent must locate the OpenClaw master files folder. Search for:
-   - ~/Downloads/OpenClaw Master Files
-   - ~/Downloads/openclaw-master-files
-   - ~/Downloads/OpenClaw Master Documents
-   - ~/Downloads/openclaw-documents
+   - /data/.openclaw/master-files/OpenClaw Master Files
+   - /data/.openclaw/master-files
+   - /data/.openclaw/master-files/OpenClaw Master Documents
+   - /data/.openclaw/master-files/openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. If no folder exists, create:
-   ~/Downloads/OpenClaw Master Files/
+   /data/.openclaw/master-files/OpenClaw Master Files/
 
    Agent must save this full document content as a .md file in that folder.
 
@@ -141,8 +141,8 @@ Agent must execute:
 
 1a. Check for existing Context7 API key in this order:
     - Check $CONTEXT7_API_KEY environment variable
-    - If not set, read ~/clawd/secrets/.env and look for CONTEXT7_API_KEY
-    - If not found there, read ~/.openclaw/.env and look for CONTEXT7_API_KEY
+    - If not set, read /data/.openclaw/secrets/.env and look for CONTEXT7_API_KEY
+    - If not found there, read /data/.openclaw/.env and look for CONTEXT7_API_KEY
     - If key found in any location and starts with "ctx7sk-": Skip to Step 4 (Verify Key)
     - If key not found anywhere: Proceed to 1b
 
@@ -224,8 +224,8 @@ Agent must execute:
     - If format is incorrect: Request user to verify key and try again
 
 4b. Store API key in environment:
-    - Check if secrets.env exists at ~/.openclaw/secrets.env
-    - If not: Create file at ~/.openclaw/secrets.env
+    - Check if secrets.env exists at /data/.openclaw/secrets.env
+    - If not: Create file at /data/.openclaw/secrets.env
     - Add line: CONTEXT7_API_KEY=<paste-key-here>
     - Replace <paste-key-here> with actual key
     - Save file
@@ -273,7 +273,7 @@ STEP 5: VERIFY CONTEXT7 API KEY WORKS (MANDATORY)
 Agent must execute this step. Do not skip.
 
 5a. Reload environment so newly written key is available:
-    - Run: source ~/clawd/secrets/.env 2>/dev/null || source ~/.openclaw/.env 2>/dev/null || true
+    - Run: source /data/.openclaw/secrets/.env 2>/dev/null || source /data/.openclaw/.env 2>/dev/null || true
 
 5b. Execute verification command:
     - Run: curl -s -H "Authorization: Bearer $CONTEXT7_API_KEY" \
@@ -284,7 +284,7 @@ Agent must execute this step. Do not skip.
     - Expected success: Response shows a library name in quotes, e.g. "facebook/react"
       This confirms the key is valid and the API is reachable.
     - If response shows null, empty, or an error object: TROUBLESHOOT before proceeding:
-      * Confirm API key was saved correctly to ~/clawd/secrets/.env
+      * Confirm API key was saved correctly to /data/.openclaw/secrets/.env
       * Confirm key starts with "ctx7sk-"
       * Confirm internet connection is working
       * Re-run source command from 5a and retry verification

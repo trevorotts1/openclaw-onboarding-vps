@@ -45,8 +45,8 @@ HOME = Path.home()
 ZHC_ROOTS = [
     HOME / "clawd" / "zero-human-company",
     HOME / "clawd" / "zhc",
-    Path("/data/clawd/zero-human-company"),
-    Path("/data/clawd/zhc"),
+    Path("/data/.openclaw/workspace/zero-human-company"),
+    Path("/data/.openclaw/workspace/zhc"),
 ]
 
 SELECTOR_CANDIDATES = [

@@ -36,7 +36,7 @@ DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/.openclaw/master-files/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -46,7 +46,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/.openclaw/master-files/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -172,7 +172,7 @@ Worker results go only to the requesting DM by default. Workers CAN send directe
 
 Step 1: Configure Sub-Agent Settings
 
-In ~/.openclaw/openclaw.json, set:
+In /data/.openclaw/openclaw.json, set:
 
 {  "agents": {    "defaults": {      "subagents": {        "maxConcurrent": 8,        "maxChildrenPerAgent": 5,        "archiveAfterMinutes": 43200,        "model": {          "primary": "your-preferred-model",          "fallbacks": [            "fallback-model-1",            "fallback-model-2"          ]        }      }    }  }}
 
@@ -185,7 +185,7 @@ Step 1B: Approve Team Telegram IDs (MANDATORY - First Thing)
 
 Before anything else works, every team member's Telegram ID must be in the bot's allowFrom list so they can message the AI directly.
 
-In ~/.openclaw/openclaw.json, add all team IDs (collected during Step 0 intake) to channels.telegram.allowFrom:
+In /data/.openclaw/openclaw.json, add all team IDs (collected during Step 0 intake) to channels.telegram.allowFrom:
 
 {  "channels": {    "telegram": {      "allowFrom": [        "[TEAM_MEMBER_1_ID]",        "[TEAM_MEMBER_2_ID]",        "[TEAM_MEMBER_3_ID]"      ]    }  }}
 
@@ -498,8 +498,8 @@ The fix: Write the IDs to BOTH WORKFLOW_AUTO.md AND the core .md files.
 [ADD TO AGENTS.md]
 
 ## BLACK CEO Team - Telegram Routing (Dispatcher Protocol)
-- Protocol doc: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
-- Routing table: ~/clawd/WORKFLOW_AUTO.md
+- Protocol doc: /data/.openclaw/master-files/[master-files-folder]/blackceo-management-protocol.md
+- Routing table: /data/.openclaw/workspace/WORKFLOW_AUTO.md
 - Architecture: Main session = dispatcher. Each person gets a dedicated worker sub-agent.
 
 ### Permanent Team IDs (Always Present in Every Deployment)
@@ -521,8 +521,8 @@ The fix: Write the IDs to BOTH WORKFLOW_AUTO.md AND the core .md files.
 [ADD TO TOOLS.md]
 
 ## BLACK CEO Dispatcher - Message Routing
-- WORKFLOW_AUTO.md: ~/clawd/WORKFLOW_AUTO.md (routing table with all Telegram IDs)
-- Full protocol: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
+- WORKFLOW_AUTO.md: /data/.openclaw/workspace/WORKFLOW_AUTO.md (routing table with all Telegram IDs)
+- Full protocol: /data/.openclaw/master-files/[master-files-folder]/blackceo-management-protocol.md
 - To send to a specific person: use message tool with target set to their Telegram ID
 - All team Telegram IDs: see TEAM_CONFIG.md
 - To check a worker's conversation: sessions_history(sessionKey) or sessions_list to find the session
@@ -538,8 +538,8 @@ The fix: Write the IDs to BOTH WORKFLOW_AUTO.md AND the core .md files.
 | [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] |
 (Fill in from TEAM_CONFIG.md during setup - add one row per team member)
 - All team IDs are approved in channels.telegram.allowFrom
-- Routing protocol: ~/clawd/WORKFLOW_AUTO.md
-- Full SOP: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
+- Routing protocol: /data/.openclaw/workspace/WORKFLOW_AUTO.md
+- Full SOP: /data/.openclaw/master-files/[master-files-folder]/blackceo-management-protocol.md
 
 
 16) What is WORKFLOW_AUTO.md?
@@ -548,7 +548,7 @@ WORKFLOW_AUTO.md is a CUSTOM file created by this protocol. It is NOT part of st
 
 What it is: A routing table that maps Telegram IDs to worker sub-agent labels so the dispatcher knows where to send each person's messages.
 
-Where it lives: ~/clawd/WORKFLOW_AUTO.md (in the workspace root)
+Where it lives: /data/.openclaw/workspace/WORKFLOW_AUTO.md (in the workspace root)
 
 What it contains:
 - Table of sender IDs, names, roles, worker labels, and reply targets

@@ -21,7 +21,7 @@ This skill is the organized, practical reference for working with the Convert an
 
 The full 430K master reference lives here:
 
-`~/Downloads/openclaw-master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
+`/data/.openclaw/master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
 
 **Rule: NEVER paste the master reference into context.**
 
@@ -90,7 +90,7 @@ GHL_API_KEY
 Store it in your local environment file:
 
 ```bash
-~/clawd/secrets/.env
+/data/.openclaw/secrets/.env
 ```
 
 ### Example .env Entry
@@ -107,7 +107,7 @@ If you are working in a shell session and need to load the value:
 
 ```bash
 set -a
-source ~/clawd/secrets/.env
+source /data/.openclaw/secrets/.env
 set +a
 ```
 
@@ -920,7 +920,7 @@ When in doubt, start with `modules.md`, then go narrower.
 
 1. The base URL is `https://services.leadconnectorhq.com`
 2. Auth uses a Bearer token, usually from `GHL_API_KEY`
-3. Store the token in `~/clawd/secrets/.env`
+3. Store the token in `/data/.openclaw/secrets/.env`
 4. Read the matching `references/*.md` file before acting
 5. Never paste the 430K master reference into context
 6. Slow down for billing, phone number, and destructive operations

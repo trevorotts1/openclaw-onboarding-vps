@@ -8,7 +8,7 @@ Run this after installation. Every section must pass before you mark self-improv
 ## 1. File and version checks
 
 ```bash
-SKILL_DIR="$HOME/Downloads/openclaw-master-files/OpenClaw Onboarding/17-self-improving-agent"
+SKILL_DIR="/data/.openclaw/master-files/OpenClaw Onboarding/17-self-improving-agent"
 ls -1 "$SKILL_DIR"
 cat "$SKILL_DIR/skill-version.txt"
 ```
@@ -22,11 +22,11 @@ cat "$SKILL_DIR/skill-version.txt"
 ## 2. Installed skill folder checks
 
 ```bash
-ls -la ~/.openclaw/skills/self-improving-agent
-ls -la ~/.openclaw/skills/self-improving-agent/.learnings
+ls -la /data/.openclaw/skills/self-improving-agent
+ls -la /data/.openclaw/skills/self-improving-agent/.learnings
 ```
 
-- [ ] Installed skill folder exists at `~/.openclaw/skills/self-improving-agent`
+- [ ] Installed skill folder exists at `/data/.openclaw/skills/self-improving-agent`
 - [ ] `SKILL.md`, `INSTALL.md`, and `CORE_UPDATES.md` exist there
 - [ ] `.learnings/` exists inside the installed skill folder
 - [ ] `.learnings/LEARNINGS.md`, `.learnings/ERRORS.md`, and `.learnings/FEATURE_REQUESTS.md` all exist
@@ -37,9 +37,9 @@ ls -la ~/.openclaw/skills/self-improving-agent/.learnings
 
 ```bash
 for f in   assets/LEARNINGS.md   assets/SKILL-TEMPLATE.md   hooks/openclaw/HOOK.md   references/examples.md   references/hooks-setup.md   references/openclaw-integration.md; do
-  [ -f "$HOME/.openclaw/skills/self-improving-agent/$f" ] && echo "PASS $f" || echo "FAIL $f"
+  [ -f "/data/.openclaw/skills/self-improving-agent/$f" ] && echo "PASS $f" || echo "FAIL $f"
 done
-ls -la ~/.openclaw/hooks/self-improvement 2>/dev/null || true
+ls -la /data/.openclaw/hooks/self-improvement 2>/dev/null || true
 ```
 
 - [ ] All upstream reference assets listed above exist
@@ -52,7 +52,7 @@ ls -la ~/.openclaw/hooks/self-improvement 2>/dev/null || true
 
 ### 4A. Writable learnings folder
 ```bash
-LDIR="$HOME/.openclaw/skills/self-improving-agent/.learnings"
+LDIR="/data/.openclaw/skills/self-improving-agent/.learnings"
 touch "$LDIR/.qc-write-test" && rm "$LDIR/.qc-write-test"
 ```
 
@@ -60,8 +60,8 @@ touch "$LDIR/.qc-write-test" && rm "$LDIR/.qc-write-test"
 
 ### 4B. Workspace learnings location
 ```bash
-mkdir -p ~/.openclaw/workspace/.learnings
-ls -ld ~/.openclaw/workspace/.learnings
+mkdir -p /data/.openclaw/workspace/.learnings
+ls -ld /data/.openclaw/workspace/.learnings
 ```
 
 - [ ] Workspace learnings directory exists if the install created it
@@ -69,10 +69,10 @@ ls -ld ~/.openclaw/workspace/.learnings
 ### 4C. Installer smoke test
 ```bash
 echo "--- Self-Improving Agent Smoke Test ---"
-SKILL_FILE=~/.openclaw/skills/self-improving-agent/SKILL.md
+SKILL_FILE=/data/.openclaw/skills/self-improving-agent/SKILL.md
 [ -s "$SKILL_FILE" ] && echo "PASS: SKILL.md present and non-empty" || echo "FAIL: SKILL.md"
 for f in SKILL.md INSTALL.md CORE_UPDATES.md; do
-  [ -f "$HOME/.openclaw/skills/self-improving-agent/$f" ] && echo "PASS: $f present" || echo "FAIL: $f missing"
+  [ -f "/data/.openclaw/skills/self-improving-agent/$f" ] && echo "PASS: $f present" || echo "FAIL: $f missing"
 done
 ```
 
@@ -83,7 +83,7 @@ done
 ## 5. Core file policy checks
 
 ```bash
-grep -n "self-improving\|self-improvement" ~/clawd/AGENTS.md ~/clawd/TOOLS.md ~/clawd/MEMORY.md 2>/dev/null
+grep -n "self-improving\|self-improvement" /data/.openclaw/workspace/AGENTS.md /data/.openclaw/workspace/TOOLS.md /data/.openclaw/workspace/MEMORY.md 2>/dev/null
 ```
 
 - [ ] Core files reference the skill briefly if CORE_UPDATES required it
@@ -127,7 +127,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

@@ -36,7 +36,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/.openclaw/master-files/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -46,7 +46,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/.openclaw/master-files/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -164,20 +164,14 @@ Expected output: "Playwright installed successfully" printed to stdout.
 
 GHL login credentials must NEVER be hardcoded in scripts or saved in code repositories.
 
-**ALWAYS check for existing credentials before asking the user. Platform-aware:**
+**ALWAYS check for existing credentials before asking the user. On Hostinger Docker VPS, credentials live as container env vars (Hostinger injects them at container boot) — there is no .env file by default.**
 
 ```bash
-# Mac (canonical secrets file): grep ~/.openclaw/secrets/.env
-# Hostinger Docker VPS: container env vars are pre-populated (no .env file exists)
-if [ -d "/data/.openclaw" ]; then
-    # VPS: check container env first (Hostinger injects vars there)
-    printenv | grep -E "^(GHL_EMAIL|GHL_PASSWORD)="
-    # Some VPS installs also keep an .env at /data/.openclaw/secrets/.env
-    [ -f /data/.openclaw/secrets/.env ] && grep -E "GHL_EMAIL|GHL_PASSWORD" /data/.openclaw/secrets/.env
-else
-    grep -E "GHL_EMAIL|GHL_PASSWORD" ~/.openclaw/secrets/.env 2>/dev/null
-    grep -E "GHL_EMAIL|GHL_PASSWORD" ~/clawd/secrets/.env 2>/dev/null  # legacy location
-fi
+# Source 1: container env vars (Hostinger primary)
+printenv | grep -E "^(GHL_EMAIL|GHL_PASSWORD)="
+
+# Source 2: optional /data/.openclaw/secrets/.env (only if operator created it)
+[ -f /data/.openclaw/secrets/.env ] && grep -E "GHL_EMAIL|GHL_PASSWORD" /data/.openclaw/secrets/.env
 ```
 
 **Decision tree:**
@@ -192,13 +186,10 @@ fi
 
 **NEVER block the install on missing credentials. Always offer a skip option.**
 
-If credentials need to be added, store them in the canonical secrets file for the platform:
+If credentials need to be added, the preferred method on Hostinger Docker VPS is to add them via the Hostinger control panel as container env vars — that way they persist across container rebuilds and are injected at boot.
+
+As a fallback, you can write them to `/data/.openclaw/secrets/.env`:
 ```bash
-# Mac:
-nano ~/.openclaw/secrets/.env
-# Hostinger Docker VPS: Hostinger normally injects creds as container env vars, so
-# adding GHL_EMAIL/GHL_PASSWORD via the Hostinger control panel is preferred. As a
-# fallback, you can write to /data/.openclaw/secrets/.env (create dir if missing):
 mkdir -p /data/.openclaw/secrets && nano /data/.openclaw/secrets/.env
 ```
 
@@ -231,8 +222,8 @@ Required settings:
 Use this browser launch configuration:
 
 # PERSISTENT SESSION - user logs in once, session saved automatically
-# Session stored at: ~/.openclaw/playwright-data/ghl-install-pages/
-# To reset and re-login: rm -rf ~/.openclaw/playwright-data/ghl-install-pages/
+# Session stored at: /data/.openclaw/playwright-data/ghl-install-pages/
+# To reset and re-login: rm -rf /data/.openclaw/playwright-data/ghl-install-pages/
 
 ```python
 import os
@@ -240,7 +231,7 @@ from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
     browser = p.chromium.launch_persistent_context(
-        user_data_dir=os.path.expanduser("~/.openclaw/playwright-data/ghl-install-pages"),
+        user_data_dir=os.path.expanduser("/data/.openclaw/playwright-data/ghl-install-pages"),
         headless=False,
         viewport={"width": 1440, "height": 900},
         args=[
@@ -344,11 +335,11 @@ Follow TYP rules - only add summaries and file path references.
 - Always send a deployment report after completing
 
 **Add to TOOLS.md:**
-- Full guide location: ~/Downloads/[master-files-folder]/ghl-install-pages-full.md
+- Full guide location: /data/.openclaw/master-files/[master-files-folder]/ghl-install-pages-full.md
 - Viewport minimum: 1440x900
 - Builder loads inside nested iframes - use get_builder_frame() to switch context
 - Every selector has fallback chains - use find_element_with_fallback()
-- Credential location: ~/.openclaw/secrets/.env (Mac) | container env vars or /data/.openclaw/secrets/.env (VPS)
+- Credential location: /data/.openclaw/secrets/.env (Mac) | container env vars or /data/.openclaw/secrets/.env (VPS)
 
 **Add to MEMORY.md:**
 - GHL page deployment skill has been learned

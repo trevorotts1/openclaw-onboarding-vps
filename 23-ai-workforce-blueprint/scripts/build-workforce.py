@@ -143,7 +143,7 @@ def build_from_config(config):
 
     # v9.6.0: resolve the Zero Human Company folder for this client BEFORE
     # any dept workspace is created. This sets COMPANY_DIR / DEPARTMENTS_DIR
-    # to ~/clawd/zero-human-company/<company-slug>/...
+    # to /data/.openclaw/workspace/zero-human-company/<company-slug>/...
     resolve_company_paths(company_name)
     print(f"[ZHC] Company folder: {COMPANY_DIR}", file=sys.stderr)
     print(f"[ZHC] Departments folder: {DEPARTMENTS_DIR}", file=sys.stderr)
@@ -363,22 +363,22 @@ def build_from_config(config):
 # ============================================================
 
 HOME = os.path.expanduser("~")
-# VPS install detection: prefer /data/clawd if it exists, else $HOME/clawd
-if os.path.isdir("/data/clawd"):
-    WORKSPACE_ROOT = "/data/clawd"
+# VPS install detection: prefer /data/.openclaw/workspace if it exists, else /data/.openclaw/workspace
+if os.path.isdir("/data/.openclaw/workspace"):
+    WORKSPACE_ROOT = "/data/.openclaw/workspace"
 else:
     WORKSPACE_ROOT = os.path.join(HOME, "clawd")
 
 # Zero Human Company folder structure (v9.6.0+)
-# Top-level: ~/clawd/zero-human-company/
-# Per-company: ~/clawd/zero-human-company/<company-slug>/
+# Top-level: /data/.openclaw/workspace/zero-human-company/
+# Per-company: /data/.openclaw/workspace/zero-human-company/<company-slug>/
 # Departments live inside the per-company folder.
 ZHC_ROOT = os.path.join(WORKSPACE_ROOT, "zero-human-company")
 
 # DEPARTMENTS_DIR is resolved per-company at runtime once the company slug is known.
 # Falls back to the pre-v9.6.0 path for legacy installs (auto-detected).
 DEPARTMENTS_DIR = None       # Resolved by resolve_company_paths() below
-COMPANY_DIR = None           # ~/clawd/zero-human-company/<slug>/
+COMPANY_DIR = None           # /data/.openclaw/workspace/zero-human-company/<slug>/
 COMPANY_SLUG = None
 LEGACY_DEPARTMENTS_DIR = os.path.join(WORKSPACE_ROOT, "departments")  # pre-v9.6.0 location
 
@@ -406,9 +406,9 @@ def resolve_company_paths(company_name: str):
     the client's company name. Creates the folders if missing.
 
     Discovery order at runtime (an agent looking for the workforce later):
-      1. ~/clawd/zero-human-company/<slug>/         ← v9.6.0+ canonical
-      2. ~/clawd/zhc/<slug>/                        ← short alias (legacy from very early v9.6 testing)
-      3. ~/clawd/departments/                        ← pre-v9.6.0 (still readable for legacy installs)
+      1. /data/.openclaw/workspace/zero-human-company/<slug>/         ← v9.6.0+ canonical
+      2. /data/.openclaw/workspace/zhc/<slug>/                        ← short alias (legacy from very early v9.6 testing)
+      3. /data/.openclaw/workspace/departments/                        ← pre-v9.6.0 (still readable for legacy installs)
     """
     global COMPANY_SLUG, COMPANY_DIR, DEPARTMENTS_DIR
     COMPANY_SLUG = slugify_company_name(company_name)
@@ -430,7 +430,7 @@ def resolve_company_paths(company_name: str):
 
     # If pre-v9.6.0 legacy departments folder exists with content, log a migration note
     if os.path.isdir(LEGACY_DEPARTMENTS_DIR) and os.listdir(LEGACY_DEPARTMENTS_DIR):
-        print(f"[ZHC] Legacy ~/clawd/departments/ detected. Reading from it for backward compat.\n"
+        print(f"[ZHC] Legacy /data/.openclaw/workspace/departments/ detected. Reading from it for backward compat.\n"
               f"[ZHC] New writes go to: {DEPARTMENTS_DIR}", file=sys.stderr)
 
     return COMPANY_DIR, DEPARTMENTS_DIR
@@ -494,19 +494,19 @@ DEFAULT_MODEL_ASSIGNMENTS = {
 
 def find_master_files_folder():
     """
-    Find the master files folder in ~/Downloads/ (case-insensitive search).
+    Find the master files folder in /data/.openclaw/master-files/ (case-insensitive search).
     
     FALLBACK BEHAVIOR (hardened):
-    - If ~/Downloads/ exists and a matching folder is found: use it (normal path)
-    - If ~/Downloads/ exists but no matching folder: create ~/Downloads/openclaw-master-files/
-    - If ~/Downloads/ does NOT exist (e.g., VPS, Docker, headless):
-        use ~/.openclaw/workspace/data/ as the safe fallback location
+    - If /data/.openclaw/master-files/ exists and a matching folder is found: use it (normal path)
+    - If /data/.openclaw/master-files/ exists but no matching folder: create /data/.openclaw/master-files/
+    - If /data/.openclaw/master-files/ does NOT exist (e.g., VPS, Docker, headless):
+        use /data/.openclaw/workspace/data/ as the safe fallback location
     - ALWAYS print a warning to stderr when falling back so the agent knows.
     - NEVER returns None. A persistence path is always guaranteed.
     """
     downloads = os.path.join(HOME, "Downloads")
     
-    # Primary search: ~/Downloads/
+    # Primary search: /data/.openclaw/master-files/
     if os.path.isdir(downloads):
         for name in os.listdir(downloads):
             lower = name.lower().replace(" ", "-").replace("_", "-")
@@ -514,20 +514,20 @@ def find_master_files_folder():
                 path = os.path.join(downloads, name)
                 if os.path.isdir(path):
                     return path
-        # ~/Downloads exists but no matching folder found - create default
+        # /data/.openclaw/master-files exists but no matching folder found - create default
         path = os.path.join(downloads, "openclaw-master-files")
         os.makedirs(path, exist_ok=True)
         return path
     
-    # FALLBACK: ~/Downloads/ does not exist (VPS, Docker, headless environment)
-    # Use ~/.openclaw/workspace/data/ as a safe data-side location that survives restarts
-    # Use ~/.openclaw/workspace/data as fallback (or /data/clawd/ on VPS)
+    # FALLBACK: /data/.openclaw/master-files/ does not exist (VPS, Docker, headless environment)
+    # Use /data/.openclaw/workspace/data/ as a safe data-side location that survives restarts
+    # Use /data/.openclaw/workspace/data as fallback (or /data/.openclaw/workspace/ on VPS)
     workspace_root = os.environ.get("WORKSPACE_ROOT", os.path.join(HOME, ".openclaw", "workspace"))
     if not os.path.isdir(workspace_root):
         workspace_root = os.path.join(HOME, "clawd")  # Legacy fallback
     fallback = os.path.join(workspace_root, "data")
     os.makedirs(fallback, exist_ok=True)
-    print(f"[PERSISTENCE WARNING] ~/Downloads/ not found. Using fallback persistence path: {fallback}",
+    print(f"[PERSISTENCE WARNING] /data/.openclaw/master-files/ not found. Using fallback persistence path: {fallback}",
           file=sys.stderr)
     print(f"[PERSISTENCE WARNING] Interview answers and handoff files will be saved to: {fallback}/company-discovery/",
           file=sys.stderr)
@@ -669,7 +669,7 @@ def create_department_workspace(dept_id, dept_info, interview_answers):
 
     # v9.6.1: SHARED files (AGENTS.md / TOOLS.md / USER.md) are SYMLINKED,
     # not copied. Every dept director, specialist, and sub-agent reads the
-    # SAME master file at ~/clawd/. When any agent writes to its AGENTS.md,
+    # SAME master file at /data/.openclaw/workspace/. When any agent writes to its AGENTS.md,
     # TOOLS.md, or USER.md, the write lands in the universal file and ALL
     # other agents pick it up on next read.
     #

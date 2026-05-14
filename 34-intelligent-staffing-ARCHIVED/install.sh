@@ -12,8 +12,8 @@ set -euo pipefail
 #   NO  -> Skip
 #
 # Depends on: Skill 33 (Department Heads) already installed
-# Safe to run: creates files under ~/clawd only, modifies
-#              ~/.openclaw/openclaw.json agents.list[]
+# Safe to run: creates files under /data/.openclaw/workspace only, modifies
+#              /data/.openclaw/openclaw.json agents.list[]
 # ============================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -55,8 +55,8 @@ python3 -c "import json; json.load(open('$QUESTIONS_FILE'))" 2>/dev/null || {
 }
 
 # Check that Skill 33 has been run (departments exist)
-if [ ! -d "$HOME/clawd/departments" ]; then
-    echo "[WARNING] ~/clawd/departments/ not found."
+if [ ! -d "/data/.openclaw/workspace/departments" ]; then
+    echo "[WARNING] /data/.openclaw/workspace/departments/ not found."
     echo "  Skill 33 (Department Heads) should be installed first."
     echo "  Continuing anyway - specialist folders will be created."
     echo ""
@@ -237,7 +237,7 @@ for spec in results["permanent_specialists"]:
     model = spec["model"]
 
     # Create specialist directory under department
-    spec_dir = os.path.expanduser(f"~/clawd/departments/{dept}/specialists/{folder}")
+    spec_dir = os.path.expanduser(f"/data/.openclaw/workspace/departments/{dept}/specialists/{folder}")
     os.makedirs(spec_dir, exist_ok=True)
 
     # Create SOUL.md from template
@@ -285,7 +285,7 @@ for spec in results["subagent_roles"]:
     folder = spec["folder"]
     name = spec["name"]
 
-    sub_dir = os.path.expanduser(f"~/clawd/subagents/templates/{folder}")
+    sub_dir = os.path.expanduser(f"/data/.openclaw/workspace/subagents/templates/{folder}")
     os.makedirs(sub_dir, exist_ok=True)
 
     # Create sub-agent template SOUL.md
@@ -323,14 +323,14 @@ PYTHON_WORKSPACE
 # Step 3: Add permanent specialists to openclaw.json
 # ----------------------------------------------------------
 echo ""
-echo "[3/4] Adding permanent specialist agents to ~/.openclaw/openclaw.json..."
+echo "[3/4] Adding permanent specialist agents to /data/.openclaw/openclaw.json..."
 
 python3 << 'PYTHON_CONFIG'
 import json
 import os
 
 results_file = os.path.expanduser("~/.skill34-results.json")
-config_path = os.path.expanduser("~/.openclaw/openclaw.json")
+config_path = os.path.expanduser("/data/.openclaw/openclaw.json")
 
 with open(results_file, 'r') as f:
     results = json.load(f)
@@ -364,8 +364,8 @@ for spec in results["permanent_specialists"]:
             "id": agent_id,
             "name": name,
             "model": model,
-            "system": f"file://~/clawd/departments/{dept}/specialists/{folder}/SOUL.md",
-            "workspace": os.path.expanduser(f"~/clawd/departments/{dept}/specialists/{folder}"),
+            "system": f"file:///data/.openclaw/workspace/departments/{dept}/specialists/{folder}/SOUL.md",
+            "workspace": os.path.expanduser(f"/data/.openclaw/workspace/departments/{dept}/specialists/{folder}"),
             "parent": f"dept-{dept}"
         }
         config["agents"]["list"].append(agent_entry)
@@ -392,8 +392,8 @@ echo "[4/4] Cleaning up and verifying..."
 rm -f "$HOME/.skill34-results.json"
 
 # Count created directories
-PERM_DIRS=$(find ~/clawd/departments -path "*/specialists/*" -name "SOUL.md" 2>/dev/null | wc -l | tr -d ' ')
-SUB_DIRS=$(find ~/clawd/subagents/templates -name "SOUL.md" 2>/dev/null | wc -l | tr -d ' ')
+PERM_DIRS=$(find /data/.openclaw/workspace/departments -path "*/specialists/*" -name "SOUL.md" 2>/dev/null | wc -l | tr -d ' ')
+SUB_DIRS=$(find /data/.openclaw/workspace/subagents/templates -name "SOUL.md" 2>/dev/null | wc -l | tr -d ' ')
 
 echo ""
 echo "============================================"
@@ -402,10 +402,10 @@ echo "============================================"
 echo ""
 echo "Created:"
 echo "  - $PERM_DIRS permanent specialist workspaces"
-echo "    (under ~/clawd/departments/[dept]/specialists/)"
+echo "    (under /data/.openclaw/workspace/departments/[dept]/specialists/)"
 echo "  - $SUB_DIRS sub-agent templates"
-echo "    (under ~/clawd/subagents/templates/)"
-echo "  - Specialist agents added to ~/.openclaw/openclaw.json"
+echo "    (under /data/.openclaw/workspace/subagents/templates/)"
+echo "  - Specialist agents added to /data/.openclaw/openclaw.json"
 echo ""
 echo "Each permanent specialist has:"
 echo "  - SOUL.md (identity and operating rules)"

@@ -18,7 +18,7 @@ Weekly auto-update: Sundays at 2:00 AM (check with: crontab -l | grep update-ski
 File: /data/.openclaw/skills/.pending-setup.md
 If this file exists with entries marked Status: PENDING, proactively remind the user.
 When relevant to what they are working on, say: "You have a pending skill setup for [key] - want to add that now?"
-When user provides the key: save it to /data/openclaw/workspace/secrets/.env and mark the entry Status: COMPLETE.
+When user provides the key: save it to /data/.openclaw/secrets/.env and mark the entry Status: COMPLETE.
 Never nag - bring it up once per session max, only when relevant.
 ```
 

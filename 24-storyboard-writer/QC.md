@@ -46,8 +46,8 @@ Verify the skill correctly registered itself in the two allowed core files.
 ### 2a. TOOLS.md
 
 ```bash
-grep -n "Storyboard Writer" ~/.openclaw/TOOLS.md
-grep -n "storyboard-writer" ~/.openclaw/TOOLS.md
+grep -n "Storyboard Writer" /data/.openclaw/TOOLS.md
+grep -n "storyboard-writer" /data/.openclaw/TOOLS.md
 ```
 
 **PASS** if both lines are found and the entry matches:
@@ -55,7 +55,7 @@ grep -n "storyboard-writer" ~/.openclaw/TOOLS.md
 ## Video Skills Suite
 
 ### Storyboard Writer (Skill 24)
-- Location: `~/.openclaw/skills/storyboard-writer/`
+- Location: `/data/.openclaw/skills/storyboard-writer/`
 - Purpose: turn a video idea into a structured storyboard that matches model limits (Veo, Sora, etc.)
 - Use when: user asks for a storyboard, shot list, scene plan, or "turn this script into a video plan"
 ```
@@ -65,14 +65,14 @@ grep -n "storyboard-writer" ~/.openclaw/TOOLS.md
 ### 2b. MEMORY.md
 
 ```bash
-grep -n "Storyboard Writer" ~/.openclaw/MEMORY.md
-grep -n "storyboard-writer" ~/.openclaw/MEMORY.md
+grep -n "Storyboard Writer" /data/.openclaw/MEMORY.md
+grep -n "storyboard-writer" /data/.openclaw/MEMORY.md
 ```
 
 **PASS** if this pointer is present:
 ```
 ## Video Skills Suite
-- Storyboard Writer (Skill 24): `~/.openclaw/skills/storyboard-writer/`
+- Storyboard Writer (Skill 24): `/data/.openclaw/skills/storyboard-writer/`
 ```
 
 **FAIL** if absent.
@@ -80,7 +80,7 @@ grep -n "storyboard-writer" ~/.openclaw/MEMORY.md
 ### 2c. No unauthorized core file changes
 
 ```bash
-git -C ~/.openclaw diff --name-only HEAD
+git -C /data/.openclaw diff --name-only HEAD
 ```
 
 **PASS** if only `TOOLS.md` and `MEMORY.md` appear in the diff (plus any skill folder files).
@@ -246,7 +246,7 @@ Verify the agent did NOT do any of the following during or after installation.
 
 | Anti-Pattern | Check | PASS if |
 |---|---|---|
-| Modified unauthorized core files | `git -C ~/.openclaw diff --name-only HEAD` | Only `TOOLS.md` and `MEMORY.md` changed |
+| Modified unauthorized core files | `git -C /data/.openclaw diff --name-only HEAD` | Only `TOOLS.md` and `MEMORY.md` changed |
 | Triggered gateway restart autonomously | Review install log/transcript | No `openclaw gateway restart` was run without user confirmation |
 | Left template placeholders as final prompts | Inspect any storyboards generated during install | All prompts are specific, visual descriptions — not generic fill-ins |
 | Asked all onboarding questions at once | Review conversation transcript | Questions were asked one at a time |
@@ -300,7 +300,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

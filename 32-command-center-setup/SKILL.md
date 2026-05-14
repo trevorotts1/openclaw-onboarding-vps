@@ -103,7 +103,7 @@ After installation, verify:
 - [ ] One topic exists for each department
 - [ ] Cross-Department topic exists
 - [ ] Bot is admin with topic management permissions
-- [ ] Department workspaces created at ~/.openclaw/workspaces/command-center/
+- [ ] Department workspaces created at /data/.openclaw/workspaces/command-center/
 - [ ] Each department has IDENTITY.md, MEMORY.md, and memory/ folder
 - [ ] Agent config entries added for each department
 - [ ] Telegram bindings configured for each topic

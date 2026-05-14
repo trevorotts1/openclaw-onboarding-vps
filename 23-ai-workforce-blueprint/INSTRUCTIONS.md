@@ -127,7 +127,7 @@ Ask:
 **What to do with the materials:**
 
 1. Read every doc the client provides. Watch YouTube videos with the transcript or summary tool. Fetch LinkedIn profile + recent posts.
-2. Write findings to `~/clawd/zero-human-company/[company-slug]/pre-interview-research.md` under sections: `## Mission & Vision`, `## Industry`, `## Tools Used`, `## Brand Voice`, `## Target Audience`, `## Open Questions`, `## Source URLs`.
+2. Write findings to `/data/.openclaw/workspace/zero-human-company/[company-slug]/pre-interview-research.md` under sections: `## Mission & Vision`, `## Industry`, `## Tools Used`, `## Brand Voice`, `## Target Audience`, `## Open Questions`, `## Source URLs`.
 3. Use those findings to PRE-FILL the answers to the Core Business Questions (Step 7) and to reduce the per-department question count.
 4. When asking a follow-up that the materials already answer, FRAME it as a confirmation, not a question. e.g. *"Based on your LinkedIn, your business is in real estate brokerage — is that still right, or did anything change?"*
 
@@ -193,10 +193,10 @@ The client never has to answer "what specialists do I need" — the AI determine
 **Pull-forward rule (binding):**
 
 Before asking ANY question, check:
-1. `~/clawd/zero-human-company/[slug]/pre-interview-research.md` — Step 6a findings
-2. `~/clawd/MEMORY.md` — facts already saved
-3. `~/clawd/USER.md` — owner preferences
-4. `~/clawd/AGENTS.md` — tools/behavior already configured
+1. `/data/.openclaw/workspace/zero-human-company/[slug]/pre-interview-research.md` — Step 6a findings
+2. `/data/.openclaw/workspace/MEMORY.md` — facts already saved
+3. `/data/.openclaw/workspace/USER.md` — owner preferences
+4. `/data/.openclaw/workspace/AGENTS.md` — tools/behavior already configured
 
 If the answer exists in any of those files, **DO NOT re-ask**. Instead, frame as confirmation:
 > "Based on what I already know, your marketing focuses on social media and email. Still right, or did anything change?"
@@ -339,7 +339,7 @@ If the client wants a department that is not in the recommended list:
 
 ### Department Workspaces
 The build-workforce.py script handles all workspace creation via `create_department_workspace()`.
-For each department chosen, create a workspace at ~/.openclaw/workspace/departments/[dept-name]/ with:
+For each department chosen, create a workspace at /data/.openclaw/workspace/departments/[dept-name]/ with:
 
 **Unique files:**
 - SOUL.md - generated from interview answers (NOT a generic template)
@@ -347,7 +347,7 @@ For each department chosen, create a workspace at ~/.openclaw/workspace/departme
 - HEARTBEAT.md - department-specific priorities from interview
 - memory/ folder - for daily session logs
 
-**Inherited files (copied from main CEO workspace ~/.openclaw/workspace/):**
+**Inherited files (copied from main CEO workspace /data/.openclaw/workspace/):**
 - TOOLS.md
 - AGENTS.md
 - USER.md
@@ -380,13 +380,13 @@ After workspaces are created, persona alignment runs using the 5-layer check:
 5. Task Fit
 
 Results stored in:
-- ~/.openclaw/workspace/persona-matrix.md (master pre-qualified pool)
-- ~/.openclaw/workspace/departments/[dept]/governing-personas.md (department-specific pool)
+- /data/.openclaw/workspace/persona-matrix.md (master pre-qualified pool)
+- /data/.openclaw/workspace/departments/[dept]/governing-personas.md (department-specific pool)
 
 Personas are selected PER TASK at runtime, not locked to roles.
 
 ### ORG-CHART.md
-Generated at ~/.openclaw/workspace/ORG-CHART.md via `generate_org_chart()` showing the full company structure: CEO at top, each department director below, specialists under each director with their type (full-time or on-call). Summary reference added to MEMORY.md.
+Generated at /data/.openclaw/workspace/ORG-CHART.md via `generate_org_chart()` showing the full company structure: CEO at top, each department director below, specialists under each director with their type (full-time or on-call). Summary reference added to MEMORY.md.
 
 ### Command Center Config
 departments.json generated via `generate_departments_json()` for the BlackCEO Command Center. Exact schema per entry: id (slug), emoji, name (display), headTitle (director title). Only includes departments the client actually chose.
@@ -411,7 +411,7 @@ These pages are compiled by Memory Wiki for structured knowledge retrieval.
 ## Config Safety
 
 Before ANY edit to openclaw.json:
-1. Backup to ~/Downloads/openclaw-backups/ with human-readable name
+1. Backup to /data/.openclaw/backups/ with human-readable name
 2. Make the edit
 3. Validate JSON after writing
 4. Verify backup is in correct location (not a hidden folder)

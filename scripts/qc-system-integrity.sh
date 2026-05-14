@@ -48,7 +48,7 @@ warn_check() {
 # ─── platform detect ─────────────────────────────────────────────────────────
 if [ -d "/data/.openclaw" ]; then
   PLATFORM=vps
-  WORKSPACE=/data/clawd
+  WORKSPACE=/data/.openclaw/workspace
   SECRETS=/data/.openclaw/secrets/.env
   OCJSON=/data/.openclaw/openclaw.json
   MASTER=/data/Downloads/openclaw-master-files

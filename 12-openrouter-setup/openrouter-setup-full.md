@@ -41,7 +41,7 @@ DO NOT PROCEED PAST THIS POINT WITHOUT TYP CONFIRMED.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/.openclaw/master-files/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -51,7 +51,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/.openclaw/master-files/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -108,7 +108,7 @@ IF ANYTHING IS UNCLEAR: STOP AND ASK. Do not guess. Do not assume.
 One unauthorized change to the OpenRouter config can break the entire gateway.
 
 RULE 4: BACKUP BEFORE TOUCHING THE CONFIG - NON-NEGOTIABLE
-Before making any change to ~/.openclaw/openclaw.json:
+Before making any change to /data/.openclaw/openclaw.json:
 1. Run the full backup procedure from the Backup Protocol tab
 2. Verify the backup exists and is not empty
 3. Only then make the change
@@ -421,7 +421,7 @@ Before configuring anything, check if the user already has an OpenRouter API key
 
 Where to Look
 
-~/.openclaw/openclaw.json then check the field env.OPENROUTER_API_KEY
+/data/.openclaw/openclaw.json then check the field env.OPENROUTER_API_KEY
 Environment variable: run echo $OPENROUTER_API_KEY
 Auth profile: run openclaw auth list
 
@@ -452,7 +452,7 @@ This step is NON-NEGOTIABLE. Do it every single time before editing the config. 
 
 Find the Config File
 
-ls ~/.openclaw/openclaw.json
+ls /data/.openclaw/openclaw.json
 
 Create a Backup Folder (If It Does Not Exist)
 
@@ -460,7 +460,7 @@ mkdir -p ~/openclaw-backup-configs
 
 Back Up the Current Config with a Date Stamp
 
-cp ~/.openclaw/openclaw.json ~/openclaw-backup-configs/openclaw-backup-$(date +%Y-%m-%d-%H%M%S).json
+cp /data/.openclaw/openclaw.json ~/openclaw-backup-configs/openclaw-backup-$(date +%Y-%m-%d-%H%M%S).json
 
 Verify the Backup Exists
 
@@ -977,7 +977,7 @@ OpenClaw has BUILT-IN support for OpenRouter. You do NOT need to configure model
 
 Full Configuration with All Models
 
-Add your OpenRouter API key and the complete model roster to ~/.openclaw/openclaw.json:
+Add your OpenRouter API key and the complete model roster to /data/.openclaw/openclaw.json:
 
 {
   "env": {
@@ -1149,7 +1149,7 @@ If Validation Fails
 
 RESTORE THE BACKUP IMMEDIATELY:
 
-LATEST_BACKUP="$(ls -t ~/openclaw-backup-configs/openclaw-backup-*.json | head -1)" && cp "$LATEST_BACKUP" ~/.openclaw/openclaw.json
+LATEST_BACKUP="$(ls -t ~/openclaw-backup-configs/openclaw-backup-*.json | head -1)" && cp "$LATEST_BACKUP" /data/.openclaw/openclaw.json
 openclaw gateway restart
 
 Then review what went wrong before trying again. Do not keep editing a broken config. Restore, analyze, then attempt again with a fresh backup.

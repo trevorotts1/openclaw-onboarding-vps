@@ -276,7 +276,7 @@ Same as Block 1, but paths land under `/data/` instead of `~/`:
 - `Step 1` through `Step 11`
 - Skills copied to `/data/.openclaw/skills/`
 - `Silent Credential Discovery` checks `/data/.openclaw/secrets/.env`
-- `UPDATE PENDING flag written to /data/clawd/AGENTS.md`
+- `UPDATE PENDING flag written to /data/.openclaw/workspace/AGENTS.md`
 
 10–20 minutes total. Do not close the SSH session.
 
@@ -331,13 +331,13 @@ RULE 1 — Run this command on the VPS using your shell-exec capability. Run it 
 
 RULE 2 — Do not modify the command. Do not change the URL (note the URL ends in -vps/main/install.sh — this is the VPS variant, not the Mac one). Do not add flags.
 
-RULE 3 — VPS file paths are different from Mac. Skills land at /data/.openclaw/skills/ not ~/.openclaw/skills/. Secrets at /data/.openclaw/secrets/.env not ~/.openclaw/secrets/.env. Workspace at /data/clawd not ~/clawd. The install script knows this — do not override paths.
+RULE 3 — VPS file paths are different from Mac. Skills land at /data/.openclaw/skills/ not ~/.openclaw/skills/. Secrets at /data/.openclaw/secrets/.env not ~/.openclaw/secrets/.env. Workspace at /data/.openclaw/workspace not ~/clawd. The install script knows this — do not override paths.
 
 RULE 4 — Watch the install output continuously. Tell me progress every 5 skills OR every 2 minutes, whichever comes first.
 
 RULE 5 — Plain English headlines only. No raw error logs unless I ask.
 
-RULE 6 — When the install finishes, an UPDATE PENDING flag is written to the top of /data/clawd/AGENTS.md (the VPS workspace AGENTS.md, not anything on the Mac). Read the flag completely.
+RULE 6 — When the install finishes, an UPDATE PENDING flag is written to the top of /data/.openclaw/workspace/AGENTS.md (the VPS workspace AGENTS.md, not anything on the Mac). Read the flag completely.
 
 RULE 7 — Follow the 5-Phase Processing Order in the flag EXACTLY:
   Phase A: parallel install in 5 waves (timeout 600s)
@@ -376,8 +376,8 @@ RULE 15 — Total time budget: under 40 minutes for VPS install (slightly longer
 RULE 16 — Communication: plain English, no acronyms unless explained, headlines first, I'm over 60.
 
 RULE 17 — When complete:
-  (a) Remove UPDATE PENDING section from /data/clawd/AGENTS.md
-  (b) Append to /data/clawd/MEMORY.md under "## System Updates" with date + version
+  (a) Remove UPDATE PENDING section from /data/.openclaw/workspace/AGENTS.md
+  (b) Append to /data/.openclaw/workspace/MEMORY.md under "## System Updates" with date + version
   (c) Final summary: "VPS install complete. [N] skills active. Memory: 8 layers verified. Personas: [M] available. Anything pending my attention: [list or 'nothing']."
 
 RULE 18 — Confirm with "Got it — starting your VPS install" + 2–3 sentence plain-English summary. Then start.
@@ -609,13 +609,13 @@ RULE 1 — Run this command on the VPS using your shell-exec capability. Run it 
 
 RULE 2 — Do not modify the command. The URL ends in -vps/main/update-skills.sh — confirm you're using the VPS variant, not the Mac variant.
 
-RULE 3 — VPS paths are different from Mac. Skills at /data/.openclaw/skills/. Secrets at /data/.openclaw/secrets/.env. Workspace at /data/clawd. The update script knows this — do not override paths.
+RULE 3 — VPS paths are different from Mac. Skills at /data/.openclaw/skills/. Secrets at /data/.openclaw/secrets/.env. Workspace at /data/.openclaw/workspace. The update script knows this — do not override paths.
 
 RULE 4 — Watch the update output. Send me a progress note when the download finishes and when the skill copy loop completes.
 
 RULE 5 — Plain English headlines only.
 
-RULE 6 — When the update completes, an UPDATE PENDING flag is written at the top of /data/clawd/AGENTS.md. The flag lists NEW skills (didn't exist before) and UPDATED skills (refreshed in place). Read the flag completely.
+RULE 6 — When the update completes, an UPDATE PENDING flag is written at the top of /data/.openclaw/workspace/AGENTS.md. The flag lists NEW skills (didn't exist before) and UPDATED skills (refreshed in place). Read the flag completely.
 
 RULE 7 — For each NEW skill in the flag:
   (a) Read ALL files in the skill folder: SKILL.md, INSTALL.md, INSTRUCTIONS.md, EXAMPLES.md, CORE_UPDATES.md, QC.md, and any references/*.md
@@ -649,8 +649,8 @@ RULE 15 — Time budget: 20 minutes for a typical VPS update. Progress note if o
 RULE 16 — Communication: plain English, no acronyms unless explained, headlines first, I'm over 60.
 
 RULE 17 — When complete:
-  (a) Remove UPDATE PENDING section from /data/clawd/AGENTS.md
-  (b) Append to /data/clawd/MEMORY.md under "## System Updates" with date + version + list of new skills
+  (a) Remove UPDATE PENDING section from /data/.openclaw/workspace/AGENTS.md
+  (b) Append to /data/.openclaw/workspace/MEMORY.md under "## System Updates" with date + version + list of new skills
   (c) Final summary: "VPS update complete. Newly installed: [list or 'none']. Updated in place: [count]. Anything needing my attention: [list or 'nothing']."
 
 RULE 18 — Confirm with "Got it — starting your VPS update" + 2–3 sentence summary. Then start.

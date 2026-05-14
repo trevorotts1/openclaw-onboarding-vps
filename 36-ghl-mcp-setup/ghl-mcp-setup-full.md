@@ -121,9 +121,9 @@ The Tier 3 fallback (REST API + skill set), the install of this document, and se
 
 | Platform | Canonical location |
 |---|---|
-| **macOS / desktop install** | `~/Downloads/openclaw-master-files/` |
-| **VPS / Docker / server install** | `/data/Downloads/openclaw-master-files/` (VPS has no `~/Downloads/` — the persistent volume is `/data/`, with `/data/Downloads/`, `/data/clawd/`, and `/data/.openclaw/` as the twins of the Mac home-dir equivalents) |
-| **Other Linux desktop** | `$HOME/Downloads/openclaw-master-files/` |
+| **macOS / desktop install** | `/data/.openclaw/master-files/` |
+| **VPS / Docker / server install** | `/data/Downloads/openclaw-master-files/` (VPS has no `/data/.openclaw/master-files/` — the persistent volume is `/data/`, with `/data/Downloads/`, `/data/.openclaw/workspace/`, and `/data/.openclaw/` as the twins of the Mac home-dir equivalents) |
+| **Other Linux desktop** | `/data/.openclaw/master-files/` |
 
 #### Smart locator (run this before anything else)
 
@@ -134,7 +134,7 @@ if [ -d "/data/.openclaw" ]; then
   CANONICAL_MASTER="/data/Downloads/openclaw-master-files"
 else
   PLATFORM="desktop"
-  CANONICAL_MASTER="$HOME/Downloads/openclaw-master-files"
+  CANONICAL_MASTER="/data/.openclaw/master-files"
 fi
 echo "Platform detected: $PLATFORM"
 echo "Canonical path if missing: $CANONICAL_MASTER"
@@ -142,13 +142,13 @@ echo "Canonical path if missing: $CANONICAL_MASTER"
 # Search across all reasonable roots for the folder, tolerating spelling variants
 MASTER_FILES_DIR=""
 ROOTS=(
-  "$HOME/Downloads"        # macOS / Linux desktop canonical
+  "/data/.openclaw/master-files"        # macOS / Linux desktop canonical
   "/data/Downloads"        # VPS canonical
   "/root/Downloads"        # some root-shell VPS setups
   "/data"                  # in case it was placed at the volume root
   "$HOME"                  # in case the client dropped it in home
-  "$HOME/clawd"            # in case it lives next to the workspace
-  "/data/clawd"            # VPS twin of above
+  "/data/.openclaw/workspace"            # in case it lives next to the workspace
+  "/data/.openclaw/workspace"            # VPS twin of above
   "/opt"                   # some server installs
   "/srv"                   # some server installs
 )
@@ -187,7 +187,7 @@ fi
 
 Stop and ask the client/Trevor with this exact message:
 
-> "I can't find an `openclaw-master-files` folder anywhere under `~/Downloads/`, `/data/Downloads/`, or the other usual locations. This folder holds the GHL API skill set that the Tier 3 fallback depends on. I'd like to create it at `$CANONICAL_MASTER` and then either (a) copy in the GHL skill from a known-good source, or (b) flag that the skill is missing and proceed with Tiers 1+2 only.
+> "I can't find an `openclaw-master-files` folder anywhere under `/data/.openclaw/master-files/`, `/data/Downloads/`, or the other usual locations. This folder holds the GHL API skill set that the Tier 3 fallback depends on. I'd like to create it at `$CANONICAL_MASTER` and then either (a) copy in the GHL skill from a known-good source, or (b) flag that the skill is missing and proceed with Tiers 1+2 only.
 >
 > Do I have permission to create the folder? If yes, also tell me whether you have a backup of the skill set I should restore into it."
 
@@ -210,7 +210,7 @@ mkdir -p "$MASTER_FILES_DIR/XX-ghl-mcp-setup"
 cp "$(pwd)/GHL-MCP-Setup.md" "$MASTER_FILES_DIR/XX-ghl-mcp-setup/"
 ```
 
-(Replace `$(pwd)/GHL-MCP-Setup.md` with the actual current path of this file — typically `~/Downloads/GHL-MCP-Setup.md` after the original install.)
+(Replace `$(pwd)/GHL-MCP-Setup.md` with the actual current path of this file — typically `/data/.openclaw/master-files/GHL-MCP-Setup.md` after the original install.)
 
 ---
 
@@ -225,11 +225,11 @@ The client likely already has a GHL Private Integration Token (PIT) and Location
 if [ -d "/data/.openclaw" ]; then
   SECRETS_ENV="/data/.openclaw/secrets/.env"
   CONFIG_JSON="/data/.openclaw/openclaw.json"
-  WORKSPACE="/data/clawd"
+  WORKSPACE="/data/.openclaw/workspace"
 else
-  SECRETS_ENV="$HOME/.openclaw/secrets/.env"
-  CONFIG_JSON="$HOME/.openclaw/openclaw.json"
-  WORKSPACE="$HOME/clawd"
+  SECRETS_ENV="/data/.openclaw/secrets/.env"
+  CONFIG_JSON="/data/.openclaw/openclaw.json"
+  WORKSPACE="/data/.openclaw/workspace"
 fi
 
 # 1. OpenClaw secrets file (canonical — same names on Mac and VPS, different paths)
@@ -318,7 +318,7 @@ Use this exact request template (adapt the client's white-label brand name):
 if [ -d "/data/.openclaw" ]; then
   SECRETS_DIR="/data/.openclaw/secrets"
 else
-  SECRETS_DIR="$HOME/.openclaw/secrets"
+  SECRETS_DIR="/data/.openclaw/secrets"
 fi
 
 # 1. Canonical secrets file
@@ -471,12 +471,12 @@ The launchd plist (Section 6.5) install is idempotent if you `bootout` before `b
 | Build succeeds but `dist/main.js` not present | Wrong build script — older fork uses `dist/server.js` | `ls dist/` to confirm entrypoint; update launchd plist accordingly |
 | `npm run build` UI step fails — vite or React error | Node version too old | Require Node ≥ 20 (`node --version`); use `nvm install 22` if older |
 | Port 8765 reported free but server crashes on bind | IPv6 vs IPv4 mismatch, or systemd-resolved on Linux holding it | Force IPv4 in `.env`: `MCP_SERVER_HOST=0.0.0.0`. Or pick a different port from the list in 6.1 |
-| `launchctl bootstrap` returns "service already loaded" | Plist already loaded from previous boot | `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist` first, then bootstrap |
-| `launchctl bootstrap` succeeds but service immediately exits | Path to node in plist is wrong (Apple Silicon vs Intel Mac) | Apple Silicon: `/opt/homebrew/bin/node`. Intel: `/usr/local/bin/node`. Check with `which node` and update plist |
+| `systemctl --user bootstrap` returns "service already loaded" | Plist already loaded from previous boot | `systemctl --user bootout gui/$(id -u) /etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist` first, then bootstrap |
+| `systemctl --user bootstrap` succeeds but service immediately exits | Path to node in plist is wrong (Apple Silicon vs Intel Mac) | Apple Silicon: `/opt/homebrew/bin/node`. Intel: `/usr/local/bin/node`. Check with `which node` and update plist |
 | systemd `Failed to start ghl-mcp.service` | Wrong user or path in unit file | `journalctl -u ghl-mcp -n 50` reveals the line; fix in `/etc/systemd/system/ghl-mcp.service` |
 | /health returns Cognee's response | Wrong port — Cognee occupies 8000 | Update `MCP_SERVER_PORT` in .env + `GHL_COMMUNITY_MCP_URL` env var + restart |
 | /tools returns < 588 | Tool registry init failed during boot — check logs | `tail -50 ~/Library/Logs/ghl-mcp/stderr.log` (Mac) or `journalctl -u ghl-mcp -n 50` (Linux) |
-| Server boots but real tool call returns 401 | PIT in .env doesn't match Location ID, or PIT was rotated | Re-verify both values from `~/.openclaw/secrets/.env`; rotate PIT in GHL if needed |
+| Server boots but real tool call returns 401 | PIT in .env doesn't match Location ID, or PIT was rotated | Re-verify both values from `/data/.openclaw/secrets/.env`; rotate PIT in GHL if needed |
 | `npm install` complains about peer-deps for `@modelcontextprotocol/sdk` | Strict peer-dep policy in npm 9+ | Add `--legacy-peer-deps` flag |
 
 ### 6.3 Write the `.env`
@@ -507,7 +507,7 @@ Document for the agent: **ALWAYS use `$GHL_COMMUNITY_MCP_URL` in shell commands.
 ```bash
 mkdir -p ~/Library/Logs/ghl-mcp
 
-cat > ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist <<'EOF'
+cat > /etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -536,10 +536,10 @@ cat > ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist <<'EOF'
 EOF
 
 # Substitute the real username
-sed -i '' "s|USERNAME|$(whoami)|g" ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist
+sed -i '' "s|USERNAME|$(whoami)|g" /etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist
 
 # Boot it
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist
+systemctl --user bootstrap gui/$(id -u) /etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist
 ```
 
 ### 6.6 Linux / VPS alternative: systemd
@@ -638,7 +638,7 @@ Note: products module uses `Version: 2021-04-15`. Most others use `2021-07-28`. 
 
 Use `launchPersistentContext` (NEVER `launch()`) so login state persists.
 - URL: `https://app.gohighlevel.com` or the client's white-label (e.g. `https://app.convertandflow.com`)
-- Creds: `GHL_AGENCY_EMAIL`, `GHL_AGENCY_PASSWORD` (or location-level creds) in `~/.openclaw/secrets/.env`
+- Creds: `GHL_AGENCY_EMAIL`, `GHL_AGENCY_PASSWORD` (or location-level creds) in `/data/.openclaw/secrets/.env`
 - Browser MUST be Playwright + Kimi K2.5 model. Never Gemini with Playwright (documented incompatibility).
 
 ### Tier 5 — Codex Computer Use
@@ -652,7 +652,7 @@ Use `launchPersistentContext` (NEVER `launch()`) so login state persists.
 
 ## 8. PHASE 7 — WIRE THE 5-TIER CHAIN INTO THE CLIENT'S CORE `.md` FILES
 
-The client's agent has bootstrap files at the workspace root (e.g. `~/clawd/`). Names vary; common conventions:
+The client's agent has bootstrap files at the workspace root (e.g. `/data/.openclaw/workspace/`). Names vary; common conventions:
 - `SOUL.md` — voice/stance, cardinal behavioral rules
 - `AGENTS.md` — operating rules, the WHAT-TO-DO
 - `TOOLS.md` — WHERE-THINGS-LIVE
@@ -661,7 +661,7 @@ The client's agent has bootstrap files at the workspace root (e.g. `~/clawd/`). 
 
 Verify which the client uses by running:
 ```bash
-ls ~/clawd/{SOUL,AGENTS,TOOLS,MEMORY,USER,CLAUDE}.md 2>/dev/null
+ls /data/.openclaw/workspace/{SOUL,AGENTS,TOOLS,MEMORY,USER,CLAUDE}.md 2>/dev/null
 ```
 
 ### 8.1 What to add to SOUL.md (cardinal rule — survives across all sessions)
@@ -704,7 +704,7 @@ These values are authoritative. If your session history disagrees, trust this bl
 | MCP endpoint (OpenClaw transport) | `$GHL_COMMUNITY_MCP_URL/mcp` (streamable-http) |
 | REST execute (debugging) | `POST $GHL_COMMUNITY_MCP_URL/execute` with `{"name":"tool","arguments":{...}}` |
 | Live tool discovery | `curl $GHL_COMMUNITY_MCP_URL/tools` |
-| Lifecycle | launchd plist `~/Library/LaunchAgents/com.clawd.ghl-mcp.plist` (macOS) or systemd `ghl-mcp.service` (Linux). Restart: `launchctl kickstart gui/$(id -u)/com.clawd.ghl-mcp` (macOS) / `sudo systemctl restart ghl-mcp` (Linux). |
+| Lifecycle | launchd plist `/etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist` (macOS) or systemd `ghl-mcp.service` (Linux). Restart: `systemctl --user kickstart gui/$(id -u)/com.clawd.ghl-mcp` (macOS) / `sudo systemctl restart ghl-mcp` (Linux). |
 
 ### Tier order (try in sequence; do not skip)
 
@@ -721,7 +721,7 @@ These values are authoritative. If your session history disagrees, trust this bl
 - Use when Tier 1 lacks the needed tool
 
 **Tier 3 — Direct REST API with PIT**
-- Skill set at `$MASTER_FILES_DIR/29-ghl-convert-and-flow/` (Mac default: `~/Downloads/openclaw-master-files/29-ghl-convert-and-flow/`; VPS default: `/data/Downloads/openclaw-master-files/29-ghl-convert-and-flow/`)
+- Skill set at `$MASTER_FILES_DIR/29-ghl-convert-and-flow/` (Mac default: `/data/.openclaw/master-files/29-ghl-convert-and-flow/`; VPS default: `/data/Downloads/openclaw-master-files/29-ghl-convert-and-flow/`)
 - Read `references/[module].md` for endpoint specifics
 - Base URL: `https://services.leadconnectorhq.com`
 - Version header: `2021-07-28` (some modules use `2021-04-15`)
@@ -729,7 +729,7 @@ These values are authoritative. If your session history disagrees, trust this bl
 **Tier 4 — Playwright browser**
 - URL: `https://app.gohighlevel.com` (or client white-label)
 - Use `launchPersistentContext`, never `launch()`
-- Creds in `~/.openclaw/secrets/.env`
+- Creds in `/data/.openclaw/secrets/.env`
 
 **Tier 5 — Codex Computer Use**
 - `codex/gpt-5.5`, 45-min default timeout
@@ -797,9 +797,9 @@ Two MCP servers configured for [client white-label brand]:
 
 1. **Official GHL MCP** — OpenClaw entry `ghl-mcp`, hosted at `https://services.leadconnectorhq.com/mcp/`. 36 tools. Stateless.
 
-2. **Community GHL MCP — DEPLOYED** — OpenClaw entry `ghl-community-mcp`, BusyBee3333 2026 fork. 588 tools. Runs locally on `$GHL_COMMUNITY_MCP_URL` (env var resolves to `http://localhost:8765` unless port collision required a different port). Repo at `~/mcp-servers/ghl-community-mcp`. Lifecycle: launchd plist `~/Library/LaunchAgents/com.clawd.ghl-mcp.plist` (macOS) or `ghl-mcp.service` (Linux). Auto-starts at login, restarts on crash. **No Docker dependency.**
+2. **Community GHL MCP — DEPLOYED** — OpenClaw entry `ghl-community-mcp`, BusyBee3333 2026 fork. 588 tools. Runs locally on `$GHL_COMMUNITY_MCP_URL` (env var resolves to `http://localhost:8765` unless port collision required a different port). Repo at `~/mcp-servers/ghl-community-mcp`. Lifecycle: launchd plist `/etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist` (macOS) or `ghl-mcp.service` (Linux). Auto-starts at login, restarts on crash. **No Docker dependency.**
 
-3. **Tier 3 fallback** — GHL skill at `$MASTER_FILES_DIR/29-ghl-convert-and-flow/` (Mac default: `~/Downloads/openclaw-master-files/29-ghl-convert-and-flow/`; VPS default: `/data/Downloads/openclaw-master-files/29-ghl-convert-and-flow/`). Pre-installed for all clients unless Section 1.B noted otherwise.
+3. **Tier 3 fallback** — GHL skill at `$MASTER_FILES_DIR/29-ghl-convert-and-flow/` (Mac default: `/data/.openclaw/master-files/29-ghl-convert-and-flow/`; VPS default: `/data/Downloads/openclaw-master-files/29-ghl-convert-and-flow/`). Pre-installed for all clients unless Section 1.B noted otherwise.
 
 4. **Tier 4 fallback** — Playwright browser at `[client white-label URL]`.
 
@@ -809,7 +809,7 @@ Decision table and full setup details in TOOLS.md. Cardinal behavioral rule in S
 
 ### Credentials
 
-- Location PIT stored as `GOHIGHLEVEL_API_KEY` in `~/.openclaw/secrets/.env` and `openclaw.json` env.vars.
+- Location PIT stored as `GOHIGHLEVEL_API_KEY` in `/data/.openclaw/secrets/.env` and `openclaw.json` env.vars.
 - Location ID stored as `GOHIGHLEVEL_LOCATION_ID` in same locations.
 - **Never echo these in chat logs.** Reference env-var names only.
 ```
@@ -884,7 +884,7 @@ The QC script is the standalone file `qc-ghl-mcp-setup.sh` shipped alongside thi
 if [ -d "/data/.openclaw" ]; then
   MASTER_FILES_DIR=/data/Downloads/openclaw-master-files
 else
-  MASTER_FILES_DIR=$HOME/Downloads/openclaw-master-files
+  MASTER_FILES_DIR=/data/.openclaw/master-files
 fi
 
 chmod +x "$MASTER_FILES_DIR/36-ghl-mcp-setup/qc-ghl-mcp-setup.sh"
@@ -893,7 +893,7 @@ bash    "$MASTER_FILES_DIR/36-ghl-mcp-setup/qc-ghl-mcp-setup.sh"
 
 What the script does (summary — read the source for details):
 - Detects platform (Mac vs VPS) and resolves canonical secrets / config / workspace paths
-- Sources `~/.openclaw/secrets/.env` (or `/data/.openclaw/secrets/.env`), reads `GOHIGHLEVEL_API_KEY` (PIT) and `GOHIGHLEVEL_LOCATION_ID`
+- Sources `/data/.openclaw/secrets/.env` (or `/data/.openclaw/secrets/.env`), reads `GOHIGHLEVEL_API_KEY` (PIT) and `GOHIGHLEVEL_LOCATION_ID`
 - Probes Tier 1 (Official MCP) — confirms 36 tools available
 - Probes Tier 2 (Community MCP) — hits `$GHL_COMMUNITY_MCP_URL/health`, confirms tool count
 - Probes Tier 3 (direct REST) — reads `X-RateLimit-Daily-Remaining` and surfaces the reset clock time in plain English if quota is low (v9.3.5 incident-response logic)
@@ -1067,14 +1067,14 @@ upload_message_attachments, upload_social_csv, upload_media_file, upload_form_cu
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `/health` returns nothing | Server not running | `launchctl kickstart gui/$(id -u)/com.clawd.ghl-mcp` (macOS) or `sudo systemctl restart ghl-mcp` (Linux) |
+| `/health` returns nothing | Server not running | `systemctl --user kickstart gui/$(id -u)/com.clawd.ghl-mcp` (macOS) or `sudo systemctl restart ghl-mcp` (Linux) |
 | `/health` returns Cognee's response (`status:ready, version:0.5.3-local`) | Wrong port — you hit Cognee | Check `MCP_SERVER_PORT` in `.env` and `GHL_COMMUNITY_MCP_URL`; ensure they match |
-| Server registers <588 tools | Stale build | `cd ~/mcp-servers/ghl-community-mcp && git pull && npm install && npm run build && launchctl kickstart gui/$(id -u)/com.clawd.ghl-mcp` |
+| Server registers <588 tools | Stale build | `cd ~/mcp-servers/ghl-community-mcp && git pull && npm install && npm run build && systemctl --user kickstart gui/$(id -u)/com.clawd.ghl-mcp` |
 | Tool returns "Tool 'X' not found or not active" | PIT lacks the required scope OR tool name is misspelled | Re-check tool name against `/tools`; if name is correct, verify PIT scopes in GHL Settings → Integrations → Private Integrations |
-| 401 / 403 on Tier 1 or Tier 3 | PIT lacks scope, or PIT was rotated and `.env` is stale | Check `GHL Settings → Integrations → Private Integrations` for token validity; update both `~/.openclaw/secrets/.env` and `openclaw.json` env.vars |
+| 401 / 403 on Tier 1 or Tier 3 | PIT lacks scope, or PIT was rotated and `.env` is stale | Check `GHL Settings → Integrations → Private Integrations` for token validity; update both `/data/.openclaw/secrets/.env` and `openclaw.json` env.vars |
 | Agent skips Tier 2 | Stale session context, or `.md` files not loading | Start fresh session; verify SOUL.md + AGENTS.md are in agent's workspace bootstrap |
 | Agent hardcodes wrong port | Stale memory of port 8000 from earlier setup | Ensure `GHL_COMMUNITY_MCP_URL` env var is set AND AGENTS.md says "always use the env var" |
-| `launchctl bootstrap` fails with "service already loaded" | Plist already loaded from previous boot | `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist` then bootstrap again |
+| `systemctl --user bootstrap` fails with "service already loaded" | Plist already loaded from previous boot | `systemctl --user bootout gui/$(id -u) /etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist` then bootstrap again |
 | WorkflowBuilderTools init warning on boot | Visual workflow builder needs additional tokens (Firebase or v2 JWT refresh) | Non-blocking — other 588 tools work without it. Ignore unless client needs visual workflow authoring via MCP |
 
 ---
@@ -1111,15 +1111,15 @@ Source: https://github.com/openclaw/mcporter
 
 ## APPENDIX — SECURITY CHECKLIST (DO THIS BEFORE DECLARING SETUP COMPLETE)
 
-- [ ] PIT stored in `~/.openclaw/secrets/.env` with `chmod 600`
+- [ ] PIT stored in `/data/.openclaw/secrets/.env` with `chmod 600`
 - [ ] `.env` for community MCP at `~/mcp-servers/ghl-community-mcp/.env` with `chmod 600`
 - [ ] No PIT or Location ID echoed into chat logs, commit history, or shared docs
-- [ ] `~/.openclaw/secrets/` and `~/mcp-servers/*/.env` listed in `.gitignore` for any tracked repos
+- [ ] `/data/.openclaw/secrets/` and `~/mcp-servers/*/.env` listed in `.gitignore` for any tracked repos
 - [ ] `GHL_COMMUNITY_MCP_URL` env var set in `openclaw.json` env.vars
 - [ ] launchd / systemd unit owns logs that don't contain the PIT (check `~/Library/Logs/ghl-mcp/stdout.log` for any leaked auth)
 - [ ] Smoke tests pass for both MCPs (verified with real data)
 - [ ] All 5 test prompts (Phase 8) produce correct disclosure headers
-- [ ] This document copied to `$MASTER_FILES_DIR/XX-ghl-mcp-setup/` (Mac: `~/Downloads/openclaw-master-files/XX-ghl-mcp-setup/`; VPS: `/data/Downloads/openclaw-master-files/XX-ghl-mcp-setup/`) for future re-use
+- [ ] This document copied to `$MASTER_FILES_DIR/XX-ghl-mcp-setup/` (Mac: `/data/.openclaw/master-files/XX-ghl-mcp-setup/`; VPS: `/data/Downloads/openclaw-master-files/XX-ghl-mcp-setup/`) for future re-use
 
 ---
 
@@ -1130,7 +1130,7 @@ If anything is unclear or fails to work as described, first run:
 openclaw doctor
 curl $GHL_COMMUNITY_MCP_URL/health
 openclaw mcp list
-launchctl print gui/$(id -u)/com.clawd.ghl-mcp | grep -E "state|pid"
+systemctl --user print gui/$(id -u)/com.clawd.ghl-mcp | grep -E "state|pid"
 ```
 
 Then check the troubleshooting cheat sheet (Reference C) before falling back to manual debugging.

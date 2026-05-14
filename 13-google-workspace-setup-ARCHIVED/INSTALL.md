@@ -289,7 +289,7 @@ cat [WORKSPACE_ROOT]/secrets/.env 2>/dev/null | grep -E "USER_EMAIL|GOG_DEFAULT_
 cat /data/.openclaw/openclaw.json 2>/dev/null | grep -i "google\|gmail\|gcp\|impersonate" || true
 
 # Service account files in common locations
-ls /data/openclaw/workspace/secrets/*google* /data/openclaw/workspace/secrets/*gcp* /data/downloads/*google*.json 2>/dev/null || true
+ls /data/.openclaw/secrets/*google* /data/.openclaw/secrets/*gcp* /data/downloads/*google*.json 2>/dev/null || true
 ```
 
 If detection shows Gmail or Workspace is already configured, tell the user exactly:
@@ -832,12 +832,12 @@ CONTINUE IMMEDIATELY. Do not pause.
    ```
    Store the path:
    ```
-   KEY_FILE_PATH="$HOME/clawd/secrets/gcp-service-account.json"
+   KEY_FILE_PATH="/data/.openclaw/workspace/secrets/gcp-service-account.json"
    ```
 
    Verify the file is valid JSON:
    ```bash
-   python3 -c "import json; json.load(open('$HOME/clawd/secrets/gcp-service-account.json')); print('Valid JSON key file')"
+   python3 -c "import json; json.load(open('/data/.openclaw/workspace/secrets/gcp-service-account.json')); print('Valid JSON key file')"
    ```
 
 CONTINUE IMMEDIATELY to Step A6. Do not pause. Do not ask the user anything.
@@ -866,7 +866,7 @@ CONTINUE IMMEDIATELY to Step A6. Do not pause. Do not ask the user anything.
 
    Alternatively, extract it from the JSON key file:
    ```bash
-   python3 -c "import json; print(json.load(open('$HOME/clawd/secrets/gcp-service-account.json'))['client_id'])"
+   python3 -c "import json; print(json.load(open('/data/.openclaw/workspace/secrets/gcp-service-account.json'))['client_id'])"
    ```
 
    Store it:

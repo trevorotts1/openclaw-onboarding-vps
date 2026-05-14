@@ -35,12 +35,12 @@ def _load_openclaw_env():
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-DB_PATH = os.path.expanduser("/data/clawd/data/coaching-personas/gemini-index.sqlite")
-PERSONAS_DIR_PRIMARY = os.path.expanduser("/data/clawd/data/coaching-personas/personas")
+DB_PATH = os.path.expanduser("/data/.openclaw/workspace/data/coaching-personas/gemini-index.sqlite")
+PERSONAS_DIR_PRIMARY = os.path.expanduser("/data/.openclaw/workspace/data/coaching-personas/personas")
 PERSONAS_DIR_FALLBACK = os.path.expanduser("/data/Downloads/openclaw-master-files/coaching-personas/personas")
 BOOKS_WATCH_DIR = os.path.expanduser("/data/Downloads/openclaw-master-files/coaching-personas/books")
-MEMORY_DIR = os.path.expanduser("/data/clawd/memory")
-PERSONA_SELECTIONS_DIR = os.path.expanduser("/data/clawd/memory/persona-selections")
+MEMORY_DIR = os.path.expanduser("/data/.openclaw/workspace/memory")
+PERSONA_SELECTIONS_DIR = os.path.expanduser("/data/.openclaw/workspace/memory/persona-selections")
 
 COLLECTIONS = {
     "coaching-personas": {
@@ -49,7 +49,7 @@ COLLECTIONS = {
         "glob": "**/*.md",
     },
     "master-files": {
-        "primary": os.path.expanduser("/data/clawd/data/master-files"),
+        "primary": os.path.expanduser("/data/.openclaw/workspace/data/master-files"),
         "fallback": os.path.expanduser("/data/Downloads/openclaw-master-files"),
         "glob": "**/*.md",
     },
@@ -69,11 +69,11 @@ KEEP_REASON_LOG_ENTRIES = 20
 def get_api_key():
     _load_openclaw_env()
     env_paths = [
-        os.path.expanduser("~/.openclaw/.env"),
-        os.path.expanduser("~/.openclaw/secrets/.env"),
-        os.path.expanduser("/data/clawd/secrets/.env"),
+        os.path.expanduser("/data/.openclaw/.env"),
+        os.path.expanduser("/data/.openclaw/secrets/.env"),
+        os.path.expanduser("/data/.openclaw/workspace/secrets/.env"),
         os.path.expanduser("~/.config/openclaw/.env"),
-        "/data/clawd/secrets/.env",
+        "/data/.openclaw/workspace/secrets/.env",
         "/data/.openclaw/.env",
     ]
 
@@ -109,7 +109,7 @@ def cmd_status():
     if api_key:
         print(f"✅ API key: found ({api_key[:8]}...)")
     else:
-        print("❌ API key: NOT FOUND (add GOOGLE_API_KEY to /data/clawd/secrets/.env)")
+        print("❌ API key: NOT FOUND (add GOOGLE_API_KEY to /data/.openclaw/workspace/secrets/.env)")
 
     # Python deps
     try:
@@ -219,7 +219,7 @@ def cmd_rotate_logs():
     today = time.strftime("%Y-%m-%d")
     rotated_count = 0
 
-    # Check all daily memory files in /data/clawd/memory/
+    # Check all daily memory files in /data/.openclaw/workspace/memory/
     if not os.path.isdir(MEMORY_DIR):
         print("⚠️  Memory directory not found.")
         return
@@ -362,8 +362,8 @@ def main():
     def get_client():
         api_key = get_api_key()
         if not api_key:
-            print("WARNING: Google API key not found in any supported env location. Checked /data/clawd/secrets/.env, "
-                  "~/.openclaw/.env, ~/.openclaw/secrets/.env, and environment variables. "
+            print("WARNING: Google API key not found in any supported env location. Checked /data/.openclaw/workspace/secrets/.env, "
+                  "/data/.openclaw/.env, /data/.openclaw/secrets/.env, and environment variables. "
                   "Set GOOGLE_API_KEY and try again.")
             sys.exit(2)
         try:

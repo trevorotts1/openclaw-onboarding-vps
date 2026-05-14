@@ -10,24 +10,24 @@ Each section must reach the pass threshold before moving on.
 Verify the skill directory and all required files exist.
 
 ```bash
-ls ~/.openclaw/skills/proactive-agent/
+ls /data/.openclaw/skills/proactive-agent/
 ```
 
 ### Required files
-- [ ] `~/.openclaw/skills/proactive-agent/SKILL.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/assets/AGENTS.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/assets/HEARTBEAT.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/assets/MEMORY.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/assets/ONBOARDING.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/assets/SOUL.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/assets/TOOLS.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/assets/USER.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/references/onboarding-flow.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/references/security-patterns.md` exists
-- [ ] `~/.openclaw/skills/proactive-agent/scripts/security-audit.sh` exists (executable)
+- [ ] `/data/.openclaw/skills/proactive-agent/SKILL.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/assets/AGENTS.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/assets/HEARTBEAT.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/assets/MEMORY.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/assets/ONBOARDING.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/assets/SOUL.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/assets/TOOLS.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/assets/USER.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/references/onboarding-flow.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/references/security-patterns.md` exists
+- [ ] `/data/.openclaw/skills/proactive-agent/scripts/security-audit.sh` exists (executable)
 
 ### Full-doc save (TYP file storage requirement)
-- [ ] `proactive-agent-full.md` (or equivalent) saved in the OpenClaw master files folder under `~/Downloads/`
+- [ ] `proactive-agent-full.md` (or equivalent) saved in the OpenClaw master files folder under `/data/.openclaw/master-files/`
 
 **Section pass:** All boxes checked.
 
@@ -235,7 +235,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

@@ -11,7 +11,7 @@ PRIMARY credential storage: /data/.openclaw/secrets/.env
   - GHL_API_KEY (Private Integration Token)
   - GHL_LOCATION_ID
 
-SECONDARY (optional mirror): ~/.openclaw/openclaw.json under env.vars
+SECONDARY (optional mirror): /data/.openclaw/openclaw.json under env.vars
   - Only sync here if the section already exists
   - secrets/.env is always the source of truth
 

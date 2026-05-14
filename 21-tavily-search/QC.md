@@ -11,22 +11,22 @@ Mark each item ✅ PASS or ❌ FAIL. A single ❌ FAIL blocks the skill from use
 Verify the install target contains all required files.
 
 ```bash
-ls ~/.openclaw/skills/tavily-search/
+ls /data/.openclaw/skills/tavily-search/
 ```
 
 | # | Check | Expected |
 |---|-------|----------|
-| 1.1 | `~/.openclaw/skills/tavily-search/` directory exists | Directory present |
-| 1.2 | `~/.openclaw/skills/tavily-search/SKILL.md` exists | File present |
-| 1.3 | `~/.openclaw/skills/tavily-search/scripts/search.mjs` exists | File present |
-| 1.4 | `~/.openclaw/skills/tavily-search/scripts/extract.mjs` exists | File present |
-| 1.5 | No extra unexpected files were created outside `~/.openclaw/skills/tavily-search/` | Clean install boundary |
+| 1.1 | `/data/.openclaw/skills/tavily-search/` directory exists | Directory present |
+| 1.2 | `/data/.openclaw/skills/tavily-search/SKILL.md` exists | File present |
+| 1.3 | `/data/.openclaw/skills/tavily-search/scripts/search.mjs` exists | File present |
+| 1.4 | `/data/.openclaw/skills/tavily-search/scripts/extract.mjs` exists | File present |
+| 1.5 | No extra unexpected files were created outside `/data/.openclaw/skills/tavily-search/` | Clean install boundary |
 
 **Commands to run:**
 ```bash
-test -f ~/.openclaw/skills/tavily-search/SKILL.md && echo "PASS: SKILL.md" || echo "FAIL: SKILL.md missing"
-test -f ~/.openclaw/skills/tavily-search/scripts/search.mjs && echo "PASS: search.mjs" || echo "FAIL: search.mjs missing"
-test -f ~/.openclaw/skills/tavily-search/scripts/extract.mjs && echo "PASS: extract.mjs" || echo "FAIL: extract.mjs missing"
+test -f /data/.openclaw/skills/tavily-search/SKILL.md && echo "PASS: SKILL.md" || echo "FAIL: SKILL.md missing"
+test -f /data/.openclaw/skills/tavily-search/scripts/search.mjs && echo "PASS: search.mjs" || echo "FAIL: search.mjs missing"
+test -f /data/.openclaw/skills/tavily-search/scripts/extract.mjs && echo "PASS: extract.mjs" || echo "FAIL: extract.mjs missing"
 ```
 
 ---
@@ -43,13 +43,13 @@ Verify only the permitted core files were updated, and only with lean summaries 
 | 2.4 | `SOUL.md` was NOT modified | Unchanged |
 | 2.5 | `IDENTITY.md` was NOT modified | Unchanged |
 | 2.6 | `HEARTBEAT.md` was NOT modified | Unchanged |
-| 2.7 | Full documentation was saved to `~/Downloads/openclaw-master-files/` (not dumped into core files) | Full doc in master files folder |
+| 2.7 | Full documentation was saved to `/data/.openclaw/master-files/` (not dumped into core files) | Full doc in master files folder |
 
 **Commands to run:**
 ```bash
-grep -i "tavily" ~/.openclaw/AGENTS.md && echo "PASS: AGENTS.md updated" || echo "FAIL: AGENTS.md missing Tavily entry"
-grep -i "TAVILY_API_KEY" ~/.openclaw/TOOLS.md && echo "PASS: TOOLS.md has API key ref" || echo "FAIL: TOOLS.md missing Tavily entry"
-grep -i "tavily" ~/.openclaw/MEMORY.md && echo "PASS: MEMORY.md updated" || echo "FAIL: MEMORY.md missing Tavily entry"
+grep -i "tavily" /data/.openclaw/AGENTS.md && echo "PASS: AGENTS.md updated" || echo "FAIL: AGENTS.md missing Tavily entry"
+grep -i "TAVILY_API_KEY" /data/.openclaw/TOOLS.md && echo "PASS: TOOLS.md has API key ref" || echo "FAIL: TOOLS.md missing Tavily entry"
+grep -i "tavily" /data/.openclaw/MEMORY.md && echo "PASS: MEMORY.md updated" || echo "FAIL: MEMORY.md missing Tavily entry"
 ```
 
 ---
@@ -86,7 +86,7 @@ test -n "$TAVILY_API_KEY" && echo "PASS: TAVILY_API_KEY is set" || echo "FAIL: T
 
 **Basic search test:**
 ```bash
-node ~/.openclaw/skills/tavily-search/scripts/search.mjs "OpenClaw AI agent framework" -n 3
+node /data/.openclaw/skills/tavily-search/scripts/search.mjs "OpenClaw AI agent framework" -n 3
 ```
 
 | # | Check | Expected |
@@ -98,7 +98,7 @@ node ~/.openclaw/skills/tavily-search/scripts/search.mjs "OpenClaw AI agent fram
 
 **Extract test (dry run — verifies script loads correctly):**
 ```bash
-node ~/.openclaw/skills/tavily-search/scripts/extract.mjs --help 2>&1 || node ~/.openclaw/skills/tavily-search/scripts/extract.mjs "" 2>&1 | head -5
+node /data/.openclaw/skills/tavily-search/scripts/extract.mjs --help 2>&1 || node /data/.openclaw/skills/tavily-search/scripts/extract.mjs "" 2>&1 | head -5
 ```
 
 | # | Check | Expected |
@@ -113,13 +113,13 @@ These checks catch incorrect or dangerous install behaviors.
 
 | # | Anti-Pattern | How to Check | Pass Condition |
 |---|-------------|--------------|----------------|
-| 5.1 | Full SKILL.md or script content pasted directly into AGENTS.md | `wc -l ~/.openclaw/AGENTS.md` and review Tavily section | Tavily section in AGENTS.md is ≤ 10 lines (summary + path ref only) |
+| 5.1 | Full SKILL.md or script content pasted directly into AGENTS.md | `wc -l /data/.openclaw/AGENTS.md` and review Tavily section | Tavily section in AGENTS.md is ≤ 10 lines (summary + path ref only) |
 | 5.2 | Full SKILL.md or script content pasted directly into TOOLS.md | Review Tavily section in TOOLS.md | Tavily section in TOOLS.md is ≤ 10 lines |
 | 5.3 | Full SKILL.md or script content pasted directly into MEMORY.md | Review Tavily section in MEMORY.md | Tavily section in MEMORY.md is ≤ 10 lines |
 | 5.4 | Agent autonomously ran a gateway restart during install | Check session logs / agent transcript | No `openclaw gateway restart` was executed without explicit user confirmation |
 | 5.5 | Install was partially completed then abandoned (scripts folder exists but SKILL.md is missing, or vice versa) | Run file structure checks from Section 1 | All files present or none present (no partial state) |
 | 5.6 | SOUL.md, IDENTITY.md, or HEARTBEAT.md were modified | `git diff` or manual review of those files | Zero changes to these files |
-| 5.7 | Files were installed to a path other than `~/.openclaw/skills/tavily-search/` | Check for stray files in `/tmp`, `~/`, or project folder | Skill files exist only at canonical path |
+| 5.7 | Files were installed to a path other than `/data/.openclaw/skills/tavily-search/` | Check for stray files in `/tmp`, `~/`, or project folder | Skill files exist only at canonical path |
 | 5.8 | TYP was not confirmed before install proceeded | Review agent transcript for TYP check | TYP confirmation appears before any install step |
 
 ---
@@ -159,7 +159,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

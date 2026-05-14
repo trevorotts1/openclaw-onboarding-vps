@@ -19,7 +19,7 @@ if [ -d "/data/.openclaw" ]; then
   REPO_NAME="openclaw-onboarding-vps"
   SKILLS_DIR="/data/.openclaw/skills"
   MASTER_DIR="/data/Downloads/openclaw-master-files"
-  WORKSPACE="/data/clawd"
+  WORKSPACE="/data/.openclaw/workspace"
 else
   PLATFORM="mac"
   REPO_NAME="openclaw-onboarding"

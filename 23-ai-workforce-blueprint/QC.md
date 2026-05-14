@@ -11,7 +11,7 @@
 Verify the skill folder is present and contains all required files.
 
 ### 1a. Skill Folder
-- [ ] `~/.openclaw/skills/23-ai-workforce-blueprint/` exists
+- [ ] `/data/.openclaw/skills/23-ai-workforce-blueprint/` exists
 - [ ] `SKILL.md` is present in that folder
 - [ ] `INSTALL.md` is present in that folder
 - [ ] `INSTRUCTIONS.md` is present in that folder
@@ -25,9 +25,9 @@ Verify the skill folder is present and contains all required files.
 
 **Check command:**
 ```bash
-ls ~/.openclaw/skills/23-ai-workforce-blueprint/
-ls ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/
-ls ~/.openclaw/skills/23-ai-workforce-blueprint/suggested-roles/ | wc -l
+ls /data/.openclaw/skills/23-ai-workforce-blueprint/
+ls /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/
+ls /data/.openclaw/skills/23-ai-workforce-blueprint/suggested-roles/ | wc -l
 ```
 
 ### 1b. Blueprint File Integrity
@@ -35,7 +35,7 @@ ls ~/.openclaw/skills/23-ai-workforce-blueprint/suggested-roles/ | wc -l
 
 **Check command:**
 ```bash
-wc -c ~/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
+wc -c /data/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
 ```
 
 **FAIL if:** File is under 50,000 characters — the copy was truncated. Re-copy the skill folder before using.
@@ -45,7 +45,7 @@ wc -c ~/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.m
 
 **Check command:**
 ```bash
-ls -la ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
+ls -la /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
 ```
 
 ---
@@ -146,26 +146,26 @@ Verify that AGENTS.md, TOOLS.md, and MEMORY.md were updated per CORE_UPDATES.md.
 
 ### 3a. AGENTS.md
 - [ ] AGENTS.md contains a section titled `## AI Workforce Blueprint (Installed)`
-- [ ] That section includes the skill path `~/.openclaw/skills/23-ai-workforce-blueprint/`
+- [ ] That section includes the skill path `/data/.openclaw/skills/23-ai-workforce-blueprint/`
 - [ ] That section includes department folder rules (`-dept` naming, required files)
 - [ ] That section references the workspace location (not a placeholder `[fill in after build]`)
 - [ ] AGENTS.md contains a `## Pending Skill Setup - Check and Remind` section
 
 **Check command:**
 ```bash
-grep -n "AI Workforce Blueprint" ~/.openclaw/workspace/AGENTS.md
-grep -n "Pending Skill Setup" ~/.openclaw/workspace/AGENTS.md
+grep -n "AI Workforce Blueprint" /data/.openclaw/workspace/AGENTS.md
+grep -n "Pending Skill Setup" /data/.openclaw/workspace/AGENTS.md
 ```
 
 ### 3b. TOOLS.md
 - [ ] TOOLS.md contains a section titled `## AI Workforce Blueprint - Scaffold Script`
-- [ ] That section includes the script path `~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py`
+- [ ] That section includes the script path `/data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py`
 - [ ] That section mentions Options A, B, and C
 
 **Check command:**
 ```bash
-grep -n "AI Workforce Blueprint" ~/.openclaw/workspace/TOOLS.md
-grep -n "build-workforce.py" ~/.openclaw/workspace/TOOLS.md
+grep -n "AI Workforce Blueprint" /data/.openclaw/workspace/TOOLS.md
+grep -n "build-workforce.py" /data/.openclaw/workspace/TOOLS.md
 ```
 
 ### 3c. MEMORY.md
@@ -176,8 +176,8 @@ grep -n "build-workforce.py" ~/.openclaw/workspace/TOOLS.md
 
 **Check command:**
 ```bash
-grep -n "AI Workforce Blueprint" ~/.openclaw/workspace/MEMORY.md
-grep -n "universal-sops" ~/.openclaw/workspace/MEMORY.md
+grep -n "AI Workforce Blueprint" /data/.openclaw/workspace/MEMORY.md
+grep -n "universal-sops" /data/.openclaw/workspace/MEMORY.md
 ```
 
 ### 3d. Core Files Are Lean
@@ -187,8 +187,8 @@ grep -n "universal-sops" ~/.openclaw/workspace/MEMORY.md
 
 **Check command:**
 ```bash
-wc -l ~/.openclaw/workspace/AGENTS.md
-wc -l ~/.openclaw/workspace/MEMORY.md
+wc -l /data/.openclaw/workspace/AGENTS.md
+wc -l /data/.openclaw/workspace/MEMORY.md
 ```
 
 **FAIL if:** Either file is over 1,000 lines — likely bloated with full docs that should live in the skill folder.
@@ -410,7 +410,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

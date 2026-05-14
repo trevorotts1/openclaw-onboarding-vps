@@ -103,7 +103,7 @@ When a tier returns 404 / 502 / connection refused / "not found":
    - Tier 2: `curl $GHL_COMMUNITY_MCP_URL/health`
 3. If health passes, the server is fine — your call shape is wrong. Fix and retry.
 4. If health fails, attempt recovery:
-   - Tier 2 macOS: `launchctl kickstart gui/$(id -u)/com.clawd.ghl-mcp`
+   - Tier 2 macOS: `systemctl --user kickstart gui/$(id -u)/com.clawd.ghl-mcp`
    - Tier 2 Linux: `sudo systemctl restart ghl-mcp`
 5. Only after recovery fails, fall through to the next tier. The disclosure header must reflect the actual reason.
 
@@ -230,7 +230,7 @@ curl -sS -m 5 $GHL_COMMUNITY_MCP_URL/health
 
 # Tier 2 service status
 # macOS:
-launchctl print gui/$(id -u)/com.clawd.ghl-mcp | grep -E "state|pid"
+systemctl --user print gui/$(id -u)/com.clawd.ghl-mcp | grep -E "state|pid"
 # Linux:
 systemctl status ghl-mcp
 ```

@@ -147,7 +147,7 @@ Step 1. Obtain your service account JSON key file from your Google Cloud Console
 
 Step 2. Save the JSON file to a secure location like:
 ```
-~/clawd/secrets/gcp-service-account.json
+/data/.openclaw/workspace/secrets/gcp-service-account.json
 ```
 
 Step 3. Set the environment variable to point to your key file:
@@ -355,10 +355,10 @@ Step 2. Navigate to the gws installation directory and find the skills folder.
 Step 3. Copy or link the skills to your OpenClaw skills directory:
 ```bash
 # Option A: Create symbolic links
-ln -s /path/to/gws/skills/* ~/.openclaw/skills/
+ln -s /path/to/gws/skills/* /data/.openclaw/skills/
 
 # Option B: Copy the files
-cp -r /path/to/gws/skills/* ~/.openclaw/skills/
+cp -r /path/to/gws/skills/* /data/.openclaw/skills/
 ```
 
 Step 4. Restart OpenClaw to load the new skills:

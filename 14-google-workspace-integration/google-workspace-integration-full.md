@@ -138,7 +138,7 @@ Step 1: Obtain service account JSON from Google Cloud Console.
 
 Step 2: Save to secure location
 ```
-~/clawd/secrets/gcp-service-account.json
+/data/.openclaw/workspace/secrets/gcp-service-account.json
 ```
 
 Step 3: Set environment variable
@@ -537,7 +537,7 @@ No more google-api.js or gog.
 - Workspace accounts: Use gws auth setup with gcloud or service account
 - Domain-Wide Delegation required for Workspace
 - Token refresh: gws auth login
-- Full guide: ~/Downloads/openclaw-master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
+- Full guide: /data/.openclaw/master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
 ```
 
 ### TOOLS.md
@@ -558,7 +558,7 @@ Common commands:
 - gws sheets spreadsheets create
 - gws docs +write
 
-Full guide: ~/Downloads/openclaw-master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
+Full guide: /data/.openclaw/master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
 ```
 
 ### MEMORY.md
@@ -571,5 +571,5 @@ Replaces: google-api.js and gog CLI
 Authentication: OAuth for Gmail, service account for Workspace
 Scopes: 81 scopes configured
 
-Full guide: ~/Downloads/openclaw-master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
+Full guide: /data/.openclaw/master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
 ```

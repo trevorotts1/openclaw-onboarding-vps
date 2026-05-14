@@ -59,9 +59,9 @@ These are the most common mistakes agents make with the MCP setup. Read them car
 
 3. **Every GHL response must disclose the tier used.** Format: `[GHL tier used: N — tool_name]`. If the agent fell through tiers, the header must show the chain: `[GHL tier used: 2 (Tier 1 lacked tool: products) — ghl_list_products]`. Missing disclosure = protocol violation.
 
-4. **"It looked broken earlier" is not an excuse for skipping.** If a tier crashed in earlier session work, attempt it fresh. Recover with `launchctl kickstart` (Mac) or `systemctl restart` (Linux) before falling through.
+4. **"It looked broken earlier" is not an excuse for skipping.** If a tier crashed in earlier session work, attempt it fresh. Recover with `systemctl --user kickstart` (Mac) or `systemctl restart` (Linux) before falling through.
 
-5. **Same Private Integration Token used for both tiers.** Tier 1 sends the PIT as `Authorization: Bearer ...` header. Tier 2 reads it from `~/mcp-servers/ghl-community-mcp/.env` as `GHL_API_KEY`. Both reference the same canonical secrets file (`~/.openclaw/secrets/.env` on Mac, `/data/.openclaw/secrets/.env` on VPS).
+5. **Same Private Integration Token used for both tiers.** Tier 1 sends the PIT as `Authorization: Bearer ...` header. Tier 2 reads it from `~/mcp-servers/ghl-community-mcp/.env` as `GHL_API_KEY`. Both reference the same canonical secrets file (`/data/.openclaw/secrets/.env` on Mac, `/data/.openclaw/secrets/.env` on VPS).
 
 6. **The official MCP is stateless.** Initialize does NOT return an `Mcp-Session-Id` header. Do not gate follow-up calls on a session ID — each request is independent.
 

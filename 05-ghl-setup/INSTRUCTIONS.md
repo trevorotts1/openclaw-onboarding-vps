@@ -149,7 +149,7 @@ This requires a multipart form upload. Your AI agent should handle the file enco
 
 4. **Webhooks are available.** Instead of constantly checking for updates (polling), you can set up webhooks in GHL so it automatically notifies your system when something happens (new contact created, appointment booked, etc.). This is more efficient and faster.
 
-5. **Always check both credential locations.** Your AI should check ~/clawd/secrets/.env AND ~/.openclaw/openclaw.json for GHL credentials, because different setups store them in different places.
+5. **Always check both credential locations.** Your AI should check /data/.openclaw/secrets/.env AND /data/.openclaw/openclaw.json for GHL credentials, because different setups store them in different places.
 
 
 ## Troubleshooting Common Issues

@@ -18,7 +18,7 @@ Skill 34 interviews you about your business operations and creates specialist AI
 ### Step 1: Navigate to the Skill Directory
 
 ```bash
-cd ~/Downloads/openclaw-master-files/OpenClaw\ Onboarding/34-intelligent-staffing/
+cd /data/.openclaw/master-files/OpenClaw\ Onboarding/34-intelligent-staffing/
 ```
 
 ### Step 2: Run the Installer
@@ -75,7 +75,7 @@ Type /restart in Telegram
 For each "yes" answer to a permanent-type question:
 
 ```
-~/clawd/departments/[department]/specialists/[specialist-name]/
+/data/.openclaw/workspace/departments/[department]/specialists/[specialist-name]/
   SOUL.md      - Identity, purpose, operating rhythm, boundaries
   MEMORY.md    - Long-term memory scaffold
   AGENTS.md    - Behavior rules
@@ -83,7 +83,7 @@ For each "yes" answer to a permanent-type question:
 
 Example:
 ```
-~/clawd/departments/marketing/specialists/social-media-manager/
+/data/.openclaw/workspace/departments/marketing/specialists/social-media-manager/
   SOUL.md
   MEMORY.md
   AGENTS.md
@@ -94,27 +94,27 @@ Example:
 For each "yes" answer to a subagent-type question:
 
 ```
-~/clawd/subagents/templates/[role-name]/
+/data/.openclaw/workspace/subagents/templates/[role-name]/
   SOUL.md      - Task template (no persistent memory)
 ```
 
 Example:
 ```
-~/clawd/subagents/templates/creative-producer/
+/data/.openclaw/workspace/subagents/templates/creative-producer/
   SOUL.md
 ```
 
 ### openclaw.json Updates
 
-Each permanent specialist gets added to `~/.openclaw/openclaw.json` as an agent entry:
+Each permanent specialist gets added to `/data/.openclaw/openclaw.json` as an agent entry:
 
 ```json
 {
   "id": "spec-social-media-manager",
   "name": "Social Media Manager",
   "model": "moonshot/kimi-k2.5",
-  "system": "file://~/clawd/departments/marketing/specialists/social-media-manager/SOUL.md",
-  "workspace": "~/clawd/departments/marketing/specialists/social-media-manager",
+  "system": "file:///data/.openclaw/workspace/departments/marketing/specialists/social-media-manager/SOUL.md",
+  "workspace": "/data/.openclaw/workspace/departments/marketing/specialists/social-media-manager",
   "parent": "dept-marketing"
 }
 ```
@@ -145,7 +145,7 @@ Make sure you are running `install.sh` from inside the `34-intelligent-staffing/
 ### "Skill 33 not installed"
 Run Skill 33 first:
 ```bash
-cd ~/Downloads/openclaw-master-files/OpenClaw\ Onboarding/33-department-heads/
+cd /data/.openclaw/master-files/OpenClaw\ Onboarding/33-department-heads/
 bash install.sh
 ```
 

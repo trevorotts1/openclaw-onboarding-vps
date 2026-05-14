@@ -14,12 +14,12 @@ Enables browser-based deployment of finished HTML pages into Convert and Flow / 
 - [ ] TYP, BYUP, and GHL setup (skill 05) are already complete.
 - [ ] Python 3 and Playwright are installed: `python3 -c "from playwright.sync_api import sync_playwright"` succeeds.
 - [ ] Chromium is installed for Playwright: `playwright install chromium` completed successfully.
-- [ ] Stored GHL login credentials exist in `~/clawd/secrets/.env` or a persistent browser session exists at `~/.openclaw/playwright-data/ghl-install-pages`.
+- [ ] Stored GHL login credentials exist in `/data/.openclaw/secrets/.env` or a persistent browser session exists at `/data/.openclaw/playwright-data/ghl-install-pages`.
 - [ ] Finished HTML is available, self-contained, and ready to paste.
 
 ## 4. Key Detection
 - [ ] Search all standard locations for `GHL_EMAIL` and `GHL_PASSWORD`, while also allowing the documented skip path if SSO or manual login is used.
-- [ ] Also search for existing persistent session data at `~/.openclaw/playwright-data/ghl-install-pages` before declaring credentials missing.
+- [ ] Also search for existing persistent session data at `/data/.openclaw/playwright-data/ghl-install-pages` before declaring credentials missing.
 - [ ] Recognize broader GHL credential aliases from setup skill if needed for account context: `GHL_API_KEY`, `GHL_PIT`, `GOHIGHLEVEL_API_KEY`, and `GHL_LOCATION_ID`.
 - [ ] QC fails if the agent hardcodes credentials into a script or ignores an existing reusable session.
 
@@ -63,7 +63,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

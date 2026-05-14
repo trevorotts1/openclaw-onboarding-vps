@@ -282,19 +282,19 @@ Shell commands for the smart detection:
 BACKUP_DIR=""
 
 # First, look for any folder with "openclaw" AND "backup" in the name (case-insensitive)
-FOUND=$(find "$HOME/Downloads" -maxdepth 1 -type d -iname "*openclaw*backup*" 2>/dev/null | head -1)
+FOUND=$(find "/data/.openclaw/master-files" -maxdepth 1 -type d -iname "*openclaw*backup*" 2>/dev/null | head -1)
 
 if [ -n "$FOUND" ]; then
     BACKUP_DIR="$FOUND"
 # Next, check for a generic "backups" or "backup" folder
-elif [ -d "$HOME/Downloads/backups" ]; then
-    BACKUP_DIR="$HOME/Downloads/backups"
-elif [ -d "$HOME/Downloads/backup" ]; then
-    BACKUP_DIR="$HOME/Downloads/backup"
+elif [ -d "/data/.openclaw/master-files/backups" ]; then
+    BACKUP_DIR="/data/.openclaw/master-files/backups"
+elif [ -d "/data/.openclaw/master-files/backup" ]; then
+    BACKUP_DIR="/data/.openclaw/master-files/backup"
 else
     # Nothing found - create the standard default
-    mkdir -p "$HOME/Downloads/openclaw-backups"
-    BACKUP_DIR="$HOME/Downloads/openclaw-backups"
+    mkdir -p "/data/.openclaw/backups"
+    BACKUP_DIR="/data/.openclaw/backups"
 fi
 
 echo "Using backup directory: $BACKUP_DIR"
@@ -470,8 +470,8 @@ File/Path  |  Purpose
 If other config files exist in the OpenClaw directory, include them. When in doubt, include it.
 Category 3: Secrets and Credentials
 File/Path  |  Purpose
-/data/openclaw/workspace/secrets/.env  |  API keys, tokens, passwords
-/data/openclaw/workspace/secrets/ (entire directory)  |  Service account JSON files, certificate files, any credential files
+/data/.openclaw/secrets/.env  |  API keys, tokens, passwords
+/data/.openclaw/secrets/ (entire directory)  |  Service account JSON files, certificate files, any credential files
 GCP service account files  |  Google Cloud Platform service account key files (wherever they are stored)
 
 IMPORTANT SECURITY NOTE: The full backup folder will contain sensitive credentials. It should be stored locally only. Do not upload it to cloud storage, do not commit it to git, do not share it. If the backup needs to be moved to external storage, encrypt it first.
@@ -600,7 +600,7 @@ full-backup/
     full-backup-2026-02-09/    (newest)
 How to determine which is oldest: Sort the directories by name. Since they are named with dates in YYYY-MM-DD format, alphabetical sorting equals chronological sorting. The first one alphabetically is the oldest.
 Shell command for rotation: 
-BACKUP_BASE="$HOME/Downloads/openclaw-backups/full-backup"
+BACKUP_BASE="/data/.openclaw/backups/full-backup"
 
 # Count existing backup directories
 BACKUP_COUNT=$(ls -d "$BACKUP_BASE"/full-backup-* 2>/dev/null | wc -l | tr -d ' ')
@@ -629,17 +629,17 @@ Step 1: Determine the Backup Directory
 Use the same backup folder detection logic as Part 1. Then ensure the full-backup subfolder exists:
 # Smart backup folder detection (same logic as Part 1)
 BACKUP_ROOT=""
-FOUND=$(find "$HOME/Downloads" -maxdepth 1 -type d -iname "*openclaw*backup*" 2>/dev/null | head -1)
+FOUND=$(find "/data/.openclaw/master-files" -maxdepth 1 -type d -iname "*openclaw*backup*" 2>/dev/null | head -1)
 
 if [ -n "$FOUND" ]; then
     BACKUP_ROOT="$FOUND"
-elif [ -d "$HOME/Downloads/backups" ]; then
-    BACKUP_ROOT="$HOME/Downloads/backups"
-elif [ -d "$HOME/Downloads/backup" ]; then
-    BACKUP_ROOT="$HOME/Downloads/backup"
+elif [ -d "/data/.openclaw/master-files/backups" ]; then
+    BACKUP_ROOT="/data/.openclaw/master-files/backups"
+elif [ -d "/data/.openclaw/master-files/backup" ]; then
+    BACKUP_ROOT="/data/.openclaw/master-files/backup"
 else
-    mkdir -p "$HOME/Downloads/openclaw-backups"
-    BACKUP_ROOT="$HOME/Downloads/openclaw-backups"
+    mkdir -p "/data/.openclaw/backups"
+    BACKUP_ROOT="/data/.openclaw/backups"
 fi
 
 # Ensure full-backup subfolder exists - create if it does not
@@ -675,7 +675,7 @@ cp /data/.openclaw/*.toml "$NEW_BACKUP/config/" 2>/dev/null
 cp ~/.clawdbot/clawdbot.json "$NEW_BACKUP/config/" 2>/dev/null
 Step 6: Copy Secrets and Credentials
 # Copy secrets directory
-cp -r /data/openclaw/workspace/secrets/ "$NEW_BACKUP/secrets/" 2>/dev/null
+cp -r /data/.openclaw/secrets/ "$NEW_BACKUP/secrets/" 2>/dev/null
 
 # Copy any service account files that live elsewhere
 # (Adjust paths based on actual installation)
@@ -684,8 +684,8 @@ Step 7: Copy Memory Files
 cp -r /data/openclaw/workspace/memory/ "$NEW_BACKUP/memory/" 2>/dev/null
 
 # Copy master files if they exist in Downloads
-if [ -d "$HOME/Downloads/openclaw-master-files" ]; then
-    cp -r "$HOME/Downloads/openclaw-master-files/" "$NEW_BACKUP/memory/openclaw-master-files/" 2>/dev/null
+if [ -d "/data/.openclaw/master-files" ]; then
+    cp -r "/data/.openclaw/master-files/" "$NEW_BACKUP/memory/openclaw-master-files/" 2>/dev/null
 fi
 Step 8: Copy Scripts and Tools
 # Copy custom scripts and tools
@@ -837,7 +837,7 @@ Full Backup Checklist
 [ ] Workspace .md files copied
 [ ] OpenClaw config files copied (/data/.openclaw/)
 [ ] Legacy config files copied (if they exist)
-[ ] Secrets and credentials copied (/data/openclaw/workspace/secrets/)
+[ ] Secrets and credentials copied (/data/.openclaw/secrets/)
 [ ] Memory files copied (daily logs and master files)
 [ ] Scripts and tools copied (/data/openclaw/workspace/bin/, /data/openclaw/workspace/scripts/)
 [ ] Installed skills copied
@@ -886,8 +886,8 @@ Step 3: Restore workspace files
 mkdir -p /data/openclaw/workspace/
 cp $BACKUP/workspace/*.md /data/openclaw/workspace/
 Step 4: Restore secrets
-mkdir -p /data/openclaw/workspace/secrets/
-cp -r $BACKUP/secrets/* /data/openclaw/workspace/secrets/
+mkdir -p /data/.openclaw/secrets/
+cp -r $BACKUP/secrets/* /data/.openclaw/secrets/
 Step 5: Restore memory files
 mkdir -p /data/openclaw/workspace/memory/
 cp -r $BACKUP/memory/* /data/openclaw/workspace/memory/

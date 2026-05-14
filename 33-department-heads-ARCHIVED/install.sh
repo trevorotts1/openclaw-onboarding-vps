@@ -61,9 +61,9 @@ declare -A DEPT_MODELS=(
 # ----------------------------------------------------------
 # Step 1: Create departments directory
 # ----------------------------------------------------------
-echo "[1/4] Creating ~/clawd/departments/ directory..."
-mkdir -p ~/clawd/departments
-echo "  Created: ~/clawd/departments/"
+echo "[1/4] Creating /data/.openclaw/workspace/departments/ directory..."
+mkdir -p /data/.openclaw/workspace/departments
+echo "  Created: /data/.openclaw/workspace/departments/"
 
 # ----------------------------------------------------------
 # Step 2: Create department subdirectories and SOUL.md files
@@ -72,7 +72,7 @@ echo ""
 echo "[2/4] Creating 17 department subdirectories with SOUL.md..."
 
 for dept in "${DEPARTMENTS[@]}"; do
-    dept_dir="~/clawd/departments/$dept"
+    dept_dir="/data/.openclaw/workspace/departments/$dept"
     mkdir -p "$dept_dir"
     
     # Create SOUL.md for each department
@@ -109,36 +109,36 @@ echo "  All 17 department SOUL.md files created."
 # Step 3: Add department head agents to openclaw.json
 # ----------------------------------------------------------
 echo ""
-echo "[3/4] Adding 17 department head agents to ~/.openclaw/openclaw.json..."
+echo "[3/4] Adding 17 department head agents to /data/.openclaw/openclaw.json..."
 
 python3 << 'PYTHON_SCRIPT'
 import json
 import os
 
 # Load openclaw.json
-config_path = os.path.expanduser("~/.openclaw/openclaw.json")
+config_path = os.path.expanduser("/data/.openclaw/openclaw.json")
 with open(config_path, 'r') as f:
     config = json.load(f)
 
 # Define the 17 department head agents
 agents = [
-    {"id": "dept-ceo", "name": "CEO Director", "workspace": "~/clawd/departments/ceo", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-marketing", "name": "Marketing Director", "workspace": "~/clawd/departments/marketing", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-sales", "name": "Sales Director", "workspace": "~/clawd/departments/sales", "model": "openai-codex/gpt-5.4"},
-    {"id": "dept-billing", "name": "Finance Director", "workspace": "~/clawd/departments/billing", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-support", "name": "Support Director", "workspace": "~/clawd/departments/support", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-operations", "name": "Operations Director", "workspace": "~/clawd/departments/operations", "model": "anthropic/claude-sonnet-4-6"},
-    {"id": "dept-creative", "name": "Creative Director", "workspace": "~/clawd/departments/creative", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-hr", "name": "HR Director", "workspace": "~/clawd/departments/hr", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-legal", "name": "Legal Director", "workspace": "~/clawd/departments/legal", "model": "anthropic/claude-sonnet-4-6"},
-    {"id": "dept-it", "name": "IT Director", "workspace": "~/clawd/departments/it", "model": "openai-codex/gpt-5.4"},
-    {"id": "dept-webdev", "name": "Web Development Director", "workspace": "~/clawd/departments/webdev", "model": "openai-codex/gpt-5.4"},
-    {"id": "dept-appdev", "name": "App Development Director", "workspace": "~/clawd/departments/appdev", "model": "openai-codex/gpt-5.4"},
-    {"id": "dept-graphics", "name": "Graphics Director", "workspace": "~/clawd/departments/graphics", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-video", "name": "Video Director", "workspace": "~/clawd/departments/video", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-audio", "name": "Audio Director", "workspace": "~/clawd/departments/audio", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-research", "name": "Research Director", "workspace": "~/clawd/departments/research", "model": "moonshot/kimi-k2.5"},
-    {"id": "dept-comms", "name": "Communications Director", "workspace": "~/clawd/departments/comms", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-ceo", "name": "CEO Director", "workspace": "/data/.openclaw/workspace/departments/ceo", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-marketing", "name": "Marketing Director", "workspace": "/data/.openclaw/workspace/departments/marketing", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-sales", "name": "Sales Director", "workspace": "/data/.openclaw/workspace/departments/sales", "model": "openai-codex/gpt-5.4"},
+    {"id": "dept-billing", "name": "Finance Director", "workspace": "/data/.openclaw/workspace/departments/billing", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-support", "name": "Support Director", "workspace": "/data/.openclaw/workspace/departments/support", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-operations", "name": "Operations Director", "workspace": "/data/.openclaw/workspace/departments/operations", "model": "anthropic/claude-sonnet-4-6"},
+    {"id": "dept-creative", "name": "Creative Director", "workspace": "/data/.openclaw/workspace/departments/creative", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-hr", "name": "HR Director", "workspace": "/data/.openclaw/workspace/departments/hr", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-legal", "name": "Legal Director", "workspace": "/data/.openclaw/workspace/departments/legal", "model": "anthropic/claude-sonnet-4-6"},
+    {"id": "dept-it", "name": "IT Director", "workspace": "/data/.openclaw/workspace/departments/it", "model": "openai-codex/gpt-5.4"},
+    {"id": "dept-webdev", "name": "Web Development Director", "workspace": "/data/.openclaw/workspace/departments/webdev", "model": "openai-codex/gpt-5.4"},
+    {"id": "dept-appdev", "name": "App Development Director", "workspace": "/data/.openclaw/workspace/departments/appdev", "model": "openai-codex/gpt-5.4"},
+    {"id": "dept-graphics", "name": "Graphics Director", "workspace": "/data/.openclaw/workspace/departments/graphics", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-video", "name": "Video Director", "workspace": "/data/.openclaw/workspace/departments/video", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-audio", "name": "Audio Director", "workspace": "/data/.openclaw/workspace/departments/audio", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-research", "name": "Research Director", "workspace": "/data/.openclaw/workspace/departments/research", "model": "moonshot/kimi-k2.5"},
+    {"id": "dept-comms", "name": "Communications Director", "workspace": "/data/.openclaw/workspace/departments/comms", "model": "moonshot/kimi-k2.5"},
 ]
 
 # Check if agents already exist to avoid duplicates
@@ -171,8 +171,8 @@ echo "[4/4] Verifying installation..."
 
 echo ""
 echo "Department directories created:"
-ls -1 ~/clawd/departments/ | while read dir; do
-    if [ -f "~/clawd/departments/$dir/SOUL.md" ]; then
+ls -1 /data/.openclaw/workspace/departments/ | while read dir; do
+    if [ -f "/data/.openclaw/workspace/departments/$dir/SOUL.md" ]; then
         echo "  [OK] $dir/SOUL.md"
     else
         echo "  [MISSING] $dir/SOUL.md"
@@ -185,9 +185,9 @@ echo "   Skill 33 Installation Complete"
 echo "============================================"
 echo ""
 echo "Created:"
-echo "  - ~/clawd/departments/ (17 department folders)"
+echo "  - /data/.openclaw/workspace/departments/ (17 department folders)"
 echo "  - 17 SOUL.md files (one per department)"
-echo "  - 17 agent entries in ~/.openclaw/openclaw.json"
+echo "  - 17 agent entries in /data/.openclaw/openclaw.json"
 echo ""
 echo "Departments:"
 for dept in "${DEPARTMENTS[@]}"; do

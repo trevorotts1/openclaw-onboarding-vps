@@ -58,7 +58,7 @@ sudo apt install ffmpeg
 
 ### 3. Required API Access
 
-The agent needs access to these services. API keys should be stored in the agent's secrets/environment file (e.g., `/data/.openclaw/secrets/.env (or /data/openclaw/workspace/secrets/.env)` or equivalent):
+The agent needs access to these services. API keys should be stored in the agent's secrets/environment file (e.g., `/data/.openclaw/secrets/.env` or equivalent):
 
 | Service | What For | How to Get |
 |---------|----------|------------|

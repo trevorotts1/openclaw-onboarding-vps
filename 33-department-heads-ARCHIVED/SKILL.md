@@ -2,7 +2,7 @@
 
 ## What This Skill Does
 
-This skill installs **17 permanent department head agents** into your OpenClaw installation. Each department head is a dedicated agent with its own identity, workspace, and responsibilities. They live inside `agents.list[]` in `~/.openclaw/openclaw.json`, which means they survive restarts, context resets, and gateway reconnects.
+This skill installs **17 permanent department head agents** into your OpenClaw installation. Each department head is a dedicated agent with its own identity, workspace, and responsibilities. They live inside `agents.list[]` in `/data/.openclaw/openclaw.json`, which means they survive restarts, context resets, and gateway reconnects.
 
 ## The 17 Departments
 
@@ -28,11 +28,11 @@ This skill installs **17 permanent department head agents** into your OpenClaw i
 
 ## How agents.list[] Works
 
-Each department head is added as an entry in `~/.openclaw/openclaw.json` under `agents.list[]`. This is OpenClaw's permanent agent registry. Agents in this list:
+Each department head is added as an entry in `/data/.openclaw/openclaw.json` under `agents.list[]`. This is OpenClaw's permanent agent registry. Agents in this list:
 
 - **Survive restarts** - They are loaded every time OpenClaw starts
 - **Have unique IDs** - Each agent has a stable identifier (e.g., `dept-marketing`)
-- **Have dedicated workspaces** - Each agent works in `~/clawd/departments/[dept]/`
+- **Have dedicated workspaces** - Each agent works in `/data/.openclaw/workspace/departments/[dept]/`
 - **Can be spawned on demand** - You can talk to any department head at any time
 - **Remember their context** - Their SOUL.md and workspace files persist across sessions
 
@@ -40,7 +40,7 @@ Each department head is added as an entry in `~/.openclaw/openclaw.json` under `
 
 ### 1. Directory Structure
 ```
-~/clawd/departments/
+/data/.openclaw/workspace/departments/
 ├── ceo/SOUL.md
 ├── marketing/SOUL.md
 ├── sales/SOUL.md
@@ -61,7 +61,7 @@ Each department head is added as an entry in `~/.openclaw/openclaw.json` under `
 ```
 
 ### 2. Agent Configuration
-17 entries added to `~/.openclaw/openclaw.json` under `agents.list[]`.
+17 entries added to `/data/.openclaw/openclaw.json` under `agents.list[]`.
 
 ### 3. SOUL.md Files
 Each department gets a SOUL.md defining its identity, role, responsibilities, and communication style.
@@ -98,19 +98,19 @@ WebDev Director: "Currently 70% complete. Design phase done, development in prog
 |--------------|----------|----------------|
 | OpenClaw installed | MANDATORY | Agents are registered in openclaw.json |
 | Python 3 | MANDATORY | install.sh uses Python to modify JSON config |
-| ~/clawd/ directory | MANDATORY | Department workspaces live here |
+| /data/.openclaw/workspace/ directory | MANDATORY | Department workspaces live here |
 
 ## Troubleshooting
 
 **Department head not responding?**
 ```bash
-grep "dept-" ~/.openclaw/openclaw.json     # verify agent exists
-ls ~/clawd/departments/[dept]/              # verify workspace exists
-cat ~/clawd/departments/[dept]/SOUL.md      # verify SOUL.md exists
+grep "dept-" /data/.openclaw/openclaw.json     # verify agent exists
+ls /data/.openclaw/workspace/departments/[dept]/              # verify workspace exists
+cat /data/.openclaw/workspace/departments/[dept]/SOUL.md      # verify SOUL.md exists
 ```
 
 **Need to reset a department?**
 ```bash
-rm -rf ~/clawd/departments/[dept]/
+rm -rf /data/.openclaw/workspace/departments/[dept]/
 # Re-run install.sh - existing agents are skipped, files are recreated
 ```

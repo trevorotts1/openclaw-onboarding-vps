@@ -166,10 +166,10 @@ STEP 3: GENERATE API KEY
 STEP 4: ADD API KEY TO OPENCLAW
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-14. Check /data/openclaw/workspace/secrets/.env for KIE_API_KEY. If found, skip to Step 6.
+14. Check /data/.openclaw/secrets/.env for KIE_API_KEY. If found, skip to Step 6.
     If not found, request the API key from user.
 
-15. Open /data/openclaw/workspace/secrets/.env (create the file if it does not exist).
+15. Open /data/.openclaw/secrets/.env (create the file if it does not exist).
     Add this line at the end:
 
     KIE_API_KEY=paste-your-actual-api-key-here
@@ -199,7 +199,7 @@ TEST 1: Reload environment and verify API key is loaded.
 
 21. First, reload the environment so the newly written key is available:
 
-    source /data/openclaw/workspace/secrets/.env 2>/dev/null || source /data/.openclaw/.env 2>/dev/null || true
+    source /data/.openclaw/secrets/.env 2>/dev/null || source /data/.openclaw/.env 2>/dev/null || true
 
 22. Run:
 
@@ -254,7 +254,7 @@ Before telling the user that setup is complete, verify ALL of these:
 [ ] KIE.ai account created
 [ ] Credits added to the account
 [ ] API key generated and copied
-[ ] API key saved to /data/openclaw/workspace/secrets/.env as KIE_API_KEY
+[ ] API key saved to /data/.openclaw/secrets/.env as KIE_API_KEY
 [ ] OpenClaw gateway restarted
 [ ] Test 1 passed - API key shows up in the environment
 [ ] Test 2 passed - credit balance returns successfully
@@ -269,7 +269,7 @@ WHAT TO ADD TO YOUR CORE FILES
 
 [ADD TO AGENTS.md]
 ## KIE.ai - Image and Video Generation
-- API Key stored in /data/openclaw/workspace/secrets/.env as KIE_API_KEY
+- API Key stored in /data/.openclaw/secrets/.env as KIE_API_KEY
 - ALWAYS use KIE.ai for image generation. NEVER use DALL-E 3.
 - Primary image model: nano-banana-pro
 - Primary video model: veo3_fast (VEO 3.1 Fast)
@@ -277,7 +277,7 @@ WHAT TO ADD TO YOUR CORE FILES
 
 [ADD TO TOOLS.md]
 ## KIE.ai API
-- API Key: $KIE_API_KEY (in /data/openclaw/workspace/secrets/.env)
+- API Key: $KIE_API_KEY (in /data/.openclaw/secrets/.env)
 - Base URL: https://api.kie.ai
 - Image Generation: POST /api/v1/jobs/createTask (model: nano-banana-pro)
 - Video Generation: POST /api/v1/veo/generate

@@ -83,8 +83,8 @@ Example of a GOOD lightweight summary in TOOLS.md:
 - **Models:** 19 video (Kling, Seedance, Wan, Hailuo, Sora, Veo, Runway, etc.), 19 image (Seedream, GPT-Image, Flux, Ideogram, etc.), audio (Suno, ElevenLabs)
 - **Common pitfall:** Each model has different parameters. ALWAYS check the specific model's section in the full reference before making an API call. Do not guess parameters.
 - **When to go deeper:** When calling a specific model for the first time, when hitting errors, when the user asks for a model you haven't used recently
-- **Full API reference:** ~/Downloads/openclaw-master-files/apis/kie-ai/kie-ai-api-reference.md
-- **Endpoint index:** ~/Downloads/openclaw-master-files/apis/kie-ai/README.md
+- **Full API reference:** /data/.openclaw/master-files/apis/kie-ai/kie-ai-api-reference.md
+- **Endpoint index:** /data/.openclaw/master-files/apis/kie-ai/README.md
 - **Last verified:** 2026-02-21
 Example of a BAD lightweight summary (too thin): 
 ## KIE.ai
@@ -95,7 +95,7 @@ Example of a BAD lightweight summary (too thick):
 [200 lines of endpoint details, every parameter for every model, full curl examples...]
 This defeats the entire purpose of the Teach Yourself Protocol. This content belongs in the deep file.
 Layer 2 - Deep Reference File (When Content Is Large)
-What it is: A dedicated .md file stored in ~/Downloads/openclaw-master-files/ containing the complete, unabridged knowledge.
+What it is: A dedicated .md file stored in /data/.openclaw/master-files/ containing the complete, unabridged knowledge.
 Purpose: The full encyclopedia entry. Every detail, every parameter, every example, every edge case. The agent reads this when the Layer 1 summary isn't enough.
 When it gets created: When the content is too large to fit into a core file without causing bloat. General threshold: if the content would add more than 25-30 lines to a core file, it needs its own .md file.
 What it contains: 
@@ -139,31 +139,31 @@ Step 3: Check for Existing Knowledge (Conflict Resolution)
 BEFORE creating or writing anything, check if knowledge on this topic already exists.
 Search ALL core files and the master-files folder for existing entries on this topic:
 Search TOOLS.md, MEMORY.md, AGENTS.md, IDENTITY.md, USER.md, SOUL.md, HEARTBEAT.md for mentions of this topic
-Search the master files folder in ~/Downloads/ (could be named openclaw-master-files, openclaw-master-docs, or similar variation) for existing deep files on this topic
+Search the master files folder in /data/.openclaw/master-files/ (could be named openclaw-master-files, openclaw-master-docs, or similar variation) for existing deep files on this topic
 If existing knowledge is found, proceed to Conflict Resolution (Section 8)
 If no existing knowledge is found, proceed to Step 4
 Step 4: Check/Create the Master Files Folder
 If the content needs a deep file (Layer 2 or 3):
 Finding the master files folder: 
-Different users may have named this folder differently. Before creating a new one, search ~/Downloads/ for any existing folder that serves this purpose. Common variations include:
+Different users may have named this folder differently. Before creating a new one, search /data/.openclaw/master-files/ for any existing folder that serves this purpose. Common variations include:
 openclaw-master-files
 openclaw-master-docs
 openclaw-docs
 master-files
 master-docs
 openclaw-files
-How to search: List the folders in ~/Downloads/ and look for any folder name containing keywords like "openclaw," "master," "docs," or "files" in combination. If you find a folder that clearly serves as the knowledge storage location (contains .md files, has subfolders like apis/ or skills/), use that folder. Do not create a duplicate.
+How to search: List the folders in /data/.openclaw/master-files/ and look for any folder name containing keywords like "openclaw," "master," "docs," or "files" in combination. If you find a folder that clearly serves as the knowledge storage location (contains .md files, has subfolders like apis/ or skills/), use that folder. Do not create a duplicate.
 Decision logic: 
-Search ~/Downloads/ for any folder matching the variations above or similar naming patterns
+Search /data/.openclaw/master-files/ for any folder matching the variations above or similar naming patterns
 If a matching folder is found, use it. That is the master files folder for this user.
-If NO matching folder is found, create ~/Downloads/openclaw-master-files/ (this is the standard default name)
+If NO matching folder is found, create /data/.openclaw/master-files/ (this is the standard default name)
 Once identified or created, check for and create these subfolders as needed:
 apis/ (for API documentation)
 skills/ (for skill instruction files)
 processes/ (for SOPs and operational procedures)
 references/ (for general reference documents)
 Standard folder structure: 
-~/Downloads/openclaw-master-files/
+/data/.openclaw/master-files/
   |-- apis/
   |    |-- kie-ai/
   |    |    |-- README.md            (index of all endpoints)
@@ -279,8 +279,8 @@ Learned: KIE.ai API (video/image/audio generation)
 Priority: HIGH (daily use)
 
 Storage:
-- Deep file: ~/Downloads/openclaw-master-files/apis/kie-ai/kie-ai-api-reference.md
-- Endpoint index: ~/Downloads/openclaw-master-files/apis/kie-ai/README.md
+- Deep file: /data/.openclaw/master-files/apis/kie-ai/kie-ai-api-reference.md
+- Endpoint index: /data/.openclaw/master-files/apis/kie-ai/README.md
 
 Core files updated:
 - TOOLS.md: Lightweight summary with auth, pattern, rate limits, pricing, top endpoints
@@ -302,7 +302,7 @@ APIs change over time and need version tracking
 A single platform can have dozens or hundreds of endpoints across multiple categories
 API Storage Structure
 Every API the agent learns gets its own folder:
-~/Downloads/openclaw-master-files/apis/[platform-name]/
+/data/.openclaw/master-files/apis/[platform-name]/
   |-- README.md              (index: list of all endpoints with one-line descriptions)
   |-- [full-reference].md    (complete API docs if manageable as one file)
   |-- [category-1].md        (optional: broken out by endpoint category)
@@ -361,9 +361,9 @@ The naming convention MUST match:
 Skill name: video-editor
 Instruction file: video-editor.md
 The instruction .md file lives in:
-~/Downloads/openclaw-master-files/skills/[skill-name].md
+/data/.openclaw/master-files/skills/[skill-name].md
 Or, if installed as a proper OpenClaw skill:
-~/.openclaw/skills/[skill-name]/SKILL.md
+/data/.openclaw/skills/[skill-name]/SKILL.md
 If both locations exist, the SKILL.md inside the installed skill directory takes precedence for execution. The master-files version serves as a backup and extended reference.
 What Goes in a Skill Instruction File
 What the skill does (clear, specific description)
@@ -394,7 +394,7 @@ When the agent learns something and discovers it already has knowledge on that t
 Detection
 Before creating any files or updating core files, search for existing entries:
 Search every core file for the topic name, platform name, or related keywords
-Search ~/Downloads/openclaw-master-files/ for existing deep files
+Search /data/.openclaw/master-files/ for existing deep files
 If ANY match is found, you have a conflict to resolve
 Resolution Decision Tree
 Scenario A: New knowledge REPLACES old knowledge (update/correction)
@@ -502,8 +502,8 @@ Any time one deep file's content is relevant to understanding or using another d
 Cross-Reference Format
 Every deep file has a "Related files" field in its header:
 **Related files:**
-- ~/Downloads/openclaw-master-files/apis/ghl/webhooks-api.md (GHL triggers that initiate KIE.ai tasks)
-- ~/Downloads/openclaw-master-files/processes/video-generation-workflow.md (end-to-end workflow using this API)
+- /data/.openclaw/master-files/apis/ghl/webhooks-api.md (GHL triggers that initiate KIE.ai tasks)
+- /data/.openclaw/master-files/processes/video-generation-workflow.md (end-to-end workflow using this API)
 Within the body of the deep file, use inline references:
 After the webhook fires (see: apis/ghl/webhooks-api.md), the agent calls the KIE.ai 
 video creation endpoint with the payload data.
@@ -512,7 +512,7 @@ Core file summaries should also note relationships when relevant:
 ## KIE.ai - Video/Image/Audio Generation API [PRIORITY: HIGH]
 ...
 - **Related:** Often triggered by GHL webhooks. See GHL webhook docs for trigger setup.
-- **Full reference:** ~/Downloads/openclaw-master-files/apis/kie-ai/kie-ai-api-reference.md
+- **Full reference:** /data/.openclaw/master-files/apis/kie-ai/kie-ai-api-reference.md
 Error Recovery Through Cross-References
 When the agent hits an error and checks a deep file, it should ALSO check the related files listed in that deep file's header. Often the problem isn't in the tool being called but in the system that feeds it data.
 Example: KIE.ai returns a 400 error. The agent checks kie-ai-api-reference.md and sees the parameters look correct. But the "Related files" section points to the GHL webhook docs. The agent checks those and discovers the webhook is sending the wrong payload format. Cross-references help the agent trace problems across connected systems.
@@ -563,7 +563,7 @@ When "teach yourself" triggers, run through this entire checklist:
 [ ] Size: Is this small, medium, large, or massive?
 [ ] Conflict check: Does knowledge on this topic already exist anywhere?
 [ ] Resolve conflicts: If yes, follow Section 8 before proceeding
-[ ] Folder check: If large+, does ~/Downloads/openclaw-master-files/ exist? Create if needed.
+[ ] Folder check: If large+, does /data/.openclaw/master-files/ exist? Create if needed.
 [ ] API check: If this is API docs, create platform folder under apis/
 [ ] Deep file: If large+, create the .md file with standard header, version history, cross-references
 [ ] Core file evaluation: Check EVERY core file - which ones need updates?
@@ -596,7 +596,7 @@ Agent process:
 Understand: Complete API reference for media generation platform
 Size: Massive (thousands of lines, dozens of endpoints, 19+ models)
 Conflict check: Search for "KIE" in core files and master-files. Update if exists, create if not.
-Create ~/Downloads/openclaw-master-files/apis/kie-ai/
+Create /data/.openclaw/master-files/apis/kie-ai/
 Create README.md (endpoint index) and kie-ai-api-reference.md (full docs)
 Core files: TOOLS.md (how to use), MEMORY.md (when learned), AGENTS.md (rules about image generation)
 Priority: HIGH (used frequently for image/video generation)
@@ -613,7 +613,7 @@ Agent process:
 Understand: Standard client onboarding workflow
 Size: Large (80 lines)
 Conflict check: Any existing onboarding docs?
-Create ~/Downloads/openclaw-master-files/processes/client-onboarding-sop.md
+Create /data/.openclaw/master-files/processes/client-onboarding-sop.md
 Core files: AGENTS.md (operational rules), HEARTBEAT.md (if it's a recurring task), MEMORY.md (context)
 Priority: HIGH (client-facing process)
 Agent action: 
@@ -628,7 +628,7 @@ Agent process:
 Understand: New skill for video editing
 Size: Large (skill documentation)
 Conflict check: Any existing video editor docs?
-Create ~/Downloads/openclaw-master-files/skills/video-editor.md
+Create /data/.openclaw/master-files/skills/video-editor.md
 Verify naming matches skill name
 Core files: TOOLS.md (how to use), IDENTITY.md (new capability)
 Priority: STANDARD (used when video editing is requested)
@@ -663,9 +663,9 @@ This is an operational procedure - it tells you HOW to learn. It is not a one-ti
 Step-by-Step: What to Do When You Receive This Document
 Step 1: Evaluate - You are learning an operational protocol for how to learn new things.
 Step 2: Assess size - This document is large (800+ lines, 37,000+ characters). It is too big for any single core file. It needs its own .md file.
-Step 3: Check/create the master files folder - Search ~/Downloads/ for any existing folder that serves as the master knowledge storage. Look for folders named openclaw-master-files, openclaw-master-docs, openclaw-docs, master-files, master-docs, or any similar variation containing "openclaw," "master," "docs," or "files." If found, use that folder. If nothing exists, create ~/Downloads/openclaw-master-files/. Then check for a processes/ subfolder inside it. If it does not exist, create it.
+Step 3: Check/create the master files folder - Search /data/.openclaw/master-files/ for any existing folder that serves as the master knowledge storage. Look for folders named openclaw-master-files, openclaw-master-docs, openclaw-docs, master-files, master-docs, or any similar variation containing "openclaw," "master," "docs," or "files." If found, use that folder. If nothing exists, create /data/.openclaw/master-files/. Then check for a processes/ subfolder inside it. If it does not exist, create it.
 Step 4: Store the full document - Save this entire document (untruncated, nothing removed) as:
-~/Downloads/openclaw-master-files/processes/teach-yourself-protocol.md
+/data/.openclaw/master-files/processes/teach-yourself-protocol.md
 Step 5: Determine which core files need updates - This protocol affects how you BEHAVE (AGENTS.md), what TOOLS you use (TOOLS.md), what you KNOW (MEMORY.md), and what you're CAPABLE of (IDENTITY.md).
 Step 6: Write lightweight summaries in each core file
 Add the following to AGENTS.md:
@@ -676,9 +676,9 @@ When a user says any variation of "teach yourself this," "learn this," "train yo
 
 1. Evaluate what you are learning (category, purpose, how you will use it)
 2. Assess size: Small (under 25 lines) goes directly in core files. Large (25+ lines) needs its own .md file.
-3. Check for existing knowledge on this topic - search ALL core files and ~/Downloads/openclaw-master-files/
+3. Check for existing knowledge on this topic - search ALL core files and /data/.openclaw/master-files/
 4. If existing knowledge found, resolve conflicts: replace outdated info, expand with new info, or flag contradictions to user
-5. If large: check/create ~/Downloads/openclaw-master-files/ and appropriate subfolder
+5. If large: check/create /data/.openclaw/master-files/ and appropriate subfolder
 6. Create the deep reference .md file with full untruncated content and standard header
 7. For APIs: create dedicated folder under openclaw-master-files/apis/[platform-name]/ with README.md index
 8. Determine which core files need updates (check ALL: AGENTS.md, TOOLS.md, MEMORY.md, IDENTITY.md, USER.md, SOUL.md, HEARTBEAT.md)
@@ -694,18 +694,18 @@ Key rules:
 - Every skill must have a matching instruction .md file with matching naming convention
 - APIs over 90 days old are considered stale - verify before relying on them
 - When to go deeper: first time using learned knowledge, hitting errors, complex tasks, user asks for precision
-- Full protocol: ~/Downloads/openclaw-master-files/processes/teach-yourself-protocol.md
+- Full protocol: /data/.openclaw/master-files/processes/teach-yourself-protocol.md
 Add to TOOLS.md:
 ## Teach Yourself Protocol [PRIORITY: CRITICAL]
 - Triggers on: "teach yourself," "learn this," "train yourself," "study this," "memorize this," or any variation
-- Full protocol: ~/Downloads/openclaw-master-files/processes/teach-yourself-protocol.md
+- Full protocol: /data/.openclaw/master-files/processes/teach-yourself-protocol.md
 - Purpose: Structured process for learning and storing new knowledge without bloating core files
 - Uses three-layer architecture: lightweight summary in core files + deep reference .md file + organized folder structure for large topics
 - When to reference full protocol: first time executing, hitting edge cases, conflict resolution needed
 Add to MEMORY.md:
 ## Teach Yourself Protocol - Learned [DATE]
 - Operational protocol for how to learn new knowledge permanently
-- Stored at: ~/Downloads/openclaw-master-files/processes/teach-yourself-protocol.md
+- Stored at: /data/.openclaw/master-files/processes/teach-yourself-protocol.md
 - Lightweight summary in AGENTS.md and TOOLS.md
 - Priority: CRITICAL - this changes how I handle all future learning requests
 Add to IDENTITY.md:
@@ -713,7 +713,7 @@ Add to IDENTITY.md:
 - I know how to learn new things in a structured, anti-bloat way
 - When told to learn something, I follow a defined decision tree
 - I create deep reference files for large knowledge and lightweight summaries for daily use
-- Full protocol: ~/Downloads/openclaw-master-files/processes/teach-yourself-protocol.md
+- Full protocol: /data/.openclaw/master-files/processes/teach-yourself-protocol.md
 Step 7: Confirm to the user - Tell them what you learned, where everything is stored, and demonstrate that you understand the protocol by summarizing the key points.
 Why This Matters
 If you just dump this entire document into AGENTS.md, you have bloated the file with 800+ lines for one protocol. If you just save it as a .md file and don't update any core files, you will forget it exists next session. The correct approach - lightweight summary in core files pointing to the full document - means you know the protocol exists, you know the key steps, and you know where to find the full details when you need them.

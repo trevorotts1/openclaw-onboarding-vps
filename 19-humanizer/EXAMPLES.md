@@ -7,4 +7,4 @@
 "Apply only relevant core updates for humanizer from CORE_UPDATES.md."
 
 ## Example 3: Install verify
-"Install humanizer into ~/.openclaw/skills/humanizer and verify SKILL.md exists."
+"Install humanizer into /data/.openclaw/skills/humanizer and verify SKILL.md exists."

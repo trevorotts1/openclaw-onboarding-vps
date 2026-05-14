@@ -33,7 +33,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/.openclaw/master-files/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -43,7 +43,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/.openclaw/master-files/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -117,8 +117,8 @@ GHL uses a PRIVATE INTEGRATION TOKEN (PIT), NOT an API key. If your AI ever says
 
 📋 WHERE TO CHECK FOR CREDENTIALS:
 Your AI should check BOTH of these locations:
-1. ~/clawd/secrets/.env (look for GOHIGHLEVEL_API_KEY or GHL_PIT)
-2. ~/.openclaw/openclaw.json under env.vars (look for GOHIGHLEVEL_API_KEY)
+1. /data/.openclaw/secrets/.env (look for GOHIGHLEVEL_API_KEY or GHL_PIT)
+2. /data/.openclaw/openclaw.json under env.vars (look for GOHIGHLEVEL_API_KEY)
 New AI setups will NOT know to check both unless explicitly told.
 
 🎯 PRIORITY SCOPES (Test These First):
@@ -144,7 +144,7 @@ Complete guide to setting up GoHighLevel API integration.
 
 📋 STEP 2: Add to OpenClaw Config
 
-nano ~/.openclaw/openclaw.json
+nano /data/.openclaw/openclaw.json
 
 Add under "env" section:
 {

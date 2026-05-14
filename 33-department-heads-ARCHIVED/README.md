@@ -32,7 +32,7 @@ This skill establishes **17 permanent department head agents** as first-class ci
 Department heads maintain consistent personality, memory, and context across sessions. Unlike temporary task agents, they remember your company's history, KPIs, and ongoing projects.
 
 ### 2. **Dedicated Workspaces**
-Each department head has its own workspace (`~/clawd/departments/[dept]/`) with:
+Each department head has its own workspace (`/data/.openclaw/workspace/departments/[dept]/`) with:
 - `SOUL.md` - Identity and role definition
 - `MEMORY.md` - Department-specific memory
 - `AGENTS.md` - Department workflows and SOPs
@@ -58,7 +58,7 @@ With permanent department heads, you can:
 
 ### Directory Structure
 ```
-~/clawd/departments/
+/data/.openclaw/workspace/departments/
 ├── ceo/
 │   └── SOUL.md
 ├── marketing/
@@ -96,7 +96,7 @@ With permanent department heads, you can:
 ```
 
 ### Agent Configuration
-17 new entries added to `~/.openclaw/openclaw.json` under `agents.list`:
+17 new entries added to `/data/.openclaw/openclaw.json` under `agents.list`:
 - `dept-ceo` - CEO Director
 - `dept-marketing` - Marketing Director
 - `dept-sales` - Sales Director
@@ -160,17 +160,17 @@ Department heads are permanent agents. They persist across:
 - Context window resets
 - Gateway reconnections
 
-Their workspaces (`~/clawd/departments/`) should be backed up regularly as part of your standard backup protocol.
+Their workspaces (`/data/.openclaw/workspace/departments/`) should be backed up regularly as part of your standard backup protocol.
 
 ## Troubleshooting
 
 **Department head not responding?**
-- Check agent exists: `grep "dept-" ~/.openclaw/openclaw.json`
-- Verify workspace exists: `ls ~/clawd/departments/[dept]/`
-- Check SOUL.md exists: `cat ~/clawd/departments/[dept]/SOUL.md`
+- Check agent exists: `grep "dept-" /data/.openclaw/openclaw.json`
+- Verify workspace exists: `ls /data/.openclaw/workspace/departments/[dept]/`
+- Check SOUL.md exists: `cat /data/.openclaw/workspace/departments/[dept]/SOUL.md`
 - Restart OpenClaw: Type `/restart` in Telegram
 
 **Need to reset a department head?**
-- Delete the department folder: `rm -rf ~/clawd/departments/[dept]/`
+- Delete the department folder: `rm -rf /data/.openclaw/workspace/departments/[dept]/`
 - Re-run this skill's install.sh
 - The agent entry will be skipped (already exists), files will be recreated

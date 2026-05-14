@@ -112,7 +112,7 @@ fi
 # 3. Confirm skill folder contains expected files
 REQUIRED_FILES="SKILL.md INSTALL.md CORE_UPDATES.md"
 for f in $REQUIRED_FILES; do
-  if [ -f "$HOME/.openclaw/skills/self-improving-agent/$f" ]; then
+  if [ -f "/data/.openclaw/skills/self-improving-agent/$f" ]; then
     echo "PASS: $f present"
   else
     echo "FAIL: $f missing"

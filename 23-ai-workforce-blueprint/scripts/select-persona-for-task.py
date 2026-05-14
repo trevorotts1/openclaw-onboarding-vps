@@ -56,14 +56,14 @@ HOME = Path.home()
 ZHC_ROOTS = [
     HOME / "clawd" / "zero-human-company",
     HOME / "clawd" / "zhc",
-    Path("/data/clawd/zero-human-company"),
-    Path("/data/clawd/zhc"),
+    Path("/data/.openclaw/workspace/zero-human-company"),
+    Path("/data/.openclaw/workspace/zhc"),
 ]
 
 GEMINI_SEARCH_CANDIDATES = [
     HOME / ".openclaw" / "workspace" / "scripts" / "gemini-search.py",
     HOME / "clawd" / "scripts" / "gemini-search.py",
-    Path("/data/clawd/scripts/gemini-search.py"),
+    Path("/data/.openclaw/workspace/scripts/gemini-search.py"),
     HOME / "Downloads" / "openclaw-master-files" / "23-ai-workforce-blueprint" / "scripts" / "gemini-search.py",
 ]
 
@@ -88,14 +88,14 @@ def find_company_dir(slug=None):
 
 
 def find_dept_dir(company_dir, dept_id):
-    """Return ~/clawd/zhc/<co>/departments/<dept_id>/ or fall back to legacy."""
+    """Return /data/.openclaw/workspace/zhc/<co>/departments/<dept_id>/ or fall back to legacy."""
     if company_dir:
         cand = company_dir / "departments" / dept_id
         if cand.is_dir():
             return cand
     # Legacy
     for legacy in [HOME / "clawd" / "departments" / dept_id,
-                   Path("/data/clawd/departments") / dept_id]:
+                   Path("/data/.openclaw/workspace/departments") / dept_id]:
         if legacy.is_dir():
             return legacy
     return None

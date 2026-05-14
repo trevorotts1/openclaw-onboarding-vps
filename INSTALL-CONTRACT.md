@@ -204,7 +204,7 @@ The `openclaw-master-files` folder name varies across installs. ALWAYS use the f
 - `OpenClawMasterFiles` (camel case)
 - `OpenClaw Documents` / `openclaw files` / etc.
 
-Search order: `~/Downloads` → `/data/Downloads` → `/root/Downloads` → `/data` → `$HOME` → `$HOME/clawd` → `/data/clawd` → `/opt` → `/srv`. Excludes backup/zip/bak/tmp folders. Case-insensitive throughout.
+Search order: `~/Downloads` → `/data/Downloads` → `/root/Downloads` → `/data` → `$HOME` → `$HOME/clawd` → `/data/.openclaw/workspace` → `/opt` → `/srv`. Excludes backup/zip/bak/tmp folders. Case-insensitive throughout.
 
 If the folder is not found, create it at the canonical path (`$HOME/Downloads/openclaw-master-files` on Mac, `/data/Downloads/openclaw-master-files` on VPS) — but only after asking the owner for permission.
 

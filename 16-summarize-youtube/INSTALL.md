@@ -94,8 +94,8 @@ Load keys from the first `.env` file found. Check these locations in order:
 _discover_key() {
   local key_name="$1"
   for env_file in \
-    "$HOME/clawd/secrets/.env" \
-    "$HOME/.openclaw/.env" \
+    "/data/.openclaw/secrets/.env" \
+    "/data/.openclaw/.env" \
     "$HOME/.config/openclaw/.env" \
     ".env"; do
     if [ -f "$env_file" ]; then
@@ -156,7 +156,7 @@ fi
 
 if [ "${SKIP_OPENAI:-0}" = "1" ] && [ "${SKIP_GEMINI:-0}" = "1" ]; then
   echo "ERROR: Both providers skipped. At least one API key is required."
-  echo "Add OPENAI_API_KEY or GEMINI_API_KEY to /data/openclaw/workspace/secrets/.env and re-run."
+  echo "Add OPENAI_API_KEY or GEMINI_API_KEY to /data/.openclaw/secrets/.env and re-run."
   exit 1
 fi
 ```

@@ -25,7 +25,7 @@ Add:
 
 ```
 ## OpenRouter [PRIORITY: CRITICAL]
-- Config: ~/.openclaw/openclaw.json (models section)
+- Config: /data/.openclaw/openclaw.json (models section)
 - API key: OPENROUTER_API_KEY in secrets/.env
 - Model aliases: /model <alias> to switch
 - Thinking: /reasoning <low|medium|high>

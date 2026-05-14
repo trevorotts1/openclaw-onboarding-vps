@@ -71,7 +71,7 @@ The .skill file is an archive. No CLI command needed - install by following SKIL
 3. Confirm the folder exists:
 
 ```bash
-ls -la ~/.openclaw/skills/caption-creator
+ls -la /data/.openclaw/skills/caption-creator
 ```
 
 You should see files like `SKILL.md`, `INSTALL.md`, `Scripts/`, and `CORE_UPDATES.md`.
@@ -84,7 +84,7 @@ You should see files like `SKILL.md`, `INSTALL.md`, `Scripts/`, and `CORE_UPDATE
 2. Run:
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
   --input "video.mp4" \
   --output "captions.srt" \
   --model medium
@@ -100,7 +100,7 @@ You should see files like `SKILL.md`, `INSTALL.md`, `Scripts/`, and `CORE_UPDATE
 3. Run:
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
+/data/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
   --input "video.mp4" \
   --output "video_captioned.mp4" \
   --style minimal \
@@ -118,7 +118,7 @@ You should see files like `SKILL.md`, `INSTALL.md`, `Scripts/`, and `CORE_UPDATE
 Example (fast):
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
   --input "video.mp4" \
   --output "captions.srt" \
   --model base

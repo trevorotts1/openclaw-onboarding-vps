@@ -28,8 +28,8 @@ The agent reads team data from two sources on each deployment:
 - MEMORY.md - contains team IDs, read every session at boot
 
 **Secondary source (routing details):**
-- ~/clawd/WORKFLOW_AUTO.md - routing table with full details, read when needed
-- ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md - master team data, read when updating or onboarding
+- /data/.openclaw/workspace/WORKFLOW_AUTO.md - routing table with full details, read when needed
+- /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md - master team data, read when updating or onboarding
 
 When in doubt about who belongs to what role, read TEAM_CONFIG.md. It is the source of truth for team membership.
 
@@ -254,8 +254,8 @@ When a new person needs to be added to the system:
 
 1. Collect their name, Telegram ID, role, and type (Worker or Client)
 2. Add their ID to channels.telegram.allowFrom in openclaw.json
-3. Add a row to ~/clawd/WORKFLOW_AUTO.md
-4. Add them to ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+3. Add a row to /data/.openclaw/workspace/WORKFLOW_AUTO.md
+4. Add them to /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
 5. Add them to the team table in AGENTS.md and MEMORY.md
 6. Back up config, validate JSON, restart gateway
 7. Test: have them send a message to the bot and confirm they get a dedicated worker

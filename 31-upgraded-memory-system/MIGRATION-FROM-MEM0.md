@@ -19,17 +19,17 @@ Before migrating, verify your current setup:
 openclaw plugins list | grep -i mem0
 
 # Check current memory backend
-grep '"backend"' ~/.openclaw/openclaw.json
+grep '"backend"' /data/.openclaw/openclaw.json
 
 # Backup your config
-cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.backup.$(date +%Y%m%d)
+cp /data/.openclaw/openclaw.json /data/.openclaw/openclaw.json.backup.$(date +%Y%m%d)
 ```
 
 ## Migration Steps
 
 ### Step 1: Remove Mem0 Plugin Slot
 
-Edit `~/.openclaw/openclaw.json` and remove or update the memory slot:
+Edit `/data/.openclaw/openclaw.json` and remove or update the memory slot:
 
 **Before:**
 ```json
@@ -84,7 +84,7 @@ Find and remove the `openclaw-mem0` entry from `plugins.entries`:
 
 ### Step 3: Enable memory-core
 
-Ensure your `~/.openclaw/openclaw.json` has:
+Ensure your `/data/.openclaw/openclaw.json` has:
 
 ```json
 "memory": {
@@ -157,7 +157,7 @@ If migration fails:
 
 1. Restore config backup:
    ```bash
-   cp ~/.openclaw/openclaw.json.backup.YYYYMMDD ~/.openclaw/openclaw.json
+   cp /data/.openclaw/openclaw.json.backup.YYYYMMDD /data/.openclaw/openclaw.json
    ```
 
 2. Reinstall Mem0 if needed:
@@ -199,13 +199,13 @@ Update your core files to reflect the change:
 ### Issue: Config validation fails
 
 **Solution:** 
-1. Check JSON syntax with: `python3 -m json.tool ~/.openclaw/openclaw.json`
+1. Check JSON syntax with: `python3 -m json.tool /data/.openclaw/openclaw.json`
 2. Look for trailing commas or missing braces
 3. Restore from backup if needed
 
 ## Questions?
 
 If you encounter issues not covered here:
-1. Check `~/.openclaw/logs/` for error messages
+1. Check `/data/.openclaw/logs/` for error messages
 2. Run `openclaw memory status` for diagnostics
 3. Consult the HOW-YOUR-MEMORY-WORKS.md guide

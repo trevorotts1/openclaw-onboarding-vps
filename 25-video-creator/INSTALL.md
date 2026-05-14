@@ -7,7 +7,7 @@ Before you run any commands in this skill:
 1. Open Terminal.
 2. Go into the skill folder:
    ```bash
-   cd ~/.openclaw/skills/video-creator
+   cd /data/.openclaw/skills/video-creator
    ```
 3. Discover every Markdown file in this skill folder (including subfolders):
    ```bash
@@ -109,21 +109,21 @@ MoviePy v2 removed `moviepy.editor`, so you must pin MoviePy to v1.
    The .skill file is an archive. No CLI command needed - install by following SKILL.md, INSTALL.md, and CORE_UPDATES.md instructions.
    ```
 2. After install, the skill should exist at:
-   - `$HOME/.openclaw/skills/video-creator/`
+   - `/data/.openclaw/skills/video-creator/`
 
 ### Option B (manual): Unzip
 
 1. Create the skills folder if it does not exist:
    ```bash
-   mkdir -p "$HOME/.openclaw/skills"
+   mkdir -p "/data/.openclaw/skills"
    ```
 2. Copy the skill folder from the onboarding package:
    ```bash
-   cp -r "$(find ~/Downloads -name '25-video-creator' -type d | head -1)" "$HOME/.openclaw/skills/video-creator"
+   cp -r "$(find /data/.openclaw/master-files -name '25-video-creator' -type d | head -1)" "/data/.openclaw/skills/video-creator"
    ```
 3. Make scripts executable:
    ```bash
-   chmod +x "$HOME/.openclaw/skills/video-creator/scripts"/*.py
+   chmod +x "/data/.openclaw/skills/video-creator/scripts"/*.py
    ```
 
 ---
@@ -157,7 +157,7 @@ You can use this skill without any API keys by using the `mock` or `local` provi
 
 1. Go into the installed skill folder:
    ```bash
-   cd "$HOME/.openclaw/skills/video-creator"
+   cd "/data/.openclaw/skills/video-creator"
    ```
 2. Run the installation test:
    ```bash
@@ -170,7 +170,7 @@ You can use this skill without any API keys by using the `mock` or `local` provi
 
 1. Remove the skill folder:
    ```bash
-   rm -rf "$HOME/.openclaw/skills/video-creator"
+   rm -rf "/data/.openclaw/skills/video-creator"
    ```
 2. (Optional) Remove the virtual environment you created:
    ```bash

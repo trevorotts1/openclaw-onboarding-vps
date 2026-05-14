@@ -64,7 +64,7 @@ def get_api_key():
         os.path.expanduser("~/.openclaw/secrets/.env"),
         os.path.expanduser("~/clawd/secrets/.env"),
         os.path.expanduser("~/.config/openclaw/.env"),
-        "/data/clawd/secrets/.env",
+        "/data/.openclaw/workspace/secrets/.env",
         "/data/.openclaw/.env",
     ]
 

@@ -90,8 +90,8 @@ Add this task to HEARTBEAT.md (in the regular checks section):
 Check twice daily if Skill 23 is complete but Command Center not yet set up.
 
 **How to check:**
-1. Look for department folders in ~/Downloads/openclaw-master-files/ (or your master files location)
-2. Check if ~/.openclaw/workspaces/command-center/ exists
+1. Look for department folders in /data/.openclaw/master-files/ (or your master files location)
+2. Check if /data/.openclaw/workspaces/command-center/ exists
 
 **If Skill 23 is done and no command-center workspace exists:**
 - Prompt user to activate Skill 32: "Your AI Workforce Blueprint is complete. Activate Skill 32 to set up your Command Center with live department agents and dashboard."
@@ -119,7 +119,7 @@ If the client says ANY of the following at ANY time — today, tomorrow, next we
 - "I'm ready for the dashboard"
 
 Then IMMEDIATELY:
-1. Verify department folders exist on disk (check ~/.openclaw/workspaces/command-center/, ~/.openclaw/workspace/departments/, ~/Downloads/openclaw-master-files/)
+1. Verify department folders exist on disk (check /data/.openclaw/workspaces/command-center/, /data/.openclaw/workspace/departments/, /data/.openclaw/master-files/)
 2. If folders exist: download and install Skill 32 from the onboarding repo (curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main/scripts/update-skills.sh | bash) then follow Skill 32 INSTALL.md
 3. If folders do NOT exist: ask "Where did you save your department folders?" and use their answer
 4. Do NOT wait for a scheduled check. Do NOT say "I'll look into it later." Install NOW.
@@ -132,7 +132,7 @@ The Command Center uses a "Department Head" pattern:
 - Workers spun up on-demand for specific tasks
 - Personas assigned from coaching-personas library
 
-See full documentation: ~/.openclaw/skills/32-command-center-setup/
+See full documentation: /data/.openclaw/skills/32-command-center-setup/
 ```
 
 This addition is REQUIRED, not optional.
@@ -141,7 +141,7 @@ This addition is REQUIRED, not optional.
 
 ## AGENTS.md Addition — Kanban Done-Gate Protocol (v9.6.5)
 
-**Where:** Append at the bottom of `~/clawd/AGENTS.md` after the existing Skill 32 sections.
+**Where:** Append at the bottom of `/data/.openclaw/workspace/AGENTS.md` after the existing Skill 32 sections.
 
 **Exact text to add:**
 ```

@@ -17,7 +17,7 @@ Unified API key detection and retrieval from multiple sources.
 **Sources checked (in order of priority):**
 1. Environment variables (os.environ)
 2. /data/.openclaw/.env
-3. /data/openclaw/workspace/secrets/.env
+3. /data/.openclaw/secrets/.env
 4. ~/.clawdbot/.env
 
 **Usage:**

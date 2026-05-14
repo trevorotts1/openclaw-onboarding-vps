@@ -1,3 +1,84 @@
+## v10.0.0 - May 14, 2026 - The split: VPS-only repo, bulletproof discovery
+
+### What changed
+This is a deliberate major version break. Through v9.7.11, this repo and openclaw-onboarding shared install.sh in lockstep, with `if [ -d "/data/.openclaw" ]; then ... else ... fi` platform-detect blocks throughout. That worked but bloated each repo with code that never fired on its target environment.
+
+**v10.0.0 establishes two separate, independently-coherent codebases.** This repo is now Hostinger Docker VPS-only. The Mac installer lives at https://github.com/trevorotts1/openclaw-onboarding and is its own thing going forward.
+
+### Hard split (no shared code with Mac repo)
+- Platform-detect block removed. Paths hardcoded to `/data/.openclaw/...` everywhere.
+- All Mac-flavored paths (`~/...`, `$HOME/...`, `$OC_CLAWD`, `$OC_DOWNLOADS`, `$OC_HOME`) purged.
+- Safety guard added at script top: if `/data/.openclaw` doesn't exist, the installer hard-fails and points the operator to the Mac repo. Prevents accidentally running the VPS installer on a Mac.
+- Workspace hardcoded to `/data/.openclaw/workspace` (Hostinger entrypoint creates this). The `/data/clawd` path that was a Mac convention is gone.
+- 1497 path replacements across 179 skill files. All `if [ -d "/data/.openclaw" ]; then ... else ... fi` blocks in skill QC scripts collapsed to VPS-only single-path code.
+- Path bug fix: `/data/openclaw/workspace/secrets/` (typo I introduced in v9.7.11) replaced with `/data/.openclaw/secrets/` everywhere.
+
+### Bulletproof Telegram chat ID resolver — 14 sources
+Hostinger Docker VPS canonical pairing always succeeds — clients never reach install without Telegram already paired. So if the resolver doesn't find a chat ID, it didn't look in the right place. v10.0.0 searches 14 locations in priority order:
+
+**Tier 1** — canonical pairing records (where Hostinger's auto-pairing writes):
+1. `commands.ownerAllowFrom` via `openclaw config get` (docs-canonical primary — found Evelyn's pairing first try)
+2. `/data/.openclaw/credentials/telegram-*-allowFrom.json` glob
+3. `/data/.openclaw/credentials/telegram-pairing.json`
+
+**Tier 2** — alternate schemas:
+4. `channels.telegram.allowFrom`
+5. `channels.telegram.groupAllowFrom`
+6. `commands.allowFrom.telegram` (older schema)
+7. `plugins.entries.telegram.config.allowFrom`
+
+**Tier 3** — per-agent bindings:
+8. `agents.list[*].bindings.telegram.chatId`
+9. `agents.list[*].channels.telegram`
+
+**Tier 4** — runtime CLI introspection:
+10. `openclaw channels telegram list --json`
+11. `openclaw devices list --json` paired entries
+
+**Tier 5** — exhaustive last-resort:
+12. Recursive walk of `/data/.openclaw/` for any JSON with telegram chat IDs
+13. Container env vars: TELEGRAM_OWNER_ID, TELEGRAM_CHAT_ID, TG_CHAT_ID, TELEGRAM_USER_ID, TELEGRAM_ALLOW_FROM
+14. Audit log scan: `/data/.openclaw/logs/*.jsonl` for `pairing.approved` events
+
+**Validation:** chat ID must be 6-20 digits, not the bot's own ID. Account name captured from filename. Source logged.
+
+**Verified live on Evelyn's container:** resolved `8279177438` via Strategy 1 (`commands.ownerAllowFrom (CLI)`).
+
+### Bulletproof credential discovery — 9 sources
+Replaces v9.7.11's three-source lookup with full coverage of Hostinger Docker locations:
+
+1. Container env vars (`printenv`) — Hostinger primary (verified: 12 keys found on Evelyn's)
+2. `/proc/1/environ` — PID 1 fallback if shell env was reset
+3. `models.providers.<name>.apiKey` — Hostinger entrypoint bakes LLM keys here
+4. `env.vars` block in `openclaw.json` — operator inline pattern
+5. `plugins.entries.<plugin>.config.*` — plugin-level secrets
+6. `auth-profiles.json` per-agent api_key entries (Evelyn has OpenAI Codex OAuth here)
+7. `/data/.openclaw/secrets.json` — official OpenClaw secrets file (per docs)
+8. `/data/.openclaw/secrets/.env` — only if operator manually created
+9. Deep recursive scan of `openclaw.json` for any field named `apiKey|token|secret`
+
+Alias map covers Hostinger-specific names: GHL_PRIVATE_INTEGRATION_TOKEN → GOHIGHLEVEL_API_KEY, AI_GATEWAY_API_KEY → VERCEL_TOKEN, CONTEXT7_API_KEY, etc.
+
+**Verified live on Evelyn's container:** 12 of 14 canonical credentials resolved including alias matches (GOHIGHLEVEL_API_KEY found via GHL_PRIVATE_INTEGRATION_TOKEN env var, VERCEL_TOKEN found via AI_GATEWAY_API_KEY).
+
+### Bulletproof workspace resolver
+1. `agents.list[<main>].workspace` (per-agent override — wins if set)
+2. `agents.defaults.workspace` via `openclaw config get`
+3. `/data/.openclaw/workspace` (Hostinger canonical — server.mjs creates this)
+
+The `/data/clawd` path (a Mac convention) is gone entirely.
+
+### Skills sweep
+Cleaned all 36 skill folders to VPS-only paths. Critical 4 skills (06, 29, 11, 16) rewritten with VPS-only code. 1497 path replacements across 179 files. QC scripts have platform-detect collapsed to VPS single-path code.
+
+### Companion repo
+The Mac mini installer now lives at:
+https://github.com/trevorotts1/openclaw-onboarding
+
+Both repos at v10.0.0 mark the canonical split. Versions diverge from here.
+
+---
+
 ## v9.7.11 - May 14, 2026 - Smart credential discovery + 4 critical skill fixes
 
 ### Background
@@ -28,7 +109,7 @@ Live SSH probe of Evelyn's Hostinger Docker container revealed:
 - **Missing-credentials report** at end of credential discovery — prints what's not configured yet so the operator can fix gaps BEFORE skills hit them.
 - **Discovery logs which alias matched** when a non-canonical variant was used — so the next time a client uses an unusual var name, the install log tells us exactly which alias hit.
 - **Expanded credential set scanned**: added OPENAI_API_KEY, OLLAMA_API_KEY, TAVILY_API_KEY, KIE_API_KEY, GITHUB_TOKEN, VERCEL_TOKEN, SUPABASE_SERVICE_ROLE_KEY (previously skipped).
-- **Workspace fallback priority** flipped on VPS: `/data/.openclaw/workspace` wins before `/data/clawd` (Mac convention) since `/data/clawd` doesn't exist on Hostinger.
+- **Workspace fallback priority** flipped on VPS: `/data/.openclaw/workspace` wins before `/data/.openclaw/workspace` (Mac convention) since `/data/.openclaw/workspace` doesn't exist on Hostinger.
 
 ### Skills fixed (4 critical)
 - **Skill 06 ghl-install-pages**: INSTALL.md hardcoded `~/clawd/secrets/.env` for the GHL_EMAIL / GHL_PASSWORD checks. Rewrote credential lookup block to be platform-aware (env vars on VPS, .env on Mac).
@@ -469,7 +550,7 @@ The "anything less than a 9 must be fixed" pass. Closes the gaps between Skill 2
 
 ### 🔴 Blocker fixes
 
-- **Skill 32 was seeding the Kanban with 17 hardcoded default departments, regardless of how many the client actually chose in the interview.** `seed-workspaces.py find_departments_config()` read `departments.json` only from stale legacy paths and fell through to the wrong fallback. **Fix:** new priority order checks ZHC paths first — `~/clawd/zero-human-company/<slug>/departments.json` (canonical) → `~/clawd/zhc/<slug>/departments.json` (short-alias) → `/data/clawd/zero-human-company/<slug>/...` (VPS) → legacy `company-discovery/` → very-old `~/clawd/departments/`. Most-recently-modified ZHC company picked when `$COMPANY_SLUG` not specified. Strict match: seeds exactly the count the client chose. Dashboard prints "EXACT department count: N (this is what the client chose)."
+- **Skill 32 was seeding the Kanban with 17 hardcoded default departments, regardless of how many the client actually chose in the interview.** `seed-workspaces.py find_departments_config()` read `departments.json` only from stale legacy paths and fell through to the wrong fallback. **Fix:** new priority order checks ZHC paths first — `~/clawd/zero-human-company/<slug>/departments.json` (canonical) → `~/clawd/zhc/<slug>/departments.json` (short-alias) → `/data/.openclaw/workspace/zero-human-company/<slug>/...` (VPS) → legacy `company-discovery/` → very-old `~/clawd/departments/`. Most-recently-modified ZHC company picked when `$COMPANY_SLUG` not specified. Strict match: seeds exactly the count the client chose. Dashboard prints "EXACT department count: N (this is what the client chose)."
 
 - **AGENTS.md, TOOLS.md, USER.md were being COPIED into every department folder via `shutil.copy2`** at `build-workforce.py:623-628`, creating per-dept duplicates that diverged from the master over time. **Fix:** every dept folder now SYMLINKS to the master `~/clawd/AGENTS.md`, `~/clawd/TOOLS.md`, `~/clawd/USER.md`. One write updates all agents. Stale copies / wrong symlinks are detected and replaced. Falls back to copy only if symlink is unsupported (e.g. Windows without admin).
 
@@ -770,7 +851,7 @@ Pure additive change. No behavior changes. The standalone script duplicates the 
 
 ### Audited (confirmed correct)
 - **Cross-platform defensive branches** in both install.sh and update-skills.sh that read `[ -d "/data/.openclaw" ] && REPO_URL=...-vps/main` — these are intentional, protect against the wrong script being run on the wrong machine. Each script auto-detects platform and switches repo URL.
-- **21 skill folders have legitimate Mac-vs-VPS path differences** (Mac uses `~/clawd/...`, VPS uses `/data/clawd/...`). This is correct — not cross-contamination. The platform paths are platform-specific.
+- **21 skill folders have legitimate Mac-vs-VPS path differences** (Mac uses `~/clawd/...`, VPS uses `/data/.openclaw/workspace/...`). This is correct — not cross-contamination. The platform paths are platform-specific.
 - **All 36 skill folders present in both repos** (33 active + 3 archived: 13/33/34). No skills missing on either side.
 
 ### Changed

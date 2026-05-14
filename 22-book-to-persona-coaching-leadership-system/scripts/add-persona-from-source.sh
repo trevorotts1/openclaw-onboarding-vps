@@ -53,14 +53,9 @@ if [ -z "$SOURCE" ]; then
   exit 1
 fi
 
-# ─── PLATFORM DETECT ─────────────────────────────────────────────────────────
-if [ -d "/data/.openclaw" ]; then
-  WORKSPACE=/data/clawd
-  MASTER=/data/Downloads/openclaw-master-files
-else
-  WORKSPACE=$HOME/clawd
-  MASTER=$HOME/Downloads/openclaw-master-files
-fi
+# ─── CANONICAL PATHS (Hostinger Docker VPS) ──────────────────────────────────
+WORKSPACE=/data/.openclaw/workspace
+MASTER=/data/.openclaw/master-files
 
 PERSONA_DIR="$MASTER/coaching-personas"
 TEXT_DIR="$PERSONA_DIR/text"
@@ -155,9 +150,9 @@ PYEOF
 
   youtube)
     blue "── Extracting YouTube transcript via Skill 16 (Summarize YouTube) ──"
-    if ! command -v summarize >/dev/null 2>&1 && [ ! -f "$HOME/clawd/scripts/summarize.sh" ]; then
+    if ! command -v summarize >/dev/null 2>&1 && [ ! -f "/data/.openclaw/scripts/summarize.sh" ]; then
       red "ERROR: Skill 16 (Summarize YouTube) not installed. Run install.sh first or"
-      red "       install summarize CLI: see ~/.openclaw/skills/16-summarize-youtube/INSTALL.md"
+      red "       install summarize CLI: see /data/.openclaw/skills/16-summarize-youtube/INSTALL.md"
       exit 3
     fi
 
@@ -174,7 +169,7 @@ PYEOF
     TEXT_FILE="$TEXT_DIR/$SLUG.txt"
 
     SUMMARIZE_CMD="summarize"
-    [ -f "$HOME/clawd/scripts/summarize.sh" ] && SUMMARIZE_CMD="bash $HOME/clawd/scripts/summarize.sh"
+    [ -f "/data/.openclaw/scripts/summarize.sh" ] && SUMMARIZE_CMD="bash /data/.openclaw/scripts/summarize.sh"
 
     # Try transcript-only first, fall back to full output
     $SUMMARIZE_CMD --transcript-only "$SOURCE" > "$TEXT_FILE" 2>/dev/null \
@@ -182,7 +177,7 @@ PYEOF
 
     if [ ! -s "$TEXT_FILE" ]; then
       red "YouTube transcript extraction failed. Check that Skill 16 is configured "
-      red "with valid OPENAI_API_KEY or GEMINI_API_KEY in ~/.openclaw/secrets/.env"
+      red "with valid OPENAI_API_KEY or GEMINI_API_KEY in /data/.openclaw/secrets/.env"
       exit 4
     fi
     green "  Transcript saved: $TEXT_FILE ($(wc -c < "$TEXT_FILE" | tr -d ' ') chars)"
@@ -276,7 +271,7 @@ green "  Persona folder ready: $PERSONA_FOLDER"
 echo "  Text input:          $TEXT_FILE"
 
 # ─── INVOKE PIPELINE ─────────────────────────────────────────────────────────
-ORCHESTRATOR="$HOME/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py"
+ORCHESTRATOR="/data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py"
 [ ! -f "$ORCHESTRATOR" ] && ORCHESTRATOR="/data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py"
 
 if [ ! -f "$ORCHESTRATOR" ]; then
@@ -303,7 +298,7 @@ green "  Pipeline complete. Blueprint at: $PERSONA_FOLDER/persona-blueprint.md"
 if [ "$SKIP_INDEX" = "false" ]; then
   blue "── Re-indexing Gemini Engine (coaching-personas + workspace) ──"
   INDEXER=""
-  for c in "$WORKSPACE/scripts/gemini-indexer.py" "$HOME/.openclaw/workspace/scripts/gemini-indexer.py"; do
+  for c in "$WORKSPACE/scripts/gemini-indexer.py" "/data/.openclaw/workspace/scripts/gemini-indexer.py"; do
     [ -f "$c" ] && INDEXER="$c" && break
   done
   if [ -n "$INDEXER" ]; then
@@ -311,7 +306,7 @@ if [ "$SKIP_INDEX" = "false" ]; then
     green "  Gemini index refreshed. New persona is now searchable."
   else
     yellow "  gemini-indexer.py not found; persona blueprint written but not yet indexed."
-    yellow "  Run manually: python3 ~/clawd/scripts/gemini-indexer.py"
+    yellow "  Run manually: python3 /data/.openclaw/scripts/gemini-indexer.py"
   fi
 fi
 
@@ -351,7 +346,7 @@ green "  ✓ Persona added: $SLUG"
 green "═══════════════════════════════════════════════════"
 echo "  Blueprint:          $PERSONA_FOLDER/persona-blueprint.md"
 echo "  Source text:        $TEXT_FILE"
-echo "  Searchable via:     python3 ~/clawd/scripts/gemini-search.py --query \"<task>\""
+echo "  Searchable via:     python3 /data/.openclaw/scripts/gemini-search.py --query \"<task>\""
 echo ""
 yellow "  NEXT STEP: open persona-categories.json and add domain_tags + perspective_tags for $SLUG."
 yellow "  Without tags, the keyword filter in select-persona-for-task.py won't include this persona"

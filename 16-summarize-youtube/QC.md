@@ -8,7 +8,7 @@ Run this after installation. Every section must pass before you mark summarize-y
 ## 1. File and version checks
 
 ```bash
-SKILL_DIR="$HOME/Downloads/openclaw-master-files/OpenClaw Onboarding/16-summarize-youtube"
+SKILL_DIR="/data/.openclaw/master-files/OpenClaw Onboarding/16-summarize-youtube"
 ls -1 "$SKILL_DIR"
 cat "$SKILL_DIR/skill-version.txt"
 ```
@@ -22,7 +22,7 @@ cat "$SKILL_DIR/skill-version.txt"
 ## 2. Core file update checks
 
 ```bash
-grep -n "summarize\|YouTube" ~/clawd/AGENTS.md ~/clawd/TOOLS.md ~/clawd/MEMORY.md
+grep -n "summarize\|YouTube" /data/.openclaw/workspace/AGENTS.md /data/.openclaw/workspace/TOOLS.md /data/.openclaw/workspace/MEMORY.md
 ```
 
 - [ ] Core docs mention the summarize CLI
@@ -47,7 +47,7 @@ summarize --help >/dev/null && echo OK
 ## 4. Provider key checks
 
 ```bash
-grep -E '^(OPENAI_API_KEY|GEMINI_API_KEY)=' ~/clawd/secrets/.env 2>/dev/null
+grep -E '^(OPENAI_API_KEY|GEMINI_API_KEY)=' /data/.openclaw/secrets/.env 2>/dev/null
 ```
 
 - [ ] At least one of `OPENAI_API_KEY` or `GEMINI_API_KEY` exists
@@ -63,7 +63,7 @@ Use the exact test video from INSTALL.md.
 ### 5A. OpenAI-first test
 Run only if `OPENAI_API_KEY` is available.
 ```bash
-source ~/clawd/secrets/.env 2>/dev/null || true
+source /data/.openclaw/secrets/.env 2>/dev/null || true
 OPENAI_API_KEY="$OPENAI_API_KEY" summarize "https://youtu.be/dQw4w9WgXcQ" --youtube auto --length short
 ```
 
@@ -125,7 +125,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

@@ -38,7 +38,7 @@ edit the config until I can create a valid backup." Fix the backup problem first
 | Main config | /data/.openclaw/openclaw.json |
 | Workspace .md files | AGENTS.md, TOOLS.md, MEMORY.md, IDENTITY.md, USER.md, SOUL.md, HEARTBEAT.md |
 | Memory logs | memory/*.md |
-| Secrets | /data/openclaw/workspace/secrets/.env (if exists) |
+| Secrets | /data/.openclaw/secrets/.env (if exists) |
 | Installed skills | /data/.openclaw/skills/ |
 | Cron jobs | openclaw cron list (export) |
 

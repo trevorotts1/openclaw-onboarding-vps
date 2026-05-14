@@ -7,15 +7,15 @@ Do not update files marked NO UPDATE NEEDED.
 
 ## CREDENTIAL STORAGE — AUTHORITATIVE RULE
 
-**This skill updates the canonical credential location for GHL.** Skill 05 (older versions) pointed to `~/clawd/secrets/.env`. As of skill 36 v1.0.0 and aligned with the agent's current AGENTS.md operating rules:
+**This skill updates the canonical credential location for GHL.** Skill 05 (older versions) pointed to `/data/.openclaw/secrets/.env`. As of skill 36 v1.0.0 and aligned with the agent's current AGENTS.md operating rules:
 
-- **macOS canonical:** `~/.openclaw/secrets/.env`
+- **macOS canonical:** `/data/.openclaw/secrets/.env`
 - **VPS canonical:** `/data/.openclaw/secrets/.env`
 - **Secondary mirror:** `openclaw.json` `env.vars` (gateway reads from here at runtime)
 
 Env var names: `GOHIGHLEVEL_API_KEY` (the Location PIT — legacy variable name kept for backwards compatibility) and `GOHIGHLEVEL_LOCATION_ID`.
 
-If credentials still live at `~/clawd/secrets/.env`, migrate them to the canonical location during this skill's install (Action 2 of INSTALL.md).
+If credentials still live at `/data/.openclaw/secrets/.env`, migrate them to the canonical location during this skill's install (Action 2 of INSTALL.md).
 
 All runtime code, API calls, and skill references must read from the canonical secrets path. The community MCP at `~/mcp-servers/ghl-community-mcp/.env` (or `/data/mcp-servers/...` on VPS) gets a copy of the PIT for its own runtime — that copy stays in sync via the install script.
 
@@ -38,7 +38,7 @@ When asked to do anything involving GHL / GoHighLevel / Convert and Flow / LeadC
 
 4. **Required disclosure on every GHL response:** prefix your final answer with `[GHL tier used: N — tool_name]`. If you fell through tiers, include the chain. Missing disclosure = protocol violation.
 
-5. **"It looked broken earlier" is not an excuse.** If a tier crashed in earlier session work, attempt it fresh. Recover with `launchctl kickstart gui/$(id -u)/com.clawd.ghl-mcp` (Mac) or `sudo systemctl restart ghl-mcp` (Linux) before falling through.
+5. **"It looked broken earlier" is not an excuse.** If a tier crashed in earlier session work, attempt it fresh. Recover with `systemctl --user kickstart gui/$(id -u)/com.clawd.ghl-mcp` (Mac) or `sudo systemctl restart ghl-mcp` (Linux) before falling through.
 
 Full reference: [MASTER_FILES_FOLDER]/36-ghl-mcp-setup/ghl-mcp-setup-full.md
 ```
@@ -63,15 +63,15 @@ Add this section. Adapt aliases to client white-label brand:
 | MCP endpoint | `$GHL_COMMUNITY_MCP_URL/mcp` (streamable-http) |
 | REST execute (debug) | `POST $GHL_COMMUNITY_MCP_URL/execute` with `{"name":"tool","arguments":{...}}` |
 | Live tool discovery | `curl $GHL_COMMUNITY_MCP_URL/tools` |
-| Lifecycle | macOS: launchd `~/Library/LaunchAgents/com.clawd.ghl-mcp.plist`. Linux: systemd `ghl-mcp.service`. |
-| Restart | macOS: `launchctl kickstart gui/$(id -u)/com.clawd.ghl-mcp`. Linux: `sudo systemctl restart ghl-mcp`. |
-| Credentials | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS). Env vars: `GOHIGHLEVEL_API_KEY` (PIT), `GOHIGHLEVEL_LOCATION_ID`. |
+| Lifecycle | macOS: launchd `/etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist`. Linux: systemd `ghl-mcp.service`. |
+| Restart | macOS: `systemctl --user kickstart gui/$(id -u)/com.clawd.ghl-mcp`. Linux: `sudo systemctl restart ghl-mcp`. |
+| Credentials | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS). Env vars: `GOHIGHLEVEL_API_KEY` (PIT), `GOHIGHLEVEL_LOCATION_ID`. |
 
 ### Tier order (try in sequence; do not skip)
 
 - **Tier 1:** `ghl-mcp` — 36 tools (contacts, calendars, conversations, opportunities, social media, blogs, emails, locations, read-only payments)
 - **Tier 2:** `ghl-community-mcp` — 588 tools (products, invoices, billing, subscriptions, estimates, store, coupons, Voice AI, Phone System, Agent Studio, workflows)
-- **Tier 3:** REST API + skill 29 references at `~/Downloads/openclaw-master-files/29-ghl-convert-and-flow/references/[module].md`
+- **Tier 3:** REST API + skill 29 references at `/data/.openclaw/master-files/29-ghl-convert-and-flow/references/[module].md`
 - **Tier 4:** Playwright browser, `launchPersistentContext`
 - **Tier 5:** Codex Computer Use, `codex/gpt-5.5`, 45-min default timeout
 
@@ -137,7 +137,7 @@ Two MCP servers configured (skill 36):
 
 2. **Community GHL MCP** (`ghl-community-mcp`) — BusyBee3333 2026 fork, 588 tools. Local at `$GHL_COMMUNITY_MCP_URL`. Runs via launchd (macOS) or systemd (Linux). Repo at `~/mcp-servers/ghl-community-mcp/` (Mac) or `/data/mcp-servers/ghl-community-mcp/` (VPS).
 
-Credentials: `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS). Env vars: `GOHIGHLEVEL_API_KEY` (PIT), `GOHIGHLEVEL_LOCATION_ID`.
+Credentials: `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS). Env vars: `GOHIGHLEVEL_API_KEY` (PIT), `GOHIGHLEVEL_LOCATION_ID`.
 
 5-tier escalation: MCP official → MCP community → REST API + skill 29 → Playwright → Codex Computer Use.
 

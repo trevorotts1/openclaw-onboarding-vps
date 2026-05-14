@@ -34,7 +34,7 @@ ENV_FILE_PATHS = [
     "~/.openclaw/.env",
     "/data/.openclaw/.env",
     "~/clawd/secrets/.env",
-    "/data/clawd/secrets/.env",
+    "/data/.openclaw/workspace/secrets/.env",
     "~/.env",
     "/data/.env",
     "~/.clawdbot/.env",

@@ -13,7 +13,7 @@ Verifies that the 5-tier GHL access chain is fully installed and routing correct
 - [ ] Env var `GHL_COMMUNITY_MCP_URL` is set in `openclaw.json` `env.vars`
 - [ ] Repo `~/mcp-servers/ghl-community-mcp` (Mac) or `/data/mcp-servers/ghl-community-mcp` (VPS) is cloned, has `.git`, has `dist/main.js`
 - [ ] `.env` exists in MCP repo with `chmod 600`, contains `GHL_API_KEY` + `GHL_LOCATION_ID` + `MCP_SERVER_PORT`
-- [ ] Lifecycle service installed: launchd plist (macOS) at `~/Library/LaunchAgents/com.clawd.ghl-mcp.plist` OR systemd unit (Linux) at `/etc/systemd/system/ghl-mcp.service`
+- [ ] Lifecycle service installed: launchd plist (macOS) at `/etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist` OR systemd unit (Linux) at `/etc/systemd/system/ghl-mcp.service`
 - [ ] Service is currently running (launchd `state = running` OR systemd `active (running)`)
 - [ ] This document copied to `$MASTER_FILES_DIR/36-ghl-mcp-setup/`
 
@@ -21,7 +21,7 @@ Verifies that the 5-tier GHL access chain is fully installed and routing correct
 
 - [ ] Skill 01 (Teach Yourself Protocol) installed
 - [ ] Skill 02 (Back Yourself Up Protocol) installed
-- [ ] Skill 05 (GHL Setup) installed AND credential path migrated to canonical (`~/.openclaw/secrets/.env` not `~/clawd/secrets/.env`)
+- [ ] Skill 05 (GHL Setup) installed AND credential path migrated to canonical (`/data/.openclaw/secrets/.env` not `/data/.openclaw/secrets/.env`)
 - [ ] Skill 29 (GHL Convert and Flow) installed with `references/` subfolder populated
 - [ ] Node.js ≥ 20 available (`node --version`)
 - [ ] curl and python3 available
@@ -42,7 +42,7 @@ The agent MUST find the canonical credentials by searching in this order:
 QC fails if:
 - The installer asks for credentials WITHOUT first searching all locations above
 - An "API key" is requested instead of a "Private Integration Token (PIT)"
-- Credentials are stored only to legacy location and not the canonical `~/.openclaw/secrets/.env`
+- Credentials are stored only to legacy location and not the canonical `/data/.openclaw/secrets/.env`
 
 ## 5. Functional Checks
 
@@ -91,12 +91,8 @@ The script ships in this skill folder as `qc-ghl-mcp-setup.sh` — single source
 To run it:
 
 ```bash
-# Locate the master files folder (where install.sh placed the skill)
-if [ -d "/data/.openclaw" ]; then
-  MASTER_FILES_DIR=/data/Downloads/openclaw-master-files
-else
-  MASTER_FILES_DIR=$HOME/Downloads/openclaw-master-files
-fi
+# Master files folder on Hostinger Docker VPS
+MASTER_FILES_DIR=/data/.openclaw/master-files
 
 chmod +x "$MASTER_FILES_DIR/36-ghl-mcp-setup/qc-ghl-mcp-setup.sh"
 bash    "$MASTER_FILES_DIR/36-ghl-mcp-setup/qc-ghl-mcp-setup.sh"
@@ -105,8 +101,8 @@ bash    "$MASTER_FILES_DIR/36-ghl-mcp-setup/qc-ghl-mcp-setup.sh"
 Exit code 0 = setup complete. Any non-zero exit = fix the failed items and re-run.
 
 The script:
-- Detects platform (Mac vs VPS), resolves canonical paths
-- Sources `~/.openclaw/secrets/.env` (or `/data/...`), reads `GOHIGHLEVEL_API_KEY` + `GOHIGHLEVEL_LOCATION_ID`
+- Uses canonical paths `/data/.openclaw/` (Hostinger Docker layout)
+- Reads `GOHIGHLEVEL_API_KEY` + `GOHIGHLEVEL_LOCATION_ID` from container env vars (primary) or `/data/.openclaw/secrets/.env` (fallback)
 - Probes Tier 1 (official MCP) for 36 tools
 - Probes Tier 2 (community MCP) on `$GHL_COMMUNITY_MCP_URL` for the full tool count
 - Probes Tier 3 (direct REST) and reads `X-RateLimit-Daily-Remaining` — if low, surfaces reset clock time

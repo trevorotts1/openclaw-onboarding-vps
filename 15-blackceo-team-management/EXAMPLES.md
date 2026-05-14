@@ -149,7 +149,7 @@ The client is NEVER assigned tasks. The AI serves them - it does not boss them a
 
 **Step 1: Add her ID to the allowFrom list**
 
-Open ~/.openclaw/openclaw.json and add her ID:
+Open /data/.openclaw/openclaw.json and add her ID:
 
 ```json
 {
@@ -168,7 +168,7 @@ Open ~/.openclaw/openclaw.json and add her ID:
 
 **Step 2: Add her to TEAM_CONFIG.md**
 
-Open ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md and add a row:
+Open /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md and add a row:
 
 ```
 | Dana Lee | 5566778899 | Content Coordinator | Worker | dana-worker |
@@ -176,7 +176,7 @@ Open ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md and add a row
 
 **Step 3: Add her to the routing table**
 
-Open ~/clawd/WORKFLOW_AUTO.md and add a row:
+Open /data/.openclaw/workspace/WORKFLOW_AUTO.md and add a row:
 
 ```
 | 5566778899 | Dana Lee | Content Coordinator | dana-worker | 5566778899 |
@@ -189,7 +189,7 @@ Add her Telegram ID and role to the team tables in both files.
 **Step 5: Validate and restart**
 
 ```bash
-python3 -m json.tool ~/.openclaw/openclaw.json > /dev/null
+python3 -m json.tool /data/.openclaw/openclaw.json > /dev/null
 openclaw gateway restart
 ```
 

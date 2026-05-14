@@ -34,8 +34,8 @@ The .skill file is an archive. No CLI command needed - install by following SKIL
 
 Or manually:
 ```bash
-unzip video-creator.skill -d $HOME/.openclaw/skills/
-chmod +x $HOME/.openclaw/skills/video-creator/scripts/*.py
+unzip video-creator.skill -d /data/.openclaw/skills/
+chmod +x /data/.openclaw/skills/video-creator/scripts/*.py
 ```
 
 ### Step 3: Configure AI Providers
@@ -111,8 +111,8 @@ Options: `--transition` (fade/slide_left/slide_right/slide_up/slide_down/wipe/zo
 
 Apply the core file updates from `CORE_UPDATES.md`.
 ## Video Creator Skill
-- Installed at: ~/.openclaw/skills/video-creator/
-- Full reference: ~/.openclaw/skills/video-creator/SKILL.md
+- Installed at: /data/.openclaw/skills/video-creator/
+- Full reference: /data/.openclaw/skills/video-creator/SKILL.md
 ```
 
 ---

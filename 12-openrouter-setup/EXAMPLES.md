@@ -9,7 +9,7 @@ This document shows real examples of OpenRouter configuration and model routing 
 **The agent will execute the following when given an OpenRouter API key (format: sk-or-...):**
 
 1. Creates a backup of your current config:
-   cp ~/.openclaw/openclaw.json ~/openclaw-backup-configs/openclaw-backup-$(date +%Y-%m-%d-%H%M%S).json
+   cp /data/.openclaw/openclaw.json ~/openclaw-backup-configs/openclaw-backup-$(date +%Y-%m-%d-%H%M%S).json
 
 2. Adds the API key to the env section of your config file.
 
@@ -149,7 +149,7 @@ This document shows real examples of OpenRouter configuration and model routing 
 **What the agent does:**
 
 1. Creates a backup:
-   cp ~/.openclaw/openclaw.json ~/openclaw-backup-configs/openclaw-backup-$(date +%Y-%m-%d-%H%M%S).json
+   cp /data/.openclaw/openclaw.json ~/openclaw-backup-configs/openclaw-backup-$(date +%Y-%m-%d-%H%M%S).json
 
 2. Opens the config file and adds:
 
@@ -193,7 +193,7 @@ This document shows real examples of OpenRouter configuration and model routing 
 **What to check:**
 
 1. Open the config file:
-   cat ~/.openclaw/openclaw.json
+   cat /data/.openclaw/openclaw.json
 
 2. Look at the agents.defaults.models section. Each model listed there is available.
 

@@ -149,13 +149,13 @@ openclaw status | grep "Gateway service"
 ### 1.1 Verify MEMORY.md exists
 
 ```bash
-ls -la ~/.openclaw/workspace/MEMORY.md
+ls -la /data/.openclaw/workspace/MEMORY.md
 ```
 
 If MEMORY.md does not exist, create it:
 
 ```bash
-cat > ~/.openclaw/workspace/MEMORY.md << 'EOF'
+cat > /data/.openclaw/workspace/MEMORY.md << 'EOF'
 # MEMORY.md
 
 > This file contains persistent state, lessons learned, and project status ONLY.
@@ -170,20 +170,20 @@ EOF
 ### 1.2 Verify daily log directory exists
 
 ```bash
-mkdir -p ~/.openclaw/workspace/memory
+mkdir -p /data/.openclaw/workspace/memory
 ```
 
 ### 1.3 Verify core files exist
 
 Check that these files are present. If any are missing, create them from the templates in the onboarding package:
 
-- ~/.openclaw/workspace/MEMORY.md
-- ~/.openclaw/workspace/AGENTS.md
-- ~/.openclaw/workspace/TOOLS.md
-- ~/.openclaw/workspace/USER.md
-- ~/.openclaw/workspace/SOUL.md
-- ~/.openclaw/workspace/IDENTITY.md
-- ~/.openclaw/workspace/HEARTBEAT.md
+- /data/.openclaw/workspace/MEMORY.md
+- /data/.openclaw/workspace/AGENTS.md
+- /data/.openclaw/workspace/TOOLS.md
+- /data/.openclaw/workspace/USER.md
+- /data/.openclaw/workspace/SOUL.md
+- /data/.openclaw/workspace/IDENTITY.md
+- /data/.openclaw/workspace/HEARTBEAT.md
 
 ---
 
@@ -191,7 +191,7 @@ Check that these files are present. If any are missing, create them from the tem
 
 ### 2.1 Update the flush prompt in openclaw.json
 
-Open `~/.openclaw/openclaw.json` and find the `compaction.memoryFlush` section under `agents.defaults`. Replace the prompt and systemPrompt with these values:
+Open `/data/.openclaw/openclaw.json` and find the `compaction.memoryFlush` section under `agents.defaults`. Replace the prompt and systemPrompt with these values:
 
 **prompt:**
 ```
@@ -239,7 +239,7 @@ This triggers the flush when the context reaches 32K tokens.
 
 ### 3.1 Enable session memory
 
-In `~/.openclaw/openclaw.json`, find the `agents.defaults.memorySearch` section. Add or verify these settings:
+In `/data/.openclaw/openclaw.json`, find the `agents.defaults.memorySearch` section. Add or verify these settings:
 
 ```json
 "memorySearch": {
@@ -276,7 +276,7 @@ In the same `memorySearch` block, add:
 
 ### 4.1 Set the search provider
 
-In `~/.openclaw/openclaw.json`, find the `agents.defaults.memorySearch` section. Add or update:
+In `/data/.openclaw/openclaw.json`, find the `agents.defaults.memorySearch` section. Add or update:
 
 ```json
 "provider": "gemini",
@@ -305,15 +305,15 @@ Search the user's machine for any folder matching these names (case-insensitive)
 - openclaw-master-files
 - OpenClaw Master Files
 - openclaw master files
-- Any folder in ~/Downloads/ containing "openclaw" and "master" or "onboarding"
+- Any folder in /data/.openclaw/master-files/ containing "openclaw" and "master" or "onboarding"
 
 ```bash
-find ~/Downloads -maxdepth 2 -type d -iname "*openclaw*master*" -o -iname "*openclaw*onboarding*" 2>/dev/null
+find /data/.openclaw/master-files -maxdepth 2 -type d -iname "*openclaw*master*" -o -iname "*openclaw*onboarding*" 2>/dev/null
 ```
 
 **Step 2: Add the path to memorySearch.extraPaths.**
 
-In `~/.openclaw/openclaw.json`, inside the `agents.defaults.memorySearch` section, add:
+In `/data/.openclaw/openclaw.json`, inside the `agents.defaults.memorySearch` section, add:
 
 ```json
 "extraPaths": [
@@ -321,12 +321,12 @@ In `~/.openclaw/openclaw.json`, inside the `agents.defaults.memorySearch` sectio
 ]
 ```
 
-**CRITICAL: Use the FULL ABSOLUTE path, not a tilde (~).** OpenClaw resolves non-absolute paths relative to the workspace directory, so `~/Downloads/...` becomes `~/.openclaw/workspace/~/Downloads/...` which does not exist.
+**CRITICAL: Use the FULL ABSOLUTE path, not a tilde (~).** OpenClaw resolves non-absolute paths relative to the workspace directory, so `/data/.openclaw/master-files/...` becomes `/data/.openclaw/workspace//data/.openclaw/master-files/...` which does not exist.
 
 To get the absolute path:
 ```bash
 # This prints the full absolute path
-echo "$(cd ~/Downloads/openclaw-master-files && pwd)"
+echo "$(cd /data/.openclaw/master-files && pwd)"
 ```
 
 Use the ACTUAL path found in Step 1. If the folder is named differently (e.g., "OpenClaw Master Files" with spaces), use that exact name with the full absolute path:
@@ -434,7 +434,7 @@ Layer 5 uses OpenClaw's built-in memory-core instead of the legacy memory plugin
 
 ### 5.1 Verify memory-core is enabled
 
-In `~/.openclaw/openclaw.json`, verify the memory backend:
+In `/data/.openclaw/openclaw.json`, verify the memory backend:
 
 ```json
 "memory": {
@@ -444,7 +444,7 @@ In `~/.openclaw/openclaw.json`, verify the memory backend:
 
 ### 5.2 Configure auto-capture
 
-In `~/.openclaw/openclaw.json`, under `agents.defaults`, add:
+In `/data/.openclaw/openclaw.json`, under `agents.defaults`, add:
 
 ```json
 "memory": {
@@ -487,7 +487,7 @@ openclaw plugins install @openclaw/cognee
 
 ### 6.3 Configure Cognee
 
-In `~/.openclaw/openclaw.json`, under `plugins.entries`:
+In `/data/.openclaw/openclaw.json`, under `plugins.entries`:
 
 ```json
 "cognee": {
@@ -540,7 +540,7 @@ ls ~/Documents/ | grep -i obsidian
 
 ### 7.3 Configure Obsidian integration
 
-In `~/.openclaw/openclaw.json`, add:
+In `/data/.openclaw/openclaw.json`, add:
 
 ```json
 "obsidian": {
@@ -567,7 +567,7 @@ Expected: Shows vault path, note count, and daily notes status.
 
 ### 8.1 Enable wiki system
 
-In `~/.openclaw/openclaw.json`, add:
+In `/data/.openclaw/openclaw.json`, add:
 
 ```json
 "wiki": {
@@ -647,18 +647,18 @@ Run these checks and report the results to the user in Telegram:
 
 ```bash
 # Layer 1: Markdown files
-echo "Layer 1:" && ls ~/.openclaw/workspace/MEMORY.md 2>/dev/null && echo "MEMORY.md OK" || echo "MEMORY.md MISSING"
-ls ~/.openclaw/workspace/memory/ 2>/dev/null | wc -l | xargs -I{} echo "Daily logs: {} files"
+echo "Layer 1:" && ls /data/.openclaw/workspace/MEMORY.md 2>/dev/null && echo "MEMORY.md OK" || echo "MEMORY.md MISSING"
+ls /data/.openclaw/workspace/memory/ 2>/dev/null | wc -l | xargs -I{} echo "Daily logs: {} files"
 
 # Layer 2: Flush prompt
-echo "Layer 2:" && grep -c "memoryFlush" ~/.openclaw/openclaw.json | xargs -I{} echo "Flush config entries: {}"
+echo "Layer 2:" && grep -c "memoryFlush" /data/.openclaw/openclaw.json | xargs -I{} echo "Flush config entries: {}"
 
 # Layer 3: Session indexing
-echo "Layer 3:" && grep "sessionMemory" ~/.openclaw/openclaw.json | xargs echo
+echo "Layer 3:" && grep "sessionMemory" /data/.openclaw/openclaw.json | xargs echo
 
 # Layer 4: Gemini search
-echo "Layer 4:" && grep '"backend"' ~/.openclaw/openclaw.json | head -1
-grep '"provider"' ~/.openclaw/openclaw.json | grep gemini | head -1
+echo "Layer 4:" && grep '"backend"' /data/.openclaw/openclaw.json | head -1
+grep '"provider"' /data/.openclaw/openclaw.json | grep gemini | head -1
 
 # Layer 5: memory-core
 echo "Layer 5:" && openclaw memory status 2>/dev/null | grep -E "Backend|autoCapture|autoRecall" || echo "memory-core not detected"
@@ -698,11 +698,11 @@ Search the user's machine for all knowledge folders. Check these locations (case
 
 ```bash
 # Find all candidate knowledge folders
-find ~/Downloads -maxdepth 2 -type d -iname "*openclaw*master*" -o -iname "*openclaw*onboarding*" 2>/dev/null
+find /data/.openclaw/master-files -maxdepth 2 -type d -iname "*openclaw*master*" -o -iname "*openclaw*onboarding*" 2>/dev/null
 ```
 
 Also include:
-- The workspace directory (check `agents.defaults.workspace` in openclaw.json, typically ~/.openclaw/workspace)
+- The workspace directory (check `agents.defaults.workspace` in openclaw.json, typically /data/.openclaw/workspace)
 - The memory/ subdirectory inside the workspace
 - Any coaching-personas, AI-workforce-blueprint, or department folders inside the master files folder
 
@@ -785,11 +785,11 @@ After indexing and embedding are confirmed complete, run a REAL test of each mem
 
 ```bash
 # Verify MEMORY.md exists and has real content
-wc -l ~/.openclaw/workspace/MEMORY.md
+wc -l /data/.openclaw/workspace/MEMORY.md
 # Expected: more than 10 lines of real content, not just a template header
 
 # Verify daily logs exist
-ls ~/.openclaw/workspace/memory/*.md 2>/dev/null | wc -l
+ls /data/.openclaw/workspace/memory/*.md 2>/dev/null | wc -l
 # Expected: at least 1 daily log file
 ```
 
@@ -800,7 +800,7 @@ Report: "Layer 1: MEMORY.md has [X] lines. [Y] daily log files found."
 This layer cannot be tested directly without triggering a compaction event. Verify the config is set correctly:
 
 ```bash
-grep -A2 '"memoryFlush"' ~/.openclaw/openclaw.json | head -3
+grep -A2 '"memoryFlush"' /data/.openclaw/openclaw.json | head -3
 ```
 
 Confirm: enabled = true, softThresholdTokens is set, prompt contains category-based capture instructions.
@@ -831,7 +831,7 @@ Expected: returns actual search results with content from the user's files.
 If this returns nothing:
 1. Check if GOOGLE_API_KEY is set: `echo $GOOGLE_API_KEY`
 2. Check if indexing completed: `openclaw memory status`
-3. Check if backend is correct: `grep '"backend"' ~/.openclaw/openclaw.json`
+3. Check if backend is correct: `grep '"backend"' /data/.openclaw/openclaw.json`
 
 Report: "Layer 4: Gemini search returned [X] results. Search is operational." or "Layer 4: Search returned no results. [diagnosis]."
 
@@ -873,7 +873,7 @@ If any layer test fails after the config changes and restart:
 
 1. Restore the config backup you created before making changes:
    ```bash
-   cp [BACKUP_PATH]/openclaw.json ~/.openclaw/openclaw.json
+   cp [BACKUP_PATH]/openclaw.json /data/.openclaw/openclaw.json
    ```
 2. Ask the user to type /restart
 3. Report to the user what failed and what was rolled back
@@ -891,7 +891,7 @@ If any layer test fails after the config changes and restart:
 1. Do NOT ask the user to restart
 2. Immediately restore from backup:
    ```bash
-   cp [BACKUP_PATH]/openclaw.json ~/.openclaw/openclaw.json
+   cp [BACKUP_PATH]/openclaw.json /data/.openclaw/openclaw.json
    ```
 3. Re-validate: `openclaw config validate`
 4. Report to the user exactly what value caused the failure
@@ -913,7 +913,7 @@ When the onboarding package is updated (via the weekly Sunday check or manual up
 ### Update Status File
 
 After an update runs, it writes a status file at:
-`~/.openclaw/onboarding/.update-result.json`
+`/data/.openclaw/onboarding/.update-result.json`
 
 The agent should check for this file on each heartbeat. If it exists, read it and send a summary to the user in Telegram:
 
@@ -1004,7 +1004,7 @@ You do not need to do anything special. The system works automatically.
 
 ### Weekly: Clean up MEMORY.md
 
-At least once a week, open ~/.openclaw/workspace/MEMORY.md and:
+At least once a week, open /data/.openclaw/workspace/MEMORY.md and:
 - Remove entries that are no longer relevant
 - Correct any information that has changed
 - Consolidate duplicate entries
@@ -1013,7 +1013,7 @@ Use Obsidian if you want a nice UI for editing markdown files.
 
 ### Monthly: Review daily logs
 
-Check ~/.openclaw/workspace/memory/ for old daily logs. Delete logs older than 90 days that contain only routine information. Keep logs that document important decisions.
+Check /data/.openclaw/workspace/memory/ for old daily logs. Delete logs older than 90 days that contain only routine information. Keep logs that document important decisions.
 
 ### When things feel off: Test the search
 
@@ -1034,7 +1034,7 @@ Just tell your agent: "Remember that [fact]"
 Ask: "Search your memory for [topic]"
 
 ### Review what was saved today
-Ask: "Show me today's memory log" or check ~/.openclaw/workspace/memory/YYYY-MM-DD.md
+Ask: "Show me today's memory log" or check /data/.openclaw/workspace/memory/YYYY-MM-DD.md
 
 ### List key decisions from a conversation
 At the end of an important session, say: "List the key decisions from this session that we should save to memory"

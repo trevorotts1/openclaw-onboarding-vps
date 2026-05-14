@@ -1,18 +1,28 @@
-# OpenClaw Onboarding
+# OpenClaw Onboarding — Hostinger Docker VPS
 
-**A complete onboarding package for setting up a fully operational OpenClaw agent.**
+**A complete onboarding package for setting up a fully operational OpenClaw agent on Hostinger's hvps-openclaw Docker container.**
 
-**Current Version: v9.7.11** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
+**Current Version: v10.0.0** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
+
+This repo is **Hostinger Docker VPS-only**. The Mac mini installer lives at https://github.com/trevorotts1/openclaw-onboarding.
 
 This repo contains **36 skill folders** (01 through 36, with 13, 33, and 34 archived) plus an install script and update script.
 
-> **First time installing or updating?** Read **[ONBOARDING-TRIGGERS.md](ONBOARDING-TRIGGERS.md)** — it shows exactly how to start a fresh install or run an update, with both Terminal and Telegram options for Mac and VPS.
+> **First time installing or updating?** Read **[ONBOARDING-TRIGGERS.md](ONBOARDING-TRIGGERS.md)** — it shows exactly how to start a fresh install or run an update via Terminal or Telegram.
 
-### What's New in v9.7.11 (May 14, 2026) — Smart credential discovery + 4 critical skill fixes
+### What's New in v10.0.0 (May 14, 2026) — The split: VPS-only repo, bulletproof discovery
 
-install.sh credential discovery is now platform-aware and alias-smart. Hostinger Docker VPS exposes API keys as container env vars (no .env files); Mac uses `~/.openclaw/secrets/.env`. Lookup now tries multiple naming variants per credential — e.g. `GOHIGHLEVEL_API_KEY` ↔ `GHL_PRIVATE_INTEGRATION_TOKEN` ↔ `GHL_API_KEY` ↔ `GHL_PIT`. Also reads LLM keys directly from `models.providers.<name>.apiKey` in openclaw.json.
+This is a deliberate major version break that splits the previous unified codebase into two dedicated repos. The Mac installer is its own thing now (https://github.com/trevorotts1/openclaw-onboarding). This repo is VPS-only — paths hardcoded to `/data/.openclaw/...`, no Mac branches, no platform detect.
 
-4 critical skill fixes (skills 06, 29, 11, 16) that would have failed outright on Hostinger Docker — see CHANGELOG.md for the line-by-line fix list.
+**Bulletproof Telegram chat ID resolver — 14 sources.** Hostinger Docker pairing always succeeds — if we don't find a chat ID, we weren't looking right. The resolver now walks all 14 plausible Hostinger Docker locations starting with `commands.ownerAllowFrom` (the docs-canonical primary field). Verified live on a Hostinger container — resolved chat ID via Strategy 1.
+
+**Bulletproof credential discovery — 9 sources.** Container env vars (`printenv`) → `/proc/1/environ` → openclaw.json (models.providers, env.vars block, plugins.entries) → auth-profiles.json → secrets.json → secrets/.env → deep scan. Alias map covers Hostinger-specific names (GHL_PRIVATE_INTEGRATION_TOKEN, AI_GATEWAY_API_KEY, etc).
+
+**Bulletproof workspace resolver.** Per-agent override → defaults.workspace → /data/.openclaw/workspace (Hostinger canonical). The `/data/clawd` path (a Mac convention) is gone entirely.
+
+**All 36 skills cleaned to VPS-only paths.** 1497 path replacements across 179 files. The path bug from v9.7.11 (`/data/openclaw/workspace/secrets/` typo) is fixed everywhere.
+
+See CHANGELOG.md for the full list of changes.
 
 End-of-discovery report now lists any missing canonical credentials so the operator can fix gaps before skill installs hit them.
 
@@ -182,13 +192,13 @@ Works regardless of OpenClaw schema version. Tested against multi-account schema
 - ONBOARDING_VERSION bumped to v9.3.4.
 
 ### What's New in v9.3.3 (May 13, 2026) — Mac/VPS Sync Audit + Skill 35 v2.0.0 mirrored to VPS
-- **Audited cross-contamination between Mac and VPS repos.** Most folder diffs are legitimate platform-specific paths (Mac uses ~/clawd, VPS uses /data/clawd) — those are correct.
+- **Audited cross-contamination between Mac and VPS repos.** Most folder diffs are legitimate platform-specific paths (Mac uses ~/clawd, VPS uses /data/.openclaw/workspace) — those are correct.
 - **Real bugs found and fixed:**
   - VPS install.sh header comment referenced Mac repo URL. Fixed to openclaw-onboarding-vps/main.
   - Skill 35 v2.0.0 (canonical GOHIGHLEVEL_API_KEY env var, MCP-first routing, qc-skill35.sh) had only landed on Mac. Mirrored to VPS. Both repos now ship Skill 35 v2.0.0 identically.
 - **Confirmed correct (not bugs):**
   - Mac/VPS install.sh and update-skills.sh contain reciprocal defensive branches (`[ -d "/data/.openclaw" ] && REPO_URL=...-vps/main`) that auto-switch repo URL based on detected platform. This is by design — protects against the wrong script being run on the wrong machine.
-  - 21 skill folders have legitimate path differences between Mac and VPS (`~/clawd/...` vs `/data/clawd/...`). This is correct; not cross-contamination.
+  - 21 skill folders have legitimate path differences between Mac and VPS (`~/clawd/...` vs `/data/.openclaw/workspace/...`). This is correct; not cross-contamination.
 - ONBOARDING_VERSION bumped to v9.3.3.
 
 ### What's New in v9.3.2 (May 13, 2026) — Bespoke Per-Skill QC Scripts

@@ -85,23 +85,16 @@ python3 --version
 - If you see a version number like "Python 3.9.0", Python is installed
 - If you see "command not found," you need to install Python
 
-**To install Python:**
-```bash
-brew install python
-```
+**Python on Hostinger Docker:** Already installed at `/usr/bin/python3` (Python 3.11+). If `python3` shows "command not found", the container image is broken — contact Hostinger support.
 
 ### Installing yt-dlp
 
-You have two options for installing yt-dlp. Choose the one that works best for you.
-
-**Option 1: Install with Homebrew (Recommended)**
-
-Homebrew is a package manager for Mac. If you do not have Homebrew installed, visit https://brew.sh for installation instructions.
-
-Once Homebrew is ready, type:
+Hostinger Docker has no Homebrew on PATH and no apt-get. Use Python pip — works in the container without sudo:
 
 ```bash
-brew install yt-dlp
+pip3 install --user yt-dlp
+export PATH="/data/.local/bin:$PATH"   # HOME=/data on Hostinger
+yt-dlp --version   # verify
 ```
 
 **What to expect:**
@@ -147,7 +140,7 @@ Replace `{baseDir}` with the actual path to the skill folder. Replace `YOUTUBE_U
 Here is how you actually run it:
 
 ```bash
-python3 ~/.openclaw/skills/20-youtube-watcher/scripts/get_transcript.py "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+python3 /data/.openclaw/skills/20-youtube-watcher/scripts/get_transcript.py "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
 **What to expect:**

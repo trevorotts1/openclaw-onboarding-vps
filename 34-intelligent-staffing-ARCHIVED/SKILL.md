@@ -38,14 +38,14 @@ Each question has a pre-assigned type based on the nature of the work:
 ### What Gets Created
 
 **For permanent specialists:**
-- Workspace folder: `~/clawd/departments/[dept]/specialists/[specialist-name]/`
+- Workspace folder: `/data/.openclaw/workspace/departments/[dept]/specialists/[specialist-name]/`
 - `SOUL.md` - identity, purpose, operating rhythm, boundaries
 - `MEMORY.md` - long-term memory scaffold
 - `AGENTS.md` - behavior rules
-- Entry in `~/.openclaw/openclaw.json` agents list
+- Entry in `/data/.openclaw/openclaw.json` agents list
 
 **For sub-agent roles:**
-- Template folder: `~/clawd/subagents/templates/[role-name]/`
+- Template folder: `/data/.openclaw/workspace/subagents/templates/[role-name]/`
 - `SOUL.md` - task template (no persistent memory)
 
 ## Department Coverage

@@ -131,12 +131,12 @@ Before doing anything else, identify where secrets are stored on this machine.
 Run this check and store the result in $SECRETS_FILE for use in later steps:
 
   SECRETS_FILE=""
-  for f in /data/openclaw/workspace/secrets/.env /data/.openclaw/.env ~/.env ~/secrets/.env; do
+  for f in /data/.openclaw/secrets/.env /data/.openclaw/.env ~/.env ~/secrets/.env; do
     if [ -f "$f" ]; then SECRETS_FILE="$f"; break; fi
   done
   if [ -z "$SECRETS_FILE" ]; then
-    SECRETS_FILE=/data/openclaw/workspace/secrets/.env
-    mkdir -p /data/openclaw/workspace/secrets
+    SECRETS_FILE=/data/.openclaw/secrets/.env
+    mkdir -p /data/.openclaw/secrets
   fi
   echo "Secrets file: $SECRETS_FILE"
 

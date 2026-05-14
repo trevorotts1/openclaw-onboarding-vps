@@ -40,11 +40,11 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   The canonical master files folder is: ~/Downloads/openclaw-master-files/
+   The canonical master files folder is: /data/.openclaw/master-files/
    If that exact path does not exist, check for these common variations:
-   - ~/Downloads/OpenClaw Master Files/
-   - ~/Downloads/OpenClaw Master Documents/
-   Use whichever exists. If none exist, create: ~/Downloads/openclaw-master-files/
+   - /data/.openclaw/master-files/OpenClaw Master Files/
+   - /data/.openclaw/master-files/OpenClaw Master Documents/
+   Use whichever exists. If none exist, create: /data/.openclaw/master-files/
 
    Save this full document content as a .md file in that folder.
 
@@ -66,10 +66,10 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. Ensure TYP read pass is complete.
 2. Create target folder:
-   `mkdir -p ~/.openclaw/skills/tavily-search`
+   `mkdir -p /data/.openclaw/skills/tavily-search`
 3. Copy upstream files:
-   `cp -R ./upstream-original/. ~/.openclaw/skills/tavily-search/`
-4. Verify `~/.openclaw/skills/tavily-search/SKILL.md` exists.
+   `cp -R ./upstream-original/. /data/.openclaw/skills/tavily-search/`
+4. Verify `/data/.openclaw/skills/tavily-search/SKILL.md` exists.
 5. Apply relevant core file updates from CORE_UPDATES.md only.
 ---
 
@@ -100,7 +100,7 @@ If the installation fails at any step (copy error, permission denied, missing fo
 1. **STOP** - Do not proceed to the next step
 2. **Clean up** the partial install:
    ```bash
-   rm -rf ~/.openclaw/skills/tavily-search
+   rm -rf /data/.openclaw/skills/tavily-search
    ```
 3. **Identify the failure** - read the error message carefully
 4. **Fix the root cause** (missing folder, wrong path, permission issue)

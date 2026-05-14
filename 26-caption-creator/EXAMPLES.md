@@ -18,7 +18,7 @@ This file gives copy-paste examples for the scripts that ship with this skill.
 Use this when you want subtitles for YouTube or for your video editor.
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
   --input "my_video.mp4" \
   --output "my_video.srt" \
   --model medium
@@ -27,7 +27,7 @@ Use this when you want subtitles for YouTube or for your video editor.
 ## Create a captioned video (minimal)
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
+/data/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
   --input "my_video.mp4" \
   --output "my_video_captioned.mp4" \
   --style minimal \
@@ -39,7 +39,7 @@ Use this when you want subtitles for YouTube or for your video editor.
 Use this when you want bigger captions and maximum readability.
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
+/data/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
   --input "my_video.mp4" \
   --output "my_video_captioned_full.mp4" \
   --style full \
@@ -51,7 +51,7 @@ Use this when you want bigger captions and maximum readability.
 This style uses `Scripts/animated_captions.py` internally.
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
+/data/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
   --input "my_video.mp4" \
   --output "my_video_captioned_animated.mp4" \
   --style animated \
@@ -63,7 +63,7 @@ This style uses `Scripts/animated_captions.py` internally.
 Fast (lower accuracy):
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
   --input "my_video.mp4" \
   --output "my_video.srt" \
   --model base
@@ -72,7 +72,7 @@ Fast (lower accuracy):
 More accurate (slower):
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
   --input "my_video.mp4" \
   --output "my_video.srt" \
   --model large
@@ -91,7 +91,7 @@ mkdir -p subtitles
 
 for f in *.mp4; do
   stem="${f%.*}"
-  ~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+  /data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
     --input "$f" \
     --output "subtitles/${stem}.srt" \
     --model medium

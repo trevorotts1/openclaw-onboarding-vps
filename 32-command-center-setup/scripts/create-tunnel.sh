@@ -32,12 +32,12 @@ fi
 TUNNEL_TOKEN=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['tunnelToken'])")
 SUBDOMAIN=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['subdomain'])")
 
-echo "[2/5] Saving tunnel token to ~/.openclaw/.env"
-mkdir -p ~/.openclaw
+echo "[2/5] Saving tunnel token to /data/.openclaw/.env"
+mkdir -p /data/.openclaw
 TMP_ENV=$(mktemp)
-grep -v '^CLOUDFLARE_TUNNEL_TOKEN=' ~/.openclaw/.env 2>/dev/null > "$TMP_ENV" || true
+grep -v '^CLOUDFLARE_TUNNEL_TOKEN=' /data/.openclaw/.env 2>/dev/null > "$TMP_ENV" || true
 echo "CLOUDFLARE_TUNNEL_TOKEN=$TUNNEL_TOKEN" >> "$TMP_ENV"
-mv "$TMP_ENV" ~/.openclaw/.env
+mv "$TMP_ENV" /data/.openclaw/.env
 
 echo "[3/5] Starting tunnel via PM2"
 pm2 delete cloudflare-tunnel >/dev/null 2>&1 || true

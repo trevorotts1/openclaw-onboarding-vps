@@ -12,7 +12,7 @@ Add concise summaries and file paths only. Never paste full documentation into c
 ```
 ## Summarize Skill (YouTube Transcript + Summary)
 - Installed summarize via Homebrew (`steipete/tap/summarize`)
-- Keys: discovered from /data/openclaw/workspace/secrets/.env, /data/.openclaw/.env, or ~/.config/openclaw/.env
+- Keys: discovered from /data/.openclaw/secrets/.env, /data/.openclaw/.env, or ~/.config/openclaw/.env
 - Key order: OPENAI_API_KEY first, GEMINI_API_KEY fallback (--provider gemini)
 - Missing keys are skippable per provider - skill continues with available provider(s)
 - Full install reference: /data/openclaw-master-files/16-summarize-youtube-full.md
@@ -30,7 +30,7 @@ Add concise summaries and file paths only. Never paste full documentation into c
 - Summary (OpenAI): `OPENAI_API_KEY="$OPENAI_API_KEY" summarize "https://youtu.be/VIDEO_ID" --youtube auto`
 - Summary (Gemini): `GEMINI_API_KEY="$GEMINI_API_KEY" summarize "https://youtu.be/VIDEO_ID" --youtube auto --provider gemini`
 - Transcript: `summarize "https://youtu.be/VIDEO_ID" --youtube auto --extract-only`
-- Key discovery order: /data/openclaw/workspace/secrets/.env → /data/.openclaw/.env → ~/.config/openclaw/.env
+- Key discovery order: /data/.openclaw/secrets/.env → /data/.openclaw/.env → ~/.config/openclaw/.env
 - Full reference: /data/openclaw-master-files/16-summarize-youtube-full.md
 ```
 
@@ -43,7 +43,7 @@ Add concise summaries and file paths only. Never paste full documentation into c
 ```
 ## Installed: summarize tool
 - summarize CLI installed via Homebrew
-- Keys loaded from env discovery (/data/openclaw/workspace/secrets/.env or /data/.openclaw/.env)
+- Keys loaded from env discovery (/data/.openclaw/secrets/.env or /data/.openclaw/.env)
 - OpenAI-first with --provider gemini fallback confirmed working
 - Transcript extraction confirmed working
 - Full reference: /data/openclaw-master-files/16-summarize-youtube-full.md

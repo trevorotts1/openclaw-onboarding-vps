@@ -10,7 +10,7 @@ Each section lists checks, the exact command or verification step, and the expec
 Confirm the skill folder and all required files are present.
 
 ```bash
-SKILL_DIR="$HOME/.openclaw/skills/video-creator"
+SKILL_DIR="/data/.openclaw/skills/video-creator"
 
 # Check top-level files
 for f in SKILL.md INSTALL.md INSTRUCTIONS.md EXAMPLES.md CORE_UPDATES.md; do
@@ -41,7 +41,7 @@ done
 All `.py` scripts in `scripts/` must be executable.
 
 ```bash
-SKILL_DIR="$HOME/.openclaw/skills/video-creator"
+SKILL_DIR="/data/.openclaw/skills/video-creator"
 
 for s in "$SKILL_DIR"/scripts/*.py; do
   [ -x "$s" ] && echo "PASS: $(basename $s) is executable" \
@@ -51,7 +51,7 @@ done
 
 **Pass criteria:** All scripts print `PASS`. If any fail, fix with:
 ```bash
-chmod +x "$HOME/.openclaw/skills/video-creator/scripts"/*.py
+chmod +x "/data/.openclaw/skills/video-creator/scripts"/*.py
 ```
 
 ---
@@ -63,15 +63,15 @@ Verify that `TOOLS.md` and `MEMORY.md` were updated as specified in `CORE_UPDATE
 ### TOOLS.md
 
 ```bash
-grep -q "Video Creator (Skill 25)" "$HOME/.openclaw/TOOLS.md" \
+grep -q "Video Creator (Skill 25)" "/data/.openclaw/TOOLS.md" \
   && echo "PASS: Video Creator entry found in TOOLS.md" \
   || echo "FAIL: Video Creator entry missing from TOOLS.md"
 
-grep -q "KIE_API_KEY" "$HOME/.openclaw/TOOLS.md" \
+grep -q "KIE_API_KEY" "/data/.openclaw/TOOLS.md" \
   && echo "PASS: KIE_API_KEY reference found in TOOLS.md" \
   || echo "FAIL: KIE_API_KEY reference missing from TOOLS.md"
 
-grep -q "video-creator" "$HOME/.openclaw/TOOLS.md" \
+grep -q "video-creator" "/data/.openclaw/TOOLS.md" \
   && echo "PASS: video-creator path found in TOOLS.md" \
   || echo "FAIL: video-creator path missing from TOOLS.md"
 ```
@@ -79,11 +79,11 @@ grep -q "video-creator" "$HOME/.openclaw/TOOLS.md" \
 ### MEMORY.md
 
 ```bash
-grep -q "Video Creator (Skill 25)" "$HOME/.openclaw/MEMORY.md" \
+grep -q "Video Creator (Skill 25)" "/data/.openclaw/MEMORY.md" \
   && echo "PASS: Video Creator pointer found in MEMORY.md" \
   || echo "FAIL: Video Creator pointer missing from MEMORY.md"
 
-grep -q "video-creator" "$HOME/.openclaw/MEMORY.md" \
+grep -q "video-creator" "/data/.openclaw/MEMORY.md" \
   && echo "PASS: video-creator path found in MEMORY.md" \
   || echo "FAIL: video-creator path missing from MEMORY.md"
 ```
@@ -119,7 +119,7 @@ python3 -c "import sys; v=sys.version_info; \
 ### Python packages
 
 ```bash
-cd "$HOME/.openclaw/skills/video-creator"
+cd "/data/.openclaw/skills/video-creator"
 source venv/bin/activate 2>/dev/null || true  # activate venv if present
 
 for pkg in moviepy cv2 requests PIL numpy; do
@@ -172,7 +172,7 @@ Run the built-in test script, then a manual mock generation.
 ### Step 1: Built-in test
 
 ```bash
-cd "$HOME/.openclaw/skills/video-creator"
+cd "/data/.openclaw/skills/video-creator"
 source venv/bin/activate 2>/dev/null || true
 python3 scripts/test_installation.py
 ```
@@ -182,7 +182,7 @@ python3 scripts/test_installation.py
 ### Step 2: Mock text-to-video (no API key required)
 
 ```bash
-cd "$HOME/.openclaw/skills/video-creator"
+cd "/data/.openclaw/skills/video-creator"
 source venv/bin/activate 2>/dev/null || true
 
 mkdir -p output
@@ -201,7 +201,7 @@ python3 scripts/text_to_video.py "A calm ocean at sunrise" \
 ### Step 3: Verify output file
 
 ```bash
-[ -s "$HOME/.openclaw/skills/video-creator/output/qc_test.mp4" ] \
+[ -s "/data/.openclaw/skills/video-creator/output/qc_test.mp4" ] \
   && echo "PASS: qc_test.mp4 created and non-empty" \
   || echo "FAIL: qc_test.mp4 missing or empty"
 ```
@@ -221,7 +221,7 @@ Verify the agent does NOT exhibit these incorrect behaviors.
 | 3 | **Updating wrong core files** — agent modifies files other than `TOOLS.md` and `MEMORY.md` | Check git diff or file timestamps on other core files; only `TOOLS.md` and `MEMORY.md` should be touched |
 | 4 | **Missing `--provider mock`** — agent tries to call a real API when no key is set | Confirm test run above used `--provider mock` and produced output without API errors |
 | 5 | **Scripts not executable** — agent runs scripts via `python3 scripts/x.py` but scripts are not chmod +x | Covered in Section 2; all scripts must be executable |
-| 6 | **Wrong install path** — skill placed somewhere other than `~/.openclaw/skills/video-creator/` | Confirm: `ls "$HOME/.openclaw/skills/video-creator/SKILL.md"` returns the file |
+| 6 | **Wrong install path** — skill placed somewhere other than `/data/.openclaw/skills/video-creator/` | Confirm: `ls "/data/.openclaw/skills/video-creator/SKILL.md"` returns the file |
 
 **Pass criteria:** None of the anti-patterns are present.
 
@@ -257,7 +257,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

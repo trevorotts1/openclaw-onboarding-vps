@@ -38,7 +38,7 @@ touches. When in doubt: skill docs win.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Locate OpenClaw master files folder in ~/Downloads/. Possible names:
+   Locate OpenClaw master files folder in /data/.openclaw/master-files/. Possible names:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -48,7 +48,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder found, create: /data/.openclaw/master-files/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -132,16 +132,16 @@ STEP 0: DEPENDENCY CHECK
 
 Agent action - run before anything else:
 
-1. Check that jq is available:
+1. Check that jq is available (Hostinger Docker has jq via /data/linuxbrew):
    if ! command -v jq &>/dev/null; then
-     echo "Installing jq..."
-     brew install jq 2>/dev/null || sudo apt-get install -y jq 2>/dev/null
+     echo "ERROR: jq not available. Hostinger image normally ships with /data/linuxbrew/.linuxbrew/bin/jq."
+     echo "Re-install via: /data/linuxbrew/.linuxbrew/bin/brew install jq"
+     exit 1
    fi
 
-2. Check that Node.js and npm are available:
+2. Check that Node.js and npm are available (Hostinger Docker ships Node v22):
    node --version && npm --version
-   - If not found: instruct user to install Node.js from https://nodejs.org
-     and halt until confirmed.
+   - If not found, the container image is broken — contact Hostinger support.
 
 3. Check that curl is available:
    curl --version
@@ -154,11 +154,11 @@ Agent action:
    secrets locations:
 
    SECRETS_FILE=""
-   for f in ~/clawd/secrets/.env ~/.openclaw/.env ~/.env ~/secrets/.env; do
+   for f in /data/.openclaw/secrets/.env /data/.openclaw/.env ~/.env ~/secrets/.env; do
      if [ -f "$f" ]; then SECRETS_FILE="$f"; break; fi
    done
 
-   Also check: ~/.openclaw/openclaw.json and the $VERCEL_TOKEN env var.
+   Also check: /data/.openclaw/openclaw.json and the $VERCEL_TOKEN env var.
 
 2. If VERCEL_TOKEN found:
    - Verify token via API call:
@@ -218,12 +218,12 @@ STEP 4: STORE TOKEN IN ENVIRONMENT
 Agent action:
 1. Locate or create secrets file using multi-env check:
    SECRETS_FILE=""
-   for f in ~/clawd/secrets/.env ~/.openclaw/.env ~/.env ~/secrets/.env; do
+   for f in /data/.openclaw/secrets/.env /data/.openclaw/.env ~/.env ~/secrets/.env; do
      if [ -f "$f" ]; then SECRETS_FILE="$f"; break; fi
    done
    if [ -z "$SECRETS_FILE" ]; then
-     SECRETS_FILE=~/clawd/secrets/.env
-     mkdir -p ~/clawd/secrets
+     SECRETS_FILE=/data/.openclaw/secrets/.env
+     mkdir -p /data/.openclaw/workspace/secrets
    fi
 
 2. Add or update the token line:

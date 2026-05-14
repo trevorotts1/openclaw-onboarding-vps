@@ -9,7 +9,7 @@ Run this after installation to verify the skill is correctly installed and funct
 Verify every required file and folder exists.
 
 ```bash
-SKILL_DIR="$HOME/.openclaw/skills/video-editor"
+SKILL_DIR="/data/.openclaw/skills/video-editor"
 
 # Check top-level files
 for f in SKILL.md INSTALL.md INSTRUCTIONS.md EXAMPLES.md CORE_UPDATES.md BROLL-WORKFLOW.md; do
@@ -42,7 +42,7 @@ done
 All `.sh` scripts must be executable (macOS/Linux).
 
 ```bash
-SKILL_DIR="$HOME/.openclaw/skills/video-editor"
+SKILL_DIR="/data/.openclaw/skills/video-editor"
 
 for s in download.sh cut.sh resize.sh caption.sh social-clip.sh \
           analyze-video.sh extract-audio.sh merge-broll.sh broll-workflow.sh; do
@@ -63,7 +63,7 @@ Verify the three required entries were added to core files.
 ### 3a. AGENTS.md — Video QC Rule
 
 ```bash
-grep -q "Video QC Rule (Skill 27)" "$HOME/.openclaw/AGENTS.md" \
+grep -q "Video QC Rule (Skill 27)" "/data/.openclaw/AGENTS.md" \
   && echo "PASS: AGENTS.md contains Video QC Rule" \
   || echo "FAIL: AGENTS.md missing Video QC Rule (Skill 27)"
 ```
@@ -75,7 +75,7 @@ for line in "Verify the output file exists" \
             "duration and resolution" \
             "audio is present" \
             "treat the run as FAILED"; do
-  grep -q "$line" "$HOME/.openclaw/AGENTS.md" \
+  grep -q "$line" "/data/.openclaw/AGENTS.md" \
     && echo "PASS: AGENTS.md contains: $line" \
     || echo "FAIL: AGENTS.md missing: $line"
 done
@@ -84,11 +84,11 @@ done
 ### 3b. TOOLS.md — Video Skills Suite section
 
 ```bash
-grep -q "Video Editor (Skill 27)" "$HOME/.openclaw/TOOLS.md" \
+grep -q "Video Editor (Skill 27)" "/data/.openclaw/TOOLS.md" \
   && echo "PASS: TOOLS.md contains Video Editor entry" \
   || echo "FAIL: TOOLS.md missing Video Editor (Skill 27)"
 
-grep -q "video-editor" "$HOME/.openclaw/TOOLS.md" \
+grep -q "video-editor" "/data/.openclaw/TOOLS.md" \
   && echo "PASS: TOOLS.md contains skill path" \
   || echo "FAIL: TOOLS.md missing skill path"
 ```
@@ -96,11 +96,11 @@ grep -q "video-editor" "$HOME/.openclaw/TOOLS.md" \
 ### 3c. MEMORY.md — Pointer entry
 
 ```bash
-grep -q "Video Editor (Skill 27)" "$HOME/.openclaw/MEMORY.md" \
+grep -q "Video Editor (Skill 27)" "/data/.openclaw/MEMORY.md" \
   && echo "PASS: MEMORY.md contains Video Editor pointer" \
   || echo "FAIL: MEMORY.md missing Video Editor (Skill 27) pointer"
 
-grep -q "video-editor" "$HOME/.openclaw/MEMORY.md" \
+grep -q "video-editor" "/data/.openclaw/MEMORY.md" \
   && echo "PASS: MEMORY.md contains skill path" \
   || echo "FAIL: MEMORY.md missing skill path"
 ```
@@ -189,7 +189,7 @@ Run a minimal end-to-end smoke test using a local test file (no network required
 ### Step 1 — Create a test source clip with FFmpeg
 
 ```bash
-SKILL_DIR="$HOME/.openclaw/skills/video-editor"
+SKILL_DIR="/data/.openclaw/skills/video-editor"
 cd /tmp
 
 # Generate a 10-second silent test video (no download needed)
@@ -317,7 +317,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

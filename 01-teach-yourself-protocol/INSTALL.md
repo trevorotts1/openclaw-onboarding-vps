@@ -3,11 +3,11 @@
 ## Prerequisites
 - OpenClaw installed and running (`openclaw status`)
 - Write access to workspace files (AGENTS.md, TOOLS.md, MEMORY.md, IDENTITY.md)
-- ~/Downloads/ folder accessible
+- /data/.openclaw/master-files/ folder accessible
 
 ## Step 1: Find or Create the Master Files Folder
 
-Search ~/Downloads/ for an existing master files folder. Check these names:
+Search /data/.openclaw/master-files/ for an existing master files folder. Check these names:
 - openclaw-master-files
 - openclaw-master-docs
 - OpenClaw Master Files
@@ -17,15 +17,15 @@ If found, use it. Do NOT create a duplicate.
 
 If not found:
 ```bash
-mkdir -p ~/Downloads/openclaw-master-files/
+mkdir -p /data/.openclaw/master-files/
 ```
 
 Create subfolders:
 ```bash
-mkdir -p ~/Downloads/[MASTER_FILES_FOLDER]/apis/
-mkdir -p ~/Downloads/[MASTER_FILES_FOLDER]/skills/
-mkdir -p ~/Downloads/[MASTER_FILES_FOLDER]/processes/
-mkdir -p ~/Downloads/[MASTER_FILES_FOLDER]/references/
+mkdir -p /data/.openclaw/master-files/[MASTER_FILES_FOLDER]/apis/
+mkdir -p /data/.openclaw/master-files/[MASTER_FILES_FOLDER]/skills/
+mkdir -p /data/.openclaw/master-files/[MASTER_FILES_FOLDER]/processes/
+mkdir -p /data/.openclaw/master-files/[MASTER_FILES_FOLDER]/references/
 ```
 
 ## Step 2: Place the Skill Files
@@ -45,8 +45,8 @@ All files stay together:
 Copy this skill folder into the OpenClaw skills directory so the agent can access it:
 
 ```bash
-mkdir -p ~/.openclaw/skills/01-teach-yourself-protocol
-cp -r "$(dirname "$0")"/* ~/.openclaw/skills/01-teach-yourself-protocol/
+mkdir -p /data/.openclaw/skills/01-teach-yourself-protocol
+cp -r "$(dirname "$0")"/* /data/.openclaw/skills/01-teach-yourself-protocol/
 ```
 
 If a `.skill` file exists in this folder, it is the skill package archive. The agent does NOT need to run any `openclaw skill install` command - that command does not exist. Simply copy the files.

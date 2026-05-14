@@ -80,7 +80,7 @@ store anything.
    questions about the topic. If a new agent could handle basic tasks from just the
    summary, it is good enough. If they would be stuck guessing, it is too thin.
 
-3. **Deep files go in ~/Downloads/openclaw-master-files/.** This folder (or whatever
+3. **Deep files go in /data/.openclaw/master-files/.** This folder (or whatever
    the user has named it) holds the complete, untruncated knowledge organized into
    subfolders: apis/, skills/, processes/, references/.
 

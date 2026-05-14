@@ -20,24 +20,16 @@ PASS=0; FAIL=0; WARN=0
 
 SKILL_DIR="$(dirname "$0")"
 LIB="$SKILL_DIR/../lib-shared.sh"
-[ -f "$LIB" ] || LIB="$HOME/.openclaw/skills/lib-shared.sh"
+[ -f "$LIB" ] || LIB="/data/.openclaw/skills/lib-shared.sh"
 [ -f "$LIB" ] && source "$LIB"
 
 if ! command -v resolve_platform_paths >/dev/null 2>&1; then
   resolve_platform_paths() {
-    if [ -d "/data/.openclaw" ]; then
-      export OPENCLAW_PLATFORM="vps"
-      export SECRETS_ENV="/data/.openclaw/secrets/.env"
-      export CONFIG_JSON="/data/.openclaw/openclaw.json"
-      export WORKSPACE="/data/clawd"
-      export SKILLS_DIR_DEFAULT="/data/.openclaw/skills"
-    else
-      export OPENCLAW_PLATFORM="mac"
-      export SECRETS_ENV="$HOME/.openclaw/secrets/.env"
-      export CONFIG_JSON="$HOME/.openclaw/openclaw.json"
-      export WORKSPACE="$HOME/clawd"
-      export SKILLS_DIR_DEFAULT="$HOME/.openclaw/skills"
-    fi
+    # VPS canonical paths (Hostinger Docker)
+    export SECRETS_ENV="/data/.openclaw/secrets/.env"
+    export CONFIG_JSON="/data/.openclaw/openclaw.json"
+    export WORKSPACE="/data/.openclaw/workspace"
+    export SKILLS_DIR_DEFAULT="/data/.openclaw/skills"
   }
 fi
 resolve_platform_paths
@@ -83,7 +75,7 @@ echo "── Section A: Master files + platform ──"
 
 # Fuzzy locator (mirrors lib-shared.sh)
 MASTER_FILES_DIR=""
-for r in "$HOME/Downloads" "/data/Downloads" "/root/Downloads" "/data" "$HOME"; do
+for r in "/data/.openclaw/master-files" "/data/Downloads" "/root/Downloads" "/data" "$HOME"; do
   [ -d "$r" ] || continue
   f=$(find "$r" -maxdepth 2 -type d \
     \( -iname "*openclaw*master*file*" -o -iname "*open*claw*master*file*" \) \
@@ -155,7 +147,7 @@ echo "── Section D: Tier 2 (Community MCP) ──"
 assert "ghl-community-mcp registered" "command -v openclaw && openclaw mcp list 2>/dev/null | grep -q 'ghl-community-mcp'"
 URL=$(command -v openclaw && openclaw config get env.vars.GHL_COMMUNITY_MCP_URL 2>/dev/null | tr -d '\n' | sed 's|/$||')
 if [ "$OPENCLAW_PLATFORM" = "mac" ]; then
-  assert "launchd service is running" "launchctl print gui/$(id -u)/com.clawd.ghl-mcp 2>/dev/null | grep -q 'state = running'"
+  assert "launchd service is running" "systemctl --user print gui/$(id -u)/com.clawd.ghl-mcp 2>/dev/null | grep -q 'state = running'"
 else
   assert "systemd service is running" "systemctl is-active ghl-mcp 2>/dev/null | grep -q '^active$'"
 fi

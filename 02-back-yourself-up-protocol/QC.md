@@ -5,7 +5,7 @@ Enables mandatory config backups and recurring full-instance backups before any 
 
 ## 2. Installation Checks
 - [ ] Skill folder exists and contains `SKILL.md`, `INSTALL.md`, `INSTRUCTIONS.md`, `EXAMPLES.md`, `CORE_UPDATES.md`, the full reference `.md`, and the `.skill` package.
-- [ ] The correct config file path from the skill is used: `~/.openclaw/openclaw.json` for this repo context, with no fallback to unrelated config filenames.
+- [ ] The correct config file path from the skill is used: `/data/.openclaw/openclaw.json` for this repo context, with no fallback to unrelated config filenames.
 - [ ] A backup folder is detected or created under the documented downloads location, with human-readable backup filenames.
 - [ ] The scheduled backup job exists: `openclaw cron list` includes the BYUP backup entry.
 - [ ] No executable helper script is required in the skill folder; if a local backup shell script was added later, it must be executable.
@@ -18,11 +18,11 @@ Enables mandatory config backups and recurring full-instance backups before any 
 
 ## 4. Key Detection
 - [ ] No external API key is required for BYUP.
-- [ ] Smart detection should validate paths, not secrets: check `~/.openclaw/openclaw.json`, then `~/.openclaw/openclaw.json`, then the repo-specific data path if the environment is containerized.
+- [ ] Smart detection should validate paths, not secrets: check `/data/.openclaw/openclaw.json`, then `/data/.openclaw/openclaw.json`, then the repo-specific data path if the environment is containerized.
 - [ ] QC fails if the agent asks for a backup “key” or treats this skill as credential-driven.
 
 ## 5. Functional Checks
-- [ ] Run a test backup of `~/.openclaw/openclaw.json` into the backup folder and confirm the file exists and is not 0 bytes.
+- [ ] Run a test backup of `/data/.openclaw/openclaw.json` into the backup folder and confirm the file exists and is not 0 bytes.
 - [ ] Verify the filename uses the required human-readable format, e.g. `models-backup-February 23 at 11-00 AM.txt`.
 - [ ] Simulate a config edit request and verify the agent asks for explicit permission **after** backup creation and **before** editing.
 - [ ] Validate the cron entry exists and matches the documented cadence.
@@ -61,7 +61,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

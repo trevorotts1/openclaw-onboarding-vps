@@ -5,7 +5,7 @@
 
 ## 🔴 CONFIG SAFETY NOTE
 Before ANY config edit:
-1. Back up `~/.openclaw/openclaw.json` to `~/Downloads/openclaw-backups/` with a human-readable name.
+1. Back up `/data/.openclaw/openclaw.json` to `/data/.openclaw/backups/` with a human-readable name.
 2. Validate JSON after writing (`jq . < file` or `openclaw doctor`).
 3. Reference https://docs.openclaw.ai for config structure.
 4. Reference https://github.com/openclaw/openclaw for latest schema.
@@ -53,8 +53,8 @@ files it touches. When in doubt: skill docs win.
 WHEN AGENT LEARNS THIS DOCUMENT, AGENT FOLLOWS THIS STRUCTURE:
 
 1. AGENT SAVES FULL DOCUMENTATION TO MASTER FILES FOLDER
-   The canonical master files path is: ~/Downloads/openclaw-master-files/
-   If this folder does not exist, agent creates it: mkdir -p ~/Downloads/openclaw-master-files/
+   The canonical master files path is: /data/.openclaw/master-files/
+   If this folder does not exist, agent creates it: mkdir -p /data/.openclaw/master-files/
 
    Agent saves this full document content as a .md file in that folder.
 
@@ -161,10 +161,10 @@ Agent checks environment and config files for an existing key:
 echo $OPENROUTER_API_KEY
 
 # Check secrets env file
-grep "OPENROUTER_API_KEY" ~/clawd/secrets/.env 2>/dev/null
+grep "OPENROUTER_API_KEY" /data/.openclaw/secrets/.env 2>/dev/null
 
 # Check existing openclaw config
-grep "OPENROUTER_API_KEY" ~/.openclaw/openclaw.json 2>/dev/null
+grep "OPENROUTER_API_KEY" /data/.openclaw/openclaw.json 2>/dev/null
 ```
 
 IF API key is found in any location:
@@ -208,7 +208,7 @@ Agent backs up current config and captures the backup filename:
 
 ```bash
 BACKUP_FILE="openclaw-backup-$(date +'%B %-d at %-I-%M %p').json"
-cp ~/.openclaw/openclaw.json ~/openclaw-backup-configs/"$BACKUP_FILE"
+cp /data/.openclaw/openclaw.json ~/openclaw-backup-configs/"$BACKUP_FILE"
 echo "Backup saved as: $BACKUP_FILE"
 ```
 
@@ -231,7 +231,7 @@ IF backup is successful and not empty:
 Agent opens config file and reads current content:
 
 ```bash
-cat ~/.openclaw/openclaw.json
+cat /data/.openclaw/openclaw.json
 ```
 
 Agent parses the JSON to locate or create the "env" section.
@@ -250,13 +250,13 @@ Agent writes updated config back to file:
 
 ```bash
 # Agent uses jq or similar JSON tool to safely merge the key
-jq '.env.OPENROUTER_API_KEY = "sk-or-YOUR-KEY-HERE"' ~/.openclaw/openclaw.json > ~/.openclaw/openclaw.json.tmp && mv ~/.openclaw/openclaw.json.tmp ~/.openclaw/openclaw.json
+jq '.env.OPENROUTER_API_KEY = "sk-or-YOUR-KEY-HERE"' /data/.openclaw/openclaw.json > /data/.openclaw/openclaw.json.tmp && mv /data/.openclaw/openclaw.json.tmp /data/.openclaw/openclaw.json
 ```
 
 Agent verifies the key was added:
 
 ```bash
-grep -A 2 '"env"' ~/.openclaw/openclaw.json
+grep -A 2 '"env"' /data/.openclaw/openclaw.json
 ```
 
 IF key is not found in config:
@@ -264,7 +264,7 @@ IF key is not found in config:
 - Agent reports error to requester
 - Agent restores backup:
   ```bash
-  cp ~/openclaw-backup-configs/"$BACKUP_FILE" ~/.openclaw/openclaw.json
+  cp ~/openclaw-backup-configs/"$BACKUP_FILE" /data/.openclaw/openclaw.json
   ```
 - Agent does NOT proceed
 
@@ -276,7 +276,7 @@ IF key is found in config:
 Agent reads current config:
 
 ```bash
-cat ~/.openclaw/openclaw.json
+cat /data/.openclaw/openclaw.json
 ```
 
 Agent parses JSON to locate or create agents.defaults.models section.
@@ -425,7 +425,7 @@ jq --argjson new "$NEW_MODELS" '
   .agents.defaults.model.fallbacks = ["openrouter/xiaomi/mimo-v2-pro", "openrouter/google/gemini-3.1-flash-lite-preview", "openrouter/openrouter/free", "openrouter/minimax/minimax-m2.7", "openrouter/moonshotai/kimi-k2.5", "openrouter/google/gemini-3-flash-preview", "openrouter/qwen/qwen3.5-plus-02-15", "openrouter/z-ai/glm-5", "openrouter/deepseek/deepseek-v3.2", "openrouter/deepseek/deepseek-v3.2-speciale", "openrouter/deepseek/deepseek-r1-0528:free", "openrouter/xiaomi/mimo-v2-omni", "openrouter/nvidia/nemotron-3-super-120b-a12b:free"] |
   .agents.defaults.thinkingDefault = "medium" |
   .agents.defaults.models = ((.agents.defaults.models // {}) * $new)
-' ~/.openclaw/openclaw.json > ~/.openclaw/openclaw.json.tmp && mv ~/.openclaw/openclaw.json.tmp ~/.openclaw/openclaw.json
+' /data/.openclaw/openclaw.json > /data/.openclaw/openclaw.json.tmp && mv /data/.openclaw/openclaw.json.tmp /data/.openclaw/openclaw.json
 ```
 
 NOTE: The `* $new` operator merges new models INTO existing models. Any pre-existing models that are NOT in the new set remain untouched. Any models that exist in both are updated to the new config.
@@ -433,7 +433,7 @@ NOTE: The `* $new` operator merges new models INTO existing models. Any pre-exis
 Agent verifies models were added:
 
 ```bash
-grep -c "openrouter/xiaomi/mimo-v2-pro" ~/.openclaw/openclaw.json
+grep -c "openrouter/xiaomi/mimo-v2-pro" /data/.openclaw/openclaw.json
 ```
 
 IF models are not found in config:
@@ -441,7 +441,7 @@ IF models are not found in config:
 - Agent reports error to requester
 - Agent restores backup:
   ```bash
-  cp ~/openclaw-backup-configs/"$BACKUP_FILE" ~/.openclaw/openclaw.json
+  cp ~/openclaw-backup-configs/"$BACKUP_FILE" /data/.openclaw/openclaw.json
   ```
 - Agent does NOT proceed
 
@@ -466,7 +466,7 @@ IF validation FAILS:
 - Agent reports validation error to requester
 - Agent restores backup:
   ```bash
-  cp ~/openclaw-backup-configs/"$BACKUP_FILE" ~/.openclaw/openclaw.json
+  cp ~/openclaw-backup-configs/"$BACKUP_FILE" /data/.openclaw/openclaw.json
   ```
 - Agent does NOT proceed
 
@@ -501,13 +501,13 @@ IF gateway is not running:
 Agent locates or creates master files folder:
 
 ```bash
-mkdir -p ~/Downloads/openclaw-master-files/openrouter-setup/
+mkdir -p /data/.openclaw/master-files/openrouter-setup/
 ```
 
 Agent saves this full document to:
 
 ```bash
-~/Downloads/openclaw-master-files/openrouter-setup/openrouter-setup-instructions.md
+/data/.openclaw/master-files/openrouter-setup/openrouter-setup-instructions.md
 ```
 
 Agent creates summary for AGENTS.md:
@@ -522,7 +522,7 @@ Key rules:
 - MiMo V2 Omni for multimodal tasks (images+video+audio).
 - Opus is the specialist (complex strategy, writing, client-facing).
 - Perplexity Sonar Pro Search for deep research, Perplexity Sonar for quick lookups.
-Full details: See ~/Downloads/openclaw-master-files/openrouter-setup/openrouter-setup-instructions.md
+Full details: See /data/.openclaw/master-files/openrouter-setup/openrouter-setup-instructions.md
 ```
 
 Agent creates summary for TOOLS.md:
@@ -531,9 +531,9 @@ Agent creates summary for TOOLS.md:
 ## OpenRouter Model Configuration
 22 models configured via OpenRouter. Primary: MiniMax M2.7.
 Temperature: 0.3 for all models, 1.0 for Kimi K2.5 only.
-Config file: ~/.openclaw/openclaw.json
+Config file: /data/.openclaw/openclaw.json
 Always back up before editing. Always validate with openclaw doctor after.
-Full reference: ~/Downloads/openclaw-master-files/openrouter-setup/openrouter-setup-instructions.md
+Full reference: /data/.openclaw/master-files/openrouter-setup/openrouter-setup-instructions.md
 ```
 
 Agent adds these summaries to AGENTS.md and TOOLS.md respectively (agent does NOT paste full document content).
@@ -548,17 +548,17 @@ OPENROUTER SETUP COMPLETE
 Actions completed:
 1. ✓ Verified or obtained OpenRouter API key
 2. ✓ Backed up config to ~/openclaw-backup-configs/
-3. ✓ Added OPENROUTER_API_KEY to ~/.openclaw/openclaw.json
+3. ✓ Added OPENROUTER_API_KEY to /data/.openclaw/openclaw.json
 4. ✓ Configured 22 models in agents.defaults.models
 5. ✓ Validated config with openclaw doctor
 6. ✓ Restarted openclaw gateway
-7. ✓ Saved full documentation to ~/Downloads/openclaw-master-files/openrouter-setup/
+7. ✓ Saved full documentation to /data/.openclaw/master-files/openrouter-setup/
 8. ✓ Added summaries to AGENTS.md and TOOLS.md
 
 Primary model: openrouter/minimax/minimax-m2.7
 Fallback models: openrouter/xiaomi/mimo-v2-pro, openrouter/google/gemini-3.1-flash-lite-preview, openrouter/openrouter/free, openrouter/minimax/minimax-m2.7, openrouter/moonshotai/kimi-k2.5, (+ 12 more)
 
-Config file: ~/.openclaw/openclaw.json
+Config file: /data/.openclaw/openclaw.json
 Backup location: ~/openclaw-backup-configs/
 
 Setup is complete and ready for use.

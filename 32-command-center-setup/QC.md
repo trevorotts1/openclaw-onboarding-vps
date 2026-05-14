@@ -7,8 +7,8 @@ Run this after installation to verify the AI workforce is actually live: workspa
 ## Section 1: File Structure + Version Check
 
 ```bash
-SKILL_DIR="$HOME/.openclaw/skills/32-command-center-setup"
-[ -d "$SKILL_DIR" ] || SKILL_DIR="$HOME/.openclaw/skills/command-center-setup"
+SKILL_DIR="/data/.openclaw/skills/32-command-center-setup"
+[ -d "$SKILL_DIR" ] || SKILL_DIR="/data/.openclaw/skills/command-center-setup"
 
 echo "Using skill dir: $SKILL_DIR"
 
@@ -44,21 +44,21 @@ cloudflared --version >/dev/null 2>&1 && echo "PASS: cloudflared found" || echo 
 This skill depends on department output from Skill 23.
 
 ```bash
-for p in "$HOME/clawd/departments" "$HOME/.openclaw/workspaces/command-center" "$HOME/Downloads/openclaw-master-files"; do
+for p in "/data/.openclaw/workspace/departments" "/data/.openclaw/workspaces/command-center" "/data/.openclaw/master-files"; do
   [ -d "$p" ] && echo "INFO: found directory $p"
 done
 
-[ -d "$HOME/.openclaw/workspaces/command-center" ] \
+[ -d "/data/.openclaw/workspaces/command-center" ] \
   && echo "PASS: command-center workspace root exists" \
   || echo "FAIL: command-center workspace root missing"
 
-find "$HOME/.openclaw/workspaces/command-center" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sed 's#^.*/##' | sort
+find "/data/.openclaw/workspaces/command-center" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sed 's#^.*/##' | sort
 ```
 
 For each department workspace, verify required memory files:
 
 ```bash
-for d in "$HOME/.openclaw/workspaces/command-center"/*; do
+for d in "/data/.openclaw/workspaces/command-center"/*; do
   [ -d "$d" ] || continue
   name=$(basename "$d")
   [ -f "$d/IDENTITY.md" ] && echo "PASS: $name/IDENTITY.md" || echo "FAIL: $name/IDENTITY.md missing"
@@ -132,7 +132,7 @@ python3 "$SKILL_DIR/scripts/seed-workspaces.py"
 If public access has been configured, verify the tunnel token and process.
 
 ```bash
-grep '^CLOUDFLARE_TUNNEL_TOKEN=' "$HOME/.openclaw/.env" 2>/dev/null \
+grep '^CLOUDFLARE_TUNNEL_TOKEN=' "/data/.openclaw/.env" 2>/dev/null \
   && echo "PASS: tunnel token persisted" \
   || echo "INFO: CLOUDFLARE_TUNNEL_TOKEN not yet stored"
 
@@ -222,7 +222,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

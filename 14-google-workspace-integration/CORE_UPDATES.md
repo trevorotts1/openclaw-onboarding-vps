@@ -19,7 +19,7 @@ No more google-api.js or gog.
 - Workspace accounts (@yourdomain.com): Use gws auth setup with gcloud or service account key
 - Domain-Wide Delegation required for Workspace (81 scopes)
 - Token refresh: run gws auth login when tokens expire
-- Full guide: ~/Downloads/openclaw-master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
+- Full guide: /data/.openclaw/master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
 ```
 
 ---
@@ -48,7 +48,7 @@ Common commands:
 MCP server mode: gws mcp -s drive,gmail,calendar
 Token refresh: gws auth login (when tokens expire)
 
-Full guide: ~/Downloads/openclaw-master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
+Full guide: /data/.openclaw/master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
 ```
 
 ---
@@ -66,7 +66,7 @@ Replaces: google-api.js and gog CLI
 Authentication: OAuth for Gmail, service account for Workspace
 Domain-Wide Delegation: 81 scopes configured for Workspace
 
-Full guide: ~/Downloads/openclaw-master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
+Full guide: /data/.openclaw/master-files/OpenClaw Onboarding/14-google-workspace-integration/google-workspace-integration-full.md
 ```
 
 ---

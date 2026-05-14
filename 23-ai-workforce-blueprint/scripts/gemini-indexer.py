@@ -28,10 +28,10 @@ def _load_openclaw_env():
         except:
             pass
 
-DB_PATH = os.path.expanduser("/data/clawd/data/coaching-personas/gemini-index.sqlite")
-PERSONAS_DIR = os.path.expanduser("/data/clawd/data/coaching-personas/personas")
+DB_PATH = os.path.expanduser("/data/.openclaw/workspace/data/coaching-personas/gemini-index.sqlite")
+PERSONAS_DIR = os.path.expanduser("/data/.openclaw/workspace/data/coaching-personas/personas")
 if not os.path.exists(PERSONAS_DIR):
-    PERSONAS_DIR = os.path.expanduser("~/Downloads/openclaw-master-files/coaching-personas/personas")
+    PERSONAS_DIR = os.path.expanduser("/data/.openclaw/master-files/coaching-personas/personas")
 
 GEMINI_MODEL = "gemini-embedding-2-preview"
 CHUNK_SIZE = 1000
@@ -42,10 +42,10 @@ def get_client():
     api_key = _get_google_api_key()
     if not api_key:
         env_paths = [
-            os.path.expanduser("/data/clawd/secrets/.env"),
-            os.path.expanduser("~/.openclaw/.env"),
-            os.path.expanduser("~/.openclaw/secrets/.env"),
-            "/data/clawd/secrets/.env",
+            os.path.expanduser("/data/.openclaw/workspace/secrets/.env"),
+            os.path.expanduser("/data/.openclaw/.env"),
+            os.path.expanduser("/data/.openclaw/secrets/.env"),
+            "/data/.openclaw/workspace/secrets/.env",
             "/data/.openclaw/.env",
         ]
         for env_path in env_paths:

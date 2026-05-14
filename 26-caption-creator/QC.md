@@ -9,7 +9,7 @@ Run this after installation to verify the skill is correctly installed and funct
 Confirm every required file is present at the correct install path.
 
 ```bash
-ls ~/.openclaw/skills/caption-creator/
+ls /data/.openclaw/skills/caption-creator/
 ```
 
 - [ ] `SKILL.md` exists
@@ -20,7 +20,7 @@ ls ~/.openclaw/skills/caption-creator/
 - [ ] `Scripts/` directory exists
 
 ```bash
-ls ~/.openclaw/skills/caption-creator/Scripts/
+ls /data/.openclaw/skills/caption-creator/Scripts/
 ```
 
 - [ ] `generate-captions.sh` exists
@@ -36,7 +36,7 @@ ls ~/.openclaw/skills/caption-creator/Scripts/
 Scripts must be executable, not just present.
 
 ```bash
-ls -la ~/.openclaw/skills/caption-creator/Scripts/
+ls -la /data/.openclaw/skills/caption-creator/Scripts/
 ```
 
 - [ ] `generate-captions.sh` has execute bit set (`-rwx...`)
@@ -45,8 +45,8 @@ ls -la ~/.openclaw/skills/caption-creator/Scripts/
 
 **Fix if failing:**
 ```bash
-chmod +x ~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh
-chmod +x ~/.openclaw/skills/caption-creator/Scripts/export-srt.sh
+chmod +x /data/.openclaw/skills/caption-creator/Scripts/generate-captions.sh
+chmod +x /data/.openclaw/skills/caption-creator/Scripts/export-srt.sh
 ```
 
 **Pass criteria:** Both `.sh` scripts are executable.
@@ -60,7 +60,7 @@ Verify the two core files were updated during installation per `CORE_UPDATES.md`
 ### 3a. TOOLS.md
 
 ```bash
-grep -n "Caption Creator" ~/.openclaw/TOOLS.md
+grep -n "Caption Creator" /data/.openclaw/TOOLS.md
 ```
 
 - [ ] Line containing `Caption Creator (Skill 26)` is present
@@ -70,11 +70,11 @@ grep -n "Caption Creator" ~/.openclaw/TOOLS.md
 ### 3b. MEMORY.md
 
 ```bash
-grep -n "Caption Creator" ~/.openclaw/MEMORY.md
+grep -n "Caption Creator" /data/.openclaw/MEMORY.md
 ```
 
 - [ ] Line containing `Caption Creator (Skill 26)` is present
-- [ ] Line containing `~/.openclaw/skills/caption-creator/` is present
+- [ ] Line containing `/data/.openclaw/skills/caption-creator/` is present
 
 **Pass criteria:** Both files contain the exact entries specified in `CORE_UPDATES.md`. No other core files were modified beyond `TOOLS.md` and `MEMORY.md`.
 
@@ -130,7 +130,7 @@ Answer these without looking at the files. If you cannot answer confidently, re-
 | 7 | Name two "fast, lower accuracy" Whisper models. | Any two of: `tiny`, `base`, `small` |
 | 8 | Name two "slower, higher accuracy" Whisper models. | `medium`, `large` |
 | 9 | Which two core files is this skill allowed to update? | `TOOLS.md` and `MEMORY.md` only |
-| 10 | What is the install path for this skill? | `~/.openclaw/skills/caption-creator/` |
+| 10 | What is the install path for this skill? | `/data/.openclaw/skills/caption-creator/` |
 
 - [ ] All 10 questions answered correctly
 
@@ -145,7 +145,7 @@ Run a lightweight live check to confirm the scripts invoke without crashing. The
 ### Test A: `export-srt.sh` — help / no-args response
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh 2>&1 | head -5
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh 2>&1 | head -5
 ```
 
 - [ ] Script runs (no "Permission denied" or "not found" error)
@@ -154,7 +154,7 @@ Run a lightweight live check to confirm the scripts invoke without crashing. The
 ### Test B: `generate-captions.sh` — help / no-args response
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh 2>&1 | head -5
+/data/.openclaw/skills/caption-creator/Scripts/generate-captions.sh 2>&1 | head -5
 ```
 
 - [ ] Script runs (no "Permission denied" or "not found" error)
@@ -163,7 +163,7 @@ Run a lightweight live check to confirm the scripts invoke without crashing. The
 ### Test C: `animated_captions.py` — Python syntax check
 
 ```bash
-python3 -m py_compile ~/.openclaw/skills/caption-creator/Scripts/animated_captions.py && echo "SYNTAX OK"
+python3 -m py_compile /data/.openclaw/skills/caption-creator/Scripts/animated_captions.py && echo "SYNTAX OK"
 ```
 
 - [ ] Output prints `SYNTAX OK` (no syntax errors)
@@ -173,7 +173,7 @@ python3 -m py_compile ~/.openclaw/skills/caption-creator/Scripts/animated_captio
 > Skip this test if no video file is available. Mark as deferred, not failed.
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
   --input "test_video.mp4" \
   --output "/tmp/qc_test_captions.srt" \
   --model tiny
@@ -195,7 +195,7 @@ Confirm the agent did NOT do any of the following during installation.
 - [ ] Did NOT trigger an OpenClaw gateway restart autonomously (must always wait for user `/restart` command)
 - [ ] Did NOT add `--style` or `--model` flags to `CORE_UPDATES.md` beyond what is defined in `SKILL.md`
 - [ ] Did NOT install Whisper globally with `sudo pip` (should be user-level `pip install`)
-- [ ] Did NOT delete or overwrite an existing `~/.openclaw/skills/caption-creator/` folder without warning the user
+- [ ] Did NOT delete or overwrite an existing `/data/.openclaw/skills/caption-creator/` folder without warning the user
 - [ ] Did NOT run `openclaw gateway restart` without explicit user permission
 
 **Pass criteria:** All six anti-patterns confirmed absent.
@@ -234,7 +234,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

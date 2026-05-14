@@ -33,7 +33,7 @@ If you have not read the contract, STOP and read it now.
 **Auto-check the prerequisites:**
 ```bash
 for skill in 01-teach-yourself-protocol 02-back-yourself-up-protocol 22-book-to-persona-coaching-leadership-system 31-upgraded-memory-system 36-ghl-mcp-setup 30-fish-audio-api-reference; do
-  if [ -d "$HOME/.openclaw/skills/$skill" ] || [ -d "/data/.openclaw/skills/$skill" ]; then
+  if [ -d "/data/.openclaw/skills/$skill" ] || [ -d "/data/.openclaw/skills/$skill" ]; then
     echo "  ✓ $skill installed"
   else
     echo "  ✗ $skill MISSING"
@@ -48,7 +48,7 @@ done
 ⚠️ **This skill uses the same canonical credential paths as Skill 05 and Skill 36. DO NOT invent new variable names. DO NOT use deprecated paths.**
 
 ### Canonical storage locations
-- **macOS:** `~/.openclaw/secrets/.env`
+- **macOS:** `/data/.openclaw/secrets/.env`
 - **VPS:** `/data/.openclaw/secrets/.env`
 - **Secondary mirror:** `openclaw.json` `env.vars` (gateway reads here at runtime)
 
@@ -113,43 +113,37 @@ Before any system change:
 
 Do NOT proceed until all 5 are read.
 
-### Step 1: Detect platform + resolve canonical paths
+### Step 1: Canonical paths (Hostinger Docker VPS)
 
 ```bash
-if [ -d "/data/.openclaw" ]; then
-  PLATFORM=vps
-  SECRETS_ENV=/data/.openclaw/secrets/.env
-  WORKSPACE=/data/clawd
-else
-  PLATFORM=mac
-  SECRETS_ENV=$HOME/.openclaw/secrets/.env
-  WORKSPACE=$HOME/clawd
-fi
+SECRETS_ENV=/data/.openclaw/secrets/.env   # only if operator created it
+WORKSPACE=/data/.openclaw/workspace
 ```
 
-### Step 2: Search ALL canonical credential locations before asking
+### Step 2: Search canonical credential sources before asking
+
+On Hostinger Docker, credentials live as container env vars FIRST, then optionally in a manually-created `.env` file. Also check `models.providers.<name>.apiKey` and `env.vars` block inside `openclaw.json`.
 
 ```bash
-# Search canonical first, then legacy locations
-for FILE in "$SECRETS_ENV" \
-            "$HOME/.openclaw/secrets/.env" \
-            "/data/.openclaw/secrets/.env" \
-            "$HOME/clawd/secrets/.env" \
-            "$HOME/.env"; do
-  [ -f "$FILE" ] && grep -E "^(GOHIGHLEVEL_API_KEY|GOHIGHLEVEL_LOCATION_ID|KIE_API_KEY|FISH_AUDIO_API_KEY|FISH_AUDIO_VOICE_ID|PODBEAN_PODCAST_ID)=" "$FILE" 2>/dev/null
+# Source 1: container env vars (primary on Hostinger)
+printenv | grep -E "^(GOHIGHLEVEL_API_KEY|GHL_PRIVATE_INTEGRATION_TOKEN|GHL_LOCATION_ID|KIE_API_KEY|FISH_AUDIO_API_KEY|FISH_AUDIO_VOICE_ID|PODBEAN_PODCAST_ID)="
+
+# Source 2: optional .env (only if operator created it)
+[ -f "$SECRETS_ENV" ] && grep -E "^(GOHIGHLEVEL_API_KEY|GOHIGHLEVEL_LOCATION_ID|KIE_API_KEY|FISH_AUDIO_API_KEY|FISH_AUDIO_VOICE_ID|PODBEAN_PODCAST_ID)=" "$SECRETS_ENV"
+
+# Source 3: env.vars block inside openclaw.json (Trevor's inline pattern)
 done
 
 # Also check openclaw.json env.vars
 python3 -c "
 import json
-for path in ['$HOME/.openclaw/openclaw.json', '/data/.openclaw/openclaw.json']:
-  try:
-    cfg=json.load(open(path))
+try:
+    cfg=json.load(open('/data/.openclaw/openclaw.json'))
     ev=cfg.get('env',{}).get('vars',{})
     for k in ['GOHIGHLEVEL_API_KEY','GOHIGHLEVEL_LOCATION_ID','KIE_API_KEY','FISH_AUDIO_API_KEY','FISH_AUDIO_VOICE_ID','PODBEAN_PODCAST_ID']:
       v=ev.get(k,'')
       if v: print(f'  ✓ {k}=<set, prefix {v[:8]}...>')
-  except: pass
+except: pass
 "
 
 # Live env
@@ -206,7 +200,7 @@ Never echo the PIT into chat logs.
 ### Step 4: Detect Skill 36 (GHL MCPs) and configure routing
 
 ```bash
-if [ -d "$HOME/.openclaw/skills/36-ghl-mcp-setup" ] || [ -d "/data/.openclaw/skills/36-ghl-mcp-setup" ]; then
+if [ -d "/data/.openclaw/skills/36-ghl-mcp-setup" ] || [ -d "/data/.openclaw/skills/36-ghl-mcp-setup" ]; then
   ROUTING_MODE="mcp-first"
   echo "  ✓ Skill 36 detected — Skill 35 will route GHL operations through MCPs first"
 else
@@ -345,7 +339,7 @@ Send the client this exact summary:
 ## What v2.0.0 changed (May 13, 2026)
 
 - **Replaced `GHL_PRIVATE_TOKEN` with `GOHIGHLEVEL_API_KEY`** everywhere — eliminates the "auto-fix during install" bug where the agent had to remap names every time.
-- **Migrated all credential paths** from `~/clawd/secrets/.env` (deprecated) to `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS).
+- **Migrated all credential paths** from `/data/.openclaw/secrets/.env` (deprecated) to `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS).
 - **Expanded required PIT scope list** to match the full set Skill 36 uses, plus the two social-media-specific scopes this skill needs.
 - **Added MCP-first routing detection in Step 4** — when Skill 36 is installed, this skill prefers MCP tools. Direct API only as fallback.
 - **Made the install order explicitly numbered** with Step 0 (contract check) at the top. Steps are no longer reorderable.

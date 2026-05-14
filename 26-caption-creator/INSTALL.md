@@ -102,7 +102,7 @@ The .skill file is an archive. No CLI command needed - install by following SKIL
 ### Confirm install location
 
 ```bash
-ls -la ~/.openclaw/skills/caption-creator
+ls -la /data/.openclaw/skills/caption-creator
 ```
 
 ## Development install (optional)
@@ -110,7 +110,7 @@ ls -la ~/.openclaw/skills/caption-creator
 Only do this if you are modifying the skill source code in a local checkout.
 
 ```bash
-cd "$HOME/clawd/skills/caption-creator"
+cd "/data/.openclaw/workspace/skills/caption-creator"
 ```
 
 ## Uninstall
@@ -130,7 +130,7 @@ rm -rf ~/.cache/whisper
 3. Remove the skill:
 
 ```bash
-rm -rf ~/.openclaw/skills/caption-creator
+rm -rf /data/.openclaw/skills/caption-creator
 ```
 
 ---

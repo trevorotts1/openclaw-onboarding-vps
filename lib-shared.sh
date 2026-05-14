@@ -26,7 +26,7 @@ resolve_platform_paths() {
     export OPENCLAW_HOME="/data"
     export SECRETS_ENV="/data/.openclaw/secrets/.env"
     export CONFIG_JSON="/data/.openclaw/openclaw.json"
-    export WORKSPACE="/data/clawd"
+    export WORKSPACE="/data/.openclaw/workspace"
     export CANONICAL_MASTER="/data/Downloads/openclaw-master-files"
     export SKILLS_DIR_DEFAULT="/data/.openclaw/skills"
     export BACKUP_DIR_DEFAULT="$HOME/openclaw-backups"
@@ -65,7 +65,7 @@ find_master_files() {
     "/data"
     "$HOME"
     "$HOME/clawd"
-    "/data/clawd"
+    "/data/.openclaw/workspace"
     "/opt"
     "/srv"
   )

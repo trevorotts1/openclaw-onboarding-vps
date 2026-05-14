@@ -7,8 +7,8 @@ Run this after installation to verify all eight layers are in place and the memo
 ## Section 1: File Structure + Version Check
 
 ```bash
-SKILL_DIR="$HOME/.openclaw/skills/31-upgraded-memory-system"
-[ -d "$SKILL_DIR" ] || SKILL_DIR="$HOME/.openclaw/skills/upgraded-memory-system"
+SKILL_DIR="/data/.openclaw/skills/31-upgraded-memory-system"
+[ -d "$SKILL_DIR" ] || SKILL_DIR="/data/.openclaw/skills/upgraded-memory-system"
 
 echo "Using skill dir: $SKILL_DIR"
 
@@ -49,8 +49,8 @@ echo "GOOGLE_API_KEY length: ${#GOOGLE_API_KEY}"
 ### Layer 1: Markdown memory files
 
 ```bash
-[ -f ~/.openclaw/workspace/MEMORY.md ] && echo "PASS: MEMORY.md exists" || echo "FAIL: MEMORY.md missing"
-[ -d ~/.openclaw/workspace/memory ] && echo "PASS: memory/ directory exists" || echo "FAIL: memory/ directory missing"
+[ -f /data/.openclaw/workspace/MEMORY.md ] && echo "PASS: MEMORY.md exists" || echo "FAIL: MEMORY.md missing"
+[ -d /data/.openclaw/workspace/memory ] && echo "PASS: memory/ directory exists" || echo "FAIL: memory/ directory missing"
 ```
 
 ### Layer 2: memoryFlush configured
@@ -153,7 +153,7 @@ openclaw config validate
 ### 4.2 Daily-memory presence
 
 ```bash
-COUNT=$(ls ~/.openclaw/workspace/memory/*.md 2>/dev/null | wc -l | tr -d ' ')
+COUNT=$(ls /data/.openclaw/workspace/memory/*.md 2>/dev/null | wc -l | tr -d ' ')
 echo "Daily memory files: $COUNT"
 [ "$COUNT" -ge 1 ] && echo "PASS: daily memory exists" || echo "WARN: no daily memory files yet"
 ```
@@ -334,7 +334,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

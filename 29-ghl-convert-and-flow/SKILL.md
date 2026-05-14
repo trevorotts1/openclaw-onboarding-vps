@@ -19,7 +19,7 @@ This skill pack provides:
 - Real-world examples for common GHL tasks
 
 **Master reference (do NOT load into context):**
-`$HOME/Downloads/openclaw-master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
+`/data/.openclaw/master-files/Convert and Flow - GoHighLevel API v2 Master Reference.md`
 
 ---
 

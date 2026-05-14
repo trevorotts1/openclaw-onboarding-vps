@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sets up Cloudflare tunnel as a launchctl service (auto-restart if it dies)
+# Sets up Cloudflare tunnel as a systemctl --user service (auto-restart if it dies)
 # Usage: ./setup-tunnel-daemon.sh <tunnel-uuid> <config-path>
 
 TUNNEL_UUID="${1}"
@@ -46,10 +46,10 @@ EOF
 echo "Plist created at: $PLIST_PATH"
 
 # Unload if already loaded
-launchctl unload "$PLIST_PATH" 2>/dev/null
+systemctl --user unload "$PLIST_PATH" 2>/dev/null
 
 # Load the service
-launchctl load "$PLIST_PATH" 2>&1
+systemctl --user load "$PLIST_PATH" 2>&1
 
 echo "Tunnel daemon loaded. It auto-restarts if it dies."
 echo "Check status: ps aux | grep ${TUNNEL_UUID}"

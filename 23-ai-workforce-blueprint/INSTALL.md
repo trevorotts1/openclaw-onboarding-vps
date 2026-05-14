@@ -40,7 +40,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/.openclaw/master-files/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -50,7 +50,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/.openclaw/master-files/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -78,7 +78,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 ```bash
 # Check if coaching-personas Gemini Vector Database exists
-if python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
+if python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
   echo "✅ Skill 22 verified: coaching-personas collection found"
   SKILL22_INSTALLED=true
 else
@@ -120,7 +120,7 @@ Search AGENTS.md and MEMORY.md for: "Teach Yourself Protocol" or "TYP"
 
 **If TYP IS found:** Proceed to Phase 1.
 
-**If TYP is NOT found:** STOP. The agent will check if the package is present at `~/.openclaw/skills/01-teach-yourself-protocol/`. If missing, notify the operator to complete Skill 01 first before returning to this skill.
+**If TYP is NOT found:** STOP. The agent will check if the package is present at `/data/.openclaw/skills/01-teach-yourself-protocol/`. If missing, notify the operator to complete Skill 01 first before returning to this skill.
 
 Do NOT proceed until TYP is confirmed installed.
 
@@ -168,7 +168,7 @@ touch /tmp/.workforce-install-test && rm /tmp/.workforce-install-test
 
 ## PHASE 3 - MASTER FILES FOLDER DETECTION
 
-Locate or create the master files folder. Search `~/Downloads/` for any existing folder matching these names (case-insensitive):
+Locate or create the master files folder. Search `/data/.openclaw/master-files/` for any existing folder matching these names (case-insensitive):
 
 - openclaw-master-files
 - OpenClaw Master Files
@@ -183,16 +183,16 @@ Locate or create the master files folder. Search `~/Downloads/` for any existing
 
 ```bash
 # Search for existing master folder
-find ~/Downloads/ -maxdepth 1 -type d -iname "*openclaw*" -o -type d -iname "*master*file*" -o -type d -iname "*master*doc*" 2>/dev/null
+find /data/.openclaw/master-files/ -maxdepth 1 -type d -iname "*openclaw*" -o -type d -iname "*master*file*" -o -type d -iname "*master*doc*" 2>/dev/null
 ```
 
 **If a master folder exists:** Use it. Do NOT create a new one. Note its path as `$MASTER_FOLDER`.
 
 **If no master folder exists:** Create it:
 ```bash
-mkdir -p ~/Downloads/openclaw-master-files
+mkdir -p /data/.openclaw/master-files
 ```
-Set `$MASTER_FOLDER` to `~/Downloads/openclaw-master-files`.
+Set `$MASTER_FOLDER` to `/data/.openclaw/master-files`.
 
 **Announce to user:** "Master files folder located at: [path]" or "Created master files folder at: [path]"
 
@@ -202,24 +202,24 @@ Set `$MASTER_FOLDER` to `~/Downloads/openclaw-master-files`.
 
 ```bash
 # Copy skill to OpenClaw skills directory if not already there
-if [ ! -d ~/.openclaw/skills/23-ai-workforce-blueprint ]; then
-  cp -r "$(dirname "$0")/../23-ai-workforce-blueprint" ~/.openclaw/skills/ 2>/dev/null || \
-  cp -r /tmp/openclaw-onboarding/23-ai-workforce-blueprint ~/.openclaw/skills/ 2>/dev/null || \
+if [ ! -d /data/.openclaw/skills/23-ai-workforce-blueprint ]; then
+  cp -r "$(dirname "$0")/../23-ai-workforce-blueprint" /data/.openclaw/skills/ 2>/dev/null || \
+  cp -r /tmp/openclaw-onboarding/23-ai-workforce-blueprint /data/.openclaw/skills/ 2>/dev/null || \
   echo "Skill folder already in place or copy from current location"
 fi
 ```
 
 ```bash
-chmod +x ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
+chmod +x /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
 ```
 
 **Verify the critical blueprint file was not truncated during copy:**
 ```bash
-wc -c ~/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
+wc -c /data/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
 ```
 Expected: 66,000+ characters. If the file is under 50,000 characters, the copy was truncated - re-copy the skill folder before proceeding. A truncated blueprint will produce an incomplete workforce structure.
 
-If the skill files are already at `~/.openclaw/skills/23-ai-workforce-blueprint/`, skip the copy but still run the chmod and file size check.
+If the skill files are already at `/data/.openclaw/skills/23-ai-workforce-blueprint/`, skip the copy but still run the chmod and file size check.
 
 ---
 
@@ -252,29 +252,29 @@ Before presenting options, before asking a single question, check if this client
 
 **Check 1:** Look for department folders in the workspace:
 ```bash
-ls -d ~/.openclaw/workspace/departments/*/ 2>/dev/null | head -5
+ls -d /data/.openclaw/workspace/departments/*/ 2>/dev/null | head -5
 ```
 If department folders exist (e.g., marketing/, sales/), the build was already completed.
 
 **Check 2:** Look for the completed interview answers:
 ```bash
-cat ~/Downloads/openclaw-master-files/company-discovery/workforce-interview-answers.md 2>/dev/null | head -5
+cat /data/.openclaw/master-files/company-discovery/workforce-interview-answers.md 2>/dev/null | head -5
 ```
 If this file exists and has real content (not empty, not a template), the interview was already done.
 
 **Check 3:** Look in master files:
 ```bash
-ls ~/Downloads/openclaw-master-files/*/SOUL.md 2>/dev/null | head -5
+ls /data/.openclaw/master-files/*/SOUL.md 2>/dev/null | head -5
 ```
 
 **Check 4:** Search MEMORY.md for completion markers:
 ```bash
-grep -i "workforce complete\|AI WORKFORCE COMPLETE\|skill 23.*complete\|blueprint.*complete" ~/.openclaw/workspace/MEMORY.md 2>/dev/null
+grep -i "workforce complete\|AI WORKFORCE COMPLETE\|skill 23.*complete\|blueprint.*complete" /data/.openclaw/workspace/MEMORY.md 2>/dev/null
 ```
 
 **Check 5:** Look for interview-handoff.md (partial completion):
 ```bash
-cat ~/Downloads/openclaw-master-files/company-discovery/interview-handoff.md 2>/dev/null | head -10
+cat /data/.openclaw/master-files/company-discovery/interview-handoff.md 2>/dev/null | head -10
 ```
 
 **DECISION LOGIC:**
@@ -383,7 +383,7 @@ After the interview (or Option B proposal approval), build the company.
 ### 5-BUILD-A. Config Safety (MANDATORY BEFORE ANY CONFIG EDIT)
 
 Before touching openclaw.json:
-1. Backup to ~/Downloads/openclaw-backups/ with human-readable name
+1. Backup to /data/.openclaw/backups/ with human-readable name
 2. Verify backup exists in that location (NOT in a hidden dot-folder)
 3. If backup ended up in wrong place, re-backup to correct location
 4. Only then proceed with edits
@@ -393,7 +393,7 @@ Before touching openclaw.json:
 
 For EACH department the client chose, use build-workforce.py create_department_workspace():
 
-Create folder: ~/.openclaw/workspace/departments/[dept-name]/
+Create folder: /data/.openclaw/workspace/departments/[dept-name]/
 
 **Unique files (created new):**
 - SOUL.md - generated from interview answers via generate_soul_md(), NOT a generic template
@@ -401,7 +401,7 @@ Create folder: ~/.openclaw/workspace/departments/[dept-name]/
 - HEARTBEAT.md - department-specific priorities from interview
 - memory/ folder - for daily session logs
 
-**Inherited files (copied from main CEO workspace ~/.openclaw/workspace/):**
+**Inherited files (copied from main CEO workspace /data/.openclaw/workspace/):**
 - TOOLS.md - same tools, same credentials
 - AGENTS.md - same behavioral playbook
 - USER.md - same human, same preferences
@@ -417,7 +417,7 @@ At the start of EVERY task, run dynamic persona selection. Do NOT skip. Do NOT d
 ### Step 1: Run the Unified Selector (does Steps 1 + 2 in one call)
 
 ```bash
-python3 ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/select-persona-for-task.py \
+python3 /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/select-persona-for-task.py \
     --dept [your-dept] \
     --task "<concise task description here>" \
     --format json
@@ -452,7 +452,7 @@ This script does THREE things internally:
 - `2` = Gemini Engine unavailable; selector still returned a persona via keyword + 5-layer only (logged but acceptable as fallback)
 - `1` = no candidates found at all (dept's governing-personas.md missing or persona library empty)
 
-**Logging:** The selector AUTO-LOGS the selection to `~/clawd/zero-human-company/[slug]/departments/[your-dept]/memory/[YYYY-MM-DD].md`. Do NOT log again manually.
+**Logging:** The selector AUTO-LOGS the selection to `/data/.openclaw/workspace/zero-human-company/[slug]/departments/[your-dept]/memory/[YYYY-MM-DD].md`. Do NOT log again manually.
 
 ### Step 2: Execute AS the Selected Persona ("Act As If" Protocol)
 
@@ -462,7 +462,7 @@ For this entire task, think, communicate, and decide AS THE SELECTED PERSONA:
 - Make decisions following their execution standard (Section 4A: Agent Governance Framework)
 - Follow their definition of done (Section 4D: Task Activation Language)
 
-The selected persona's blueprint is at: `~/Downloads/openclaw-master-files/coaching-personas/personas/[persona-id]/persona-blueprint.md`
+The selected persona's blueprint is at: `/data/.openclaw/master-files/coaching-personas/personas/[persona-id]/persona-blueprint.md`
 
 ### Step 3: Follow the Dept's DMAIC SOP for this Task Type
 
@@ -497,12 +497,12 @@ Using determine_specialists() from build-workforce.py, read the interview answer
 
 **Full-time team member (permanent):**
 - Work is daily/weekly, needs memory of past work, maintains relationships
-- Gets: SOUL.md + MEMORY.md in ~/.openclaw/workspace/departments/[dept]/specialists/[name]/
+- Gets: SOUL.md + MEMORY.md in /data/.openclaw/workspace/departments/[dept]/specialists/[name]/
 - Gets: agents.list entry in openclaw.json
 
 **On-call specialist:**
 - Work is occasional/one-time, no memory needed
-- Gets: SOUL.md template in ~/.openclaw/workspace/subagents/templates/[name]/
+- Gets: SOUL.md template in /data/.openclaw/workspace/subagents/templates/[name]/
 - No agents.list entry
 
 The client NEVER hears "permanent agent" or "sub-agent."
@@ -604,7 +604,7 @@ After workspaces are created, run persona alignment using build-workforce.py fun
 2. For each department, identify relevant domain tags (marketing dept → marketing, copywriting, communication)
 3. Pull pre-qualified personas from those categories via get_personas_for_category()
 4. Create governing-personas.md per department via create_governing_personas_md()
-5. Create ~/.openclaw/workspace/persona-matrix.md with the full company persona pool
+5. Create /data/.openclaw/workspace/persona-matrix.md with the full company persona pool
 
 ### Governing-Personas.md Content Requirements (MANDATORY - NOT OPTIONAL)
 
@@ -641,8 +641,8 @@ After creating all governing-personas.md files, run this check:
 
 ```bash
 # Count departments with real governing-personas.md content
-ACTUAL=$(grep -rl 'Primary Persona' ~/.openclaw/workspace/departments/*/governing-personas.md 2>/dev/null | wc -l | tr -d ' ')
-EXPECTED=$(ls -d ~/.openclaw/workspace/departments/*/ 2>/dev/null | wc -l | tr -d ' ')
+ACTUAL=$(grep -rl 'Primary Persona' /data/.openclaw/workspace/departments/*/governing-personas.md 2>/dev/null | wc -l | tr -d ' ')
+EXPECTED=$(ls -d /data/.openclaw/workspace/departments/*/ 2>/dev/null | wc -l | tr -d ' ')
 echo "Departments with governing-personas.md content: $ACTUAL / $EXPECTED"
 ```
 
@@ -665,7 +665,7 @@ The instruction to the agent is: "Act as if you are [persona name] executing thi
 ## PHASE 5-ORG - GENERATE ORG CHART AND COMMAND CENTER CONFIG
 
 ### ORG-CHART.md
-Generate ~/.openclaw/workspace/ORG-CHART.md via generate_org_chart() showing:
+Generate /data/.openclaw/workspace/ORG-CHART.md via generate_org_chart() showing:
 - CEO / Master Orchestrator at top
 - Each department director with their model
 - Specialists under each director (full-time or on-call)
@@ -676,7 +676,7 @@ Generate departments.json for the BlackCEO Command Center via generate_departmen
 
 **Canonical output path (absolute):**
 ```
-~/Downloads/openclaw-master-files/company-discovery/departments.json
+/data/.openclaw/master-files/company-discovery/departments.json
 ```
 
 This is the exact file that Skill 32 (Command Center Setup) reads to populate the dashboard. Write the JSON array returned by generate_departments_json() to this path. Do NOT write it to a relative path or a different directory.
@@ -701,7 +701,7 @@ After everything is built: "You are complete! Setting up your AI workforce now."
 
 ```bash
 # Re-run detection after questions complete
-if python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
+if python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
   echo "✅ Skill 22 detected post-build - running persona wiring..."
   RUN_PERSONA_WIRING=true
 else
@@ -722,12 +722,12 @@ Check if Skill 22 (Book To Persona & Coaching & Leadership System) is installed.
 
 1. Run this command to check for the Gemini Engine coaching-personas collection:
 ```bash
-python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"
+python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"
 ```
 2. If that returns exit code 0 (match found), personas are installed.
 3. As a fallback, also check for the persona skill folder:
 ```bash
-ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/ 2>/dev/null
+ls /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/ 2>/dev/null
 ```
 4. If EITHER check succeeds, treat personas as installed.
 
@@ -742,7 +742,7 @@ ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/ 2>/dev/null
 
 Each department must have:
 ```
-~/.openclaw/workspace/departments/[dept-name]/specialists/
+/data/.openclaw/workspace/departments/[dept-name]/specialists/
   ├── [role-name-1].md
   └── [role-name-2].md
 ```
@@ -772,7 +772,7 @@ Determine role names from the interview answers. Minimum 2 specialist roles per 
 
 ### ORG-CHART.md Creation (MANDATORY)
 
-**Create `~/.openclaw/workspace/ORG-CHART.md` showing the full reporting structure.**
+**Create `/data/.openclaw/workspace/ORG-CHART.md` showing the full reporting structure.**
 
 Format:
 ```markdown
@@ -796,7 +796,7 @@ Format:
 
 **Gate check:**
 ```bash
-if [ -s ~/.openclaw/workspace/ORG-CHART.md ]; then
+if [ -s /data/.openclaw/workspace/ORG-CHART.md ]; then
   echo "✅ ORG-CHART.md exists and is non-empty"
 else
   echo "❌ ORG-CHART.md missing or empty — FIX BEFORE PROCEEDING"
@@ -806,7 +806,7 @@ fi
 
 **Gate check for specialist folders:**
 ```bash
-for dept_dir in ~/.openclaw/workspace/departments/*/; do
+for dept_dir in /data/.openclaw/workspace/departments/*/; do
   dept=$(basename "$dept_dir")
   count=$(ls "$dept_dir/specialists/"*.md 2>/dev/null | wc -l | tr -d ' ')
   if [ "$count" -lt 2 ]; then
@@ -854,13 +854,13 @@ Regardless of whether coaching personas were detected, ALWAYS run Gemini Engine 
 
 ```bash
 # Add/update all collections
-python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
+python3 /data/.openclaw/workspace/scripts/gemini-indexer.py
 
 # Generate embeddings (covers master-files + coaching-personas + workforce files)
 # Handled by gemini-indexer.py
 
 # Verify completion
-python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status
+python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status
 ```
 
 **Why this happens here:**
@@ -952,13 +952,13 @@ Add the `## Pending Skill Setup - Check and Remind` block to AGENTS.md per CORE_
 Set up automatic skill updates. The setup script is included in the onboarding package:
 
 ```bash
-mkdir -p ~/.openclaw/skills/scripts
+mkdir -p /data/.openclaw/skills/scripts
 
 # Use the setup script from the onboarding package if available
 SETUP_SCRIPT=""
 for candidate in \
   "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
-  "$HOME/.openclaw/skills/scripts/setup-weekly-update.sh"; do
+  "/data/.openclaw/skills/scripts/setup-weekly-update.sh"; do
   if [ -f "$candidate" ]; then
     SETUP_SCRIPT="$candidate"
     break
@@ -966,9 +966,9 @@ for candidate in \
 done
 
 if [ -n "$SETUP_SCRIPT" ]; then
-  cp "$SETUP_SCRIPT" ~/.openclaw/skills/scripts/setup-weekly-update.sh
-  chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
-  bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  cp "$SETUP_SCRIPT" /data/.openclaw/skills/scripts/setup-weekly-update.sh
+  chmod +x /data/.openclaw/skills/scripts/setup-weekly-update.sh
+  bash /data/.openclaw/skills/scripts/setup-weekly-update.sh
 else
   echo "Setup script not found in onboarding package. Skipping weekly auto-update setup."
   echo "Note this in the completion report and set up manually when the script is available."
@@ -1016,14 +1016,14 @@ Before reporting done, verify every item:
 - [ ] TYP was confirmed installed before starting
 - [ ] All 6 skill files were read completely
 - [ ] Master files folder located or created
-- [ ] Skill copied to ~/.openclaw/skills/23-ai-workforce-blueprint/
+- [ ] Skill copied to /data/.openclaw/skills/23-ai-workforce-blueprint/
 - [ ] User was asked about business name, industry, departments
 - [ ] User chose Option A, B, or C and that option was fully executed
 - [ ] Existing context checked before every question (no redundant asks)
 - [ ] workforce-interview-answers.md created and updated after every answer
 - [ ] interview-handoff.md created and updated after every answer
 - [ ] Config backed up before ANY openclaw.json edit
-- [ ] Backup verified in ~/Downloads/openclaw-backups/ (not hidden folder)
+- [ ] Backup verified in /data/.openclaw/backups/ (not hidden folder)
 - [ ] All department workspaces created with FULL core files:
   - [ ] SOUL.md (unique, generated from interview)
   - [ ] MEMORY.md (empty)
@@ -1037,12 +1037,12 @@ Before reporting done, verify every item:
 - [ ] Permanent specialists have SOUL.md + MEMORY.md + agents.list entry
 - [ ] On-call specialists have template SOUL.md in subagents/templates/
 - [ ] governing-personas.md created per department with REAL content (Primary Persona name, book title, why it fits, 3 task types — NOT empty stubs)
-- [ ] Gate check passed: grep -l 'Primary Persona' ~/.openclaw/workspace/departments/*/governing-personas.md | wc -l equals department count
+- [ ] Gate check passed: grep -l 'Primary Persona' /data/.openclaw/workspace/departments/*/governing-personas.md | wc -l equals department count
 - [ ] Specialist folders created: each department has specialists/ with at least 2 role files
 - [ ] Each specialist role file contains: Title, Reports to, Responsibilities (5 bullets), Key metrics
 - [ ] persona-matrix.md created in CEO workspace
 - [ ] ORG-CHART.md generated in CEO workspace (exists and non-empty)
-- [ ] departments.json generated for Command Center at ~/Downloads/openclaw-master-files/company-discovery/departments.json
+- [ ] departments.json generated for Command Center at /data/.openclaw/master-files/company-discovery/departments.json
 - [ ] Devil's Advocate created per department
 - [ ] All department folders use correct naming (lowercase, hyphens, NO -dept suffix)
 - [ ] Universal SOPs folder created with 00-ROUTING.md
@@ -1079,7 +1079,7 @@ Before reporting done, verify every item:
 After the final announcement above, IMMEDIATELY proceed to install Skill 32 (Command Center Setup). Do NOT wait for the user to ask. Do NOT stop and report. The Command Center is the next required step after the AI Workforce Blueprint.
 
 **What to do:**
-1. Read `~/.openclaw/skills/32-command-center-setup/INSTALL.md` (or `~/.openclaw/onboarding/32-command-center-setup/INSTALL.md` if skills folder does not have it)
+1. Read `/data/.openclaw/skills/32-command-center-setup/INSTALL.md` (or `/data/.openclaw/onboarding/32-command-center-setup/INSTALL.md` if skills folder does not have it)
 2. Follow Phase 1 prerequisites — all should pass since Skill 23 just completed
 3. Continue through all phases of Skill 32
 
@@ -1129,41 +1129,41 @@ Teach Yourself means READ. Activate means EXECUTE.
 
 #### Step 1: COPY skill to OpenClaw skills folder
 ```bash
-mkdir -p ~/.openclaw/skills/23-ai-workforce-blueprint
-cp -r [SKILL_SOURCE_PATH]/* ~/.openclaw/skills/23-ai-workforce-blueprint/
-chmod +x ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
+mkdir -p /data/.openclaw/skills/23-ai-workforce-blueprint
+cp -r [SKILL_SOURCE_PATH]/* /data/.openclaw/skills/23-ai-workforce-blueprint/
+chmod +x /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
 ```
 
 #### Step 2: VERIFY blueprint file integrity
 ```bash
-wc -c ~/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
+wc -c /data/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
 ```
 Expected: 66,000+ characters. If under 50,000, re-copy.
 
 #### Step 3: LOCATE/CREATE master files folder
 ```bash
 # Search for existing folder
-find ~/Downloads/ -maxdepth 1 -type d -iname "*openclaw*" 2>/dev/null
+find /data/.openclaw/master-files/ -maxdepth 1 -type d -iname "*openclaw*" 2>/dev/null
 
 # If not found, create it
-mkdir -p ~/Downloads/openclaw-master-files
+mkdir -p /data/.openclaw/master-files
 ```
 
 #### Step 4: RUN build-workforce.py (Option A, B, or C)
 ```bash
 # Option A: Automated scaffold
-python3 ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py --option A
+python3 /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py --option A
 
 # Option B: Manual guided build
-python3 ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py --option B
+python3 /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py --option B
 
 # Option C: Audit/Resume existing
-python3 ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py --option C
+python3 /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py --option C
 ```
 
 #### Step 5: VERIFY department folders created
 ```bash
-ls -la ~/.openclaw/workspace/departments/
+ls -la /data/.openclaw/workspace/departments/
 ```
 Expected: One folder per department chosen during interview.
 

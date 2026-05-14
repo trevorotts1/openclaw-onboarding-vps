@@ -37,7 +37,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder. On macOS it is in ~/Downloads/.
+   Find the OpenClaw master files folder. On macOS it is in /data/.openclaw/master-files/.
    On a VPS it is in /data/Downloads/. The folder may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
@@ -49,7 +49,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
    If no folder is found:
-   - macOS: create ~/Downloads/openclaw-master-files/
+   - macOS: create /data/.openclaw/master-files/
    - VPS: create /data/Downloads/openclaw-master-files/
    Ask the user for permission before creating if there is any ambiguity.
 
@@ -152,42 +152,34 @@ MCP coverage (Tier 1 + Tier 2):
 - medias.write
 
 ### Where Credentials Get Stored (CANONICAL — overrides any older skill)
-- macOS: `~/.openclaw/secrets/.env`
+- macOS: `/data/.openclaw/secrets/.env`
 - VPS: `/data/.openclaw/secrets/.env`
 
 Env var names: `GOHIGHLEVEL_API_KEY` (= the Location PIT, despite the legacy name)
 and `GOHIGHLEVEL_LOCATION_ID`. Secondary mirror: `openclaw.json` `env.vars`.
 
-If older versions of skill 05 stored creds at `~/clawd/secrets/.env`, MIGRATE
-them to `~/.openclaw/secrets/.env` before installing this skill.
+If older versions of skill 05 stored creds at `/data/.openclaw/secrets/.env`, MIGRATE
+them to `/data/.openclaw/secrets/.env` before installing this skill.
 
 ## Autonomous Setup Execution
 
-### Pre-Action 0: Detect Platform
+### Pre-Action 0: Canonical Paths (Hostinger Docker VPS)
 
 ```bash
-if [ -d "/data/.openclaw" ]; then
-  export PLATFORM="vps"
-  export SECRETS_ENV="/data/.openclaw/secrets/.env"
-  export CONFIG_JSON="/data/.openclaw/openclaw.json"
-  export CANONICAL_MASTER="/data/Downloads/openclaw-master-files"
-  export WORKSPACE="/data/clawd"
-else
-  export PLATFORM="desktop"
-  export SECRETS_ENV="$HOME/.openclaw/secrets/.env"
-  export CONFIG_JSON="$HOME/.openclaw/openclaw.json"
-  export CANONICAL_MASTER="$HOME/Downloads/openclaw-master-files"
-  export WORKSPACE="$HOME/clawd"
-fi
-echo "Platform detected: $PLATFORM"
+export SECRETS_ENV="/data/.openclaw/secrets/.env"   # only if operator created it
+export CONFIG_JSON="/data/.openclaw/openclaw.json"
+export CANONICAL_MASTER="/data/.openclaw/master-files"
+export WORKSPACE="/data/.openclaw/workspace"
 echo "Workspace: $WORKSPACE"
 ```
+
+On Hostinger Docker VPS, the primary source of credentials is container env vars (use `printenv` not `source`). Use `SECRETS_ENV` only as fallback if a `.env` was manually created.
 
 ### Pre-Action 1: Locate the openclaw-master-files Folder
 
 ```bash
 MASTER_FILES_DIR=""
-for r in "$HOME/Downloads" "/data/Downloads" "/root/Downloads" "/data" "$HOME"; do
+for r in "/data/.openclaw/master-files" "/data/Downloads" "/root/Downloads" "/data" "$HOME"; do
   [ -d "$r" ] || continue
   found=$(find "$r" -maxdepth 2 -type d \
     \( -iname "*openclaw*master*file*" -o -iname "*open*claw*master*file*" \) \
@@ -366,7 +358,7 @@ openclaw config set env.vars.GHL_COMMUNITY_MCP_URL "http://localhost:${GHL_MCP_P
 if [ "$PLATFORM" = "desktop" ]; then
   mkdir -p ~/Library/Logs/ghl-mcp
   NODE_PATH=$(which node)
-  cat > ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist <<EOF
+  cat > /etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -395,8 +387,8 @@ if [ "$PLATFORM" = "desktop" ]; then
 EOF
 
   # Boot service
-  launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist 2>/dev/null
-  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.clawd.ghl-mcp.plist
+  systemctl --user bootout gui/$(id -u) /etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist 2>/dev/null
+  systemctl --user bootstrap gui/$(id -u) /etc/systemd/user (on Linux Docker)/com.clawd.ghl-mcp.plist
 fi
 ```
 

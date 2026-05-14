@@ -70,13 +70,13 @@ openclaw status | grep "Gateway service"
 ### 1.1 Verify MEMORY.md exists
 
 ```bash
-ls -la ~/.openclaw/workspace/MEMORY.md
+ls -la /data/.openclaw/workspace/MEMORY.md
 ```
 
 If MEMORY.md does not exist, create it:
 
 ```bash
-cat > ~/.openclaw/workspace/MEMORY.md << 'EOF'
+cat > /data/.openclaw/workspace/MEMORY.md << 'EOF'
 # MEMORY.md
 
 > This file contains persistent state, lessons learned, and project status ONLY.
@@ -91,20 +91,20 @@ EOF
 ### 1.2 Verify daily log directory exists
 
 ```bash
-mkdir -p ~/.openclaw/workspace/memory
+mkdir -p /data/.openclaw/workspace/memory
 ```
 
 ### 1.3 Verify core files exist
 
 Check that these files are present. If any are missing, create them from the templates in the onboarding package:
 
-- ~/.openclaw/workspace/MEMORY.md
-- ~/.openclaw/workspace/AGENTS.md
-- ~/.openclaw/workspace/TOOLS.md
-- ~/.openclaw/workspace/USER.md
-- ~/.openclaw/workspace/SOUL.md
-- ~/.openclaw/workspace/IDENTITY.md
-- ~/.openclaw/workspace/HEARTBEAT.md
+- /data/.openclaw/workspace/MEMORY.md
+- /data/.openclaw/workspace/AGENTS.md
+- /data/.openclaw/workspace/TOOLS.md
+- /data/.openclaw/workspace/USER.md
+- /data/.openclaw/workspace/SOUL.md
+- /data/.openclaw/workspace/IDENTITY.md
+- /data/.openclaw/workspace/HEARTBEAT.md
 
 ---
 
@@ -112,7 +112,7 @@ Check that these files are present. If any are missing, create them from the tem
 
 ### 2.1 Update the flush prompt in openclaw.json
 
-Open `~/.openclaw/openclaw.json` and find the `compaction.memoryFlush` section under `agents.defaults`. Replace the prompt and systemPrompt with these values:
+Open `/data/.openclaw/openclaw.json` and find the `compaction.memoryFlush` section under `agents.defaults`. Replace the prompt and systemPrompt with these values:
 
 **prompt:**
 ```
@@ -160,7 +160,7 @@ This triggers the flush when the context reaches 32K tokens.
 
 ### 3.1 Enable session memory
 
-In `~/.openclaw/openclaw.json`, find the `agents.defaults.memorySearch` section. Add or verify these settings:
+In `/data/.openclaw/openclaw.json`, find the `agents.defaults.memorySearch` section. Add or verify these settings:
 
 ```json
 "memorySearch": {
@@ -197,7 +197,7 @@ In the same `memorySearch` block, add:
 
 ### 4.1 Set the search provider
 
-In `~/.openclaw/openclaw.json`, find the `agents.defaults.memorySearch` section. Add or update:
+In `/data/.openclaw/openclaw.json`, find the `agents.defaults.memorySearch` section. Add or update:
 
 ```json
 "provider": "gemini",
@@ -241,7 +241,7 @@ Layer 5 uses OpenClaw's built-in memory-core instead of the legacy memory plugin
 
 ### 5.1 Verify memory-core is enabled
 
-In `~/.openclaw/openclaw.json`, verify the memory backend:
+In `/data/.openclaw/openclaw.json`, verify the memory backend:
 
 ```json
 "memory": {
@@ -251,7 +251,7 @@ In `~/.openclaw/openclaw.json`, verify the memory backend:
 
 ### 5.2 Configure auto-capture
 
-In `~/.openclaw/openclaw.json`, under `agents.defaults`, add:
+In `/data/.openclaw/openclaw.json`, under `agents.defaults`, add:
 
 ```json
 "memory": {
@@ -294,7 +294,7 @@ openclaw plugins install @openclaw/cognee
 
 ### 6.3 Configure Cognee
 
-In `~/.openclaw/openclaw.json`, under `plugins.entries`:
+In `/data/.openclaw/openclaw.json`, under `plugins.entries`:
 
 ```json
 "cognee": {
@@ -347,7 +347,7 @@ ls ~/Documents/ | grep -i obsidian
 
 ### 7.3 Configure Obsidian integration
 
-In `~/.openclaw/openclaw.json`, add:
+In `/data/.openclaw/openclaw.json`, add:
 
 ```json
 "obsidian": {
@@ -380,7 +380,7 @@ Layer 8 consists of two integrated components:
 
 Active Memory MUST be enabled for the 8-layer system to function.
 
-In `~/.openclaw/openclaw.json`, ensure these settings exist:
+In `/data/.openclaw/openclaw.json`, ensure these settings exist:
 
 ```json
 "memory": {
@@ -418,7 +418,7 @@ Expected output should show:
 
 ### 8.1 Enable wiki system
 
-In `~/.openclaw/openclaw.json`, add:
+In `/data/.openclaw/openclaw.json`, add:
 
 ```json
 "wiki": {
@@ -484,17 +484,17 @@ After all layers are installed, run these checks:
 
 ```bash
 # Layer 1: Markdown files exist
-ls ~/.openclaw/workspace/MEMORY.md ~/.openclaw/workspace/memory/
+ls /data/.openclaw/workspace/MEMORY.md /data/.openclaw/workspace/memory/
 
 # Layer 2: Flush prompt is configured
-grep "memoryFlush" ~/.openclaw/openclaw.json | head -1
+grep "memoryFlush" /data/.openclaw/openclaw.json | head -1
 
 # Layer 3: Session indexing is on
-grep "sessionMemory" ~/.openclaw/openclaw.json
+grep "sessionMemory" /data/.openclaw/openclaw.json
 
 # Layer 4: Gemini provider is set (skip if GOOGLE_API_KEY not set)
-grep '"backend"' ~/.openclaw/openclaw.json
-grep '"provider"' ~/.openclaw/openclaw.json | grep gemini
+grep '"backend"' /data/.openclaw/openclaw.json
+grep '"provider"' /data/.openclaw/openclaw.json | grep gemini
 
 # Layer 5: memory-core is enabled
 openclaw memory status | grep -E "Backend|autoCapture|autoRecall"
@@ -571,7 +571,7 @@ Teach Yourself means READ. Activate means EXECUTE.
 
 #### Step 1: CREATE DREAMS.md
 ```bash
-cat > ~/.openclaw/workspace/DREAMS.md << 'EOF'
+cat > /data/.openclaw/workspace/DREAMS.md << 'EOF'
 # DREAMS.md - Dynamic Reasoning & Execution Memory System
 
 ## Active Memory Configuration
@@ -583,7 +583,7 @@ EOF
 ```
 
 #### Step 2: CONFIGURE active-memory in openclaw.json
-Add to `~/.openclaw/openclaw.json` under `agents.defaults`:
+Add to `/data/.openclaw/openclaw.json` under `agents.defaults`:
 ```json
 "activeMemory": {
   "enabled": true,
@@ -598,7 +598,7 @@ Add to `~/.openclaw/openclaw.json` under `agents.defaults`:
 ```
 
 #### Step 3: UPDATE memory backend to "builtin"
-In `~/.openclaw/openclaw.json`:
+In `/data/.openclaw/openclaw.json`:
 ```json
 "memory": {
   "backend": "builtin"
@@ -610,9 +610,9 @@ In `~/.openclaw/openclaw.json`:
 
 #### Step 4: VERIFY directory structure
 ```bash
-mkdir -p ~/.openclaw/workspace/memory
-ls -la ~/.openclaw/workspace/MEMORY.md
-ls -la ~/.openclaw/workspace/DREAMS.md
+mkdir -p /data/.openclaw/workspace/memory
+ls -la /data/.openclaw/workspace/MEMORY.md
+ls -la /data/.openclaw/workspace/DREAMS.md
 ```
 
 #### Step 5: RESTART gateway (ask user first)

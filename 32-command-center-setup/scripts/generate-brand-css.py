@@ -3,7 +3,7 @@
 generate-brand-css.py — v9.6.5
 
 Reads the active company's brand colors from the Mission Control database
-(or directly from ~/clawd/zero-human-company/<slug>/company-config.json
+(or directly from /data/.openclaw/workspace/zero-human-company/<slug>/company-config.json
 as a fallback) and writes a CSS file the Kanban frontend imports at runtime.
 
 The frontend imports this from `/public/brand.css` (or whatever path the
@@ -50,8 +50,8 @@ def find_zhc_company_config(slug=None):
     roots = [
         HOME / "clawd" / "zero-human-company",
         HOME / "clawd" / "zhc",
-        Path("/data/clawd/zero-human-company"),
-        Path("/data/clawd/zhc"),
+        Path("/data/.openclaw/workspace/zero-human-company"),
+        Path("/data/.openclaw/workspace/zhc"),
     ]
     candidates = []
     for root in roots:

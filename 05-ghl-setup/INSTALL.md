@@ -36,7 +36,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
+   Find the OpenClaw master files folder in /data/.openclaw/master-files/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -46,7 +46,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
+   If no folder is found, create: /data/.openclaw/master-files/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -127,7 +127,7 @@ This is critical. GHL does NOT use traditional API keys anymore. That method is 
 ### Where Credentials Get Stored
 The AI agent checks TWO places for GHL credentials:
 1. The secrets file at /data/.openclaw/secrets/.env (look for GOHIGHLEVEL_API_KEY or GHL_PIT)
-2. The OpenClaw config file at ~/.openclaw/openclaw.json under the env.vars section
+2. The OpenClaw config file at /data/.openclaw/openclaw.json under the env.vars section
 
 
 ## Autonomous Setup Execution
@@ -143,7 +143,7 @@ env files first. Only ask the user if the values are not already stored.
 grep -E "GHL_API_KEY|GHL_PIT|GHL_LOCATION_ID|GOHIGHLEVEL_API_KEY" /data/.openclaw/secrets/.env 2>/dev/null
 
 # Check openclaw.json
-cat ~/.openclaw/openclaw.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('env',{}).get('vars',{}))" 2>/dev/null
+cat /data/.openclaw/openclaw.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('env',{}).get('vars',{}))" 2>/dev/null
 ```
 
 **Decision tree:**
@@ -175,7 +175,7 @@ If this returns a valid location, extract the location ID automatically from
 the response. Save it to /data/.openclaw/secrets/.env as GHL_LOCATION_ID.
 
 If GHL_LOCATION_ID exists but GHL_API_KEY is missing, check if a token can
-be refreshed from any saved OAuth session in ~/.openclaw/.
+be refreshed from any saved OAuth session in /data/.openclaw/.
 
 **Attempt 2 - If automatic retrieval fails or no credentials exist at all,
 ask the user for manual input:**
@@ -216,7 +216,7 @@ The agent must:
    grep "GHL_API_KEY\|GHL_LOCATION_ID" /data/.openclaw/secrets/.env
    ```
 
-SECONDARY (optional sync): If ~/.openclaw/openclaw.json already has an
+SECONDARY (optional sync): If /data/.openclaw/openclaw.json already has an
 env.vars section, also add the values there for convenience:
 ```json
 {
@@ -304,17 +304,17 @@ The agent must follow TYP rules - add only summaries and file path references to
 
 **Update TOOLS.md:**
 Add reference to GHL API base URL, Version header requirement, and common endpoint paths.
-Location: ~/clawd/TOOLS.md
+Location: /data/.openclaw/workspace/TOOLS.md
 Content to add: Brief summary + path reference to this document
 
 **Update MEMORY.md:**
 Add note that GHL credentials are configured and storage location.
-Location: ~/clawd/MEMORY.md
+Location: /data/.openclaw/workspace/MEMORY.md
 Content to add: Brief summary + path reference to this document
 
 **Update AGENTS.md:**
 Add rule that all GHL API requests must include the Version header.
-Location: ~/clawd/AGENTS.md
+Location: /data/.openclaw/workspace/AGENTS.md
 Content to add: Brief summary + path reference to this document
 
 
@@ -339,7 +339,7 @@ Tell the user exactly this:
    - Access media library files
    - Execute all GHL-integrated workflows
    
-   All credentials are securely stored in ~/.openclaw/openclaw.json and
+   All credentials are securely stored in /data/.openclaw/openclaw.json and
    all API requests include the required authentication and version headers."
 
 Do NOT report completion until ALL verification items are confirmed.

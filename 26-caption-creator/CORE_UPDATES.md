@@ -16,7 +16,7 @@ Add this section:
 ## Video Skills Suite
 
 ### Caption Creator (Skill 26)
-- Location: `~/.openclaw/skills/caption-creator/`
+- Location: `/data/.openclaw/skills/caption-creator/`
 - Purpose: export SRT subtitles and create captioned videos
 - Use when: user asks for captions, subtitles, SRT, or "burn-in captions"
 ```
@@ -26,5 +26,5 @@ Add this pointer:
 
 ```md
 ## Video Skills Suite
-- Caption Creator (Skill 26): `~/.openclaw/skills/caption-creator/`
+- Caption Creator (Skill 26): `/data/.openclaw/skills/caption-creator/`
 ```

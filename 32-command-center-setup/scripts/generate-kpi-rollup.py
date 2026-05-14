@@ -4,14 +4,14 @@ generate-kpi-rollup.py — v9.6.5
 
 Builds the company-level KPI rollup the CEO Performance Board displays.
 Reads:
-  - ~/clawd/zero-human-company/<slug>/company-config.json
+  - /data/.openclaw/workspace/zero-human-company/<slug>/company-config.json
       → declares company-level KPIs (e.g. monthly recurring revenue, NPS,
         customer count)
-  - ~/clawd/zero-human-company/<slug>/departments/<dept>/department-config.json
+  - /data/.openclaw/workspace/zero-human-company/<slug>/departments/<dept>/department-config.json
       → declares per-dept KPIs and which company KPIs they roll up to
 
 Writes:
-  - ~/clawd/zero-human-company/<slug>/kpi-rollup.json
+  - /data/.openclaw/workspace/zero-human-company/<slug>/kpi-rollup.json
       The dashboard frontend (or any agent) reads this. Schema:
       {
         "company": "BlackCEO",
@@ -70,8 +70,8 @@ def find_zhc_company_dir(slug=None):
     roots = [
         HOME / "clawd" / "zero-human-company",
         HOME / "clawd" / "zhc",
-        Path("/data/clawd/zero-human-company"),
-        Path("/data/clawd/zhc"),
+        Path("/data/.openclaw/workspace/zero-human-company"),
+        Path("/data/.openclaw/workspace/zhc"),
     ]
     candidates = []
     for root in roots:

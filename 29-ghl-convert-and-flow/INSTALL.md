@@ -71,7 +71,7 @@ Then reload: `source ~/.zshrc`
 ### Option B: OpenClaw secrets file (recommended for agent access)
 
 ```bash
-# Add to /data/openclaw/workspace/secrets/.env
+# Add to /data/.openclaw/secrets/.env
 GHL_API_KEY=your_private_integration_token_here
 GHL_LOCATION_ID=your_location_id_here
 ```

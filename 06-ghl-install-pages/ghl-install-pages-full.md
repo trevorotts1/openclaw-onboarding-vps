@@ -147,7 +147,7 @@ CREDENTIAL STORAGE (Where to Keep GHL Login Info)
 GHL credentials must NEVER be hardcoded in scripts or committed to repositories.
 
 Store credentials in the workspace secrets file:
-/data/openclaw/workspace/secrets/.env
+/data/.openclaw/secrets/.env
 
 Add these lines:
 GHL_EMAIL=user@email.com
@@ -2146,7 +2146,7 @@ Always include this report. Do not skip it. The user needs to know exactly what 
 - Use Playwright with launchPersistentContext (never launch())
 - Always verify correct sub-account before building
 - Default to Funnels unless user says Websites
-- GHL credentials stored in /data/openclaw/workspace/secrets/.env (GHL_EMAIL, GHL_PASSWORD)
+- GHL credentials stored in /data/.openclaw/secrets/.env (GHL_EMAIL, GHL_PASSWORD)
 - NEVER publish without explicit user approval
 - ALWAYS send deployment report after completing
 
@@ -2160,7 +2160,7 @@ Always include this report. Do not skip it. The user needs to know exactly what 
 - Every selector has fallback chains - use find_element_with_fallback()
 - 2FA detection built in - pauses for manual intervention
 - Two deployment methods: Direct code (default) and iframe (for complex/conflicting CSS)
-- Credential location: /data/openclaw/workspace/secrets/.env
+- Credential location: /data/.openclaw/secrets/.env
 - For updating existing pages: navigate to the funnel, open the step, replace the code in the code editor
 
 

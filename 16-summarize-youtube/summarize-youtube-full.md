@@ -45,35 +45,21 @@ Copy and paste this entire command into Terminal. Press Enter:
 
 The installation will take several minutes. You may need to enter your computer password. Just follow the on-screen prompts.
 
-### Step 2: Install the Summarize Tool
+### Step 2: Install yt-dlp (the transcript extractor)
 
-**Platform check first.** On Hostinger Docker VPS Homebrew is not available in the
-container — use the Python fallback path below. On Mac use Homebrew.
-
-**Mac (Homebrew):**
-
-```bash
-brew install steipete/tap/summarize
-```
-
-This command does several things:
-1. Adds the software repository (tap) from developer Steipete
-2. Downloads the summarize program
-3. Installs it on your system
-4. Makes it available in your command line
-
-**Hostinger Docker VPS (Python fallback — no Homebrew available):**
+The Mac-only `summarize` CLI by steipete is replaced on Hostinger Docker VPS
+with `yt-dlp` (for transcript extraction) + the agent's primary LLM (for
+summarization itself). Install via Python pip — the container has no
+Homebrew.
 
 ```bash
-# `summarize` is a Mac-only CLI; on VPS we replicate its behavior with yt-dlp
-# (for transcript extraction) + the agent's primary LLM for summarization.
 pip3 install --user yt-dlp
-export PATH="$HOME/.local/bin:$PATH"
-yt-dlp --version  # verify
+export PATH="/data/.local/bin:$PATH"   # HOME=/data on Hostinger
+yt-dlp --version   # verify
 ```
 
-The skill's runtime logic will detect the missing `summarize` binary and
-auto-fall-back to the yt-dlp + agent-LLM pipeline.
+The skill's runtime logic detects `yt-dlp` and routes summarization through
+the agent's LLM (e.g. ollama/deepseek-v4-flash, the Hostinger default).
 
 **What to expect:**
 - You will see download progress messages
@@ -381,7 +367,7 @@ The tool complains that yt-dlp is missing or not installed.
 
 2. Or on Mac with Homebrew already set up:
    ```bash
-   brew install yt-dlp
+   # brew is Mac-only and not available in Hostinger Docker. Use pip3 instead — see Step 2.
    ```
 
 3. Verify installation:

@@ -43,8 +43,8 @@ npm install -g pm2
 The agent will scan for department folders in your master files area. These folders indicate Skill 23 was completed.
 
 **What the agent looks for:**
-- Department folders at `~/.openclaw/workspace/departments/[name]/` (where Skill 23 writes them) — NO -dept suffix
-- Also checks `~/.openclaw/workspaces/command-center/` and `~/Downloads/` for department folders
+- Department folders at `/data/.openclaw/workspace/departments/[name]/` (where Skill 23 writes them) — NO -dept suffix
+- Also checks `/data/.openclaw/workspaces/command-center/` and `/data/.openclaw/master-files/` for department folders
 - Each folder should contain role definitions
 
 **If Skill 23 is NOT found:**
@@ -128,7 +128,7 @@ The agent will now create the workspace structure for your Command Center.
 
 ### 3.1 Create Base Directory
 ```bash
-mkdir -p ~/.openclaw/workspaces/command-center/
+mkdir -p /data/.openclaw/workspaces/command-center/
 ```
 
 ### 3.2 Create Department Subdirectories
@@ -140,7 +140,7 @@ For each department you chose in Skill 23, the agent will create:
 
 Example structure:
 ```
-~/.openclaw/workspaces/command-center/
+/data/.openclaw/workspaces/command-center/
 ├── marketing/
 │   ├── IDENTITY.md
 │   ├── MEMORY.md
@@ -162,12 +162,12 @@ Each department workspace will have symlinks to shared files from your main work
 - HEARTBEAT.md
 - SOUL.md
 
-**Important:** The agent uses absolute paths (like `/Users/username/clawd/TOOLS.md`), not tilde paths (`~/.openclaw/workspace/TOOLS.md`). This ensures symlinks work correctly.
+**Important:** The agent uses absolute paths (like `/Users/username/clawd/TOOLS.md`), not tilde paths (`/data/.openclaw/workspace/TOOLS.md`). This ensures symlinks work correctly.
 
 ---
 
 
-**🔴 GATE CHECK: DO NOT proceed to Phase 4 until every department workspace folder exists at ~/.openclaw/workspaces/command-center/. List the folders and verify. If any are missing, create them now. DO NOT SKIP THIS PHASE.**
+**🔴 GATE CHECK: DO NOT proceed to Phase 4 until every department workspace folder exists at /data/.openclaw/workspaces/command-center/. List the folders and verify. If any are missing, create them now. DO NOT SKIP THIS PHASE.**
 
 ## Phase 4: Agent Configuration (Agent Does This Automatically)
 
@@ -177,7 +177,7 @@ The agent will configure OpenClaw to recognize your department agents.
 The agent follows the backup protocol:
 ```bash
 # Creates a timestamped backup
-cp ~/.openclaw/openclaw.json ~/Downloads/openclaw-backups/openclaw-backup-[DATE].json
+cp /data/.openclaw/openclaw.json /data/.openclaw/backups/openclaw-backup-[DATE].json
 ```
 
 ### 4.2 Add Department Agents
@@ -355,7 +355,7 @@ pm2 start ecosystem.config.cjs
 After the dashboard starts, run the workspace seeding script to populate the database with all your department workspaces. Without this step, the workspace selector will only show the default workspace.
 
 ```bash
-python3 ~/.openclaw/onboarding/32-command-center-setup/scripts/seed-workspaces.py
+python3 /data/.openclaw/onboarding/32-command-center-setup/scripts/seed-workspaces.py
 ```
 
 Expected output: "Seeding complete. Inserted: [count] | Skipped (already existed): 0" (where [count] matches your number of departments)
@@ -449,9 +449,9 @@ SUBDOMAIN=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys
 ### 6b.4 Save the Token Locally
 
 ```bash
-grep -v '^CLOUDFLARE_TUNNEL_TOKEN=' ~/.openclaw/.env 2>/dev/null > /tmp/openclaw-env.tmp || true
+grep -v '^CLOUDFLARE_TUNNEL_TOKEN=' /data/.openclaw/.env 2>/dev/null > /tmp/openclaw-env.tmp || true
 echo "CLOUDFLARE_TUNNEL_TOKEN=$TUNNEL_TOKEN" >> /tmp/openclaw-env.tmp
-mv /tmp/openclaw-env.tmp ~/.openclaw/.env
+mv /tmp/openclaw-env.tmp /data/.openclaw/.env
 ```
 
 ### 6b.5 Connect This Machine to the Tunnel
@@ -540,7 +540,7 @@ Send each department agent this message:
 **Layer 1 - Search Evidence:**
 Ask the agent: "How did you select this persona? Did you search the persona library or just pick a default?"
 
-**Expected (v9.6.2+):** Agent describes running `select-persona-for-task.py` from `~/.openclaw/skills/23-ai-workforce-blueprint/scripts/`. That script combines THREE things in one call: (1) Gemini Embeddings 2 semantic search via `gemini-search.py`, (2) keyword filter by dept domain tags, (3) full 5-layer alignment scoring. The agent should be able to show the JSON output containing `model_id`, `score`, `mode`, `top_3` candidates, and the 5-layer `breakdown`.
+**Expected (v9.6.2+):** Agent describes running `select-persona-for-task.py` from `/data/.openclaw/skills/23-ai-workforce-blueprint/scripts/`. That script combines THREE things in one call: (1) Gemini Embeddings 2 semantic search via `gemini-search.py`, (2) keyword filter by dept domain tags, (3) full 5-layer alignment scoring. The agent should be able to show the JSON output containing `model_id`, `score`, `mode`, `top_3` candidates, and the 5-layer `breakdown`.
 
 **FAIL if:** Agent says "I always use [same persona]", "I default to the primary persona every time", OR "I only ran `gemini-search.py` directly without scoring" -- the Dynamic Persona Selection Engine must call the unified `select-persona-for-task.py` for full 5-layer scoring, not just raw semantic search.
 
@@ -559,17 +559,17 @@ Ask the agent: "Explain the 5-layer alignment you used to select this persona."
 **Layer 3 - Reason Log:**
 Ask the agent: "Did you log your persona selection to today's daily memory file?"
 
-**Expected:** Agent confirms it appended a reason log entry to `~/.openclaw/workspace/memory/YYYY-MM-DD.md` (where YYYY-MM-DD is today's date). Then verify the file directly:
+**Expected:** Agent confirms it appended a reason log entry to `/data/.openclaw/workspace/memory/YYYY-MM-DD.md` (where YYYY-MM-DD is today's date). Then verify the file directly:
 
 ```bash
-cat ~/.openclaw/workspace/memory/$(date +%Y-%m-%d).md | grep -i "selected.*persona"
+cat /data/.openclaw/workspace/memory/$(date +%Y-%m-%d).md | grep -i "selected.*persona"
 ```
 
 **FAIL if:** No matching line exists in today's memory file. The Persona Operating Protocol requires a reason log entry for every task.
 
 **Why this matters:** Department agents have `governing-personas.md` files and a Persona Operating Protocol in their AGENTS.md. But if the runtime wiring is broken, agents will skip the search, skip the alignment, skip the log, and just default to the same persona every time. This test catches all three failure modes before go-live.
 
-**If an agent fails:** Check that their department AGENTS.md contains the `## 🔴🔴🔴 Persona Operating Protocol` section. If missing, append it manually and re-test. Also verify BOTH `scripts/gemini-search.py` AND `~/.openclaw/skills/23-ai-workforce-blueprint/scripts/select-persona-for-task.py` exist and are executable. The agent calls the latter for every task; the latter internally calls the former for semantic search.
+**If an agent fails:** Check that their department AGENTS.md contains the `## 🔴🔴🔴 Persona Operating Protocol` section. If missing, append it manually and re-test. Also verify BOTH `scripts/gemini-search.py` AND `/data/.openclaw/skills/23-ai-workforce-blueprint/scripts/select-persona-for-task.py` exist and are executable. The agent calls the latter for every task; the latter internally calls the former for semantic search.
 
 ### 7.6 Report Results
 The agent sends you a summary in Telegram:
@@ -644,7 +644,7 @@ After all phases are complete, verify:
 - [ ] Bot is admin with Manage Topics permission
 - [ ] One topic per department exists
 - [ ] Cross-Department topic exists
-- [ ] Department workspaces created at ~/.openclaw/workspaces/command-center/
+- [ ] Department workspaces created at /data/.openclaw/workspaces/command-center/
 - [ ] Each department has IDENTITY.md, MEMORY.md, and memory/ folder
 - [ ] Agent config entries added for each department
 - [ ] Telegram bindings configured for each topic
@@ -695,7 +695,7 @@ Teach Yourself means READ. Activate means EXECUTE.
 
 #### Step 1: VERIFY Skill 23 completion
 ```bash
-ls -la ~/.openclaw/workspace/departments/
+ls -la /data/.openclaw/workspace/departments/
 ```
 Expected: Department folders exist from Skill 23.
 If missing: STOP and complete Skill 23 first.

@@ -37,7 +37,7 @@ in doubt: skill docs win.
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Locate the OpenClaw master files folder in ~/Downloads/. Possible names:
+   Locate the OpenClaw master files folder in /data/.openclaw/master-files/. Possible names:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -47,7 +47,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder exists, create: ~/Downloads/OpenClaw Master Files/
+   If no folder exists, create: /data/.openclaw/master-files/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -131,7 +131,7 @@ Target state: AI agent operates as a dispatcher that assigns each sender a dedic
 - All 14 prior OpenClaw skills installed and functional
 - An active Telegram bot connected to OpenClaw
 - Telegram user IDs for each team member (numeric format: e.g., 1234567890)
-- Write access to ~/.openclaw/openclaw.json
+- Write access to /data/.openclaw/openclaw.json
 
 ---
 
@@ -141,7 +141,7 @@ Before starting, create this checklist and confirm completion after each step:
 
 ```
 [ ] Step 0: Team Member Intake (collect all team data before touching config)
-[ ] Step 1: Back up ~/.openclaw/openclaw.json
+[ ] Step 1: Back up /data/.openclaw/openclaw.json
 [ ] Step 2: Configure sub-agent settings in openclaw.json
 [ ] Step 3: Add Telegram IDs to channels.telegram.allowFrom
 [ ] Step 4: Generate TEAM_CONFIG.md with collected team data
@@ -183,17 +183,17 @@ If TEAM_CONFIG.md has placeholders, the team data is:
 
 ## Step 1: Back Up Configuration
 
-Create backup of ~/.openclaw/openclaw.json before any modifications.
+Create backup of /data/.openclaw/openclaw.json before any modifications.
 
 Execute:
 ```bash
-mkdir -p ~/Downloads/OpenClaw\ Backup
-cp ~/.openclaw/openclaw.json "~/Downloads/OpenClaw Backup/openclaw-config-backup-$(date +'%B %-d at %-I-%M %p').json"
+mkdir -p /data/.openclaw/master-files/OpenClaw\ Backup
+cp /data/.openclaw/openclaw.json "/data/.openclaw/master-files/OpenClaw Backup/openclaw-config-backup-$(date +'%B %-d at %-I-%M %p').json"
 ```
 
 Verify backup exists:
 ```bash
-ls -la ~/Downloads/OpenClaw\ Backup/
+ls -la /data/.openclaw/master-files/OpenClaw\ Backup/
 ```
 
 Confirm: File with current date appears in output. If empty or missing, STOP. Do not proceed.
@@ -204,7 +204,7 @@ Confirm: File with current date appears in output. If empty or missing, STOP. Do
 
 Sub-agent concurrency settings were already configured during Step 2.5 of the onboarding walkthrough. Verify they are present:
 
-Read ~/.openclaw/openclaw.json and confirm these values exist under agents.defaults.subagents:
+Read /data/.openclaw/openclaw.json and confirm these values exist under agents.defaults.subagents:
 - maxSpawnDepth: 4
 - maxConcurrent: 20
 - maxChildrenPerAgent: 12
@@ -256,12 +256,12 @@ Save file.
 ## Step 4: Generate TEAM_CONFIG.md
 
 Create a TEAM_CONFIG.md file that records all team member data collected in Step 0.
-Save it at: ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+Save it at: /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
 
 Execute:
 ```bash
-mkdir -p ~/.openclaw/skills/15-blackceo-team-management
-nano ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+mkdir -p /data/.openclaw/skills/15-blackceo-team-management
+nano /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
 ```
 
 Paste and fill in with the actual team data collected in Step 0:
@@ -292,11 +292,11 @@ Replace all placeholder brackets with real data from Step 0. Save file.
 
 ## Step 5: Create Routing Table
 
-Create WORKFLOW_AUTO.md in ~/clawd/ to define dispatcher routing.
+Create WORKFLOW_AUTO.md in /data/.openclaw/workspace/ to define dispatcher routing.
 
 Execute:
 ```bash
-nano ~/clawd/WORKFLOW_AUTO.md
+nano /data/.openclaw/workspace/WORKFLOW_AUTO.md
 ```
 
 Paste and customize using the data from TEAM_CONFIG.md:
@@ -336,13 +336,13 @@ Replace all placeholder brackets with the real data from TEAM_CONFIG.md. Save fi
 
 ## Step 6: Add Team IDs to AGENTS.md
 
-Open ~/clawd/AGENTS.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
+Open /data/.openclaw/workspace/AGENTS.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
 
 ```markdown
 ## Team Management - Telegram Routing (Dispatcher Protocol)
-- Protocol doc: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
-- Routing table: ~/clawd/WORKFLOW_AUTO.md
-- Team config: ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+- Protocol doc: /data/.openclaw/master-files/[master-files-folder]/blackceo-management-protocol.md
+- Routing table: /data/.openclaw/workspace/WORKFLOW_AUTO.md
+- Team config: /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
 - Architecture: Main session = dispatcher. Each person gets a dedicated worker sub-agent.
 
 ### Team Members (from TEAM_CONFIG.md)
@@ -366,13 +366,13 @@ Save file.
 
 ## Step 7: Add Team IDs to TOOLS.md
 
-Open ~/clawd/TOOLS.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
+Open /data/.openclaw/workspace/TOOLS.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
 
 ```markdown
 ## Team Dispatcher - Message Routing
-- WORKFLOW_AUTO.md: ~/clawd/WORKFLOW_AUTO.md (routing table with all Telegram IDs)
-- Team config: ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
-- Full protocol: ~/Downloads/[master-files-folder]/blackceo-management-protocol.md
+- WORKFLOW_AUTO.md: /data/.openclaw/workspace/WORKFLOW_AUTO.md (routing table with all Telegram IDs)
+- Team config: /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+- Full protocol: /data/.openclaw/master-files/[master-files-folder]/blackceo-management-protocol.md
 - To send to a specific person: use message tool with target set to their Telegram ID
 - All team Telegram IDs: see TEAM_CONFIG.md
 - Worker sub-agent model must support tool calls (MiniMax M2.5, Codex, Sonnet - NOT reasoning-only models)
@@ -384,7 +384,7 @@ Save file.
 
 ## Step 8: Add Team IDs to MEMORY.md
 
-Open ~/clawd/MEMORY.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
+Open /data/.openclaw/workspace/MEMORY.md and add this section (replace placeholders with real data from TEAM_CONFIG.md):
 
 ```markdown
 ## Team Telegram IDs (Dispatcher Protocol)
@@ -393,8 +393,8 @@ Open ~/clawd/MEMORY.md and add this section (replace placeholders with real data
 | [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] |
 | [TEAM_MEMBER_NAME] | [TEAM_MEMBER_ID] | [ROLE] |
 - All IDs are approved in channels.telegram.allowFrom
-- Routing protocol: ~/clawd/WORKFLOW_AUTO.md
-- Full team config: ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+- Routing protocol: /data/.openclaw/workspace/WORKFLOW_AUTO.md
+- Full team config: /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
 ```
 
 Save file.
@@ -405,7 +405,7 @@ Save file.
 
 Execute:
 ```bash
-python3 -m json.tool ~/.openclaw/openclaw.json > /dev/null
+python3 -m json.tool /data/.openclaw/openclaw.json > /dev/null
 ```
 
 Expected: No output (JSON is valid).
@@ -481,7 +481,7 @@ Gateway restarted and running. All team members above can now message the bot.
 
 **Read the IDs back from the actual openclaw.json file before sending.** Do not write from memory. Verify they are actually in the file, then report.
 
-If you cannot send the confirmation message, write it to ~/clawd/memory/skill-15-completion.md and tell the operator to check that file.
+If you cannot send the confirmation message, write it to /data/.openclaw/workspace/memory/skill-15-completion.md and tell the operator to check that file.
 
 ---
 

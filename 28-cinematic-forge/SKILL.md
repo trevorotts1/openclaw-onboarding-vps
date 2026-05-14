@@ -387,7 +387,7 @@ After all 14 questions are answered, the agent proceeds through these phases:
 
 2. **Check KIE.ai credit balance:**
    ```bash
-   source /data/openclaw/workspace/secrets/.env
+   source /data/.openclaw/secrets/.env
    curl -s "https://api.kie.ai/api/v1/user/credits" \
      -H "Authorization: Bearer $KIE_API_KEY"
    ```

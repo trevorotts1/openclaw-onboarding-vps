@@ -444,7 +444,7 @@ def _extract_via_calibre(book_path: Path) -> str:
     from Amazon Kindle, Adobe Adept, Barnes & Noble, and Mobipocket.
 
     DRM removal is for personal use only (books you legally purchased and own).
-    Calibre + DeDRM plugin installed at: ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/drm-tools/
+    Calibre + DeDRM plugin installed at: /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/drm-tools/
 
     Conversion chain: source format -> TXT via ebook-convert
     """
@@ -933,7 +933,7 @@ You have the extraction notes (Phase 1) and deep analysis (Phase 2) below.
 Build the complete 14-section dual-purpose persona blueprint as specified.
 
 The output file must be saved to:
-~/Downloads/openclaw-master-files/coaching-personas/personas/{folder}/persona-blueprint.md
+/data/.openclaw/master-files/coaching-personas/personas/{folder}/persona-blueprint.md
 
 ---
 

@@ -101,7 +101,7 @@ QC: Final.
 ## Usage
 Spawn via Antfarm or TaskFlow:
 ```
-node ~/.openclaw/workspace/antfarm/dist/cli/cli.js workflow run content-publishing-engine "Publish: [topic]" --vars="brand=[from identity.md: brand name]"
+node /data/.openclaw/workspace/antfarm/dist/cli/cli.js workflow run content-publishing-engine "Publish: [topic]" --vars="brand=[from identity.md: brand name]"
 ```
 Or subagent: `sessions_spawn task="Run Content Publishing Engine on [topic]" runtime="subagent" model="openrouter/xiaomi/mimo-v2-pro"`
 

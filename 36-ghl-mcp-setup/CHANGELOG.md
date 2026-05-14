@@ -20,4 +20,4 @@ All notable changes to this skill are documented here.
 - **Disclosure header protocol** — every GHL response must prefix with `[GHL tier used: N — tool_name]`
 - **20-assertion QC script** (`qc-ghl-setup.sh`) covering platform detection, credentials, both MCPs, core file wiring, and security
 - **Cross-references** to skills 05 (foundation), 29 (Tier 3 reference), and 35 (which now routes through MCPs first)
-- **Credential canonical path migration:** moved from `~/clawd/secrets/.env` (legacy skill 05 location) to `~/.openclaw/secrets/.env` (current AGENTS.md canonical)
+- **Credential canonical path migration:** moved from `/data/.openclaw/secrets/.env` (legacy skill 05 location) to `/data/.openclaw/secrets/.env` (current AGENTS.md canonical)

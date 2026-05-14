@@ -9,24 +9,24 @@ Each section must fully pass before marking the install complete.
 
 Run each check. Mark pass/fail.
 
-- [ ] `~/.openclaw/skills/youtube-watcher/` directory exists
+- [ ] `/data/.openclaw/skills/youtube-watcher/` directory exists
   ```bash
-  ls ~/.openclaw/skills/youtube-watcher/
+  ls /data/.openclaw/skills/youtube-watcher/
   ```
 
-- [ ] `~/.openclaw/skills/youtube-watcher/SKILL.md` exists
+- [ ] `/data/.openclaw/skills/youtube-watcher/SKILL.md` exists
   ```bash
-  test -f ~/.openclaw/skills/youtube-watcher/SKILL.md && echo PASS || echo FAIL
+  test -f /data/.openclaw/skills/youtube-watcher/SKILL.md && echo PASS || echo FAIL
   ```
 
-- [ ] `~/.openclaw/skills/youtube-watcher/scripts/get_transcript.py` exists
+- [ ] `/data/.openclaw/skills/youtube-watcher/scripts/get_transcript.py` exists
   ```bash
-  test -f ~/.openclaw/skills/youtube-watcher/scripts/get_transcript.py && echo PASS || echo FAIL
+  test -f /data/.openclaw/skills/youtube-watcher/scripts/get_transcript.py && echo PASS || echo FAIL
   ```
 
 - [ ] File count is correct (2 files total: SKILL.md + scripts/get_transcript.py)
   ```bash
-  find ~/.openclaw/skills/youtube-watcher -type f | wc -l
+  find /data/.openclaw/skills/youtube-watcher -type f | wc -l
   # Expected: 2
   ```
 
@@ -47,22 +47,22 @@ Verify that ONLY the allowed core files were updated, and forbidden files were l
 
 - [ ] `AGENTS.md` contains a TYP-before-execution rule for youtube-watcher
   ```bash
-  grep -i "youtube" ~/.openclaw/AGENTS.md && echo PASS || echo FAIL
+  grep -i "youtube" /data/.openclaw/AGENTS.md && echo PASS || echo FAIL
   ```
 
 - [ ] `TOOLS.md` contains tool commands or endpoint references for this skill
   ```bash
-  grep -i "youtube\|get_transcript\|yt-dlp" ~/.openclaw/TOOLS.md && echo PASS || echo FAIL
+  grep -i "youtube\|get_transcript\|yt-dlp" /data/.openclaw/TOOLS.md && echo PASS || echo FAIL
   ```
 
 - [ ] `MEMORY.md` contains a path reference pointing to the full skill documentation
   ```bash
-  grep -i "youtube" ~/.openclaw/MEMORY.md && echo PASS || echo FAIL
+  grep -i "youtube" /data/.openclaw/MEMORY.md && echo PASS || echo FAIL
   ```
 
 - [ ] `MEMORY.md` does NOT contain the full SKILL.md content pasted inline (no bulk dump)
   ```bash
-  wc -l ~/.openclaw/MEMORY.md
+  wc -l /data/.openclaw/MEMORY.md
   # Flag for review if line count grew by more than ~10 lines from this install
   ```
 
@@ -70,18 +70,18 @@ Verify that ONLY the allowed core files were updated, and forbidden files were l
 
 - [ ] `SOUL.md` last-modified timestamp is unchanged from before install
   ```bash
-  ls -la ~/.openclaw/SOUL.md
+  ls -la /data/.openclaw/SOUL.md
   # Compare to known pre-install timestamp
   ```
 
 - [ ] `IDENTITY.md` last-modified timestamp is unchanged
   ```bash
-  ls -la ~/.openclaw/IDENTITY.md
+  ls -la /data/.openclaw/IDENTITY.md
   ```
 
 - [ ] `HEARTBEAT.md` last-modified timestamp is unchanged
   ```bash
-  ls -la ~/.openclaw/HEARTBEAT.md
+  ls -la /data/.openclaw/HEARTBEAT.md
   ```
 
 **Section pass criteria:** Allowed files have relevant entries; forbidden files show no modification.
@@ -113,7 +113,7 @@ Ask the agent each question directly. Verify the answer matches expected.
   Expected: Teach Yourself Protocol (TYP)
 
 - [ ] **Q: Where is the full skill documentation stored after TYP install?**
-  Expected: In the OpenClaw master files folder (e.g. `~/Downloads/openclaw-master-files/`) as a `.md` file — NOT dumped inline into AGENTS.md/TOOLS.md/MEMORY.md.
+  Expected: In the OpenClaw master files folder (e.g. `/data/.openclaw/master-files/`) as a `.md` file — NOT dumped inline into AGENTS.md/TOOLS.md/MEMORY.md.
 
 - [ ] **Q: What is the exact command template to get a transcript?**
   Expected:
@@ -139,9 +139,9 @@ Test actual skill execution end-to-end.
   4. Returns a human-readable summary (not raw JSON or raw subtitle data)
 
 - [ ] **Step 2 — Confirm correct script path is used:**
-  Agent must resolve `{baseDir}` to `~/.openclaw/skills/youtube-watcher` and call:
+  Agent must resolve `{baseDir}` to `/data/.openclaw/skills/youtube-watcher` and call:
   ```bash
-  python3 ~/.openclaw/skills/youtube-watcher/scripts/get_transcript.py "..."
+  python3 /data/.openclaw/skills/youtube-watcher/scripts/get_transcript.py "..."
   ```
   NOT a path inside the onboarding folder.
 
@@ -159,7 +159,7 @@ Verify the agent did NOT do any of the following during install.
 
 - [ ] Agent did NOT paste full SKILL.md content into AGENTS.md, TOOLS.md, or MEMORY.md
   ```bash
-  wc -l ~/.openclaw/AGENTS.md ~/.openclaw/TOOLS.md ~/.openclaw/MEMORY.md
+  wc -l /data/.openclaw/AGENTS.md /data/.openclaw/TOOLS.md /data/.openclaw/MEMORY.md
   # Each file should have grown by no more than ~5-10 lines from this install
   ```
 
@@ -218,7 +218,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

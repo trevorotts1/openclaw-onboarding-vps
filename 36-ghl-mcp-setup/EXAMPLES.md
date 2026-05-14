@@ -245,7 +245,7 @@ curl -sS -X POST "https://services.leadconnectorhq.com/mcp/" \
 curl -sS $GHL_COMMUNITY_MCP_URL/health | python3 -m json.tool
 
 # Tier 2 process status (macOS)
-launchctl print gui/$(id -u)/com.clawd.ghl-mcp | grep -E "state|pid"
+systemctl --user print gui/$(id -u)/com.clawd.ghl-mcp | grep -E "state|pid"
 
 # Tier 2 process status (Linux)
 systemctl status ghl-mcp --no-pager

@@ -97,7 +97,7 @@ python3 "$MASTER_FILES_DIR/../shared-utils/select_model.py" \
 
 **Why this changed:** v9.5.0 retired the hardcoded `deepseek/deepseek-v3.2` Phase 2 model. The selector now picks whatever the client has, with the same Kimi-first priority — which gives better analysis output if a Kimi 2.6+ is available, and DeepSeek V4+ is still a reasonable fallback for clients without Kimi.
 
-**Route + API key:** Depends on which model the selector picks. Ollama → local Ollama daemon. OpenRouter → `OPENROUTER_API_KEY` in `~/.openclaw/secrets/.env`. OAuth → OpenClaw OAuth (no API key needed).
+**Route + API key:** Depends on which model the selector picks. Ollama → local Ollama daemon. OpenRouter → `OPENROUTER_API_KEY` in `/data/.openclaw/secrets/.env`. OAuth → OpenClaw OAuth (no API key needed).
 **Context:** 128K–1M tokens depending on the selected model.
 **Max output:** 8K–128K tokens depending on selection.
 **Prompt:** agent-prompts/analysis-agent-prompt.md
@@ -186,7 +186,7 @@ After the persona-blueprint.md is written and saved, Phase 3 is NOT complete unt
 
 ```bash
 # Re-index the Gemini collection with the new persona blueprint
-python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
+python3 /data/.openclaw/workspace/scripts/gemini-indexer.py
 ```
 
 **Why:** The blueprint must be indexed immediately so that persona matching (Skill 23 persona-matching-protocol.md) can discover this new persona via semantic search. Without re-indexing, the new persona exists on disk but is invisible to the matching system until a manual index run.
@@ -198,9 +198,9 @@ gemini search "<persona name or key topic>" -c coaching-personas
 
 **Phase 3 status in pipeline-status.json should only be set to COMPLETE after both the blueprint is saved AND the re-index succeeds.**
 
-**Persona Matrix Update:** If `persona-matrix.md` exists in the workforce directory (`~/.openclaw/workspace/departments/`), re-run Layers 1-2 to update the pre-qualified persona pool. This ensures newly created personas are available for the 5-layer matching protocol. Run:
+**Persona Matrix Update:** If `persona-matrix.md` exists in the workforce directory (`/data/.openclaw/workspace/departments/`), re-run Layers 1-2 to update the pre-qualified persona pool. This ensures newly created personas are available for the 5-layer matching protocol. Run:
 ```bash
-python3 ~/Downloads/openclaw-master-files/23-ai-workforce-blueprint/scripts/build-workforce.py --non-interactive --config-file workforce-config.json
+python3 /data/.openclaw/master-files/23-ai-workforce-blueprint/scripts/build-workforce.py --non-interactive --config-file workforce-config.json
 ```
 
 ### Post-Categorization: Automatic persona-categories.json Update
@@ -244,7 +244,7 @@ After Phase 3 completes for a book:
   --mask "**/*.md"
 
 # Update index with new blueprint
-python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
+python3 /data/.openclaw/workspace/scripts/gemini-indexer.py
 
 # Generate vector embeddings
 # Handled by gemini-indexer.py

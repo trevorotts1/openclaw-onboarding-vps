@@ -15,7 +15,7 @@
     "Skill 31: Upgraded Memory System (Recommended)"
   ],
   "category": "workforce-management",
-  "installPath": "~/.openclaw/skills/32-command-center-setup",
+  "installPath": "/data/.openclaw/skills/32-command-center-setup",
   "files": [
     "SKILL.md",
     "INSTALL.md",

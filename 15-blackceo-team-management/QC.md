@@ -8,7 +8,7 @@ Run this after installation. Every section must pass before you mark team manage
 ## 1. File and version checks
 
 ```bash
-SKILL_DIR="$HOME/Downloads/openclaw-master-files/OpenClaw Onboarding/15-blackceo-team-management"
+SKILL_DIR="/data/.openclaw/master-files/OpenClaw Onboarding/15-blackceo-team-management"
 ls -1 "$SKILL_DIR"
 cat "$SKILL_DIR/skill-version.txt"
 ```
@@ -21,20 +21,20 @@ cat "$SKILL_DIR/skill-version.txt"
 ## 2. Installed routing file checks
 
 ```bash
-ls -l ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
-ls -l ~/clawd/WORKFLOW_AUTO.md
-ls -lt ~/Downloads/openclaw-backups 2>/dev/null | head
-jq empty ~/.openclaw/openclaw.json
+ls -l /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md
+ls -l /data/.openclaw/workspace/WORKFLOW_AUTO.md
+ls -lt /data/.openclaw/backups 2>/dev/null | head
+jq empty /data/.openclaw/openclaw.json
 ```
 
-- [ ] Installed `TEAM_CONFIG.md` exists at `~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md`
-- [ ] Installed `WORKFLOW_AUTO.md` exists at `~/clawd/WORKFLOW_AUTO.md`
+- [ ] Installed `TEAM_CONFIG.md` exists at `/data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md`
+- [ ] Installed `WORKFLOW_AUTO.md` exists at `/data/.openclaw/workspace/WORKFLOW_AUTO.md`
 - [ ] Backup of config exists before edits
 - [ ] `openclaw.json` is valid JSON after edits
 
 ### 2A. Placeholder check
 ```bash
-rg -n '\[[^]]+\]' ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md ~/clawd/WORKFLOW_AUTO.md ~/clawd/AGENTS.md ~/clawd/TOOLS.md ~/clawd/MEMORY.md
+rg -n '\[[^]]+\]' /data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md /data/.openclaw/workspace/WORKFLOW_AUTO.md /data/.openclaw/workspace/AGENTS.md /data/.openclaw/workspace/TOOLS.md /data/.openclaw/workspace/MEMORY.md
 ```
 
 - [ ] No placeholder values like `[TEAM_MEMBER_1_ID]` remain
@@ -45,7 +45,7 @@ rg -n '\[[^]]+\]' ~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md 
 ## 3. Allowlist checks
 
 ```bash
-jq '.channels.telegram.allowFrom' ~/.openclaw/openclaw.json
+jq '.channels.telegram.allowFrom' /data/.openclaw/openclaw.json
 ```
 
 - [ ] `channels.telegram.allowFrom` exists and is an array
@@ -60,10 +60,10 @@ jq '.channels.telegram.allowFrom' ~/.openclaw/openclaw.json
 ## 4. Core file update checks
 
 ```bash
-grep -n "Team Management\|Dispatcher\|TEAM_CONFIG\|WORKFLOW_AUTO" ~/clawd/AGENTS.md ~/clawd/TOOLS.md ~/clawd/MEMORY.md
+grep -n "Team Management\|Dispatcher\|TEAM_CONFIG\|WORKFLOW_AUTO" /data/.openclaw/workspace/AGENTS.md /data/.openclaw/workspace/TOOLS.md /data/.openclaw/workspace/MEMORY.md
 ```
 
-- [ ] `AGENTS.md` includes dispatcher rules and points to both `~/clawd/WORKFLOW_AUTO.md` and `~/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md`
+- [ ] `AGENTS.md` includes dispatcher rules and points to both `/data/.openclaw/workspace/WORKFLOW_AUTO.md` and `/data/.openclaw/skills/15-blackceo-team-management/TEAM_CONFIG.md`
 - [ ] `TOOLS.md` explains directed sends and DM-only default reply routing
 - [ ] `MEMORY.md` stores the critical team IDs so the agent remembers them next session
 - [ ] Core files do not contain the entire full protocol pasted in
@@ -143,7 +143,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

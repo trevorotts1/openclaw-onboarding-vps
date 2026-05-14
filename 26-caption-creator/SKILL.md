@@ -28,7 +28,7 @@ This skill is intentionally simple and reliable. It is built on:
 ### 1) Export an SRT file
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
   --input "video.mp4" \
   --output "captions.srt" \
   --model medium
@@ -37,7 +37,7 @@ This skill is intentionally simple and reliable. It is built on:
 ### 2) Create a captioned video (burn-in captions)
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
+/data/.openclaw/skills/caption-creator/Scripts/generate-captions.sh \
   --input "video.mp4" \
   --output "video_captioned.mp4" \
   --style minimal \
@@ -64,7 +64,7 @@ You can pick the Whisper model with `--model`:
 Example:
 
 ```bash
-~/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
+/data/.openclaw/skills/caption-creator/Scripts/export-srt.sh \
   --input "video.mp4" \
   --output "captions.srt" \
   --model base

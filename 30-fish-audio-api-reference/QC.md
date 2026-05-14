@@ -7,8 +7,8 @@ Run this after installation to verify the reference files, credentials, and live
 ## Section 1: File Structure + Version Check
 
 ```bash
-SKILL_DIR="$HOME/.openclaw/skills/30-fish-audio-api-reference"
-[ -d "$SKILL_DIR" ] || SKILL_DIR="$HOME/.openclaw/skills/fish-audio-api-reference"
+SKILL_DIR="/data/.openclaw/skills/30-fish-audio-api-reference"
+[ -d "$SKILL_DIR" ] || SKILL_DIR="/data/.openclaw/skills/fish-audio-api-reference"
 
 echo "Using skill dir: $SKILL_DIR"
 
@@ -34,7 +34,7 @@ Required values:
 - `FISH_AUDIO_VOICE_ID`
 
 ```bash
-source ~/clawd/secrets/.env 2>/dev/null || true
+source /data/.openclaw/secrets/.env 2>/dev/null || true
 for var in FISH_AUDIO_API_KEY FISH_AUDIO_VOICE_ID; do
   [ -n "$(printenv "$var" 2>/dev/null)" ] \
     && echo "PASS: $var set" \
@@ -45,7 +45,7 @@ done
 If credentials are intentionally pending, verify the pending note exists instead of failing silently:
 
 ```bash
-grep -A5 -i "fish audio" "$HOME/.openclaw/skills/.pending-setup.md" 2>/dev/null || echo "INFO: no pending-setup note found"
+grep -A5 -i "fish audio" "/data/.openclaw/skills/.pending-setup.md" 2>/dev/null || echo "INFO: no pending-setup note found"
 ```
 
 **Pass criteria:** credentials exist OR there is an explicit pending-setup note.
@@ -93,7 +93,7 @@ grep -A5 -i "fish audio" "$HOME/.openclaw/skills/.pending-setup.md" 2>/dev/null 
 Run only if credentials are present.
 
 ```bash
-source ~/clawd/secrets/.env 2>/dev/null || true
+source /data/.openclaw/secrets/.env 2>/dev/null || true
 
 HTTP_CODE=$(curl -s -o /tmp/fish_audio_qc_test.mp3 -w "%{http_code}" \
   -X POST "https://api.fish.audio/v1/tts" \
@@ -143,7 +143,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |
