@@ -1,3 +1,25 @@
+## v10.1.0 - May 14, 2026 - Ollama Cloud first, OpenRouter as fallback only
+
+### The bug
+Skills were defaulting to OpenRouter for heavy-reasoning calls (Phase 1 + 2 of Skill 22 book pipeline, social-media-planner subagents) even when the client had Ollama Cloud Kimi / DeepSeek-pro available. Ollama Cloud is subscription-billed (cheap) and OpenRouter is per-token (expensive), so the wrong default was costing real money on every install.
+
+### Root cause
+The `shared-utils/select_model.py` selector was correctly ordered Ollama-first — but legacy skill DOCUMENTATION (SKILL.md tables, INSTALL.md verify steps, QC.md checklists, CHECKLIST.md prerequisites, agent prompts) hadn't been updated to match. Agents reading those docs were getting outdated guidance pointing them at OpenRouter as primary.
+
+### What was fixed
+Mirrored from the Mac repo (same docs). Skill 22 (book-to-persona) SKILL.md / INSTALL.md / QC.md / CHECKLIST.md / agent-prompts/analysis-agent-prompt.md all updated to enforce Ollama-Cloud-first priority. Skill 35 (social-media-planner) SKILL.md subagent spawn example updated.
+
+### What stayed unchanged
+- `shared-utils/select_model.py` was already Ollama-Cloud-first. No code change needed.
+- `openrouter/perplexity/sonar-pro-search` references in Skill 23 stayed (no Ollama equivalent — documented exception).
+- Skill 22 `PIPELINE.md` and `CORE_UPDATES.md` were already correct.
+- Skill 15 `blackceo-team-management-full.md` already had correct priority guidance.
+
+### Net effect
+Hostinger Docker clients with Ollama Cloud configured (default Hostinger setup): heavy-reasoning calls now correctly route through Ollama Cloud Kimi instead of OpenRouter. Cost reduction on every book extraction, social-media campaign, workforce-blueprint interview.
+
+---
+
 ## v10.0.3 - May 14, 2026 - CLI scope auto-repair (the real root cause)
 
 ### The real bug Floyd found

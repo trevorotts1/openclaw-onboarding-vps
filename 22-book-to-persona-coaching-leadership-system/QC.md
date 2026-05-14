@@ -12,7 +12,7 @@ A skill that fails any HARD FAIL item is not installed correctly.
 Verify all required files and folders exist at the correct paths.
 
 ### Skill Root
-- [ ] `/data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/` exists
+- [ ] `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/` exists
 - [ ] `PIPELINE.md` present in skill root
 - [ ] `CHECKLIST.md` present in skill root
 - [ ] `CORE_UPDATES.md` present in skill root
@@ -27,7 +27,7 @@ Verify all required files and folders exist at the correct paths.
 - [ ] `agent-prompts/synthesis-agent-prompt.md` exists
 
 ### Pre-Built Personas Folder
-- [ ] `/data/.openclaw/master-files/coaching-personas/personas/` exists (or equivalent master-files path)
+- [ ] `~/Downloads/openclaw-master-files/coaching-personas/personas/` exists (or equivalent master-files path)
 - [ ] At least one persona folder present with all 3 files:
   - [ ] `extraction-notes.md`
   - [ ] `analysis-notes.md`
@@ -45,12 +45,12 @@ Confirm these specific folders exist inside the personas directory:
 - [ ] `pipeline/orchestrator.py` exists (or equivalent pipeline script)
 - [ ] `pipeline-status.json` exists (may be empty `{}` on first install — that is acceptable)
 
-### Secrets
+### Secrets (Ollama Cloud preferred, OpenRouter as fallback)
 - [ ] `secrets/.env` (in your agent workspace) exists
-- [ ] `GOOGLE_API_KEY` entry present in `.env` (Gemini indexing / retrieval)
-- [ ] `MOONSHOT_API_KEY` entry present in `.env` (Phase 1 extraction)
-- [ ] `OPENROUTER_API_KEY` entry present in `.env` (Phase 2 analysis)
-- [ ] `OPENAI_API_KEY` entry present in `.env` (Phase 3 synthesis)
+- [ ] `GOOGLE_API_KEY` entry present in `.env` (Gemini indexing / retrieval) — always required
+- [ ] `OLLAMA_API_KEY` entry present (Tier 1 + 2 primary — Ollama Cloud Kimi / DeepSeek-pro)
+- [ ] `OPENROUTER_API_KEY` entry present (Tier 3 + 4 fallback only — used when Ollama Cloud is unavailable)
+- [ ] `OPENAI_API_KEY` entry present (Tier 5 OAuth GPT fallback for Phase 3)
 
 **HARD FAIL:** Any missing file from skill root, agent-prompts, or pre-built personas folder = installation incomplete.
 
@@ -63,7 +63,7 @@ Verify that AGENTS.md, TOOLS.md, MEMORY.md, SOUL.md, and HEARTBEAT.md received t
 ### AGENTS.md
 - [ ] Contains section heading `## Book-to-Persona Skill (Installed)`
 - [ ] Section includes the phrase `Persona Reflex (DEFAULT BEHAVIOR)`
-- [ ] Section includes `python3 /data/.openclaw/workspace/scripts/gemini-search.py "<task keywords>"` as the runtime query pattern
+- [ ] Section includes `python3 ~/.openclaw/workspace/scripts/gemini-search.py "<task keywords>"` as the runtime query pattern
 - [ ] Key paths block is present (skill path, personas path, router path, orchestrator path)
 - [ ] Contains section `## Pending Skill Setup - Check and Remind` with `.pending-setup.md` reference
 - [ ] Full PIPELINE.md content was NOT pasted into AGENTS.md (rule: reference only)
@@ -80,7 +80,7 @@ Verify that AGENTS.md, TOOLS.md, MEMORY.md, SOUL.md, and HEARTBEAT.md received t
 ### MEMORY.md
 - [ ] Contains section heading `## Book-to-Persona Persona Library`
 - [ ] Entry includes skill path and personas path
-- [ ] Entry references `python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status` for live count
+- [ ] Entry references `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status` for live count
 - [ ] Entry references Persona Reflex behavior (query Gemini Engine before professional tasks)
 - [ ] "Add new book SOP" is referenced
 
@@ -104,7 +104,7 @@ Verify that AGENTS.md, TOOLS.md, MEMORY.md, SOUL.md, and HEARTBEAT.md received t
 Answer each question without looking at the files. These confirm the agent has internalized the skill, not just installed it.
 
 **Q1: What are the three pipeline phases and which model handles each?**
-- Expected: Phase 1 = Kimi K2.5 (Moonshot direct API), Phase 2 = DeepSeek V3.2-Speciale (OpenRouter), Phase 3 = GPT-5.4 Codex (OpenClaw OAuth)
+- Expected: Phase 1 + Phase 2 = Ollama Cloud Kimi/DeepSeek-pro (per `shared-utils/select_model.py --purpose-tier heavy`), Phase 3 = OAuth GPT preferred. OpenRouter only appears as primary if the client's openclaw.json has NO Ollama Cloud models.
 
 **Q2: What triggers a Phase 3 fallback from GPT-5.4 Codex to Kimi K2.5?**
 - Expected: Any of — API error, rate limit (429), HTTP timeout (30 min Phases 1/2, 60 min Phase 3 — v9.5.2), output under 5,000 characters, any error message in the response
@@ -113,7 +113,7 @@ Answer each question without looking at the files. These confirm the agent has i
 - Expected: 14 sections total. Section 3 = Signature Framework, Section 6 = Coaching Mode: How to Respond, Section 14 = Quick Reference Card
 
 **Q4: What is the Persona Reflex and when does the agent skip it?**
-- Expected: Before any professional task, run `python3 /data/.openclaw/workspace/scripts/gemini-search.py "<task keywords>"`, load the returned persona's Task Mode, and execute through that methodology. Skip ONLY if the user explicitly says so.
+- Expected: Before any professional task, run `python3 ~/.openclaw/workspace/scripts/gemini-search.py "<task keywords>"`, load the returned persona's Task Mode, and execute through that methodology. Skip ONLY if the user explicitly says so.
 
 **Q5: What is the author name rule in Coaching Mode?**
 - Expected: The author's name appears ONLY inside attribution-flagged direct quotes. Never use the author's name unprompted in the coaching voice.
@@ -131,7 +131,7 @@ Answer each question without looking at the files. These confirm the agent has i
 - Expected: Over 10,000 characters (blueprints are much larger in practice)
 
 **Q10: After adding a new persona blueprint, what two Gemini Engine commands must be run?**
-- Expected: `python3 /data/.openclaw/workspace/scripts/gemini-indexer.py` then `# Handled by gemini-indexer.py`
+- Expected: `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` then `# Handled by gemini-indexer.py`
 
 **Passing threshold:** 8/10 correct. Score below 8 = re-read PIPELINE.md, PERSONA-ROUTER.md, CORE_UPDATES.md, and GOOD-AND-BAD-EXAMPLES.md.
 
@@ -145,7 +145,7 @@ Run these prompts and evaluate the agent's actual output against the expected be
 **Prompt:** "Review this sales email before I send it."
 
 **Expected behavior:**
-1. Agent runs `python3 /data/.openclaw/workspace/scripts/gemini-search.py "sales email review outreach quality standard"` BEFORE writing any output
+1. Agent runs `python3 ~/.openclaw/workspace/scripts/gemini-search.py "sales email review outreach quality standard"` BEFORE writing any output
 2. Agent loads a relevant persona (e.g., `hormozi-100m-offers`, `bly-copywriters-handbook`, or `jones-exactly-what-to-say`)
 3. Agent applies that persona's execution standard and non-negotiable rules
 4. Agent output includes specific rule checks with ✅ / ❌ verdicts, not generic feedback
@@ -171,7 +171,7 @@ Run these prompts and evaluate the agent's actual output against the expected be
 ---
 
 ### Test 4C — Gemini Engine Collection Status
-**Run:** `python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status` 
+**Run:** `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status` 
 
 **Expected output:**
 - Collection named `coaching-personas` is listed
@@ -183,7 +183,7 @@ Run these prompts and evaluate the agent's actual output against the expected be
 ---
 
 ### Test 4D — Gemini Engine Query Returns Relevant Results
-**Run:** `python3 /data/.openclaw/workspace/scripts/gemini-search.py "habit building systems behavior change consistency"`
+**Run:** `python3 ~/.openclaw/workspace/scripts/gemini-search.py "habit building systems behavior change consistency"`
 
 **Expected output:**
 - Returns at least one result from a persona blueprint (e.g., `clear-atomic-habits` or `duhigg-power-of-habit`)
@@ -308,7 +308,7 @@ These are failure modes the skill is specifically designed to prevent. Verify no
 
 ### Anti-Pattern 4: Skipping Persona Reflex
 **Check:** When given a professional task (write, review, plan, analyze), does the agent query Gemini Engine before starting?
-- [ ] Confirmed: Agent queries `python3 /data/.openclaw/workspace/scripts/gemini-search.py` before executing professional tasks
+- [ ] Confirmed: Agent queries `python3 ~/.openclaw/workspace/scripts/gemini-search.py` before executing professional tasks
 - HARD FAIL if agent proceeds with a task without Gemini Engine query and no explicit user instruction to skip
 
 ### Anti-Pattern 5: Pasting Full Docs Into Core Files
@@ -328,7 +328,7 @@ These are failure modes the skill is specifically designed to prevent. Verify no
 
 ### Anti-Pattern 8: Gemini Engine Not Used for Retrieval
 **Check:** Does the agent try to load entire persona files into context rather than using Gemini Engine surgical queries?
-- [ ] Confirmed: Agent uses `python3 /data/.openclaw/workspace/scripts/gemini-search.py` for semantic retrieval for retrieval
+- [ ] Confirmed: Agent uses `python3 ~/.openclaw/workspace/scripts/gemini-search.py` for semantic retrieval for retrieval
 - FAIL if agent attempts to read entire persona-blueprint.md files into context for routine tasks
 
 ---
@@ -343,7 +343,7 @@ To declare this skill **INSTALLED AND OPERATIONAL**, ALL of the following must b
 - [ ] All skill root files present
 - [ ] All 3 agent prompt files present
 - [ ] Personas folder exists with at least 5 pre-built personas, each containing all 3 required files
-- [ ] Secrets `.env` file contains all required API key entries (`GOOGLE_API_KEY`, `MOONSHOT_API_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`)
+- [ ] Secrets `.env` file contains all required API key entries: `GOOGLE_API_KEY` (always required), `OLLAMA_API_KEY` (PRIMARY — Ollama Cloud Kimi / DeepSeek-pro), `OPENROUTER_API_KEY` (fallback only), `OPENAI_API_KEY` (OAuth GPT for Phase 3)
 
 **Core File Updates (Section 2)**
 - [ ] AGENTS.md updated with `## Book-to-Persona Skill (Installed)` and Persona Reflex
@@ -378,7 +378,7 @@ After completing this checklist, mark one:
     Skill is operational. Persona Reflex is active.
 
 [ ] PARTIAL — File structure complete, but Gemini Engine not yet embedded or core files not yet updated
-    Action: Complete Gemini Engine setup (python3 /data/.openclaw/workspace/scripts/gemini-indexer.py) and apply CORE_UPDATES.md
+    Action: Complete Gemini Engine setup (python3 ~/.openclaw/workspace/scripts/gemini-indexer.py) and apply CORE_UPDATES.md
 
 [ ] FAIL — One or more HARD FAILs present, or knowledge score below 8/10
     Action: Re-read all 7 skill .md files and repeat failed sections
@@ -392,20 +392,20 @@ If Gemini Vector Database is missing or broken:
 ```bash
   --name coaching-personas \
   --mask "**/*.md"
-python3 /data/.openclaw/workspace/scripts/gemini-indexer.py
+python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
 # Handled by gemini-indexer.py
 ```
 
 If Gemini Engine results are stale:
 ```bash
-python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --rebuild && python3 /data/.openclaw/workspace/scripts/gemini-indexer.py
+python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --rebuild && python3 ~/.openclaw/workspace/scripts/gemini-indexer.py
 ```
 
 If unsure whether core files were updated:
 ```bash
-grep -n "Book-to-Persona" /data/.openclaw/AGENTS.md
-grep -n "Persona Coaching Voice Rule" /data/.openclaw/SOUL.md
-grep -n "Book-to-Persona" /data/.openclaw/TOOLS.md
+grep -n "Book-to-Persona" ~/.openclaw/AGENTS.md
+grep -n "Persona Coaching Voice Rule" ~/.openclaw/SOUL.md
+grep -n "Book-to-Persona" ~/.openclaw/TOOLS.md
 ```
 
 ---
@@ -421,7 +421,7 @@ After install, score yourself honestly against this rubric. **Pass gate: 8.5/10 
 | Prerequisites + INSTALL-CONTRACT.md acknowledged | 1.0 | INSTALL-CONTRACT.md was read this session AND acknowledged in your work log for this specific skill. All prerequisite skills installed. |
 | All skill .md files read before any execution | 1.0 | SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md (this file), any referenced `references/*.md`. Reading happened BEFORE any command was run. |
 | INSTALL.md steps executed in order | 1.5 | No skipping, no reordering, no improvising. If a step was skipped, owner consent is documented. |
-| Credentials at canonical paths with canonical names | 1.5 | `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
+| Credentials at canonical paths with canonical names | 1.5 | `~/.openclaw/secrets/.env` (Mac) / `~/.openclaw/secrets/.env` (VPS), chmod 600. Canonical env-var names used (not deprecated ones). For GHL: `GOHIGHLEVEL_API_KEY` (a PIT, not an API key) + `GOHIGHLEVEL_LOCATION_ID`. |
 | Functional checks pass | 1.5 | The skill's specific smoke tests (API reachability, software present, etc.) all return expected results. No 4xx/5xx unhandled. |
 | CORE_UPDATES.md applied surgically | 1.0 | Only labeled sections added to labeled core files. No SOUL.md / IDENTITY.md / USER.md / HEARTBEAT.md touched unless this skill's CORE_UPDATES.md explicitly labels them. |
 | Skill-specific QC items above all checked | 1.5 | Every checkbox in the skill-specific sections of THIS QC.md is ticked. |

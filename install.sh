@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================
-#  OpenClaw Onboarding Installer v10.0.3 — Hostinger Docker VPS
+#  OpenClaw Onboarding Installer v10.1.0 — Hostinger Docker VPS
 #  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 #
 #  This installer is for the Hostinger Docker VPS deployment of OpenClaw.
@@ -24,7 +24,7 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.0.3"
+ONBOARDING_VERSION="v10.1.0"
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)

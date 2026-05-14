@@ -10,7 +10,7 @@ Run these checks before every pipeline start. Do not proceed if any check fails.
 [ ] GOOGLE_API_KEY set (run: grep GOOGLE_API_KEY secrets/.env)
 [ ] Calibre installed - ebook-convert available (run: ebook-convert --version)
 [ ] At least one book file available (PDF, EPUB, MOBI, AZW3 in books/ folder)
-[ ] Moonshot API key OR OpenRouter access configured
+[ ] Ollama Cloud configured (`OLLAMA_API_KEY` or `models.providers.ollama.apiKey` in openclaw.json) — PRIMARY. OpenRouter (`OPENROUTER_API_KEY`) only as fallback.
 ```
 
 **Quick dependency verification:**
@@ -27,9 +27,9 @@ python3 -c "import google.genai, numpy, pdfplumber, pypdf, ebooklib, aiohttp, bs
 - [ ] pdfplumber installed (`python3 -c "import pdfplumber; print('OK')"`)
 - [ ] Master files folder located or confirmed
 - [ ] PDF file exists and is readable
-- [ ] MOONSHOT_API_KEY in secrets/.env
-- [ ] OPENROUTER_API_KEY in secrets/.env
-- [ ] Codex OAuth token valid and not expired
+- [ ] `OLLAMA_API_KEY` set (Tier 1 + 2 primary — Ollama Cloud Kimi / DeepSeek-pro)
+- [ ] `OPENROUTER_API_KEY` set (Tier 3 + 4 fallback only)
+- [ ] Codex OAuth token valid and not expired (Tier 5 fallback)
 
 ---
 
@@ -86,10 +86,10 @@ python3 -c "import google.genai, numpy, pdfplumber, pypdf, ebooklib, aiohttp, bs
 
 ## Gemini Multimodal Indexing Checklist
 
-- [ ] coaching-personas collection exists (`python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status`)
-- [ ] `python3 /data/.openclaw/workspace/scripts/gemini-indexer.py` run after persona saved
+- [ ] coaching-personas collection exists (`python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status`)
+- [ ] `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` run after persona saved
 - [ ] `# Handled by gemini-indexer.py` run to generate vector embeddings
-- [ ] Test query returns relevant results: `python3 /data/.openclaw/workspace/scripts/gemini-search.py "[book topic]"`
+- [ ] Test query returns relevant results: `python3 ~/.openclaw/workspace/scripts/gemini-search.py "[book topic]"`
 - [ ] At minimum 3 test queries return accurate chunks
 
 ---

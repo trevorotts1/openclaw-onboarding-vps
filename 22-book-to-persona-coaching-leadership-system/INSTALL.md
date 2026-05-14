@@ -40,7 +40,7 @@ TYP FILE STORAGE INSTRUCTIONS (only read this if TYP confirmed)
 WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
 
 1. SAVE FULL DOCUMENTATION TO MASTER FILES FOLDER
-   Find the OpenClaw master files folder in /data/.openclaw/master-files/. It may be named:
+   Find the OpenClaw master files folder in ~/Downloads/. It may be named:
    - OpenClaw Master Files
    - OpenClaw Master Documents
    - OpenClaw Documents
@@ -50,7 +50,7 @@ WHEN LEARNING THIS DOCUMENT, FOLLOW THIS STRUCTURE:
    - openclaw-documents
    - Any variation of "openclaw" + "master" or "files" or "documents"
    Search case-insensitively. One word or two words. Plural or singular.
-   If no folder is found, create: /data/.openclaw/master-files/OpenClaw Master Files/
+   If no folder is found, create: ~/Downloads/OpenClaw Master Files/
 
    Save this full document content as a .md file in that folder.
 
@@ -112,15 +112,15 @@ Copy this entire skill folder into the standard OpenClaw skills directory so the
 
 Run:
 ```bash
-mkdir -p /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system
-cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+mkdir -p ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system
+cp -r /tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/* ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
 **Note:** If the onboarding package was extracted to a different location, replace `/tmp/openclaw-onboarding/22-book-to-persona-coaching-leadership-system/` with the actual path to this skill folder.
 
 Verify:
 ```bash
-ls /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
+ls ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/
 ```
 
 **Expected output:** SKILL.md, INSTALL.md, PIPELINE.md, CHECKLIST.md, CORE_UPDATES.md, GOOD-AND-BAD-EXAMPLES.md, PERSONA-ROUTER.md, GEMINI-RETRIEVAL-GUIDE.md, personas/, pipeline/, agent-prompts/ all present.
@@ -171,13 +171,15 @@ echo "Testing lxml..."; python3 -c "import lxml; print('PASS')" 2>&1 | grep -q "
 
 Calibre is required for Kindle format conversion (MOBI, AZW, AZW3, KFX).
 
-The Hostinger Docker container does NOT have `apt-get` and does NOT have Homebrew on the default PATH for system-level installs. Calibre's Linux installer is the standard approach:
-
+**For Mac (Homebrew):**
 ```bash
-# Hostinger Docker VPS — uses the official Calibre Linux installer
-sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin
-# Or use the Linuxbrew available at /data/linuxbrew (works without sudo):
-/data/linuxbrew/.linuxbrew/bin/brew install calibre
+brew install --cask calibre
+```
+
+**For Linux/VPS (apt-get):**
+```bash
+sudo apt-get update
+sudo apt-get install calibre
 ```
 
 **Verify installation:**
@@ -187,16 +189,14 @@ ebook-convert --version
 
 Expected output should show version info (e.g., "ebook-convert (calibre 6.x)"). DRM-free files only.
 
-If neither approach works in your container, document Calibre as unavailable in MEMORY.md and skip the ebook-convert features. The persona pipeline can still run on plain text and PDF sources without Calibre.
-
 ### Step 2d - Verify GOOGLE_API_KEY
 
 **Check your API key is set:**
 ```bash
-grep "GOOGLE_API_KEY" /data/.openclaw/secrets/.env
+grep "GOOGLE_API_KEY" ~/.openclaw/secrets/.env
 ```
 
-**If missing:** Add your Gemini API key to `/data/.openclaw/secrets/.env`:
+**If missing:** Add your Gemini API key to `~/.openclaw/secrets/.env`:
 ```
 GOOGLE_API_KEY=your_key_here
 ```
@@ -297,7 +297,7 @@ The skill stores all output in a "master files" folder. It looks for one before 
 
 ```bash
 # Run this to find existing master files folder
-find /data/.openclaw/master-files -maxdepth 2 -type d -iname "*openclaw*master*" -o \
+find ~/Downloads -maxdepth 2 -type d -iname "*openclaw*master*" -o \
   -type d -iname "*master*file*" -o \
   -type d -iname "*openclawmaster*" 2>/dev/null | head -5
 ```
@@ -306,9 +306,9 @@ find /data/.openclaw/master-files -maxdepth 2 -type d -iname "*openclaw*master*"
 
 **If no folder is found:** Create the standard one:
 ```bash
-mkdir -p /data/.openclaw/master-files/coaching-personas/books
-mkdir -p /data/.openclaw/master-files/coaching-personas/text
-mkdir -p /data/.openclaw/master-files/coaching-personas/personas
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/books
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/text
+mkdir -p ~/Downloads/openclaw-master-files/coaching-personas/personas
 ```
 
 **Record the detected path** - you will use it for all file operations in this session.
@@ -325,24 +325,25 @@ Check for `GOOGLE_API_KEY` or `GEMINI_API_KEY` across all known env file locatio
 ```bash
 _find_key "GOOGLE_API_KEY" || _find_key "GEMINI_API_KEY"
 ```
-If missing, you MUST add your Google API key to `/data/.openclaw/secrets/.env`. The multimodal embedding engine will crash without it.
+If missing, you MUST add your Google API key to `~/.openclaw/secrets/.env`. The multimodal embedding engine will crash without it.
 
-### Kimi K2.5 (Phase 1 - Primary) OR MiMo V2 Pro (Phase 1 - Fallback)
+### Phase 1 — Large-context model (Ollama Cloud preferred, OpenRouter fallback)
 
-Phase 1 needs a large-context model for book extraction. The pipeline tries models in this order:
+Phase 1 needs a large-context model for book extraction. The pipeline uses `shared-utils/select_model.py` which enforces this priority order:
 
-1. **Kimi K2.5 via OpenRouter** (262K context) - Primary, most clients have OpenRouter
-2. **MiMo V2 Pro via OpenRouter** (1M context) - Largest context, fallback
-3. **GPT 5.4 via OpenAI Codex** (196K context) - If Codex OAuth is active
-4. **Gemini 3.1 Pro via OpenRouter** (1M context) - If OpenRouter key exists
+1. **Ollama Cloud Kimi** (`ollama/kimi-k*:cloud`, 262K context) - PREFERRED. Subscription pricing, no per-call cost beyond Ollama plan.
+2. **Ollama Cloud DeepSeek V*-pro** (`ollama/deepseek-v*-pro:cloud`, 1M context) - Largest context, also subscription-billed.
+3. **OpenRouter Kimi** (`openrouter/moonshot/kimi-k*`, 262K context) - Per-token billed fallback when Ollama Cloud is unavailable.
+4. **OpenRouter DeepSeek V*-pro** (`openrouter/deepseek/deepseek-v*-pro`, 1M context) - Per-token billed largest-context fallback.
+5. **OAuth GPT** (`codex/gpt-*` or `openai-codex/gpt-*`, 196K context) - Subscription, used if no Ollama/OpenRouter Kimi available.
 
 Check which models are available:
 ```bash
 _find_key() {
   local key_name="$1"
   for env_file in \
-    "/data/.openclaw/secrets/.env" \
-    "/data/.openclaw/.env" \
+    "$HOME/.openclaw/secrets/.env" \
+    "$HOME/.openclaw/.env" \
     "$HOME/.config/openclaw/.env"; do
     if [ -f "$env_file" ]; then
       val=$(grep "^${key_name}=" "$env_file" 2>/dev/null | cut -d= -f2- | tr -d '"')
@@ -356,24 +357,21 @@ _find_key() {
   return 1
 }
 
-echo "Phase 1 model availability:"
-_find_key "OPENROUTER_API_KEY" && echo "  -> MiMo V2 Pro or Gemini 3.1 Pro available"
-_find_key "MOONSHOT_API_KEY" && echo "  -> Kimi K2.5 available"
+echo "Model availability (Ollama Cloud preferred):"
+_find_key "OLLAMA_API_KEY" && echo "  ✓ Tier 1/2 (Ollama Cloud Kimi / DeepSeek-pro) available"
+_find_key "OPENROUTER_API_KEY" && echo "  ✓ Tier 3/4 (OpenRouter fallbacks) available"
 # Codex OAuth checked in Step 4 above
 ```
 
 At least ONE model must be available. If none are found, the install cannot proceed.
 
-### DeepSeek V3.2-Speciale (Phase 2)
-Routes via OpenRouter. Check across all known env files:
-```bash
-_find_key "OPENROUTER_API_KEY"
-```
+### Phase 2 — Heavy reasoning model (same chain as Phase 1)
+Phase 2 uses the same `select_model.py --purpose-tier heavy` chain. Ollama Cloud first, OpenRouter only as fallback. **Do not configure Phase 2 to call OpenRouter directly** — the selector handles tier walk automatically.
 
 ### GPT-5.3 Codex (Phase 3)
 Routes via OpenClaw OAuth. Check:
 ```bash
-cat /data/.openclaw/agents/main/agent/auth-profiles.json | python3 -c "
+cat ~/.openclaw/agents/main/agent/auth-profiles.json | python3 -c "
 import json,sys,datetime
 d=json.load(sys.stdin)
 p=d.get('profiles',{}).get('openai-codex:default',{})
@@ -397,36 +395,36 @@ Pre-built personas are already included in this skill folder. They will be added
 **Run the indexer AFTER Skill 22 completes, before Skill 23.** Skill 23 needs the personas indexed before it can find them.
 
 **What happens next:**
-- Run `python3 /data/.openclaw/workspace/scripts/gemini-indexer.py` to index all personas now
-- Skill 23 will run `python3 /data/.openclaw/workspace/scripts/gemini-indexer.py` to index all personas + workforce files together
+- Run `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` to index all personas now
+- Skill 23 will run `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` to index all personas + workforce files together
 - This ensures Skill 23 can find persona files via the index before assigning them to departments
 
 **Note:** If you need to verify personas are searchable after Skill 23 completes, run:
 ```bash
-python3 /data/.openclaw/workspace/scripts/gemini-search.py "negotiation"
+python3 ~/.openclaw/workspace/scripts/gemini-search.py "negotiation"
 ```
 
 ---
 
 ## Step 5b - Deploy Search Scripts to Agent Workspace
 
-The Gemini search and indexer scripts must be in `/data/.openclaw/workspace/scripts/` for agents to find them at runtime. Copy them from the skill folder now:
+The Gemini search and indexer scripts must be in `~/.openclaw/workspace/scripts/` for agents to find them at runtime. Copy them from the skill folder now:
 
 ```bash
-mkdir -p /data/.openclaw/workspace/scripts
-cp /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/gemini-search.py /data/.openclaw/workspace/scripts/gemini-search.py
-cp /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/gemini-indexer.py /data/.openclaw/workspace/scripts/gemini-indexer.py
-chmod +x /data/.openclaw/workspace/scripts/gemini-search.py /data/.openclaw/workspace/scripts/gemini-indexer.py
+mkdir -p ~/.openclaw/workspace/scripts
+cp ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/gemini-search.py ~/.openclaw/workspace/scripts/gemini-search.py
+cp ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/gemini-indexer.py ~/.openclaw/workspace/scripts/gemini-indexer.py
+chmod +x ~/.openclaw/workspace/scripts/gemini-search.py ~/.openclaw/workspace/scripts/gemini-indexer.py
 ```
 
 Verify both files are deployed:
 ```bash
-ls /data/.openclaw/workspace/scripts/gemini-*.py
+ls ~/.openclaw/workspace/scripts/gemini-*.py
 ```
 
 **Expected output:** Both `gemini-search.py` and `gemini-indexer.py` listed.
 
-If either file is missing, re-run the copy commands above. Without these files in `/data/.openclaw/workspace/scripts/`, agents cannot search or re-index personas.
+If either file is missing, re-run the copy commands above. Without these files in `~/.openclaw/workspace/scripts/`, agents cannot search or re-index personas.
 
 ---
 
@@ -439,7 +437,7 @@ Before allowing Skill 23 to run, verify this Skill 22 installation is complete:
 
 ```bash
 # Check if Gemini Vector Database "coaching-personas" exists
-if python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
+if python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status 2>/dev/null | grep -q "indexed"; then
   echo "✅ Skill 22 verified: coaching-personas collection exists"
   echo "Skill 23 may proceed"
 else
@@ -458,25 +456,25 @@ fi
 Run this command now - the agent executes it autonomously:
 
 ```bash
-bash /data/.openclaw/skills/scripts/update-skills.sh --setup-cron
+bash ~/.openclaw/skills/scripts/update-skills.sh --setup-cron
 ```
 
 If the setup script does not exist yet, check the onboarding package:
 ```bash
-mkdir -p /data/.openclaw/skills/scripts
+mkdir -p ~/.openclaw/skills/scripts
 SETUP_SCRIPT=""
 for candidate in \
   "/tmp/openclaw-onboarding/scripts/setup-weekly-update.sh" \
-  "/data/.openclaw/skills/scripts/setup-weekly-update.sh"; do
+  "$HOME/.openclaw/skills/scripts/setup-weekly-update.sh"; do
   if [ -f "$candidate" ]; then
     SETUP_SCRIPT="$candidate"
     break
   fi
 done
 if [ -n "$SETUP_SCRIPT" ]; then
-  cp "$SETUP_SCRIPT" /data/.openclaw/skills/scripts/setup-weekly-update.sh
-  chmod +x /data/.openclaw/skills/scripts/setup-weekly-update.sh
-  bash /data/.openclaw/skills/scripts/setup-weekly-update.sh
+  cp "$SETUP_SCRIPT" ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  chmod +x ~/.openclaw/skills/scripts/setup-weekly-update.sh
+  bash ~/.openclaw/skills/scripts/setup-weekly-update.sh
 else
   echo "Setup script not found in onboarding package. Skip and note in completion report."
 fi
@@ -488,7 +486,7 @@ fi
 ```bash
 crontab -l | grep update-skills
 ```
-Should show: `0 2 * * 0 /data/.openclaw/skills/scripts/update-skills.sh`
+Should show: `0 2 * * 0 $HOME/.openclaw/skills/scripts/update-skills.sh`
 
 ---
 
@@ -511,7 +509,7 @@ Pick any PDF in the books folder (or use a small test PDF) and confirm pdfplumbe
 python3 -c "
 import pdfplumber, os, glob
 
-books_dir = os.path.expanduser('/data/.openclaw/master-files/coaching-personas/books')
+books_dir = os.path.expanduser('~/Downloads/openclaw-master-files/coaching-personas/books')
 pdfs = glob.glob(os.path.join(books_dir, '*.pdf'))
 if not pdfs:
     print('NO PDFs found in books/ folder. Add a book PDF to test.')
@@ -533,43 +531,34 @@ else:
 
 If no PDFs exist yet, skip this sub-step - extraction will be tested on the first real book run.
 
-### 8b - Verify Phase 1 model connectivity (best available model)
+### 8b - Verify model connectivity (Ollama Cloud preferred, OpenRouter fallback)
 
-Test whichever Phase 1 model the client has access to. Try in order:
+The pipeline uses `shared-utils/select_model.py` which enforces Ollama-Cloud-first priority. Verify which tier is available:
 
-**Option 1: MiMo V2 Pro via OpenRouter (preferred)**
+**Tier 1 (PREFERRED): Ollama Cloud Kimi**
+```bash
+OLLAMA_KEY="$(grep OLLAMA_API_KEY ~/.openclaw/secrets/.env 2>/dev/null | cut -d= -f2 || python3 -c "import json; print(json.load(open('${HOME}/.openclaw/openclaw.json')).get('models',{}).get('providers',{}).get('ollama',{}).get('apiKey',''))")"
+curl -s https://ollama.com/api/chat \
+  -H "Authorization: Bearer $OLLAMA_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"kimi-k2.6:cloud","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"stream":false}' \
+  | python3 -c "import json,sys; r=json.load(sys.stdin); print('Tier 1 (Ollama Cloud Kimi):', r.get('message',{}).get('content','FAILED'))"
+```
+
+**Tier 2 (FALLBACK): OpenRouter Kimi — only used when Ollama Cloud Kimi is unavailable**
 ```bash
 curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $(grep OPENROUTER_API_KEY /data/.openclaw/secrets/.env | cut -d= -f2)" \
+  -H "Authorization: Bearer $(grep OPENROUTER_API_KEY ~/.openclaw/secrets/.env | cut -d= -f2)" \
   -H "Content-Type: application/json" \
-  -d '{"model":"xiaomi/mimo-v2-pro","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"max_tokens":10}' \
-  | python3 -c "import json,sys; r=json.load(sys.stdin); print('Phase 1 (MiMo):', r.get('choices',[{}])[0].get('message',{}).get('content','FAILED'))"
+  -d '{"model":"moonshotai/kimi-k2","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"max_tokens":10}' \
+  | python3 -c "import json,sys; r=json.load(sys.stdin); print('Tier 2 (OpenRouter Kimi):', r.get('choices',[{}])[0].get('message',{}).get('content','FAILED'))"
 ```
 
-**Option 2: Kimi K2.5 via Moonshot (if Moonshot key exists)**
-```bash
-curl -s https://api.moonshot.cn/v1/chat/completions \
-  -H "Authorization: Bearer $(grep MOONSHOT_API_KEY /data/.openclaw/secrets/.env | cut -d= -f2)" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"kimi-k2.5","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"max_tokens":10}' \
-  | python3 -c "import json,sys; r=json.load(sys.stdin); print('Phase 1 (Kimi):', r.get('choices',[{}])[0].get('message',{}).get('content','FAILED'))"
-```
+**Expected:** Tier 1 (Ollama Cloud Kimi) should connect. The selector only walks down to OpenRouter if Tier 1 is unavailable in the client's openclaw.json.
 
-**Option 3: GPT 5.4 via Codex OAuth (already verified in Step 4)**
+### 8c - Verify Phase 2 model connectivity (same Ollama-first chain)
 
-Report which model connected and use that for Phase 1.
-
-### 8c - Verify Phase 2 model connectivity (DeepSeek via OpenRouter)
-
-```bash
-curl -s https://openrouter.ai/api/v1/chat/completions \
-  -H "Authorization: Bearer $(grep OPENROUTER_API_KEY /data/.openclaw/secrets/.env | cut -d= -f2)" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"deepseek/deepseek-chat","messages":[{"role":"user","content":"Reply with only: CONNECTED"}],"max_tokens":10}' \
-  | python3 -c "import json,sys; r=json.load(sys.stdin); print('Phase 2 (DeepSeek):', r.get('choices',[{}])[0].get('message',{}).get('content','FAILED'))"
-```
-
-**Expected output:** `Phase 2 (DeepSeek): CONNECTED`
+Phase 2 uses the same heavy-reasoning chain as Phase 1 — Ollama Cloud Kimi preferred, OpenRouter Kimi as fallback, DeepSeek V*-pro as tertiary. The selector picks whichever the client has. Use the Tier 1 / Tier 2 tests above. **Do not call OpenRouter as the primary verification** — that contradicts the Ollama-Cloud-first policy.
 If it fails, verify OPENROUTER_API_KEY is correct.
 
 ### 8d - Verify Phase 3 model connectivity (Codex OAuth)
@@ -581,7 +570,7 @@ If the primary Phase 3 model is unavailable, the pipeline auto-falls-back throug
 ### 8e - Verify output directory structure
 
 ```bash
-MASTER_DIR=/data/.openclaw/master-files/coaching-personas
+MASTER_DIR=~/Downloads/openclaw-master-files/coaching-personas
 echo "Checking output directories..."
 for dir in books text personas; do
   if [ -d "$MASTER_DIR/$dir" ]; then
@@ -607,7 +596,7 @@ This triggers the full sequence:
 2. **Phase 1 (Kimi K2.5)** - Spawns sub-agent with extraction prompt + book text. Output: `personas/[author]-[book-slug]/extraction-notes.md`
 3. **Phase 2 (DeepSeek V3.2-Speciale)** - Spawns sub-agent with analysis prompt + extraction notes. Output: `personas/[author]-[book-slug]/analysis-notes.md`
 4. **Phase 3 (GPT-5.3 Codex)** - Spawns sub-agent with synthesis prompt + extraction + analysis notes. Output: `personas/[author]-[book-slug]/persona-blueprint.md`. Falls back to Kimi K2.5 on failure.
-5. **Gemini Engine indexing** - Runs `python3 /data/.openclaw/workspace/scripts/gemini-indexer.py` to make the new persona searchable.
+5. **Gemini Engine indexing** - Runs `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` to make the new persona searchable.
 
 **Verify each phase completed** by checking:
 - File exists at the expected path
@@ -616,7 +605,7 @@ This triggers the full sequence:
 
 **Output files land in:**
 ```
-/data/.openclaw/master-files/coaching-personas/personas/[author]-[book-slug]/
+~/Downloads/openclaw-master-files/coaching-personas/personas/[author]-[book-slug]/
   ├── extraction-notes.md     (Phase 1 output)
   ├── analysis-notes.md       (Phase 2 output)
   └── persona-blueprint.md    (Phase 3 output - the deployable persona)
@@ -631,13 +620,13 @@ Run one book through the complete 3-phase pipeline to verify the entire system w
 1. Pick any PDF from the books/ folder (or use a provided sample book)
 2. Run the orchestrator:
 ```bash
-python3 /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py --single [book-slug]
+python3 ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py --single [book-slug]
 ```
 Replace `[book-slug]` with the filename slug of the book (e.g., `clear-atomic-habits` for a book by James Clear on Atomic Habits).
 
 3. Verify all three output files were created:
 ```bash
-PERSONA_DIR=/data/.openclaw/master-files/coaching-personas/personas/[book-slug]
+PERSONA_DIR=~/Downloads/openclaw-master-files/coaching-personas/personas/[book-slug]
 echo "Checking pipeline output..."
 for file in extraction-notes.md analysis-notes.md persona-blueprint.md; do
   if [ -f "$PERSONA_DIR/$file" ]; then
@@ -693,15 +682,15 @@ Run through this checklist:
 - [ ] ebooklib installed
 - [ ] Calibre ebook-convert available
 - [ ] Master files folder located or created
-- [ ] Moonshot API key confirmed in /data/.openclaw/secrets/.env
-- [ ] OpenRouter API key confirmed in /data/.openclaw/secrets/.env
-- [ ] Codex OAuth token confirmed and not expired
+- [ ] Ollama Cloud key confirmed (`OLLAMA_API_KEY` or `models.providers.ollama.apiKey` in openclaw.json) — PRIMARY for Phase 1 + 2
+- [ ] OpenRouter API key confirmed — fallback only, used when Ollama Cloud is unavailable
+- [ ] Codex OAuth token confirmed and not expired (Phase 3 primary)
 - [ ] Gemini Vector Database coaching-personas added and embedded (Step 5)
 - [ ] Gemini Engine test query returns results
 - [ ] Core files updated per CORE_UPDATES.md (Step 7)
 - [ ] Pipeline execution test passed (Step 8)
 
-When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini Vector Database active. Pre-built personas ready (run: python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status to see count). Pipeline verified operational. Ready to process new books or query personas."
+When all boxes are checked: log "Book-to-Persona skill fully installed. Gemini Vector Database active. Pre-built personas ready (run: python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status to see count). Pipeline verified operational. Ready to process new books or query personas."
 
 ---
 
@@ -714,7 +703,7 @@ Teach Yourself means READ. Activate means EXECUTE.
 ### Prerequisites
 - [ ] Skill 01 (Teach Yourself Protocol) installed
 - [ ] Python 3.8+ available
-- [ ] GOOGLE_API_KEY in /data/.openclaw/secrets/.env
+- [ ] GOOGLE_API_KEY in ~/.openclaw/secrets/.env
 
 ### Teach Yourself (COMPLETE BEFORE ACTIVATION)
 1. Read SKILL.md
@@ -730,9 +719,9 @@ Teach Yourself means READ. Activate means EXECUTE.
 
 #### Step 1: COPY Gemini scripts to workspace
 ```bash
-mkdir -p /data/.openclaw/workspace/scripts
-cp /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/gemini-*.py /data/.openclaw/workspace/scripts/
-chmod +x /data/.openclaw/workspace/scripts/gemini-*.py
+mkdir -p ~/.openclaw/workspace/scripts
+cp ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/pipeline/gemini-*.py ~/.openclaw/workspace/scripts/
+chmod +x ~/.openclaw/workspace/scripts/gemini-*.py
 ```
 
 #### Step 2: INSTALL Python dependencies
@@ -742,12 +731,12 @@ pip3 install google-genai numpy pdfplumber pypdf ebooklib aiohttp beautifulsoup4
 
 #### Step 3: INDEX pre-built personas
 ```bash
-python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --collection coaching-personas
+python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --collection coaching-personas
 ```
 
 #### Step 4: VERIFY index status
 ```bash
-python3 /data/.openclaw/workspace/scripts/gemini-indexer.py --status
+python3 ~/.openclaw/workspace/scripts/gemini-indexer.py --status
 ```
 Expected: Shows "coaching-personas" collection with 40+ documents.
 

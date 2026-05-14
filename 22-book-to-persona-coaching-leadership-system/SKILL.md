@@ -32,7 +32,7 @@ Do NOT claim the skill is installed until CORE_UPDATES.md has been applied.
 
 **Version:** 1.0.0
 **Owner:** [Your Name / Organization]
-**Skill folder:** `/data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/`
+**Skill folder:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/`
 **Output destination:** Auto-detected master files folder (see INSTALL.md)
 
 ---
@@ -53,9 +53,9 @@ All dependencies must be installed and verified before running the pipeline.
 | beautifulsoup4 | HTML parsing for MOBI | `pip3 install beautifulsoup4` | `python3 -c "import bs4; print('PASS')"` |
 | mobi | MOBI file extraction | `pip3 install mobi` | `python3 -c "import mobi; print('PASS')"` |
 | lxml | XML parsing (ebooklib uses this) | `pip3 install lxml` | `python3 -c "import lxml; print('PASS')"` |
-| Calibre (ebook-convert) | Kindle format conversion | `wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh \| sh /dev/stdin` OR `/data/linuxbrew/.linuxbrew/bin/brew install calibre` | `ebook-convert --version` |
+| Calibre (ebook-convert) | Kindle format conversion | Mac: `brew install --cask calibre`<br>Linux: `sudo apt-get install calibre` | `ebook-convert --version` |
 | GOOGLE_API_KEY env var | Gemini Engine | Add to `secrets/.env` (in your agent workspace) | `grep GOOGLE_API_KEY secrets/.env` |
-| MOONSHOT_API_KEY or OpenRouter | Phase 1 extraction | Add to `secrets/.env` (in your agent workspace) | `grep MOONSHOT_API_KEY secrets/.env` |
+| Ollama Cloud (preferred) or OpenRouter (fallback) | Phase 1 extraction | Ollama: `OLLAMA_API_KEY` in env or `models.providers.ollama.apiKey` in openclaw.json. Fallback: OpenRouter via `OPENROUTER_API_KEY` | `grep OLLAMA_API_KEY secrets/.env` or check openclaw.json |
 
 **One-line install for all pip packages:**
 ```bash
@@ -128,21 +128,21 @@ Confirm by saying: "TYP complete - ready to run Book Intelligence Pipeline."
 
 ```bash
 # Book PDF/EPUB/MOBI:
-bash /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh \
+bash ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh \
     --source "/path/to/Atomic Habits - James Clear.pdf"
 
 # YouTube video (uses Skill 16 — Summarize YouTube — for transcript):
-bash /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh \
+bash ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh \
     --source "https://youtube.com/watch?v=abc123" \
     --title "Hormozi Million Dollar Offers Talk" \
     --author "Alex Hormozi"
 
 # Local video file (uses ffmpeg + whisper for transcript):
-bash /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh \
+bash ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh \
     --source "/path/to/seminar.mp4" --title "Seth Godin Keynote" --author "Seth Godin"
 
 # Already-transcribed text:
-bash /data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh \
+bash ~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh \
     --source "/path/to/transcript.txt" --title "Foo" --author "Bar"
 ```
 
@@ -158,18 +158,25 @@ The script will:
 6. Add a stub entry to `persona-categories.json` (you tag manually after first use)
 
 **Dependencies for non-book sources:**
-- YouTube: Skill 16 (Summarize YouTube) installed; `OPENAI_API_KEY` or `GEMINI_API_KEY` in `/data/.openclaw/secrets/.env`
-- Video: `ffmpeg` + `whisper` (or `whisper-cli`). On Hostinger Docker: `/data/linuxbrew/.linuxbrew/bin/brew install ffmpeg && pip3 install --user openai-whisper`. ffmpeg is not in the Hostinger base image — Linuxbrew is the canonical install path.
+- YouTube: Skill 16 (Summarize YouTube) installed; `OPENAI_API_KEY` or `GEMINI_API_KEY` in `~/.openclaw/secrets/.env`
+- Video: `ffmpeg` + `whisper` (or `whisper-cli`). Mac: `brew install ffmpeg && pip install openai-whisper`. Linux: `apt install ffmpeg && pip install openai-whisper`.
 
 ---
 
 ## Model Routing
 
-| Phase | Model | Route | Fallback |
-|-------|-------|-------|----------|
-| Phase 1 - Extraction | Kimi K2.5 | Moonshot direct API (api.moonshot.ai/v1) | openrouter/moonshotai/kimi-k2.5 |
-| Phase 2 - Analysis | DeepSeek V3.2 | OpenRouter (openrouter.ai) | None |
-| Phase 3 - Synthesis | GPT-5.4 Codex | OpenAI OAuth (OpenClaw) | Kimi K2.5 |
+**All model selection runs through `shared-utils/select_model.py` which enforces Ollama-Cloud-first priority. The selector picks whatever the client has installed, walking down the chain only when a higher tier is unavailable. See `PIPELINE.md` for the full per-phase chain.**
+
+| Phase | Primary (Tier 1) | Secondary | Tertiary | Fallback |
+|-------|------------------|-----------|----------|----------|
+| Phase 1 - Extraction | `ollama/kimi-k*:cloud` (Ollama Cloud Kimi) | `ollama/deepseek-v*-pro:cloud` | `openrouter/moonshot/kimi-k*` | `openrouter/deepseek/deepseek-v*-pro` |
+| Phase 2 - Analysis | `ollama/kimi-k*:cloud` (Ollama Cloud Kimi) | `ollama/deepseek-v*-pro:cloud` | `openrouter/moonshot/kimi-k*` | `openrouter/deepseek/deepseek-v*-pro` |
+| Phase 3 - Synthesis | `codex/gpt-*` or `openai-codex/gpt-*` (OAuth GPT, no per-call cost) | `ollama/kimi-k*:cloud` (Ollama Cloud Kimi) | `openrouter/moonshot/kimi-k*` | — |
+
+**ABSOLUTE RULES (enforced by the selector):**
+- Ollama Cloud ALWAYS preferred over OpenRouter when both are available — Ollama Cloud has subscription pricing while OpenRouter is per-token billed.
+- Anthropic models (`anthropic/claude-*`) are FORBIDDEN by policy. Hardcoded filter at every tier.
+- The selector reads the client's actual `openclaw.json` and picks the highest available version at each tier. New Kimi/DeepSeek versions are picked up automatically when the client adds them.
 
 ---
 
@@ -227,7 +234,7 @@ Every persona is auto-tagged in `persona-categories.json` after generation:
 - Business stage and ideal user metadata
 This file is the bridge: Skill 23 reads it to build department-specific persona pools.
 
-**Cross-reference path:** `/data/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md`
+**Cross-reference path:** `~/.openclaw/skills/22-book-to-persona-coaching-leadership-system/PERSONA-ROUTER.md`
 
 ---
 
