@@ -1,3 +1,47 @@
+## v10.0.1 - May 14, 2026 - Stop breaking Telegram with rotation
+
+### The bug
+A Mac client ran the previous version and reported that his paired Telegram (working fine before the install) broke during install with:
+
+> `GatewayTransportError: gateway closed (1008): pairing required: device is asking for more scopes than currently approved`
+
+Same code path existed in this VPS repo. This release fixes it on both repos.
+
+### What was causing it
+The install was calling `rotate_all_devices_to_full_scopes()` at startup. Per the OpenClaw docs (https://docs.openclaw.ai/gateway/operator-scopes.md):
+
+> "Already paired devices do not get broader access silently: reconnects that ask for a broader role or broader scopes create a new pending upgrade request."
+
+So rotation asking for 5 scopes the device didn't all have CREATED a new pending scope upgrade request. The gateway then refused all subsequent connections — including the Telegram send the rotation was supposed to enable.
+
+The approval calls then failed because:
+1. `openclaw devices approve --latest` only PREVIEWS pending requests (per docs — I had missed this).
+2. `openclaw devices approve <requestId>` requires the calling device to have `operator.approvals` — which it doesn't, because that's the scope being requested.
+
+Self-inflicted deadlock. Present since v9.7.7.
+
+### What was removed
+- `rotate_all_devices_to_full_scopes()` function and its call.
+- `approve_pending_scopes_early()` function and its call.
+- `approve_pending_scopes()` nested function inside `install_weekly_cron`.
+- Scope-retry block inside `send_telegram_progress()`.
+
+### What stayed
+- Bulletproof 14-location Telegram chat ID resolver — unchanged.
+- Bulletproof 9-source credential discovery — unchanged.
+- Bulletproof workspace resolver — unchanged.
+- `send_telegram_progress()` calls `openclaw message send` directly. One call. No retries on scope errors.
+
+### Safety net at end of install
+If `TELEGRAM_LAST_RESULT` indicates failure, prints one short warning pointing to the log. No recovery panel, no manual approval instructions, no user action required.
+
+### Net effect for clients
+- Every paired Hostinger client has `operator.write` (that's what their daily Telegram requires).
+- Install just sends the message directly. It works.
+- No rotation = no scope upgrade request = no deadlock = Telegram works.
+
+---
+
 ## v10.0.0 - May 14, 2026 - The split: VPS-only repo, bulletproof discovery
 
 ### What changed
