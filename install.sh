@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================
-#  OpenClaw Onboarding Installer v10.2.0 — Hostinger Docker VPS
+#  OpenClaw Onboarding Installer v10.3.0 — Hostinger Docker VPS
 #  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 #
 #  This installer is for the Hostinger Docker VPS deployment of OpenClaw.
@@ -24,7 +24,7 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.2.0"
+ONBOARDING_VERSION="v10.3.0"
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)
@@ -1402,6 +1402,48 @@ if ! python3 -c "import google.genai" 2>/dev/null; then
         warn "google-genai install failed - manual install required"
 else
     success "google-genai already installed"
+fi
+
+# ----------------------------------------------------------
+# v10.3.0: Install Calibre (ebook-convert) for Skill 22 book extraction
+# ----------------------------------------------------------
+# On Hostinger Docker VPS, Calibre is installed via Linuxbrew (already at
+# /data/linuxbrew/.linuxbrew/bin) OR the official Calibre Linux installer.
+# Without Calibre, Skill 22 silently skips MOBI/AZW/AZW3/KFX formats and
+# only processes PDF/EPUB. Auto-install here so it's ready by Wave 5.
+if command -v ebook-convert >/dev/null 2>&1; then
+    success "Calibre (ebook-convert) already installed: $(ebook-convert --version 2>&1 | head -1)"
+else
+    note "Installing Calibre (ebook-convert) for Skill 22 ebook extraction..."
+
+    # Try Linuxbrew first (Hostinger's canonical package manager path)
+    if [ -x /data/linuxbrew/.linuxbrew/bin/brew ]; then
+        note "Trying Linuxbrew install..."
+        if /data/linuxbrew/.linuxbrew/bin/brew install calibre >> "$LOG_FILE" 2>&1; then
+            if command -v ebook-convert >/dev/null 2>&1; then
+                success "Calibre installed via Linuxbrew: $(ebook-convert --version 2>&1 | head -1)"
+            fi
+        else
+            warn "Linuxbrew install failed; trying official Calibre Linux installer..."
+        fi
+    fi
+
+    # Fall back to official Calibre Linux installer if still not present
+    if ! command -v ebook-convert >/dev/null 2>&1; then
+        if command -v wget >/dev/null 2>&1; then
+            note "Running official Calibre Linux installer (https://download.calibre-ebook.com/linux-installer.sh)..."
+            mkdir -p /data/.openclaw/calibre
+            wget -nv -O /tmp/calibre-installer.sh https://download.calibre-ebook.com/linux-installer.sh 2>>"$LOG_FILE" && \
+                sh /tmp/calibre-installer.sh install_dir=/data/.openclaw/calibre isolated=y >> "$LOG_FILE" 2>&1 && \
+                ln -sf /data/.openclaw/calibre/calibre/ebook-convert /usr/local/bin/ebook-convert 2>>"$LOG_FILE" || \
+                warn "Official Calibre installer failed. Skill 22 ebook extraction limited to PDF/EPUB."
+            if command -v ebook-convert >/dev/null 2>&1; then
+                success "Calibre installed via official Linux installer: $(ebook-convert --version 2>&1 | head -1)"
+            fi
+        else
+            warn "wget not available — cannot run Calibre Linux installer. Skill 22 ebook extraction limited to PDF/EPUB."
+        fi
+    fi
 fi
 
 # ----------------------------------------------------------

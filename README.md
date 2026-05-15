@@ -2,13 +2,19 @@
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent on Hostinger's hvps-openclaw Docker container.**
 
-**Current Version: v10.2.0** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
+**Current Version: v10.3.0** — See [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 This repo is **Hostinger Docker VPS-only**. The Mac mini installer lives at https://github.com/trevorotts1/openclaw-onboarding.
 
 This repo contains **36 skill folders** (01 through 36, with 13, 33, and 34 archived) plus an install script and update script.
 
 > **First time installing or updating?** Read **[ONBOARDING-TRIGGERS.md](ONBOARDING-TRIGGERS.md)** — it shows exactly how to start a fresh install or run an update via Terminal or Telegram.
+
+### What's New in v10.3.0 (May 14, 2026) — Auto-install Calibre + remove MOONSHOT_API_KEY hardcoding
+
+**Fix 1:** install.sh now auto-installs Calibre on VPS via Linuxbrew or the official Calibre Linux installer.
+
+**Fix 2:** Skill 22 orchestrator no longer crashes on missing `MOONSHOT_API_KEY`. Added real `call_ollama_cloud()` function. All three phases (extraction, analysis, synthesis) route through Ollama Cloud when the selector picks `ollama/*` — previously a TODO that silently fell back to OpenRouter. Same-model OpenRouter fallback on Ollama Cloud failure. Future-proofed via version-pattern regex.
 
 ### What's New in v10.2.0 (May 14, 2026) — No-shortcut rule for sub-agents + explicit DeepSeek/Kimi priority
 

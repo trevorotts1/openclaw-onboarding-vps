@@ -1,3 +1,23 @@
+## v10.3.0 - May 14, 2026 - Auto-install Calibre + remove MOONSHOT_API_KEY hardcoding
+
+### Fix 1: Auto-install Calibre
+install.sh now auto-installs Calibre for Skill 22 ebook extraction:
+- Linuxbrew first (`/data/linuxbrew/.linuxbrew/bin/brew install calibre`) — Hostinger Docker ships with Linuxbrew
+- Falls back to official Calibre Linux installer into `/data/.openclaw/calibre/` with symlink to `/usr/local/bin/ebook-convert`
+- Silent success if already installed; non-fatal failure (Skill 22 has graceful PDF/EPUB-only degradation)
+
+### Fix 2: Stop crashing on missing MOONSHOT_API_KEY + reroute Phase 1 through Ollama Cloud
+- `22-book-to-persona/pipeline/orchestrator.py` no longer requires `MOONSHOT_API_KEY` — replaced 3 hard-fail `raise ValueError` lines with one "at least ONE of OLLAMA_API_KEY (preferred), OPENROUTER_API_KEY, or OPENAI_API_KEY"
+- Added `call_ollama_cloud()` async helper that hits `https://ollama.com/api/chat` with `Bearer $OLLAMA_API_KEY`
+- Rewrote all three phase routing blocks (run_extraction, run_analysis, run_synthesis) to actually use Ollama Cloud when the selector picks `ollama/*` (previously a TODO that fell back to OpenRouter)
+- Same-model OpenRouter fallback if Ollama Cloud call fails (e.g. `ollama/kimi-k2.6:cloud` → `openrouter/moonshot/kimi-k2.6`)
+- Deprecated `call_moonshot()` — kept for back-compat but no longer in routing chain
+- Updated SKILL.md, INSTALL.md, QC.md, extraction-agent-prompt.md, synthesis-agent-prompt.md to reflect dynamic selection
+
+**Future-proofing:** Selector regex matches version numbers — when client adds Kimi 2.7 or DeepSeek V5, orchestrator picks them up automatically.
+
+---
+
 ## v10.2.0 - May 14, 2026 - No-shortcut rule for sub-agents + explicit DeepSeek/Kimi priority for book extraction
 
 ### Change 1: NO-SHORTCUT RULE for every skill-installing sub-agent
