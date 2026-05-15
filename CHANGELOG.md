@@ -1,3 +1,29 @@
+## v10.2.0 - May 14, 2026 - No-shortcut rule for sub-agents + explicit DeepSeek/Kimi priority for book extraction
+
+### Change 1: NO-SHORTCUT RULE for every skill-installing sub-agent
+
+Sub-agents were skipping CORE_UPDATES.md, INSTRUCTIONS.md, references/*.md and going straight to install commands. Result: wrong AGENTS.md/MEMORY.md updates, missed deps, silent failures.
+
+Added hard reinforcement block to the UPDATE PENDING flag in install.sh:
+- Required reads explicitly enumerated (SKILL.md, INSTALL.md, INSTRUCTIONS.md, CORE_UPDATES.md, EXAMPLES.md, QC.md, CHANGELOG.md, all *-full.md, all references/*.md, all agent-prompts/*.md, all pipeline/*.md, skill-specific docs like PERSONA-ROUTER.md / CHECKLIST.md / GEMINI-RETRIEVAL-GUIDE.md / GOOD-AND-BAD-EXAMPLES.md).
+- Mandatory verification step: sub-agent runs `find "$SKILL_DIR" -type f \( -name "*.md" -o -name "*.skill" \) | sort` BEFORE any install command and reports the count.
+- Structured read-log required (file list, read times, byte counts, coverage %).
+- Refusal pattern: if asked to skip docs, the sub-agent refuses with explanation.
+- Master orchestrator independently verifies the file count matches what the sub-agent reported.
+
+### Change 2: Explicit DeepSeek V4-pro / Kimi 2.6 priority for Skill 22 book extraction
+
+Per owner directive: "Favor Ollama DeepSeek V4 Pro OR latest, or Kimi 2.6 Ollama Cloud or latest. If they don't have Ollama, then go to the OpenRouter version of the same models."
+
+Updated:
+- `shared-utils/select_model.py` heavy/normal chain reordered: `DEEPSEEK_PRO_OLLAMA, KIMI_OLLAMA, DEEPSEEK_PRO_OPENROUTER, KIMI_OPENROUTER, OAUTH_GPT, MIMO, GLM`. Ollama Cloud DeepSeek V4-pro is now the absolute first pick. OpenRouter versions of the same models are fallback only.
+- `22-book-to-persona/SKILL.md` Model Routing: rewritten to 5-tier list matching new priority.
+- `22-book-to-persona/PIPELINE.md` Phase 1 + Phase 2: priority rewritten with plain-English rule.
+
+Mirrored from Mac repo. Both repos at v10.2.0.
+
+---
+
 ## v10.1.0 - May 14, 2026 - Ollama Cloud first, OpenRouter as fallback only
 
 ### The bug
