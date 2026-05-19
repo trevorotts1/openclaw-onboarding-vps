@@ -24,7 +24,7 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.6.0"
+ONBOARDING_VERSION="v10.6.2"
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)
