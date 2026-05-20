@@ -1,5 +1,18 @@
 # Skill 32: Command Center Setup
 
+## MANDATORY - Teach Yourself Protocol (TYP)
+
+**Before using this skill, complete the Teach Yourself Protocol (Skill 01) on this folder.**
+
+Required read order:
+1. SKILL.md (this file)
+2. INSTRUCTIONS.md — runtime execution guide
+3. INSTALL.md — one-time setup steps
+4. CORE_UPDATES.md — what gets written to core .md files post-install
+5. QC.md — install + runtime QC rubric (gate ≥ 8.5)
+
+Per N3 ("read before act"), do not skip any of the above. Per N4, follow steps in declared order. Per N5, QC runs in a different sub-agent than the installer.
+
 ## What This Skill Is About
 
 The Command Center Setup activates your AI workforce as a live, operational system. It takes the department structure you created in Skill 23 (AI Workforce Blueprint) and makes it real with persistent department agents, a Telegram control room with organized topics, and a visual Kanban dashboard for task management.
@@ -28,7 +41,7 @@ Use this skill when:
 This skill requires an active memory system. Department agents maintain persistent state using:
 - **Session Memory**: Conversation context within each department topic
 - **Semantic Memory**: memory-core for long-term fact retrieval
-- **Structured Memory**: Memory Wiki for coaching theories, SOPs, and persona blueprints
+- **Structured Memory**: Memory Wiki for coaching theories and SOPs
 
 Before activating, verify memory is working: `openclaw memory status`
 
@@ -103,7 +116,7 @@ After installation, verify:
 - [ ] One topic exists for each department
 - [ ] Cross-Department topic exists
 - [ ] Bot is admin with topic management permissions
-- [ ] Department workspaces created at /data/.openclaw/workspaces/command-center/
+- [ ] Department workspaces created at ~/.openclaw/workspaces/command-center/
 - [ ] Each department has IDENTITY.md, MEMORY.md, and memory/ folder
 - [ ] Agent config entries added for each department
 - [ ] Telegram bindings configured for each topic
@@ -135,4 +148,4 @@ For issues or questions about the Command Center Setup, refer to:
 - The main OpenClaw documentation at https://docs.openclaw.ai
 
 ---
-<!-- BREADCRUMB: skill-32-vps | 2026-04-12 | v6.5.7 | SKILL.md updated with wiki capability and Active Memory note | Memory Surgery Playbook v3.5 -->
+<!-- BREADCRUMB: skill-32-mac | 2026-04-12 | v6.5.7 | SKILL.md updated with wiki capability and Active Memory note | Memory Surgery Playbook v3.5 -->

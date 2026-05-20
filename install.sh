@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================
-#  OpenClaw Onboarding Installer v10.3.0 — Hostinger Docker VPS
+#  OpenClaw Onboarding Installer v10.12.0 — Hostinger Docker VPS
 #  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 #
 #  This installer is for the Hostinger Docker VPS deployment of OpenClaw.
@@ -24,7 +24,21 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.10.0"
+ONBOARDING_VERSION="v10.12.0"
+
+# ----------------------------------------------------------
+# Shared library — source if available (best-effort, never required).
+# Provides detect_platform(), find_master_files(), and other helpers
+# used by update-skills.sh / check-updates.sh / skills' QC scripts.
+# Falls back to inlined definitions below if the file isn't present
+# yet (e.g. first-time install before the repo has been cloned).
+# ----------------------------------------------------------
+_lib_shared_self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-shared.sh"
+if [ -f "$_lib_shared_self" ]; then
+  # shellcheck source=/dev/null
+  source "$_lib_shared_self"
+  export OPENCLAW_LIB_SHARED_SOURCED=1
+fi
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)
@@ -2536,40 +2550,51 @@ fire_install_kickoff_triplet() {
     local tg_fired="false" flag_fired="false"
     local tg_reason="" flag_reason=""
 
+    # 1. Telegram message — UNCONDITIONAL attempt (N22). Even if the openclaw
+    #    CLI isn't on PATH yet (first-time install), we still try; the
+    #    attempt is what's unconditional, not the success. Reason logged.
+    local tg_msg
+    tg_msg="🚀 OpenClaw onboarding files installed (${ONBOARDING_VERSION:-?}). To start the actual onboarding, paste the instructions printed in your terminal to your agent. Or reply to this message with 'start onboarding'."
     if command -v openclaw >/dev/null 2>&1; then
-        local tg_msg
-        tg_msg="🚀 OpenClaw onboarding files installed (${ONBOARDING_VERSION:-?}). To start the actual onboarding, paste the instructions printed in your terminal to your agent. Or reply to this message with 'start onboarding'."
         if openclaw message send --message "$tg_msg" 2>/dev/null; then
             tg_fired="true"
         else
             tg_reason="openclaw message send failed (Telegram likely not paired or scopes missing)"
         fi
     else
-        tg_reason="openclaw CLI not on PATH"
+        local tg_helper="$skills_dir/scripts/send-telegram.sh"
+        if [ -x "$tg_helper" ]; then
+            if "$tg_helper" "$tg_msg" 2>/dev/null; then
+                tg_fired="true"
+            else
+                tg_reason="openclaw CLI absent; send-telegram.sh helper invocation failed"
+            fi
+        else
+            tg_reason="openclaw CLI absent and no send-telegram.sh helper available (Telegram delivery deferred to first post-install agent session)"
+        fi
     fi
 
-    if [ -d "$(dirname "$agents_md")" ]; then
-        local flag_marker
-        flag_marker="<!-- OPENCLAW_ONBOARDING_KICKOFF:${ONBOARDING_VERSION:-?} -->"
-        if [ -f "$agents_md" ] && grep -qF "$flag_marker" "$agents_md" 2>/dev/null; then
-            flag_fired="true"
-        else
-            {
-                echo ""
-                echo "$flag_marker"
-                echo "## OpenClaw onboarding kickoff: ${ONBOARDING_VERSION:-?}"
-                echo "Triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ) via install.sh on platform=$plat."
-                echo ""
-                echo "The bash install.sh has finished bootstrapping repo files at $skills_dir."
-                echo "Read the terminal kickoff block (printed at install.sh end) and execute"
-                echo "those instructions in order. Begin with: read $skills_dir/Start\\ Here.md"
-                echo "and $skills_dir/INSTALL-CONTRACT.md end to end before any work."
-                echo "<!-- OPENCLAW_ONBOARDING_KICKOFF_END -->"
-            } >> "$agents_md" 2>/dev/null && flag_fired="true" \
-                                            || flag_reason="could not write $agents_md"
-        fi
+    # 2. AGENTS.md flag — UNCONDITIONAL attempt (N22). Create the parent dir
+    #    if needed; only skip if mkdir + write both fail.
+    mkdir -p "$(dirname "$agents_md")" 2>/dev/null || true
+    local flag_marker
+    flag_marker="<!-- OPENCLAW_ONBOARDING_KICKOFF:${ONBOARDING_VERSION:-?} -->"
+    if [ -f "$agents_md" ] && grep -qF "$flag_marker" "$agents_md" 2>/dev/null; then
+        flag_fired="true"
     else
-        flag_reason="AGENTS.md parent directory $(dirname "$agents_md") does not exist"
+        {
+            echo ""
+            echo "$flag_marker"
+            echo "## OpenClaw onboarding kickoff: ${ONBOARDING_VERSION:-?}"
+            echo "Triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ) via install.sh on platform=$plat."
+            echo ""
+            echo "The bash install.sh has finished bootstrapping repo files at $skills_dir."
+            echo "Read the terminal kickoff block (printed at install.sh end) and execute"
+            echo "those instructions in order. Begin with: read $skills_dir/Start\\ Here.md"
+            echo "and $skills_dir/INSTALL-CONTRACT.md end to end before any work."
+            echo "<!-- OPENCLAW_ONBOARDING_KICKOFF_END -->"
+        } >> "$agents_md" 2>/dev/null && flag_fired="true" \
+                                        || flag_reason="could not write $agents_md (mkdir -p $(dirname "$agents_md") also tried)"
     fi
 
     cat <<TERMEOF
@@ -2602,7 +2627,9 @@ fire_install_kickoff_triplet() {
      acting) are non-negotiable.
   3. Run the web research pre-flight:
         bash $skills_dir/web-research-preflight.sh
-  4. Confirm bootstrap + sub-agent settings (200K/400K, 4/20/100, high).
+  4. Confirm bootstrap + sub-agent settings per PRD §4:
+        maxChars=200000, maxTotalChars=400000, maxSpawnDepth=4,
+        maxChildren=20, maxConcurrent=100, thinking=high.
   5. Set up canonical workspace files (USER.md, AGENTS.md, TOOLS.md
      at workspace root; symlinked into every per-role workspace).
   6. Install skills in waves; gate each wave with:

@@ -5,7 +5,7 @@ PASS=0; FAIL=0; WARN=0
 SKILL_DIR="$(dirname "$0")"
 LIB="$SKILL_DIR/../lib-shared.sh"; [ -f "$LIB" ] && source "$LIB"
 if ! command -v resolve_platform_paths >/dev/null 2>&1; then
-  resolve_platform_paths() { export WORKSPACE="/data/.openclaw/workspace" SKILLS_DIR_DEFAULT="/data/.openclaw/skills"; }
+  resolve_platform_paths() { export WORKSPACE="$HOME/clawd" SKILLS_DIR_DEFAULT="$HOME/.openclaw/skills"; }
 fi
 resolve_platform_paths
 red(){ printf "\033[31m%s\033[0m\n" "$1"; }; green(){ printf "\033[32m%s\033[0m\n" "$1"; }; yellow(){ printf "\033[33m%s\033[0m\n" "$1"; }
@@ -16,7 +16,7 @@ echo ""
 echo "═══ Skill 23 — AI Workforce Blueprint — Install QC ═══"
 echo ""
 assert "Skill 23 folder present" "[ -d \"$SKILLS_DIR_DEFAULT/23-ai-workforce-blueprint\" ]"
-assert "Skill 22 (Persona) installed FIRST" "[ -d \"$SKILLS_DIR_DEFAULT/22-book-to-persona-coaching-leadership-system\" ]"
+warn_only "Skill 22 (Persona) installed (recommended; graceful-degradation supported per INSTALL.md)" "[ -d \"$SKILLS_DIR_DEFAULT/22-book-to-persona-coaching-leadership-system\" ]"
 warn_only "Interview state evidence (A/B/C): answers, departments, or ORG-CHART" \
   "[ -f \"$WORKSPACE/workforce-interview-answers.md\" ] || [ -d \"$WORKSPACE/departments\" ] || [ -f \"$WORKSPACE/ORG-CHART.md\" ]"
 warn_only "departments/ folder OR ORG-CHART.md exists (STATE C — complete)" "[ -d \"$WORKSPACE/departments\" ] || [ -f \"$WORKSPACE/ORG-CHART.md\" ]"
