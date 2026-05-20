@@ -24,7 +24,7 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.7.0"
+ONBOARDING_VERSION="v10.8.0"
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)
@@ -2357,7 +2357,7 @@ except Exception: pass
     # ATTEMPT 1: MINIMAL — name, cron, tz, channel, to, message. No fancy flags.
     local BASE=(
         --name "weekly-onboarding-update"
-        --cron "0 2 * * 0"
+        --cron "0 3 * * 0"
         --tz "America/New_York"
         --channel telegram
         --to "$TG_TARGET"
@@ -2371,7 +2371,7 @@ except Exception: pass
     # ATTEMPT 2: minimal WITHOUT --account (in case account detection was wrong)
     local BASE_NO_ACCT=(
         --name "weekly-onboarding-update"
-        --cron "0 2 * * 0"
+        --cron "0 3 * * 0"
         --tz "America/New_York"
         --channel telegram
         --to "$TG_TARGET"
@@ -2385,7 +2385,7 @@ except Exception: pass
         local WITH_AGENT=(
             --name "weekly-onboarding-update"
             --agent "$DEFAULT_AGENT"
-            --cron "0 2 * * 0"
+            --cron "0 3 * * 0"
             --tz "America/New_York"
             --channel telegram
             --to "$TG_TARGET"
@@ -2399,7 +2399,7 @@ except Exception: pass
     # ATTEMPT 4: --announce + delivery flags
     local WITH_ANNOUNCE=(
         --name "weekly-onboarding-update"
-        --cron "0 2 * * 0"
+        --cron "0 3 * * 0"
         --tz "America/New_York"
         --announce
         --channel telegram
@@ -2414,7 +2414,7 @@ except Exception: pass
     # All 4 attempts failed — leave a recovery hint
     warn "All cron creation attempts failed. Manual install command:"
     warn "  openclaw cron create --name weekly-onboarding-update \\"
-    warn "    --cron '0 2 * * 0' --tz America/New_York \\"
+    warn "    --cron '0 3 * * 0' --tz America/New_York \\"
     warn "    --channel telegram --to '$TG_TARGET' \\"
     [ -n "$CHANNEL_ACCOUNT" ] && warn "    --account $CHANNEL_ACCOUNT \\"
     [ -n "$DEFAULT_AGENT" ] && warn "    --agent $DEFAULT_AGENT \\"
@@ -2493,3 +2493,113 @@ print_install_summary() {
     echo "══════════════════════════════════════════════════════════════════════"
 }
 print_install_summary
+
+# ============================================================
+#  v10.8.0 — P0-9 Triple-Fire Install Kickoff Trigger (N22)
+#  Same as the Mac repo's install.sh — N22 enforcement: Telegram +
+#  AGENTS.md flag + terminal fallback. All three fire on every kickoff.
+# ============================================================
+fire_install_kickoff_triplet() {
+    local plat
+    if [ -d "/data/.openclaw" ]; then plat="vps"; else plat="mac"; fi
+    local agents_md skills_dir
+    if [ "$plat" = "vps" ]; then
+        agents_md="/data/.openclaw/AGENTS.md"
+        skills_dir="/data/.openclaw/skills"
+    else
+        agents_md="$HOME/.openclaw/AGENTS.md"
+        skills_dir="$HOME/.openclaw/skills"
+    fi
+
+    local tg_fired="false" flag_fired="false"
+    local tg_reason="" flag_reason=""
+
+    if command -v openclaw >/dev/null 2>&1; then
+        local tg_msg
+        tg_msg="🚀 OpenClaw onboarding files installed (${ONBOARDING_VERSION:-?}). To start the actual onboarding, paste the instructions printed in your terminal to your agent. Or reply to this message with 'start onboarding'."
+        if openclaw message send --message "$tg_msg" 2>/dev/null; then
+            tg_fired="true"
+        else
+            tg_reason="openclaw message send failed (Telegram likely not paired or scopes missing)"
+        fi
+    else
+        tg_reason="openclaw CLI not on PATH"
+    fi
+
+    if [ -d "$(dirname "$agents_md")" ]; then
+        local flag_marker
+        flag_marker="<!-- OPENCLAW_ONBOARDING_KICKOFF:${ONBOARDING_VERSION:-?} -->"
+        if [ -f "$agents_md" ] && grep -qF "$flag_marker" "$agents_md" 2>/dev/null; then
+            flag_fired="true"
+        else
+            {
+                echo ""
+                echo "$flag_marker"
+                echo "## OpenClaw onboarding kickoff: ${ONBOARDING_VERSION:-?}"
+                echo "Triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ) via install.sh on platform=$plat."
+                echo ""
+                echo "The bash install.sh has finished bootstrapping repo files at $skills_dir."
+                echo "Read the terminal kickoff block (printed at install.sh end) and execute"
+                echo "those instructions in order. Begin with: read $skills_dir/Start\\ Here.md"
+                echo "and $skills_dir/INSTALL-CONTRACT.md end to end before any work."
+                echo "<!-- OPENCLAW_ONBOARDING_KICKOFF_END -->"
+            } >> "$agents_md" 2>/dev/null && flag_fired="true" \
+                                            || flag_reason="could not write $agents_md"
+        fi
+    else
+        flag_reason="AGENTS.md parent directory $(dirname "$agents_md") does not exist"
+    fi
+
+    cat <<TERMEOF
+
+═══════════════════════════════════════════════════════════════════════
+  OpenClaw Onboarding Kickoff — Triple-Fire Trigger
+  (N22 enforcement — Telegram + agents.md flag + this terminal block)
+═══════════════════════════════════════════════════════════════════════
+
+  Platform:           $plat
+  Version installed:  ${ONBOARDING_VERSION:-?}
+  Skills directory:   $skills_dir
+
+  Telegram fired:     $tg_fired  ${tg_reason:+($tg_reason)}
+  AGENTS.md fired:    $flag_fired  ${flag_reason:+($flag_reason)}
+  Terminal block:     true (this block)
+
+═══════════════════════════════════════════════════════════════════════
+  IF YOU DIDN'T SEE A TELEGRAM AND THE AGENTS.MD FLAG MIGHT HAVE FAILED:
+  Copy the block below and paste it directly to your agent.
+═══════════════════════════════════════════════════════════════════════
+
+  --- BEGIN AGENT INSTRUCTIONS ---
+
+  Start the OpenClaw onboarding process. Procedure:
+
+  1. Read $skills_dir/Start\ Here.md end to end.
+  2. Read $skills_dir/INSTALL-CONTRACT.md end to end. Rule 0 (wave
+     concurrency: Mac=10, VPS=5) and Rule 1 (read every .md before
+     acting) are non-negotiable.
+  3. Run the web research pre-flight:
+        bash $skills_dir/web-research-preflight.sh
+  4. Confirm bootstrap + sub-agent settings (200K/400K, 4/20/100, high).
+  5. Set up canonical workspace files (USER.md, AGENTS.md, TOOLS.md
+     at workspace root; symlinked into every per-role workspace).
+  6. Install skills in waves; gate each wave with:
+        bash $skills_dir/check-wave-concurrency.sh --proposed <N> --reason "wave-N"
+  7. Per skill: independent sub-agent reads all skill .md + scripts,
+     executes INSTALL.md in order, independent QC ≥ 8.5 (5-loop cap).
+  8. Run skills/qc-system-integrity.sh — must exit 0.
+  9. Run AI Workforce Interview (Skill 23) to build ZHC structure.
+  10. After workforce build, create_role_workspaces.py writes
+      per-dept governing-personas.md.
+  11. Reply with installed skills, QC failures, ZHC location.
+
+  Hard rules: no shortcuts; no self-QC; all sub-agents non-Anthropic;
+  persona governance on EVERY non-mechanical task; Master Orchestrator
+  does NO work.
+
+  --- END AGENT INSTRUCTIONS ---
+
+═══════════════════════════════════════════════════════════════════════
+TERMEOF
+}
+fire_install_kickoff_triplet

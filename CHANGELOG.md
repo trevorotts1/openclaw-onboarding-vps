@@ -1,3 +1,58 @@
+## [v10.8.0] — 2026-05-20 — v2.0 Audit P0 Fixes: Complete the Persona Pipeline (VPS port)
+
+VPS companion to openclaw-onboarding v10.8.0. Same code; VPS-aware paths.
+
+Closes all 9 P0 items the v2.0 audit identified as unfinished work from v10.7.0. Each item proven with a smoke test on the Mac repo before porting here.
+
+### Risk: medium
+New code on critical paths. All additive — fallbacks preserve v10.7.0 behavior.
+
+### P0-1 — Layer 5 semantic scoring
+`shared-utils/semantic_task_fit.py` (NEW): Gemini Embedding 2 → keyword overlap → neutral 0.6. Wired into both heuristic and LLM scoring paths in `persona-selector-v2.py`. Replaces the v10.7.0 text-length heuristic in BOTH `_heuristic_layer_scores` and `_llm_layer_scores`.
+
+### P0-2 — Post-task adherence wiring
+`persona-selector-v2.py` now exposes `--mode record-completion` CLI. The dispatcher invokes it post-task; it runs `verify-persona-adherence.py` and writes to `persona_assignment.verification_json`. Smoke test on Mac confirmed end-to-end (Gemini Flash Lite returned a real adherence eval).
+
+### P0-3 — `governing-personas.md` per department
+`create_role_workspaces.py` `write_governing_personas_md()` writes one file per department from `persona-categories.json`. Called from `build_all_roles_for_dept()`. Domain-filtered (marketing personas in marketing dept; off-domain out).
+
+### P0-4 — Anti-staleness flag
+`write_persona_assignment_db()` tracks `consecutive_count` and flips `needs_review=1` at threshold ≥5. ALTER TABLE IF NOT EXISTS adds columns idempotently. CASE clause preserves prior `1` across switches.
+
+### P0-5 — `persona-categories.json` path resolver
+`detect_platform.py` `resolve_persona_categories()` checks 4 locations in priority order; first existing path wins.
+
+### P0-6 — Sunday Update overhaul
+- Cron `0 2 * * 0` → `0 3 * * 0` (3am per N23). All 5 occurrences in `install.sh` corrected.
+- `force-update.sh` (NEW) at repo root — for users whose VPS was unreachable during Sunday cron.
+- Triple-fire pattern on detection (Telegram + AGENTS.md flag + terminal block).
+
+### P0-7 — Web research pre-flight
+`scripts/web-research-preflight.sh` (NEW): docs.openclaw.ai + ollama.com + openrouter.ai lookups before settings config. VPS output at `/data/.openclaw/preflight-research.json`.
+
+### P0-8 — Wave concurrency cap
+`INSTALL-CONTRACT.md` Rule 0: VPS ≤ 5 worker sub-agents per wave. `scripts/check-wave-concurrency.sh` is the gate. Standing observers (Memory Wiki, Devil's Advocate) excluded from the count.
+
+### P0-9 — Install-kickoff triple-fire trigger
+`install.sh` `fire_install_kickoff_triplet()` (NEW) — Telegram + AGENTS.md flag + terminal fallback. All three fire on every kickoff. VPS paths: `/data/.openclaw/AGENTS.md`, `/data/.openclaw/skills`.
+
+### VPS-specific notes
+- VPS workspace paths (`/data/.openclaw/workspace`, `/data/.openclaw/secrets`) were already canonical — no path corrections needed beyond the cron fix.
+- All Python helpers are platform-aware via `detect_platform.py` — same code runs identically on Mac and VPS.
+
+### Companion releases
+- `openclaw-onboarding` (Mac) v10.8.0 — same waves
+- `blackceo-command-center` — no changes this release (already at v3.2.0)
+
+### How to upgrade
+```bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/check-updates.sh | bash
+# Or force update now (VPS was unreachable during Sunday cron):
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/force-update.sh | bash
+```
+
+---
+
 ## [v10.7.0] — 2026-05-20 — Post-Analysis Remediation: Persona Pipeline Fix (VPS port)
 
 VPS companion to the openclaw-onboarding v10.7.0 release. Same code, VPS-aware paths.
