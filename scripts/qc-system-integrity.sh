@@ -46,6 +46,9 @@ warn_check() {
 }
 
 # ─── platform detect ─────────────────────────────────────────────────────────
+# Wave 6 housekeeping: platform label corrected 'desktop' → 'mac' to match
+# openclaw.json and the detect_platform.py shared util. VPS workspace path
+# already canonical here.
 if [ -d "/data/.openclaw" ]; then
   PLATFORM=vps
   WORKSPACE=/data/.openclaw/workspace
@@ -53,7 +56,7 @@ if [ -d "/data/.openclaw" ]; then
   OCJSON=/data/.openclaw/openclaw.json
   MASTER=/data/Downloads/openclaw-master-files
 else
-  PLATFORM=desktop
+  PLATFORM=mac
   WORKSPACE=$HOME/clawd
   SECRETS=$HOME/.openclaw/secrets/.env
   OCJSON=$HOME/.openclaw/openclaw.json

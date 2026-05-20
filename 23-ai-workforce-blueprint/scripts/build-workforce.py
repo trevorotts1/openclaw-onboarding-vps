@@ -143,7 +143,7 @@ def build_from_config(config):
 
     # v9.6.0: resolve the Zero Human Company folder for this client BEFORE
     # any dept workspace is created. This sets COMPANY_DIR / DEPARTMENTS_DIR
-    # to /data/.openclaw/workspace/zero-human-company/<company-slug>/...
+    # to ~/clawd/zero-human-company/<company-slug>/...
     resolve_company_paths(company_name)
     print(f"[ZHC] Company folder: {COMPANY_DIR}", file=sys.stderr)
     print(f"[ZHC] Departments folder: {DEPARTMENTS_DIR}", file=sys.stderr)
@@ -298,11 +298,19 @@ def build_from_config(config):
             print(f"[NON-INTERACTIVE] populate-sops-from-manifest.py not found; "
                   f"SOPs remain as DMAIC stubs", file=sys.stderr)
 
-    # v9.6.1: Write company-config.json to the ZHC folder so Skill 32 picks up
-    # the actual company name + industry + brand colors. Brand colors can be
-    # provided via the non-interactive config; otherwise neutral defaults.
+    # v10.7.0: Write company-config.json (schema v2.0) to the ZHC folder.
+    # Now includes mission, owner_values, company_kpis, dept_kpis so the
+    # persona-selector Layers 1-4 have real data instead of falling back to
+    # flat constants. Brand colors / mission / KPIs come from the
+    # non-interactive config; departments-derived dept_kpis are aggregated.
     brand_colors = config.get("brand_colors", {}) if isinstance(config.get("brand_colors"), dict) else {}
-    write_company_config_json(company_name, industry, brand_colors)
+    write_company_config_json(
+        company_name,
+        industry,
+        brand_colors,
+        full_config=config,
+        selected_departments=selected_departments,
+    )
 
     # Generate departments.json — v9.6.1 writes to BOTH the ZHC company folder
     # (canonical for Skill 32 to read) and the legacy company-discovery folder
@@ -384,30 +392,30 @@ def build_from_config(config):
 # ============================================================
 
 HOME = os.path.expanduser("~")
-# VPS install detection: prefer /data/.openclaw/workspace if it exists, else /data/.openclaw/workspace
-if os.path.isdir("/data/.openclaw/workspace"):
-    WORKSPACE_ROOT = "/data/.openclaw/workspace"
+# VPS install detection: prefer ~/clawd if it exists, else $HOME/clawd
+if os.path.isdir("~/clawd"):
+    WORKSPACE_ROOT = "~/clawd"
 else:
     WORKSPACE_ROOT = os.path.join(HOME, "clawd")
 
 # Zero Human Company folder structure (v9.6.0+)
-# Top-level: /data/.openclaw/workspace/zero-human-company/
-# Per-company: /data/.openclaw/workspace/zero-human-company/<company-slug>/
+# Top-level: ~/clawd/zero-human-company/
+# Per-company: ~/clawd/zero-human-company/<company-slug>/
 # Departments live inside the per-company folder.
 ZHC_ROOT = os.path.join(WORKSPACE_ROOT, "zero-human-company")
 
 # DEPARTMENTS_DIR is resolved per-company at runtime once the company slug is known.
 # Falls back to the pre-v9.6.0 path for legacy installs (auto-detected).
 DEPARTMENTS_DIR = None       # Resolved by resolve_company_paths() below
-COMPANY_DIR = None           # /data/.openclaw/workspace/zero-human-company/<slug>/
+COMPANY_DIR = None           # ~/clawd/zero-human-company/<slug>/
 COMPANY_SLUG = None
 LEGACY_DEPARTMENTS_DIR = os.path.join(WORKSPACE_ROOT, "departments")  # pre-v9.6.0 location
 
 SUBAGENTS_DIR = os.path.join(WORKSPACE_ROOT, "subagents", "templates")
 MASTER_FILES = None  # Detected at runtime
 OPENCLAW_CONFIG = os.path.join(HOME, ".openclaw", "openclaw.json")
-if os.path.isdir("/data/.openclaw"):
-    OPENCLAW_CONFIG = "/data/.openclaw/openclaw.json"
+if os.path.isdir("~/.openclaw"):
+    OPENCLAW_CONFIG = "~/.openclaw/openclaw.json"
 BACKUP_DIR = os.path.join(HOME, "Downloads", "openclaw-backups")
 COMPANY_DISCOVERY_DIR = None  # Set after master files detected; per-company file is now in COMPANY_DIR
 
@@ -427,9 +435,9 @@ def resolve_company_paths(company_name: str):
     the client's company name. Creates the folders if missing.
 
     Discovery order at runtime (an agent looking for the workforce later):
-      1. /data/.openclaw/workspace/zero-human-company/<slug>/         ← v9.6.0+ canonical
-      2. /data/.openclaw/workspace/zhc/<slug>/                        ← short alias (legacy from very early v9.6 testing)
-      3. /data/.openclaw/workspace/departments/                        ← pre-v9.6.0 (still readable for legacy installs)
+      1. ~/clawd/zero-human-company/<slug>/         ← v9.6.0+ canonical
+      2. ~/clawd/zhc/<slug>/                        ← short alias (legacy from very early v9.6 testing)
+      3. ~/clawd/departments/                        ← pre-v9.6.0 (still readable for legacy installs)
     """
     global COMPANY_SLUG, COMPANY_DIR, DEPARTMENTS_DIR
     COMPANY_SLUG = slugify_company_name(company_name)
@@ -451,7 +459,7 @@ def resolve_company_paths(company_name: str):
 
     # If pre-v9.6.0 legacy departments folder exists with content, log a migration note
     if os.path.isdir(LEGACY_DEPARTMENTS_DIR) and os.listdir(LEGACY_DEPARTMENTS_DIR):
-        print(f"[ZHC] Legacy /data/.openclaw/workspace/departments/ detected. Reading from it for backward compat.\n"
+        print(f"[ZHC] Legacy ~/clawd/departments/ detected. Reading from it for backward compat.\n"
               f"[ZHC] New writes go to: {DEPARTMENTS_DIR}", file=sys.stderr)
 
     return COMPANY_DIR, DEPARTMENTS_DIR
@@ -515,19 +523,19 @@ DEFAULT_MODEL_ASSIGNMENTS = {
 
 def find_master_files_folder():
     """
-    Find the master files folder in /data/.openclaw/master-files/ (case-insensitive search).
+    Find the master files folder in ~/Downloads/ (case-insensitive search).
     
     FALLBACK BEHAVIOR (hardened):
-    - If /data/.openclaw/master-files/ exists and a matching folder is found: use it (normal path)
-    - If /data/.openclaw/master-files/ exists but no matching folder: create /data/.openclaw/master-files/
-    - If /data/.openclaw/master-files/ does NOT exist (e.g., VPS, Docker, headless):
-        use /data/.openclaw/workspace/data/ as the safe fallback location
+    - If ~/Downloads/ exists and a matching folder is found: use it (normal path)
+    - If ~/Downloads/ exists but no matching folder: create ~/Downloads/openclaw-master-files/
+    - If ~/Downloads/ does NOT exist (e.g., VPS, Docker, headless):
+        use ~/.openclaw/workspace/data/ as the safe fallback location
     - ALWAYS print a warning to stderr when falling back so the agent knows.
     - NEVER returns None. A persistence path is always guaranteed.
     """
     downloads = os.path.join(HOME, "Downloads")
     
-    # Primary search: /data/.openclaw/master-files/
+    # Primary search: ~/Downloads/
     if os.path.isdir(downloads):
         for name in os.listdir(downloads):
             lower = name.lower().replace(" ", "-").replace("_", "-")
@@ -535,20 +543,20 @@ def find_master_files_folder():
                 path = os.path.join(downloads, name)
                 if os.path.isdir(path):
                     return path
-        # /data/.openclaw/master-files exists but no matching folder found - create default
+        # ~/Downloads exists but no matching folder found - create default
         path = os.path.join(downloads, "openclaw-master-files")
         os.makedirs(path, exist_ok=True)
         return path
     
-    # FALLBACK: /data/.openclaw/master-files/ does not exist (VPS, Docker, headless environment)
-    # Use /data/.openclaw/workspace/data/ as a safe data-side location that survives restarts
-    # Use /data/.openclaw/workspace/data as fallback (or /data/.openclaw/workspace/ on VPS)
+    # FALLBACK: ~/Downloads/ does not exist (VPS, Docker, headless environment)
+    # Use ~/.openclaw/workspace/data/ as a safe data-side location that survives restarts
+    # Use ~/.openclaw/workspace/data as fallback (or ~/clawd/ on VPS)
     workspace_root = os.environ.get("WORKSPACE_ROOT", os.path.join(HOME, ".openclaw", "workspace"))
     if not os.path.isdir(workspace_root):
         workspace_root = os.path.join(HOME, "clawd")  # Legacy fallback
     fallback = os.path.join(workspace_root, "data")
     os.makedirs(fallback, exist_ok=True)
-    print(f"[PERSISTENCE WARNING] /data/.openclaw/master-files/ not found. Using fallback persistence path: {fallback}",
+    print(f"[PERSISTENCE WARNING] ~/Downloads/ not found. Using fallback persistence path: {fallback}",
           file=sys.stderr)
     print(f"[PERSISTENCE WARNING] Interview answers and handoff files will be saved to: {fallback}/company-discovery/",
           file=sys.stderr)
@@ -690,7 +698,7 @@ def create_department_workspace(dept_id, dept_info, interview_answers):
 
     # v9.6.1: SHARED files (AGENTS.md / TOOLS.md / USER.md) are SYMLINKED,
     # not copied. Every dept director, specialist, and sub-agent reads the
-    # SAME master file at /data/.openclaw/workspace/. When any agent writes to its AGENTS.md,
+    # SAME master file at ~/clawd/. When any agent writes to its AGENTS.md,
     # TOOLS.md, or USER.md, the write lands in the universal file and ALL
     # other agents pick it up on next read.
     #
@@ -1561,36 +1569,90 @@ def generate_org_chart(departments, specialists_by_dept):
 # COMMAND CENTER CONFIG GENERATION
 # ============================================================
 
-def write_company_config_json(company_name, industry, brand_colors=None):
+def write_company_config_json(company_name, industry, brand_colors=None,
+                              full_config=None, selected_departments=None):
     """
-    v9.6.1: Write company-config.json to the per-company ZHC folder so
-    Skill 32 (Command Center) can read company name + industry + brand
-    colors when it seeds the dashboard.
+    v10.7.0: Write company-config.json to the per-company ZHC folder.
 
-    brand_colors is an optional dict with primary / accent / text hex values.
-    If None or missing keys, BlackCEO neutral defaults are used.
+    Schema v2.0 includes the data the persona scoring engine reads at
+    runtime (mission, owner_values, company_kpis, dept_kpis). The earlier
+    v1.0 schema only carried name/industry/brand and the persona-selector
+    Layer 3 always fell back to a flat constant.
+
+    Args:
+        company_name:     str — company display name.
+        industry:         str — industry vertical (e.g., "personal-development").
+        brand_colors:     dict — optional {primary, accent, text} hex values.
+        full_config:      dict — the non-interactive config (or harvested
+                                  interview answers) from which mission, owner
+                                  values, and company KPIs are pulled.
+        selected_departments: dict — departments dict (dept_id -> info) used
+                                  to derive dept_kpis aggregate.
     """
     if not COMPANY_DIR:
         print("[COMPANY-CONFIG] COMPANY_DIR not resolved; skipping", file=sys.stderr)
         return None
 
     brand_colors = brand_colors or {}
+    full_config = full_config or {}
+    selected_departments = selected_departments or {}
+
+    mission = (
+        full_config.get("mission")
+        or full_config.get("company_mission")
+        or full_config.get("company_description")
+        or ""
+    )
+
+    owner_values = full_config.get("owner_values") or []
+    if isinstance(owner_values, str):
+        owner_values = [v.strip() for v in owner_values.split(",") if v.strip()]
+
+    company_kpis = full_config.get("company_kpis") or []
+    if isinstance(company_kpis, str):
+        company_kpis = [k.strip() for k in company_kpis.split(",") if k.strip()]
+
+    departments_cfg = full_config.get("departments", {}) or {}
+    dept_kpis = {}
+    for dept_id, dept_info in selected_departments.items():
+        raw_kpis = ""
+        if isinstance(departments_cfg.get(dept_id), dict):
+            raw_kpis = departments_cfg[dept_id].get("kpis", "") or ""
+        if not raw_kpis and isinstance(dept_info, dict):
+            raw_kpis = dept_info.get("kpis", "") or ""
+        if isinstance(raw_kpis, list):
+            dept_kpis[dept_id] = raw_kpis
+        elif isinstance(raw_kpis, str) and raw_kpis:
+            dept_kpis[dept_id] = [k.strip() for k in raw_kpis.split(",") if k.strip()]
+        else:
+            dept_kpis[dept_id] = []
+
     cfg = {
         "name":     company_name,
         "slug":     COMPANY_SLUG,
         "industry": industry,
+        "mission":  mission,
+        "owner_values": owner_values,
+        "company_kpis": company_kpis,
+        "dept_kpis":    dept_kpis,
+        "connected_systems": full_config.get("connected_systems", []),
         "brand": {
             "primary": brand_colors.get("primary", "#1f2937"),
             "accent":  brand_colors.get("accent",  "#3b82f6"),
             "text":    brand_colors.get("text",    "#f8fafc"),
         },
         "created":  datetime.now().isoformat(),
-        "schema_version": "1.0",
+        "schema_version": "2.0",
     }
     path = os.path.join(COMPANY_DIR, "company-config.json")
     with open(path, "w") as f:
         json.dump(cfg, f, indent=2)
-    print(f"[COMPANY-CONFIG] Wrote {path}", file=sys.stderr)
+    print(f"[COMPANY-CONFIG] Wrote {path} (schema v2.0)", file=sys.stderr)
+    missing = [k for k in ("mission", "owner_values", "company_kpis") if not cfg[k]]
+    if missing:
+        print(f"[COMPANY-CONFIG] WARN: empty fields {missing} — persona scoring "
+              f"Layers 1-3 will fall back. Re-run interview or pass via config.",
+              file=sys.stderr)
     return path
 
 
@@ -1853,7 +1915,7 @@ def _resolve_director_model(dept_id):
     import subprocess
     selector_candidates = [
         os.path.join(HOME, "Downloads", "openclaw-master-files", "shared-utils", "select_model.py"),
-        "/data/Downloads/openclaw-master-files/shared-utils/select_model.py",
+        "~/Downloads/openclaw-master-files/shared-utils/select_model.py",
     ]
     for sel in selector_candidates:
         if os.path.isfile(sel):

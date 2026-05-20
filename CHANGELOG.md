@@ -1,3 +1,52 @@
+## [v10.7.0] — 2026-05-20 — Post-Analysis Remediation: Persona Pipeline Fix (VPS port)
+
+VPS companion to the openclaw-onboarding v10.7.0 release. Same code, VPS-aware paths.
+
+The 2026-05-19 audit (grade F) found the persona-matching pipeline scored 5.1/10 against a 9.0 threshold because the persona-selector returned flat constants for 4 of 5 layers, the selection log had zero entries, and post-task adherence verification existed only as protocol. The Mac repo was remediated 2026-05-19; this commit ports those fixes to the VPS repo so Hostinger Docker clients pulling via the VPS curl path get the same working pipeline.
+
+### Wave 1.1 — `company-config.json` schema v2.0
+- `shared-utils/detect_platform.py`: new `resolve_active_company_dir()` so `paths["company_config"]` resolves to `/data/.openclaw/workspace/zero-human-company/<slug>/company-config.json`. Honors `$OPENCLAW_COMPANY_SLUG` env var, falls back to most-recent-mtime directory.
+- `23-ai-workforce-blueprint/scripts/build-workforce.py`: `write_company_config_json()` extended to schema v2.0 with `mission`, `owner_values`, `company_kpis`, `dept_kpis`, `connected_systems`. Logs stderr WARN when required fields are empty.
+- `23-ai-workforce-blueprint/templates/company-config.template.json` — new reference template.
+
+### Wave 3 — Real LLM-based persona scoring
+- `shared-utils/llm_score.py` (NEW): three-step provider chain — Ollama Cloud DeepSeek V4 Pro → OpenRouter DeepSeek V4 Pro → OpenRouter Gemini 3.1 Flash Lite. Per the no-Anthropic-in-pipeline policy.
+- 30-day SQLite cache (VPS path: `/data/.openclaw/workspace/data/llm-score-cache.sqlite`) keyed by SHA-256(persona_id + layer + context).
+- Graceful fallback to `NEUTRAL_FALLBACK_SCORE = 0.6` when ALL providers fail — never raises.
+- `23-ai-workforce-blueprint/scripts/persona-selector-v2.py`: `compute_layer_scores()` split into `_heuristic_layer_scores()` and `_llm_layer_scores()`. Reads `SCORING_MODE` env var. Default `"llm"`.
+- `shared-utils/adaptive_weights.py`: `DEFAULT_WEIGHTS` unified to PRD §10 canonical (20/25/20/20/15).
+- `23-ai-workforce-blueprint/scripts/select-persona-for-task.py`: deprecation stderr notice; weights match PRD §10.
+
+### Wave 4.1+4.2 — Selection log + post-task verification
+- `persona-selector-v2.py` — on every dispatch: appends row to `persona-selection-log.md`, UPSERTs into `persona_assignment` (composite key on `department_id, task_category`). Computes `switch_count` by comparing previous `persona_id`. Best-effort writes.
+- `23-ai-workforce-blueprint/scripts/verify-persona-adherence.py` (NEW): post-task adherence LLM check; writes back to `persona_assignment.verification_json`.
+
+### Wave 5.1+5.2 — Independent QC + CI gates
+- `scripts/qc-agent.sh` (NEW): standalone external QC runner. Doesn't trust `.onboarding-status`. Returns structured JSON.
+- `.github/workflows/qc-static.yml` (NEW): static QC invariants on every push + PR.
+- `scripts/qc-system-integrity.sh`: platform label corrected `desktop` → `mac` (matches openclaw.json + detect_platform.py). VPS workspace path was already correct (`/data/.openclaw/workspace`).
+- `check-updates.sh`: awk regex fixed to extract bracketed-format CHANGELOG headings (`## [vX.Y.Z]`). Without this fix, clients pulling via the curl saw the wrong (older, non-bracketed) entry.
+
+### VPS-specific notes
+- The VPS path baseline (`/data/.openclaw/workspace`, `/data/.openclaw/secrets`) was already correct in this repo. The Mac repo's Wave 6 path-drift fix did not apply here. Only the platform-label fix carried over.
+- All Python helpers are platform-aware via `detect_platform.py` — same code runs identically on Mac and VPS.
+
+### Companion releases
+- `openclaw-onboarding` (Mac) v10.7.0 — same waves, Mac paths
+- `blackceo-command-center` v3.2.0 — dashboard
+
+### Bump path
+- `v10.6.2` → `v10.7.0` — minor bump for additive features. No breaking changes.
+
+### How to upgrade
+```bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/check-updates.sh | bash
+```
+
+Set `OLLAMA_CLOUD_API_KEY` (primary) to enable LLM scoring. The `OPENROUTER_API_KEY` already in `/data/.openclaw/openclaw.json` serves as paid fallback.
+
+---
+
 ## [v10.6.2] — 2026-05-19 — Version Drift Prevention Infrastructure
 
 This release does two things: (1) realigns all 5 version locations that had drifted to different values, and (2) adds the tooling to prevent that drift from happening again.
