@@ -24,7 +24,7 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.9.0"
+ONBOARDING_VERSION="v10.10.0"
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)
@@ -40,13 +40,35 @@ OC_BACKUPS="/data/.openclaw/backups"
 OC_INSTALL_LOG_DIR="/data/.openclaw/logs/install"
 OC_AUTH_PROFILES="/data/.openclaw/agents/main/agent/auth-profiles.json"
 
-# Hard fail early if not on Hostinger Docker VPS — this script ONLY runs there
-if [ ! -d "$OC_CONFIG" ]; then
-    echo "ERROR: $OC_CONFIG does not exist." >&2
-    echo "This installer is for the Hostinger Docker VPS only." >&2
-    echo "If you are on Mac, use: https://github.com/trevorotts1/openclaw-onboarding" >&2
+# v10.10.0 P0-008: This installer is for Hostinger Docker VPS, but it should
+# create $OC_CONFIG on a clean container instead of hard-failing. The hard
+# fail used to assume the container provisioner created /data/.openclaw/
+# before this script ran — that's not a safe assumption for fresh containers.
+#
+# Pre-flight check: is this a Mac (Darwin)? If yes, refuse and redirect to
+# the Mac installer. Otherwise, create the dirs and proceed.
+if [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
+    echo "ERROR: This is the VPS installer running on a Mac." >&2
+    echo "Mac users: use https://github.com/trevorotts1/openclaw-onboarding" >&2
     exit 1
 fi
+
+# Auto-provision the OpenClaw config root + supporting directories on a
+# clean Hostinger Docker container. Idempotent — safe to re-run.
+if [ ! -d "$OC_CONFIG" ]; then
+    echo "[install] $OC_CONFIG missing — auto-provisioning for clean VPS install"
+    mkdir -p "$OC_CONFIG" "$OC_CONFIG/credentials" "$OC_CONFIG/agents/main/agent" \
+             "$OC_CONFIG/skills" "$OC_CONFIG/logs" "$OC_CONFIG/backups" \
+             "$OC_CONFIG/master-files" "$OC_CONFIG/secrets" 2>/dev/null || {
+        echo "ERROR: Could not create $OC_CONFIG. Check filesystem permissions." >&2
+        echo "Hostinger Docker should mount /data as writable for the container's user." >&2
+        exit 1
+    }
+    echo "[install] Auto-provisioned: $OC_CONFIG and supporting dirs"
+fi
+
+# Workspace too — required by the installer's later steps and the runtime
+mkdir -p "$OC_WORKSPACE_DEFAULT" 2>/dev/null
 
 mkdir -p "$OC_BACKUPS" "$OC_INSTALL_LOG_DIR"
 

@@ -1,3 +1,45 @@
+## [v10.10.0] — 2026-05-20 — v2.0 Fresh-Run P0 Closeout (VPS port)
+
+VPS companion to openclaw-onboarding v10.10.0. Closes 8 remaining gaps the fresh-run v2.0 audit identified.
+
+### Risk: medium
+All changes additive or strictly safer than prior behavior.
+
+### Fix #1 — `update-skills.sh` cron 2am → 3am
+Cron schedule corrected. Single canonical `0 3 * * 0` across install.sh + update-skills.sh.
+
+### Fix #2 — Gemini 3.1 Pro pattern + chain slot
+`shared-utils/select_model.py`: new GEMINI_PRO pattern. Slotted as position 3 in orchestrator + installer-subagent chains. Flash Lite drops to position 4.
+
+### Fix #3 — OpenAI embeddings fallback (N18)
+Both `gemini-indexer.py` and `gemini-search.py` now have `get_embedder()` returning `(provider, client, model_id)`. Resolution: Gemini Embeddings v2 → OpenAI text-embedding-3-small → error. No more `sys.exit(1)` on missing Google key.
+
+### Fix #4 — Book-to-Persona: stale GPT references removed
+`orchestrator.py` docstrings + comments rewritten to reflect PRD §5.4 chain (Kimi → DeepSeek → Gemini Flash Lite). LAST-RESORT fallback set to Gemini Flash Lite, not GPT.
+
+### Fix #5 — VPS install.sh auto-provisions /data/.openclaw/
+**Before:** hard-failed if `/data/.openclaw/` missing on clean container.
+**Now:** auto-provisions `OC_CONFIG`, `credentials/`, `agents/main/agent/`, `skills/`, `logs/`, `backups/`, `master-files/`, `secrets/`. Mac/Darwin pre-flight refuses + redirects. Workspace dir created unconditionally.
+
+### Fix #6 — Direct-to-agent install path
+`direct-to-agent-install.md` (NEW) — 183-line spec the user pastes to their agent. Same end-state as `install.sh`. VPS paths documented.
+
+### Fix #7 — AGENTS.md flag on DETECTION
+`cron-prompt.txt` RULE 5.5 (NEW): drop AGENTS.md detection marker BEFORE Telegram summary. VPS path: `/data/.openclaw/AGENTS.md`. Format documented.
+
+### Companion
+- `openclaw-onboarding` (Mac) v10.10.0 — same waves, Mac paths
+
+### Bump path
+- `v10.9.0` → `v10.10.0` — minor bump. All additive.
+
+### How to upgrade
+```bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/check-updates.sh | bash
+```
+
+---
+
 ## [v10.9.0] — 2026-05-20 — v2.0 Audit Full Closeout (VPS port)
 
 VPS companion to openclaw-onboarding v10.9.0. Closes the audit's broader findings — Phases 6, 7, 8, 11, 15, plus the B2P chain alignment — that weren't in my original P0 list but were in the audit report.

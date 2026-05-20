@@ -4,9 +4,6 @@ import os
 import sqlite3
 import argparse
 import time
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'shared-utils'))
-from key_resolver import resolve_key
 
 try:
     from google import genai
@@ -16,63 +13,100 @@ except ImportError:
     print("CRITICAL ERROR: Missing dependencies.")
     sys.exit(1)
 
-def _get_google_api_key():
-    return get_google_key()
+# Workspace Root Configuration
+WORKSPACE_ROOT = os.environ.get("WORKSPACE_ROOT", os.path.expanduser("~/.openclaw/workspace"))
+CLAWD_ROOT = os.path.expanduser("~/clawd")  # Legacy fallback
+if not os.path.isdir(WORKSPACE_ROOT):
+    WORKSPACE_ROOT = CLAWD_ROOT
 
-
-
-def _load_openclaw_env():
-    import json
-    for path in ['/data/.openclaw/openclaw.json', str(Path.home()/'.openclaw'/'openclaw.json')]:
-        try:
-            cfg = json.load(open(path))
-            for k,v in cfg.get('env',{}).get('vars',{}).items():
-                os.environ.setdefault(k, v)
-        except:
-            pass
-
-DB_PATH = os.path.expanduser("/data/.openclaw/workspace/data/coaching-personas/gemini-index.sqlite")
+DB_PATH = os.path.join(WORKSPACE_ROOT, "data/coaching-personas/gemini-index.sqlite")
 GEMINI_MODEL = "gemini-embedding-2-preview"
 TOP_K = 3
 
-def get_client():
-    _load_openclaw_env()
-    api_key = _get_google_api_key()
-    if not api_key:
-        env_paths = [
-            os.path.expanduser("/data/.openclaw/workspace/secrets/.env"),
-            os.path.expanduser("/data/.openclaw/.env"),
-            os.path.expanduser("/data/.openclaw/secrets/.env"),
-            "/data/.openclaw/workspace/secrets/.env",
-            "/data/.openclaw/.env",
-        ]
-        for env_path in env_paths:
-            if os.path.exists(env_path):
-                with open(env_path, "r") as f:
-                    for line in f:
-                        if line.startswith("GOOGLE_API_KEY=") or line.startswith("GOOGLE_AI_STUDIO_API_KEY=") or line.startswith("GOOGLE_GEMINI_API_KEY=") or line.startswith("GEMINI_API_KEY="):
-                            api_key = line.strip().split("=", 1)[1].strip('"\'')
-                            break
-                if api_key:
-                    break
-    if not api_key:
-        print("WARNING: Google API key not found in any supported env location. Using keyword fallback.")
-        sys.exit(2)
-    return genai.Client(api_key=api_key)
+OPENAI_EMBED_MODEL = "text-embedding-3-small"
 
-def embed_query(client, query):
+try:
+    import openai as openai_pkg
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    openai_pkg = None
+
+
+def _read_secret(name):
+    """Read API key from secrets/.env, env, or openclaw.json env block."""
+    env_path = os.path.join(WORKSPACE_ROOT, "secrets/.env")
+    if os.path.exists(env_path):
+        with open(env_path, "r") as f:
+            for line in f:
+                if line.startswith(f"{name}="):
+                    return line.strip().split("=", 1)[1].strip('"\'')
+    v = os.environ.get(name)
+    if v:
+        return v
+    import json
+    for ocj in (os.path.expanduser("~/.openclaw/openclaw.json"),
+                "/data/.openclaw/openclaw.json"):
+        if os.path.exists(ocj):
+            try:
+                with open(ocj) as f:
+                    env = json.load(f).get("env", {})
+                if env.get(name):
+                    return env[name]
+            except Exception:
+                pass
+    return ""
+
+
+def get_embedder():
+    """
+    Returns (provider, client, model_id). v10.10.0 P0-003.
+    Order: Gemini (preferred) → OpenAI (fallback) → error.
+    """
+    google_key = _read_secret("GOOGLE_API_KEY") or _read_secret("GEMINI_API_KEY")
+    if google_key:
+        return ("gemini", genai.Client(api_key=google_key), GEMINI_MODEL)
+    openai_key = _read_secret("OPENAI_API_KEY")
+    if openai_key and OPENAI_AVAILABLE:
+        client = openai_pkg.OpenAI(api_key=openai_key)
+        print(f"[gemini-search] WARN: GOOGLE_API_KEY absent — falling back to "
+              f"OpenAI {OPENAI_EMBED_MODEL}.", file=sys.stderr)
+        return ("openai", client, OPENAI_EMBED_MODEL)
+    print("ERROR: No embedding provider available. Set GOOGLE_API_KEY or OPENAI_API_KEY.", file=sys.stderr)
+    sys.exit(1)
+
+
+# Legacy alias
+def get_client():
+    return get_embedder()[1]
+
+
+def embed_query(client_or_pair, query):
+    """Embed query with Gemini OR OpenAI depending on provider."""
+    if isinstance(client_or_pair, tuple):
+        provider, client, model_id = client_or_pair
+    else:
+        provider, client, model_id = "gemini", client_or_pair, GEMINI_MODEL
+
     for attempt in range(3):
         try:
-            response = client.models.embed_content(
-                model=GEMINI_MODEL,
-                contents=query,
-                config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY")
-            )
-            return np.array(response.embeddings[0].values, dtype=np.float32)
+            if provider == "gemini":
+                response = client.models.embed_content(
+                    model=model_id,
+                    contents=query,
+                    config=types.EmbedContentConfig(task_type="RETRIEVAL_QUERY")
+                )
+                return np.array(response.embeddings[0].values, dtype=np.float32)
+            elif provider == "openai":
+                response = client.embeddings.create(model=model_id, input=query)
+                return np.array(response.data[0].embedding, dtype=np.float32)
+            else:
+                raise ValueError(f"unknown provider: {provider}")
         except Exception as e:
-            if "429" in str(e).lower() or "quota" in str(e).lower():
+            if "429" in str(e).lower() or "quota" in str(e).lower() or "rate" in str(e).lower():
                 time.sleep(2)
-            else: raise e
+            else:
+                raise e
     raise RuntimeError("Query embedding failed.")
 
 def cosine_similarity(v1, v2):
@@ -83,7 +117,6 @@ def cosine_similarity(v1, v2):
     return dot_product / (norm_v1 * norm_v2)
 
 def main():
-    _load_openclaw_env()
     parser = argparse.ArgumentParser()
     parser.add_argument("query", type=str, help="Search keyword")
     parser.add_argument("--limit", type=int, default=TOP_K)
@@ -93,8 +126,10 @@ def main():
         print(f"ERROR: Database not found at {DB_PATH}")
         sys.exit(1)
         
-    client = get_client()
-    query_vector = embed_query(client, args.query)
+    # v10.10.0 P0-003: get_embedder() returns (provider, client, model_id)
+    embedder = get_embedder()
+    print(f"[gemini-search] using embedder: {embedder[0]} ({embedder[2]})", file=sys.stderr)
+    query_vector = embed_query(embedder, args.query)
     
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     cursor = conn.cursor()
