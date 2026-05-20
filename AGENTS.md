@@ -4,15 +4,56 @@
 
 ---
 
-## Gemini INDEXING PROTOCOL
+## 🔴 N2 — MASTER ORCHESTRATOR DOES NO WORK
 
-**Gemini (semantic search) must be indexed at specific milestones, not after every skill.**
+**The Master Orchestrator does NOT perform installation work, file edits, API calls, or any other domain operation. The Master Orchestrator coordinates. Sub-agents do the work.**
+
+Allowed: spawn sub-agents, spawn standing observers (Memory Wiki + Devil's Advocate), read sub-agent reports, score the final composite, restart the gateway without asking permission (orchestrator-only authority per N7), self-rate its PRD / mission spec, compose the final summary.
+
+Forbidden: reading skill `.md` files for the purpose of installing them, running `install.sh` steps directly, writing configuration files, QC'ing its own work (see N5), skipping steps "to save time" (see N4).
+
+If the orchestrator catches itself doing work, that's an N2 violation. The work is discarded and a sub-agent is spawned to redo it cleanly.
+
+**Standing-observer exception:** Memory Wiki + Devil's Advocate sub-agents are spawned by the orchestrator at session start and do NOT count against the wave concurrency cap (Mac=10 / VPS=5) — they observe rather than perform.
+
+---
+
+## 🔴 N5 — NO SELF-QC
+
+The sub-agent that performed work on skill N CANNOT be the QC agent for skill N.
+
+The orchestrator dispatches QC to a DIFFERENT sub-agent than the installer. Hard structural rule. Self-QC is the failure mode that produced the v1.0 grade-F audit — installers tick all boxes when they grade themselves.
+
+QC runs `scripts/qc-agent.sh <skill>`, which cross-checks `.onboarding-status` against the actual `qc-*.sh` exit code (refuses to trust the installer's status file).
+
+---
+
+## 🔴 N8 — MASTER ORCHESTRATOR PROVIDES FULL CONTENT TO SUB-AGENTS
+
+When dispatching a sub-agent for skill N, the orchestrator MUST pass the actual CONTENT of the relevant `INSTALL.md`, `SKILL.md`, `QC.md`, and scripts. Sub-agents do NOT work blind.
+
+Failure mode this prevents: the sub-agent skips a step because it lacked context. Owner directive verbatim: *"normally when it's not installed correctly is because the master orchestrator didn't give the sub-agent enough context."*
+
+Dispatch protocol:
+1. Orchestrator reads the skill's file inventory (`ls skills/NN-<slug>/`)
+2. Captures the actual TEXT of `SKILL.md`, `INSTALL.md`, `QC.md`, every `.py`/`.sh` under `scripts/`
+3. Hands that text to the sub-agent as the brief — not file paths, the content
+4. Sub-agent confirms by re-stating the file inventory before any non-read action
+5. Sub-agent executes step-by-step, declared order, no re-ordering
+
+Wave concurrency cap (Mac=10 / VPS=5) is enforced BEFORE dispatch via `scripts/check-wave-concurrency.sh` — see INSTALL-CONTRACT.md Rule 0.
+
+---
+
+## Gemini Engine INDEXING PROTOCOL
+
+**Gemini Engine (semantic search) must be indexed at specific milestones, not after every skill.**
 
 ### Indexing Milestones
 
 | Milestone | When to Run | What Gets Indexed |
 |-----------|-------------|-------------------|
-| **Initial** | After Gemini install (step 3) | Base index of workspace |
+| **Initial** | After Gemini Engine install (step 3) | Base index of workspace |
 | **Personas** | After Skill 22 (Book-to-Persona) complete | 32+ persona blueprints now searchable |
 | **AI Workforce** | After Skill 23 (AI Workforce Blueprint) complete | Workforce definitions indexed |
 | **Final** | After ALL 31 skills complete | Complete system index |
@@ -21,24 +62,24 @@
 ### Standard Indexing Commands
 
 ```bash
-gemini update          # Update file index
-gemini embed           # Generate embeddings
-gemini status          # Verify completion
+python3 ~/clawd/scripts/gemini-indexer.py          # Update file index
+# Handled by gemini-indexer.py           # Generate embeddings
+python3 ~/clawd/scripts/gemini-indexer.py --status   # Verify completion
 ```
 
 ### Verification Steps
 
-1. **Announce:** "Running Gemini indexing for [milestone] milestone..."
-2. **Update:** `gemini update` - scans all collections
-3. **Embed:** `gemini embed` - generates vectors
-4. **Status:** `gemini status` - confirm completion
-5. **Report:** "Gemini indexing complete: X files, Y collections"
+1. **Announce:** "Running Gemini Engine indexing for [milestone] milestone..."
+2. **Update:** `python3 ~/clawd/scripts/gemini-indexer.py` - scans all collections
+3. **Embed:** `# Handled by gemini-indexer.py` - generates vectors
+4. **Status:** `python3 ~/clawd/scripts/gemini-indexer.py --status` - confirm completion
+5. **Report:** "Gemini Engine indexing complete: X files, Y collections"
 
 ### Critical Rules
 
 - **Do NOT** skip indexing at milestones (breaks search)
-- **Do NOT** assume "it's probably fine" - verify with `gemini status`
-- **Do NOT** run `gemini embed` without `gemini update` first
+- **Do NOT** assume "it's probably fine" - verify with `python3 ~/clawd/scripts/gemini-indexer.py --status`
+- **Do NOT** run `# Handled by gemini-indexer.py` without `python3 ~/clawd/scripts/gemini-indexer.py` first
 - **Do NOT** index after every single skill (wastes time)
 
 ### Collections
@@ -50,7 +91,7 @@ gemini status          # Verify completion
 ### See Also
 
 - [After AI Workforce Setup Complete](#after-ai-workforce-setup-complete) - Post-Skill 23 workflow
-- [When to Run Gemini Indexing](#when-to-run-gemini-indexing) - Event-triggered indexing rules
+- [When to Run Gemini Engine Indexing](#when-to-run-google-embedding-indexing) - Event-triggered indexing rules
 
 ---
 
@@ -60,20 +101,20 @@ When user finishes answering Skill 23 (AI Workforce Blueprint) questions:
 
 1. Build workforce structure
 2. Wire personas to departments and roles
-3. **RUN:** `gemini update && gemini embed`
+3. **RUN:** `python3 ~/clawd/scripts/gemini-indexer.py`
 4. Confirm indexing complete
 
 ---
 
-## When to Run Gemini Indexing
+## When to Run Gemini Engine Indexing
 
-After these events, **ALWAYS** run: `gemini update && gemini embed`
+After these events, **ALWAYS** run: `python3 ~/clawd/scripts/gemini-indexer.py`
 
 - AI Workforce Blueprint setup complete (after questions answered)
 - New book/persona added to coaching-personas collection
 - New departments or roles created
 - Bulk file additions to master-files folder
-- User says "my search isn't working" or "Gemini can't find"
+- User says "my search isn't working" or "Gemini Engine can't find"
 - Major restructuring of workforce or personas
 
 ---
@@ -187,9 +228,9 @@ Don't wait for permission to improve. If you learned something, write it down no
 
 > Add lessons here as you learn them
 
-### Gemini Indexing
+### Gemini Engine Indexing
 - Index at milestones, not after every skill
-- Always verify with `gemini status`
+- Always verify with `python3 ~/clawd/scripts/gemini-indexer.py --status`
 - Personas and AI Workforce need immediate indexing (searchable content)
 
 ### External Actions
@@ -200,19 +241,3 @@ Don't wait for permission to improve. If you learned something, write it down no
 ---
 
 *Document version: 2026-03-13*
-
----
-
-## 🔴 VPS API KEY PERSISTENCE -- HOW TO SAVE KEYS (Added April 2026)
-
-On VPS, there is no .env file. When a client gives you an API key via Telegram:
-
-1. Add it to openclaw.json under env.vars:
-   ```bash
-   python3 -c "import json; cfg=json.load(open('/data/.openclaw/openclaw.json')); cfg['env']['vars']['KEY_NAME']='value'; open('/data/.openclaw/openclaw.json','w').write(json.dumps(cfg,indent=2))"
-   ```
-2. Restart the gateway so the new key loads: tell Trevor to type /restart in Telegram
-3. Confirm the key is now available: `printenv KEY_NAME`
-
-**DO NOT** save keys to .env files -- they do not persist on VPS Docker restarts.
-The **ONLY** persistent location is `/data/.openclaw/openclaw.json` under `env.vars`.

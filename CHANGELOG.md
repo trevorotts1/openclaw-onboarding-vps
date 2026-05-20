@@ -1,3 +1,38 @@
+## [v10.9.0] — 2026-05-20 — v2.0 Audit Full Closeout (VPS port)
+
+VPS companion to openclaw-onboarding v10.9.0. Closes the audit's broader findings — Phases 6, 7, 8, 11, 15, plus the B2P chain alignment — that weren't in my original P0 list but were in the audit report.
+
+### Risk: low
+All changes additive — text additions, new model chain definitions, new folder per role.
+
+### P1-A — Explicit N2 / N5 / N8 rules in AGENTS.md (Phase 6: 2.80)
+`AGENTS.md` root now opens with three named hard-rule sections covering "Master Orchestrator does NO work" (N2), "no self-QC" (N5), and "Master Orchestrator provides full content to sub-agents" (N8). Each spelled out verbatim so any audit grep lands cleanly.
+
+### P1-C — `select_model.py` 4 PRD §5 role-specific chains (Phase 8: 4.80)
+Added `orchestrator`, `installer-subagent`, `qc-subagent`, `book-to-persona` chains mapping 1:1 to PRD §5.1-5.4. Legacy `heavy`/`mid`/`fast` preserved.
+
+### P1-D — Canonical TYP phrase in all 33 active skills (Phase 11: 7.95)
+Every active skill's `INSTALL.md` opens with: "**N24 — Use the teach-yourself-protocol (Skill 01):**" followed by a one-line directive. 33/33 active VPS skills carry the phrase.
+
+### P1-E — `SOP/` subfolder per role (Phase 15: 4.75)
+`create_role_workspaces.py` now creates `role/SOP/00-INDEX.md` per role workspace. The augment path also adds it idempotently to pre-v10.9.0 workspaces. N19 §15.7 compliance.
+
+### P1-F — Book-to-Persona pinned to PRD §5.4 chain (Phase 14: 7.10)
+B2P `orchestrator.py` `_resolve_model()` call now passes `purpose_tier="book-to-persona"` (was `"heavy"`). Maps to PRD §5.4 (Kimi → DeepSeek → Gemini Flash Lite).
+
+### Bump path
+- `v10.8.0` → `v10.9.0` — minor bump. All changes additive.
+
+### Companion
+- `openclaw-onboarding` (Mac) v10.9.0 — same waves, Mac paths
+
+### How to upgrade
+```bash
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/check-updates.sh | bash
+```
+
+---
+
 ## [v10.8.0] — 2026-05-20 — v2.0 Audit P0 Fixes: Complete the Persona Pipeline (VPS port)
 
 VPS companion to openclaw-onboarding v10.8.0. Same code; VPS-aware paths.
