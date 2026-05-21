@@ -1,3 +1,46 @@
+## [v10.14.7] — 2026-05-21 — Telegram kickoff message rewrite + Bot API direct send + agent self-restart (P0)
+
+**Discovered live during Maria + Angela T onboardings.** The Telegram welcome message in v10.14.4-v10.14.6 told the owner to "look in your terminal for the long block of text and copy it" — but the owner doesn't have terminal access. Only the operator (Trevor) running the install has the terminal. Owners were getting messages directing them to a screen they couldn't see. Trevor was on a screen-share with Angela T watching her stare at a useless instruction.
+
+Plus a related architectural issue: `openclaw message send` (the CLI command the install used to deliver the welcome) kept silently failing across every client because it requires operator.admin scope, which install can only auto-repair to operator.write. The Telegram welcome never actually delivered on any client install.
+
+Plus a UX issue Trevor surfaced: agents were sometimes asking owners to type `/restart` in Telegram to pick up config changes. Owners over 60 found this confusing.
+
+### Risk: low-medium
+The Telegram-send rewrite changes the primary delivery mechanism. New path is Telegram Bot API direct (curl + bot token + chat id), which bypasses the openclaw gateway's scope enforcement. Fallback to the openclaw CLI is kept in case the Bot API call fails (e.g., bot token env var missing). Agent self-restart change is a policy update in INSTALL-CONTRACT.md Rule 5 — agents now handle their own restart lifecycle without owner interaction.
+
+### Code changes
+
+1. **`install.sh` `fire_install_kickoff_triplet` Telegram message — complete rewrite.**
+   - Previous message: "Hi {Name}! ... Open the terminal window where the installer just finished running ... Look for the long block of text ... Copy that whole block ... Paste it here ..." → tells owner to look at a terminal they don't have.
+   - **New message: ONE consolidated Telegram message that CONTAINS the paste block directly between visually unmistakable scissor-line delimiters.** Owner copies from Telegram and pastes back to the same Telegram chat. Zero terminal references. Total length 2900-3000 chars, well within Telegram's 4096 limit.
+   - Heredoc now uses quoted marker (`'TGMSG_EOF'`) for literal content + bash parameter expansion (`${var//PLACEHOLDER/value}`) for substitution. Sidesteps a heredoc-inside-$(...) bash quirk that broke v10.14.7 syntax during development.
+
+2. **Send mechanism — Telegram Bot API direct (primary), `openclaw message send` (fallback).**
+   - PRIMARY: `curl -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage --data-urlencode chat_id=… --data-urlencode text=…`. Uses the bot token env var (always set on Hostinger image) + chat ID from `$TELEGRAM_TARGET_CACHED`. Bypasses gateway scope enforcement entirely.
+   - FALLBACK: existing `openclaw message send -t telegram:<id> -m <msg>` path, only fires if Bot API somehow fails.
+   - Soft error messaging makes the failure mode clear in install logs if both paths fail.
+
+3. **`INSTALL-CONTRACT.md` Rule 5 — agent self-restart enabled.**
+   - Previous text: "Sub-agents NEVER trigger a gateway restart. Only the master orchestrator can."
+   - New text: Master orchestrator AND sub-agents may restart the gateway when their work demands it. Sub-agents must report intent to master first; master may quiesce other sub-agents. **Owners are NEVER asked to type /restart** — agents handle restarts in-process and send a short plain-English Telegram update after.
+   - Rationale included in the rule text: agents have full context for when restart is needed; owners don't; offloading lifecycle to the human is wrong actor.
+
+4. **HARD RULES section in the paste block (the message owners send to their agent)** also updated to include the new Rule 5: "Gateway restarts: agents may restart themselves when needed (v10.14.7 lifted the no-self-restart restriction). Do NOT ask the owner to type /restart."
+
+### In-flight clients — manually delivered the new message
+
+Maria (msg 806 + apology+QuickBooks heads-up 807) and Angela T (msg 45) both received the new consolidated message during v10.14.7 development. Old confusing messages deleted from their chats via Telegram's deleteMessage API. They have a clean chat with a single clear "copy and paste this" message containing the actual paste block.
+
+### Files touched
+`install.sh` (fire_install_kickoff_triplet Telegram message rewrite + Bot API send + CLI fallback), `INSTALL-CONTRACT.md` (Rule 5 rewrite), `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+NOT touched: README, ONBOARDING-TRIGGERS, INSTALL-GOTCHAS, scripts/fix-dual-cli.sh, dashboard, force-update.sh, check-updates.sh, Mac repo.
+
+Mac repo (`openclaw-onboarding`) has the same Telegram-message issue (sends "look in terminal" wording) and same Rule 5 in its INSTALL-CONTRACT. Mac companion update (v10.13.2) shipping separately if Trevor wants Mac parity.
+
+---
+
 ## [v10.14.6] — 2026-05-21 — Hostinger CLI dual-install auto-cleanup (P0, affects every Hostinger client)
 
 **Discovered live** during Evelyn's gateway restart. Her bot surfaced the error to her in Telegram:

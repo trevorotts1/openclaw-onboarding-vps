@@ -107,22 +107,31 @@ If a flag is required to make something work, STOP and ask the owner. The flag m
 
 ---
 
-## 🔴 Rule 5 — Sub-agents NEVER trigger a gateway restart
+## 🔴 Rule 5 — Agents may restart the gateway themselves; DO NOT ask the owner to type /restart (v10.14.7)
 
-Only the master orchestrator can call `openclaw gateway restart`. Sub-agents that are installing skills, running QC, or doing repair work must NEVER call it directly.
+**Updated in v10.14.7.** Previously this rule said sub-agents could NEVER trigger a gateway restart, only the master orchestrator could. That created a UX hole — when the agent hit a state that needed a restart (e.g., config hot-reload pickup, scope upgrade application), it asked the owner to type `/restart` in Telegram. Owners over 60 (our typical client demographic) found this confusing, especially when they hadn't asked for or expected to be involved in a restart.
 
-The master orchestrator, before calling `openclaw gateway restart`, must:
-1. Run `openclaw subagents list` and confirm the list is EMPTY (no active sub-agents)
-2. If any sub-agents are active, WAIT for them to complete or cancel them first
-3. Only then proceed with the restart
+**New protocol — agents handle their own restarts:**
 
-Restarting the gateway while sub-agents are working will kill their sessions and break the install. This is a hard rule with no exceptions.
+1. **Master orchestrator MAY restart the gateway** at any time it judges necessary (config change, scope grant, recovery from a hung state, etc.). It must:
+   - Quiesce running sub-agents first: `openclaw subagents list` should show no critical work in flight
+   - Run `openclaw gateway restart` itself, in-process
+   - Wait for the gateway to come back online (~30 seconds)
+   - Resume orchestration
+   - Send a SHORT plain-English Telegram update to the owner: "Quick restart of the system to pick up a change — back in 30 seconds."
 
-If a sub-agent encounters a state that requires a gateway restart, it should:
-1. Report the need to the master orchestrator
-2. Pause its own work
-3. Wait for the master to coordinate the restart with all other sub-agents
-4. Resume after the restart completes
+2. **Sub-agents MAY also restart the gateway** when their work demands it (e.g., a skill's INSTALL.md says "after editing this config, restart") — BUT they must:
+   - Report intent to the master orchestrator FIRST (so the master knows other parallel sub-agents may be killed)
+   - Master decides whether to coordinate (pause other sub-agents) or let the sub-agent proceed
+   - Sub-agent never restarts unilaterally if other sub-agents are mid-flight
+
+3. **Owners are NEVER asked to type /restart.** If you (the agent) need a restart, do it yourself and tell the owner what happened in plain English after. The owner should not be involved in routine system administration.
+
+4. **Hard exception — owner-initiated restart:** if the OWNER themselves types /restart in chat (because something feels stuck), accept it gracefully and use it as the trigger. But don't proactively ask for it.
+
+**Rationale:** Agents have full control over their own runtime — they're the ones who know when a restart is needed and when other sub-agents are safe to interrupt. Owners don't have that context. Asking owners to restart is offloading agent-internal lifecycle to the wrong actor.
+
+Restarting the gateway while sub-agents are doing critical work will still kill their sessions, so coordination still matters — but the AGENTS coordinate among themselves, not by asking the human.
 
 ---
 
