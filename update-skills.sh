@@ -17,7 +17,19 @@ if [ -z "${OPENCLAW_NO_CONTAINER_REEXEC:-}" ] \
 
     _oc_container="${OPENCLAW_CONTAINER_NAME:-}"
     if [ -z "$_oc_container" ]; then
-        _oc_container=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'openclaw' | head -1)
+        _oc_matches=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'openclaw' || true)
+        _oc_match_count=$(printf '%s\n' "$_oc_matches" | grep -c '.' || true)
+        if [ "${_oc_match_count:-0}" -gt 1 ]; then
+            echo "" >&2
+            echo "ERROR: Multiple running OpenClaw containers detected on this host:" >&2
+            printf '%s\n' "$_oc_matches" | sed 's/^/  - /' >&2
+            echo "" >&2
+            echo "Re-run with the container name explicit:" >&2
+            echo "  OPENCLAW_CONTAINER_NAME=<name> \\" >&2
+            echo "    curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/update-skills.sh | bash" >&2
+            exit 1
+        fi
+        _oc_container=$(printf '%s\n' "$_oc_matches" | head -1)
     fi
 
     if [ -n "$_oc_container" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qF "$_oc_container"; then
@@ -34,6 +46,7 @@ if [ -z "${OPENCLAW_NO_CONTAINER_REEXEC:-}" ] \
         echo "  Container: $_oc_container"
         echo "  User:      $_oc_user"
         echo "  Script:    update-skills.sh"
+        echo "  Overrides: OPENCLAW_NO_CONTAINER_REEXEC=1, OPENCLAW_CONTAINER_NAME=<name>"
         echo "════════════════════════════════════════════════════════════"
         echo ""
 

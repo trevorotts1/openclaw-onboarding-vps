@@ -1,3 +1,33 @@
+## [v10.14.1] — 2026-05-21 — Bulletproof hardening before 10-client rollout
+
+Three small fixes to v10.14.0 before running the install on 10 client VPSes in one day. No behavior change for the standard happy path — these only fire in edge cases that would otherwise silently produce wrong results or confusing mid-install failures.
+
+### Risk: very low
+Each fix is fail-fast with a clear error message. Behavior on the standard single-container Hostinger one-click is identical to v10.14.0.
+
+### Code changes
+
+- **`install.sh` + `update-skills.sh`** — multi-container false-positive guard. The v10.14.0 auto-detect used `grep openclaw | head -1`, which silently picked the first match. On a host with multiple containers whose names contain "openclaw" (test/staging boxes, multi-tenant setups), this could install into the wrong one with no warning. v10.14.1 now counts matches and HARD FAILS with the full list + exact override command if more than one is found.
+- **`install.sh`** — disk space pre-flight. After auto-detect confirms we're in the right place, refuse to start if `/data` has less than 5 GB free. Better to fail fast with a clear message than fail halfway through Calibre's Linuxbrew install with cryptic errors.
+- **`install.sh` + `update-skills.sh`** — banner improvement. The auto-detect banner now lists ALL THREE override env vars (`OPENCLAW_NO_CONTAINER_REEXEC`, `OPENCLAW_CONTAINER_NAME`, `OPENCLAW_CONTAINER_USER`) so users can see at a glance how to redirect if the auto-pick is wrong.
+
+### When each fires
+
+| Trigger | Behavior |
+|---|---|
+| 0 openclaw containers running | Auto-detect doesn't fire (standard bare-metal VPS path, unchanged) |
+| 1 openclaw container running | Auto-detect re-execs inside it (the 99% case, unchanged from v10.14.0) |
+| 2+ openclaw containers running, no `OPENCLAW_CONTAINER_NAME` | **NEW:** Refuse + print all matches + exact re-run command |
+| 2+ openclaw containers running, `OPENCLAW_CONTAINER_NAME=foo` set | Use the explicit name (unchanged) |
+| `/data` has < 5 GB free | **NEW:** Refuse with disk-cleanup or upgrade-plan instructions |
+
+### Files touched
+`install.sh`, `update-skills.sh`, `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+NOT touched: Mac repo, dashboard, `force-update.sh`, `check-updates.sh`, README, ONBOARDING-TRIGGERS — v10.14.0 docs still describe behavior correctly; v10.14.1 only tightens edge cases.
+
+---
+
 ## [v10.14.0] — 2026-05-21 — Hostinger Docker host auto-detect (P0 client-blocker)
 
 **The fix every client install was blocked on.** v10.13.0 and earlier had a critical mismatch between the documented install path (`ssh root@vps; curl ... | bash`) and the actual deployment model 99% of clients use (Hostinger's hPanel → Docker Manager → OpenClaw one-click). On those deployments OpenClaw runs entirely INSIDE a Docker container; `/data` lives inside the container, not on the bare host. Running the documented command would `mkdir -p /data/.openclaw` on the host root filesystem, install everything there, and the running OpenClaw container could not see ANY of it. The install reported success and accomplished nothing. Discovered while staging Evelyn Bethune's client install (VPS 1651955 / 2.24.85.21).

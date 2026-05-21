@@ -58,7 +58,23 @@ if [ -z "${OPENCLAW_NO_CONTAINER_REEXEC:-}" ] \
 
     _oc_container="${OPENCLAW_CONTAINER_NAME:-}"
     if [ -z "$_oc_container" ]; then
-        _oc_container=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'openclaw' | head -1)
+        # v10.14.1: detect multi-container false positives.
+        # If more than one running container matches "openclaw", refuse to
+        # guess and require OPENCLAW_CONTAINER_NAME=<name> to disambiguate.
+        _oc_matches=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'openclaw' || true)
+        _oc_match_count=$(printf '%s\n' "$_oc_matches" | grep -c '.' || true)
+        if [ "${_oc_match_count:-0}" -gt 1 ]; then
+            echo "" >&2
+            echo "ERROR: Multiple running OpenClaw containers detected on this host:" >&2
+            printf '%s\n' "$_oc_matches" | sed 's/^/  - /' >&2
+            echo "" >&2
+            echo "Cannot auto-pick — would silently install into the wrong one." >&2
+            echo "Re-run with the container name explicit:" >&2
+            echo "  OPENCLAW_CONTAINER_NAME=<name-from-list-above> \\" >&2
+            echo "    curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash" >&2
+            exit 1
+        fi
+        _oc_container=$(printf '%s\n' "$_oc_matches" | head -1)
     fi
 
     if [ -n "$_oc_container" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qF "$_oc_container"; then
@@ -78,7 +94,9 @@ if [ -z "${OPENCLAW_NO_CONTAINER_REEXEC:-}" ] \
         echo "             Installing on host would silently land in the wrong"
         echo "             place (host /data/.openclaw is invisible to the"
         echo "             OpenClaw runtime, which only sees its bind mount)."
-        echo "  Override:  Set OPENCLAW_NO_CONTAINER_REEXEC=1 to skip this."
+        echo "  Overrides: OPENCLAW_NO_CONTAINER_REEXEC=1   — skip auto-detect entirely"
+        echo "             OPENCLAW_CONTAINER_NAME=<name>   — target a different container"
+        echo "             OPENCLAW_CONTAINER_USER=<user>   — exec as a different user"
         echo "════════════════════════════════════════════════════════════"
         echo ""
 
@@ -88,6 +106,30 @@ if [ -z "${OPENCLAW_NO_CONTAINER_REEXEC:-}" ] \
         # (credential discovery, etc.) still work through the SSH session.
         exec docker exec -i -u "$_oc_user" "$_oc_container" bash -c \
             "curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash"
+    fi
+fi
+
+# v10.14.1: Pre-flight disk space check. Runs once we're confirmed to be
+# in the right place (either inside the container or on a bare-metal VPS
+# with /data already provisioned). Install needs ~2-3 GB minimum:
+#   - 36 skill folders + onboarding metadata (~200 MB)
+#   - Calibre via Linuxbrew (~500 MB-1 GB depending on deps cache state)
+#   - google-genai + numpy + pdfplumber + other Python pkgs (~500 MB)
+#   - Workspace + master-files copies (~200 MB)
+#   - Headroom for log rotation, backups, build artifacts
+# Refuse to start the install if less than 5 GB free — better to fail
+# fast with a clear message than fail mid-Calibre with confusing errors.
+if [ -d /data ]; then
+    _free_kb=$(df -k /data 2>/dev/null | awk 'NR==2 {print $4}')
+    if [ -n "${_free_kb:-}" ] && [ "$_free_kb" -lt 5242880 ]; then
+        _free_mb=$((_free_kb / 1024))
+        echo "ERROR: /data has only ${_free_mb} MB free." >&2
+        echo "       This installer requires at least 5 GB free for skills + Calibre +" >&2
+        echo "       Python packages. Free up space (clean up logs/backups in" >&2
+        echo "       /data/.openclaw/backups/) or upgrade the VPS plan, then retry." >&2
+        echo "" >&2
+        echo "       Check: df -h /data" >&2
+        exit 1
     fi
 fi
 
@@ -110,7 +152,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.0"
+ONBOARDING_VERSION="v10.14.1"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
