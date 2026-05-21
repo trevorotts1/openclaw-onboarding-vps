@@ -1,3 +1,48 @@
+## [v10.14.3] — 2026-05-21 — Hostinger Docker edge-case bulletproofing + INSTALL-GOTCHAS.md
+
+The remaining edge cases discovered during Evelyn Bethune's live install (VPS 1651955), beyond the v10.14.2 unzip fix. Every issue below was a real soft-failure or misleading warning seen during her install. This release fixes them in code AND documents them centrally so the next 9 client rollouts won't surprise anyone.
+
+### Risk: very low
+Every change is either a fallback (engages only when the historical primary path fails) or a clarity improvement (better wording, paste-ready blocks). No existing happy-path behavior changes. Mac repo, dashboard, force-update.sh, check-updates.sh untouched.
+
+### Code fixes in `install.sh`
+
+- **Calibre install**: switched from `wget` to `curl` (wget is missing from Hostinger's image; curl is always present). Symlink target moved from `/usr/local/bin/ebook-convert` (requires sudo, fails as `node` user) to `/data/.npm-global/bin/ebook-convert` (already on the node user's PATH). Also skips Linuxbrew on Linux entirely — the calibre formula explicitly refuses Linux with `Error: macOS is required for this software`.
+- **Telegram kickoff message**: fixed `openclaw message send` invocation. Previous code passed only `--message` which always failed with `Missing required option "-t, --target <dest>"`. Now passes `-t telegram:$TELEGRAM_TARGET_CACHED` (the chat ID resolved earlier in Step 0). The kickoff Telegram message now actually delivers when scopes allow.
+- **Gateway restart**: made idempotent. Previous code always called `openclaw gateway restart` at the end of install, which hit `lsof: ENOENT` (lsof missing) and produced misleading `Gateway service disabled` output (because systemd isn't available inside containers). Now checks `openclaw gateway status` first and only restarts if unhealthy. The Hostinger entrypoint hot-reloads `AGENTS.md` on file change, so restart is almost never needed.
+- **Pre-flight prereq check**: hard-fails fast if `curl` or `python3` missing (both are Hostinger image baseline — heavy modification would be required to lose them). Soft-warns for `unzip`/`wget`/`lsof` and prints a single advisory pointing at INSTALL-GOTCHAS.md.
+- **Terminal completion block — completely rewritten**: previously verbose and technical (mentioned "Triple-Fire Trigger", "N22 enforcement" — internal terminology). Now leads with `✓ OpenClaw v10.14.3 install complete`, followed by **one** explicit action ("Open your Telegram bot and PASTE THE FOLLOWING ENTIRE BLOCK"), followed by the paste-ready agent instructions block with explicit `BEGIN PASTE BLOCK` / `END PASTE BLOCK` delimiters. Then a timeline ("Minutes 0-5: ... Minutes 40-75: 30-question workforce interview") so the owner knows what to expect. Then a known-gotchas section pointing at INSTALL-GOTCHAS.md.
+
+### New file
+
+- **`INSTALL-GOTCHAS.md`** (root of VPS repo) — single source of truth for every Hostinger `hvps-openclaw:latest` image limitation. Covers 10 issues with symptoms, causes, workarounds, and which install.sh version started handling each one automatically. Linked from README's "Deployment Models" section and from INSTALL-CONTRACT.md Rule 16. Updated whenever a new gotcha is discovered.
+
+### Modified files
+
+- **`INSTALL-CONTRACT.md`** — new Rule 16: "Read INSTALL-GOTCHAS.md before install on Hostinger Docker VPS." Slotted before Rule 15 (kept Rules 0-15 numbered as-is to preserve existing references).
+- **`README.md`** — added "Known edge cases — read first" subsection in the Deployment Models block, pointing at INSTALL-GOTCHAS.md.
+
+### What this does NOT fix (out of scope / architectural)
+
+- **`operator.admin` scope-upgrade approval flow**: still requires owner consent via Telegram message reply. Not a script-fixable issue — by design, OpenClaw refuses to auto-grant admin scope. Documented in INSTALL-GOTCHAS.md #8.
+- **Hostinger image gaps themselves**: not in our control. Workarounds in install.sh + documentation in INSTALL-GOTCHAS.md is the right answer until/unless Hostinger updates the base image.
+
+### Rollout impact
+
+The remaining 9 client installs queued for 2026-05-21 (Evelyn was the first) now hit a clean path:
+- No unzip failure (v10.14.2)
+- No wget/curl mismatch (v10.14.3)
+- No lsof-missing crash (v10.14.3)
+- No Calibre install dead-end on Linux (v10.14.3)
+- No misleading "systemd disabled" output blocking install (v10.14.3 — gateway restart now conditional)
+- No half-failed `openclaw message send` calls (v10.14.3 — target flag now correct)
+- Clear paste-ready terminal block at the end (v10.14.3) — owners know exactly what to send to their bot
+
+### Files touched
+`install.sh`, `INSTALL-GOTCHAS.md` (new), `INSTALL-CONTRACT.md`, `README.md`, `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+---
+
 ## [v10.14.2] — 2026-05-21 — unzip → python3 zipfile fallback (P0 client-blocker, discovered live on Evelyn)
 
 Discovered during the live install on Evelyn Bethune (VPS 1651955) at Step 4. The Hostinger `hvps-openclaw:latest` image **does not ship with `unzip`**. install.sh Step 4 called `unzip -qo ...` and died with `unzip: command not found`, leaving the container with a downloaded `/tmp/openclaw-onboarding-pkg.zip` but no extracted skills.

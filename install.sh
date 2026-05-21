@@ -150,9 +150,37 @@ if [ ! -d /data ] && command -v docker >/dev/null 2>&1 \
     exit 1
 fi
 
+# v10.14.3: Pre-flight prereq check. Hard-fail if curl or python3 missing
+# (these are mandatory — every fallback path in this installer relies on
+# one or both). Soft-warn for unzip/wget/lsof which have built-in fallbacks
+# documented in INSTALL-GOTCHAS.md. Runs after auto-detect re-exec so we
+# check INSIDE the container (where the install actually happens), not on
+# the bare-metal host.
+for _required in curl python3; do
+    command -v "$_required" >/dev/null 2>&1 || {
+        echo "ERROR: $_required is required but not installed." >&2
+        echo "       This installer cannot proceed without it." >&2
+        echo "       Hostinger Docker containers ship with curl + python3 by default;" >&2
+        echo "       if you see this error, the container has been heavily modified." >&2
+        exit 1
+    }
+done
+
+# Soft prereqs — present a single advisory line listing any missing
+# helpers; install.sh has fallbacks for each. See INSTALL-GOTCHAS.md.
+_missing_soft=""
+for _soft in unzip wget lsof; do
+    if ! command -v "$_soft" >/dev/null 2>&1; then
+        _missing_soft="${_missing_soft}${_soft} "
+    fi
+done
+if [ -n "$_missing_soft" ]; then
+    echo "[install] Soft prereqs missing: ${_missing_soft}— using fallbacks (see INSTALL-GOTCHAS.md)" >&2
+fi
+
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.2"
+ONBOARDING_VERSION="v10.14.3"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1635,32 +1663,40 @@ if command -v ebook-convert >/dev/null 2>&1; then
 else
     note "Installing Calibre (ebook-convert) for Skill 22 ebook extraction..."
 
-    # Try Linuxbrew first (Hostinger's canonical package manager path)
-    if [ -x /data/linuxbrew/.linuxbrew/bin/brew ]; then
-        note "Trying Linuxbrew install..."
-        if /data/linuxbrew/.linuxbrew/bin/brew install calibre >> "$LOG_FILE" 2>&1; then
-            if command -v ebook-convert >/dev/null 2>&1; then
-                success "Calibre installed via Linuxbrew: $(ebook-convert --version 2>&1 | head -1)"
-            fi
-        else
-            warn "Linuxbrew install failed; trying official Calibre Linux installer..."
-        fi
+    # v10.14.3: Skip Linuxbrew on Linux — the calibre formula refuses Linux
+    # ("macOS is required for this software"). Go directly to the official
+    # installer with curl (wget is missing from Hostinger's image; curl is
+    # always present). Install to a user-writable path so we don't need sudo
+    # or /usr/local/bin. Symlink into /data/.npm-global/bin which is already
+    # on the node user's PATH per the container's PATH env.
+    if [ "$(uname -s)" = "Darwin" ] && [ -x /opt/homebrew/bin/brew ]; then
+        # Mac path (not used in VPS install but kept for cross-platform safety)
+        note "Mac detected — trying Homebrew install..."
+        /opt/homebrew/bin/brew install --cask calibre >> "$LOG_FILE" 2>&1 || true
     fi
 
-    # Fall back to official Calibre Linux installer if still not present
     if ! command -v ebook-convert >/dev/null 2>&1; then
-        if command -v wget >/dev/null 2>&1; then
-            note "Running official Calibre Linux installer (https://download.calibre-ebook.com/linux-installer.sh)..."
+        if command -v curl >/dev/null 2>&1; then
+            note "Running official Calibre Linux installer via curl..."
             mkdir -p /data/.openclaw/calibre
-            wget -nv -O /tmp/calibre-installer.sh https://download.calibre-ebook.com/linux-installer.sh 2>>"$LOG_FILE" && \
-                sh /tmp/calibre-installer.sh install_dir=/data/.openclaw/calibre isolated=y >> "$LOG_FILE" 2>&1 && \
-                ln -sf /data/.openclaw/calibre/calibre/ebook-convert /usr/local/bin/ebook-convert 2>>"$LOG_FILE" || \
-                warn "Official Calibre installer failed. Skill 22 ebook extraction limited to PDF/EPUB."
-            if command -v ebook-convert >/dev/null 2>&1; then
-                success "Calibre installed via official Linux installer: $(ebook-convert --version 2>&1 | head -1)"
+            CAL_LOG="$OC_INSTALL_LOG_DIR/calibre-install-$(date +%Y%m%d-%H%M%S).log"
+            if curl -fsSL https://download.calibre-ebook.com/linux-installer.sh -o /tmp/calibre-installer.sh 2>>"$CAL_LOG"; then
+                sh /tmp/calibre-installer.sh install_dir=/data/.openclaw/calibre isolated=y >> "$CAL_LOG" 2>&1 || true
+                # Symlink to a user-writable PATH location (no sudo needed)
+                CAL_BIN="/data/.openclaw/calibre/calibre/ebook-convert"
+                if [ -x "$CAL_BIN" ]; then
+                    mkdir -p /data/.npm-global/bin
+                    ln -sf "$CAL_BIN" /data/.npm-global/bin/ebook-convert 2>>"$CAL_LOG" || true
+                    success "Calibre installed via official Linux installer: $(/data/.npm-global/bin/ebook-convert --version 2>&1 | head -1)"
+                else
+                    warn "Official Calibre installer ran but $CAL_BIN is missing. Skill 22 ebook extraction limited to PDF/EPUB. See $CAL_LOG."
+                fi
+                rm -f /tmp/calibre-installer.sh
+            else
+                warn "curl could not fetch the Calibre installer. Skill 22 ebook extraction limited to PDF/EPUB."
             fi
         else
-            warn "wget not available — cannot run Calibre Linux installer. Skill 22 ebook extraction limited to PDF/EPUB."
+            warn "Neither curl nor wget available — cannot run Calibre installer. Skill 22 ebook extraction limited to PDF/EPUB."
         fi
     fi
 fi
@@ -2638,14 +2674,28 @@ case "$TELEGRAM_LAST_RESULT" in
 esac
 
 # ----------------------------------------------------------
-# Final: Restart gateway (agent reloads AGENTS.md and sees the UPDATE PENDING flag on next session)
+# Final: Conditional gateway restart (v10.14.3 — idempotent)
 # ----------------------------------------------------------
-note "Restarting OpenClaw gateway..."
+# The previous version always called `openclaw gateway restart` which:
+#   - depends on `lsof` for stale-pid scan (missing on Hostinger's image)
+#   - prints misleading "Gateway service disabled" output because systemd
+#     isn't available inside the container (gateway is supervised via nohup)
+#   - can fail outright on scope-upgrade-pending state
+# Only restart when actually needed: the gateway will pick up AGENTS.md
+# changes on the next session naturally (Hostinger's entrypoint hot-reloads
+# config on file change), so a restart is only required when the install
+# rewrote agent-binding identity, which it doesn't.
 if command -v openclaw >/dev/null 2>&1; then
-    openclaw gateway restart
-    success "Gateway restart triggered. Your agent will reload AGENTS.md on next session."
+    note "Checking gateway health (gateway hot-reloads AGENTS.md; restart only if unhealthy)..."
+    gw_status_out=$(openclaw gateway status 2>&1 | head -20 || true)
+    if echo "$gw_status_out" | grep -qE "Capability: write-capable|Connectivity probe: ok"; then
+        success "Gateway healthy — no restart needed. Your agent will pick up AGENTS.md on next session."
+    else
+        note "Gateway unhealthy — attempting restart (may fail safely if scope upgrade is pending)..."
+        openclaw gateway restart 2>>"$LOG_FILE" || warn "Gateway restart returned non-zero (likely scope-upgrade-pending; not blocking install completion)."
+    fi
 else
-    warn "openclaw command not found - restart manually: openclaw gateway restart"
+    warn "openclaw command not found - restart manually if needed: openclaw gateway restart"
 fi
 
 # ----------------------------------------------------------
@@ -2715,13 +2765,31 @@ fire_install_kickoff_triplet() {
     # 1. Telegram message — UNCONDITIONAL attempt (N22). Even if the openclaw
     #    CLI isn't on PATH yet (first-time install), we still try; the
     #    attempt is what's unconditional, not the success. Reason logged.
+    #
+    # v10.14.3 fix: `openclaw message send` requires `-t/--target` flag.
+    # Previously called without it, which always failed with "Missing
+    # required option" — meaning the Telegram kickoff message NEVER
+    # actually fired on any client install. Now uses $TELEGRAM_TARGET_CACHED
+    # (resolved earlier in install.sh Step 0) with `telegram:<chat_id>`
+    # target format.
     local tg_msg
-    tg_msg="🚀 OpenClaw onboarding files installed (${ONBOARDING_VERSION:-?}). To start the actual onboarding, paste the instructions printed in your terminal to your agent. Or reply to this message with 'start onboarding'."
+    tg_msg="🚀 OpenClaw onboarding ${ONBOARDING_VERSION:-?} installed. Copy the PASTE-READY block from your terminal output (the long instructions starting with 'Start the OpenClaw onboarding process') and send it to this bot. The bot will then walk you through the workforce setup interview (~30 questions, ~35 min) and skill activation."
     if command -v openclaw >/dev/null 2>&1; then
-        if openclaw message send --message "$tg_msg" 2>/dev/null; then
-            tg_fired="true"
+        local tg_target_for_send="${TELEGRAM_TARGET_CACHED:-}"
+        # Ensure the target has the channel prefix (telegram:<id>)
+        case "$tg_target_for_send" in
+            telegram:*) ;;  # already prefixed
+            "") tg_target_for_send="" ;;
+            *) tg_target_for_send="telegram:$tg_target_for_send" ;;
+        esac
+        if [ -n "$tg_target_for_send" ]; then
+            if openclaw message send -t "$tg_target_for_send" -m "$tg_msg" 2>/dev/null; then
+                tg_fired="true"
+            else
+                tg_reason="openclaw message send failed (target=$tg_target_for_send; likely scope-upgrade-pending — owner approval needed)"
+            fi
         else
-            tg_reason="openclaw message send failed (Telegram likely not paired or scopes missing)"
+            tg_reason="no Telegram target resolved (TELEGRAM_TARGET_CACHED empty); skipping send"
         fi
     else
         local tg_helper="$skills_dir/scripts/send-telegram.sh"
@@ -2762,53 +2830,85 @@ fire_install_kickoff_triplet() {
     cat <<TERMEOF
 
 ═══════════════════════════════════════════════════════════════════════
-  OpenClaw Onboarding Kickoff — Triple-Fire Trigger
-  (N22 enforcement — Telegram + agents.md flag + this terminal block)
+  ✓ OpenClaw ${ONBOARDING_VERSION:-?} install complete on $plat
 ═══════════════════════════════════════════════════════════════════════
 
-  Platform:           $plat
-  Version installed:  ${ONBOARDING_VERSION:-?}
   Skills directory:   $skills_dir
-
-  Telegram fired:     $tg_fired  ${tg_reason:+($tg_reason)}
-  AGENTS.md fired:    $flag_fired  ${flag_reason:+($flag_reason)}
-  Terminal block:     true (this block)
+  Telegram delivery:  $tg_fired ${tg_reason:+($tg_reason)}
+  AGENTS.md flag:     $flag_fired ${flag_reason:+($flag_reason)}
 
 ═══════════════════════════════════════════════════════════════════════
-  IF YOU DIDN'T SEE A TELEGRAM AND THE AGENTS.MD FLAG MIGHT HAVE FAILED:
-  Copy the block below and paste it directly to your agent.
+  📋  WHAT TO DO NEXT — ONE STEP
 ═══════════════════════════════════════════════════════════════════════
 
-  --- BEGIN AGENT INSTRUCTIONS ---
+  Open your Telegram bot (the one connected to this OpenClaw account)
+  and PASTE THE FOLLOWING ENTIRE BLOCK as a single message:
 
-  Start the OpenClaw onboarding process. Procedure:
+────────────────────────── BEGIN PASTE BLOCK ──────────────────────────
 
-  1. Read $skills_dir/Start\ Here.md end to end.
-  2. Read $skills_dir/INSTALL-CONTRACT.md end to end. Rule 0 (wave
-     concurrency: Mac=10, VPS=5) and Rule 1 (read every .md before
-     acting) are non-negotiable.
-  3. Run the web research pre-flight:
-        bash $skills_dir/web-research-preflight.sh
-  4. Confirm bootstrap + sub-agent settings per PRD §4:
-        maxChars=200000, maxTotalChars=400000, maxSpawnDepth=4,
-        maxChildren=20, maxConcurrent=100, thinking=high.
-  5. Set up canonical workspace files (USER.md, AGENTS.md, TOOLS.md
-     at workspace root; symlinked into every per-role workspace).
-  6. Install skills in waves; gate each wave with:
-        bash $skills_dir/check-wave-concurrency.sh --proposed <N> --reason "wave-N"
-  7. Per skill: independent sub-agent reads all skill .md + scripts,
-     executes INSTALL.md in order, independent QC ≥ 8.5 (5-loop cap).
-  8. Run skills/qc-system-integrity.sh — must exit 0.
-  9. Run AI Workforce Interview (Skill 23) to build ZHC structure.
-  10. After workforce build, create_role_workspaces.py writes
-      per-dept governing-personas.md.
-  11. Reply with installed skills, QC failures, ZHC location.
+Start the OpenClaw onboarding process. Procedure:
 
-  Hard rules: no shortcuts; no self-QC; all sub-agents non-Anthropic;
-  persona governance on EVERY non-mechanical task; Master Orchestrator
-  does NO work.
+1. Read $skills_dir/Start\ Here.md end to end.
+2. Read $skills_dir/INSTALL-CONTRACT.md end to end. Rule 0 (wave
+   concurrency: VPS=5) and Rule 1 (read every .md before acting) are
+   non-negotiable. Rule 12: read INSTALL-GOTCHAS.md for known edge
+   cases on Hostinger Docker containers.
+3. Run the web research pre-flight:
+      bash $skills_dir/web-research-preflight.sh
+4. Confirm bootstrap + sub-agent settings per PRD §4:
+      maxChars=200000, maxTotalChars=400000, maxSpawnDepth=4,
+      maxChildren=20, maxConcurrent=100, thinking=high.
+5. Set up canonical workspace files (USER.md, AGENTS.md, TOOLS.md
+   at workspace root; symlinked into every per-role workspace).
+6. Install skills in waves; gate each wave with:
+      bash $skills_dir/check-wave-concurrency.sh --proposed <N> --reason "wave-N"
+7. Per skill: independent sub-agent reads all skill .md + scripts,
+   executes INSTALL.md in order, independent QC ≥ 8.5 (5-loop cap).
+8. Run skills/qc-system-integrity.sh — must exit 0.
+9. Run AI Workforce Interview (Skill 23) to build ZHC structure.
+10. After workforce build, create_role_workspaces.py writes
+    per-dept governing-personas.md.
+11. Reply with installed skills, QC failures, ZHC location.
 
-  --- END AGENT INSTRUCTIONS ---
+Hard rules: no shortcuts; no self-QC; all sub-agents non-Anthropic;
+persona governance on EVERY non-mechanical task; Master Orchestrator
+does NO work.
+
+─────────────────────────── END PASTE BLOCK ───────────────────────────
+
+  Your bot will respond within 10-30 seconds and start working.
+
+═══════════════════════════════════════════════════════════════════════
+  ⏱  WHAT TO EXPECT — TIMELINE
+═══════════════════════════════════════════════════════════════════════
+
+  • Minutes  0-5:   Bot reads onboarding docs (Start Here.md, etc.)
+  • Minutes  5-15:  Web research pre-flight + Wave 1 foundation skills
+  • Minutes 15-30:  Wave 2 (18 utility skills, 5 in parallel)
+  • Minutes 30-40:  Skill 22 Book-to-Persona (Calibre soft-fails on
+                    Linux — ebook extraction limited to PDF/EPUB; not
+                    blocking. See $skills_dir/INSTALL-GOTCHAS.md)
+  • Minutes 40-75:  Skill 23 AI Workforce Interview — ~30 questions
+                    about your business (mission, KPIs, departments).
+                    Block 35 min for this. Your answers shape the
+                    entire AI workforce.
+  • Minutes 75-90:  Department generation, persona assignment,
+                    Skill 32 Telegram supergroup setup (7 manual
+                    steps on your phone).
+
+═══════════════════════════════════════════════════════════════════════
+  ⚠  KNOWN GOTCHAS — READ IF SOMETHING SEEMS OFF
+═══════════════════════════════════════════════════════════════════════
+
+  • Sunday update cron — pending owner approval for operator.admin
+    scope. After bot activation, reply 'approve admin scope' if asked.
+  • Calibre missing — Hostinger image doesn't support it on Linux;
+    Skill 22 still works for PDF/EPUB books.
+  • Gateway "Service: systemd user (disabled)" status is MISLEADING
+    inside a container — the gateway IS running, just via nohup not
+    systemd. Don't try to systemctl start it.
+  • Full list: $skills_dir/INSTALL-GOTCHAS.md (or
+    /data/.openclaw/INSTALL-GOTCHAS.md)
 
 ═══════════════════════════════════════════════════════════════════════
 TERMEOF

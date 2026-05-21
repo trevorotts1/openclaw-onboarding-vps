@@ -357,6 +357,20 @@ This single line is the proof that you read the contract and committed to it for
 
 ---
 
+## 🔴 Rule 16 — Read INSTALL-GOTCHAS.md before install (v10.14.3)
+
+The Hostinger `hvps-openclaw:latest` Docker image has a documented set of edge cases — missing utilities (`unzip`, `wget`, `lsof`), package-manager quirks (`apt` rejected, Linuxbrew's `calibre` formula refuses Linux), schema constraints (`channels.telegram` is closed), gateway-status output that's misleading inside a container, and a scope-upgrade flow that requires owner approval.
+
+**Before running install.sh on a fresh Hostinger Docker VPS, read `INSTALL-GOTCHAS.md` end to end.** Every gotcha has a documented workaround already baked into install.sh, but the LOG OUTPUT will mention them — recognize the warnings instead of treating them as install failures.
+
+Bound to:
+- `install.sh` v10.14.3+ (auto-applies all workarounds; emits log lines referencing this file)
+- `INSTALL-GOTCHAS.md` at repo root (the single source of truth for Hostinger image limitations)
+
+Re-read after every install kickoff if the gotchas list has been bumped (check the file's "Last updated" footer).
+
+---
+
 ## 🔴 Rule 15 — What "done" means for a skill
 
 A skill is "done" (and the agent is allowed to declare it done) only when ALL of these are true:

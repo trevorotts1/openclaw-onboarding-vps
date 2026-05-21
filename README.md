@@ -48,6 +48,10 @@ Find the container name with `docker ps | grep openclaw`.
 | `OPENCLAW_CONTAINER_NAME=<name>` | Target a specific container (e.g. custom-renamed) |
 | `OPENCLAW_CONTAINER_USER=<user>` | Override the user to exec as (defaults to container's `Config.User`, then `node`) |
 
+### Known edge cases — read first
+
+The Hostinger `hvps-openclaw:latest` image lacks some Linux utilities most distros ship by default (`unzip`, `wget`, `lsof`). install.sh has fallbacks for all of them, but the warning lines in the install log will mention them. **See [`INSTALL-GOTCHAS.md`](./INSTALL-GOTCHAS.md) for the full list** — including the schema-strict `channels.telegram` block, the gateway "Service: systemd user (disabled)" status that's misleading inside a container, and the `operator.admin` scope-approval flow that needs owner consent.
+
 ### Pre-install safety (recommended for client installs)
 
 Before running the install on a production client VPS, take a snapshot. This is free, fast, and gives you instant rollback:
