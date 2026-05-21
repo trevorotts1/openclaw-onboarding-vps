@@ -1,3 +1,58 @@
+## [v10.14.10] — 2026-05-21 — Shared operator secrets injector (Podbean OAuth app — VPS companion to Mac v10.13.10)
+
+### Why
+Podbean's `client_id` + `client_secret` are operator-level (same OAuth app for every client). Cannot live in the public VPS repo. Operator stores them as env vars in `~/.zshrc` on their LOCAL Mac (where they SSH from); the VPS install.sh's auto-detect re-exec block forwards them into the container via `docker exec -e`, then new Step 1.5 writes them to `/data/.openclaw/secrets/.env` (mode 600) + `openclaw.json` `env.vars`.
+
+### Operator setup (one-time, in ~/.zshrc on operator's Mac)
+```bash
+echo 'export OPENCLAW_PODBEAN_CLIENT_ID="<your-app-client-id>"' >> ~/.zshrc
+echo 'export OPENCLAW_PODBEAN_CLIENT_SECRET="<your-app-client-secret>"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### Per-client VPS install (env vars auto-forwarded into container)
+```bash
+ssh root@<client-vps-ip>
+# Once you're in:
+OPENCLAW_OWNER_NAME="Maria" curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
+```
+
+Wait — does SSH preserve your local env vars? **No, by default it does NOT.** You have two options:
+
+**Option A (paste once per VPS session):**
+```bash
+ssh root@<client-vps-ip>
+export OPENCLAW_PODBEAN_CLIENT_ID="<value>"
+export OPENCLAW_PODBEAN_CLIENT_SECRET="<value>"
+OPENCLAW_OWNER_NAME="Maria" curl -fsSL .../install.sh | bash
+```
+
+**Option B (paste inline on the SSH command):**
+```bash
+ssh root@<client-vps-ip> "OPENCLAW_PODBEAN_CLIENT_ID='<val>' OPENCLAW_PODBEAN_CLIENT_SECRET='<val>' OPENCLAW_OWNER_NAME='Maria' curl -fsSL .../install.sh | bash"
+```
+
+Then inside the container's docker exec re-exec, the new `docker exec -e OPENCLAW_*` block (lines ~149-155) passes them through to the install.sh running as `node` user.
+
+### Implementation
+- **New `OC_SECRETS_ENV` var** at line 277: `/data/.openclaw/secrets/.env`
+- **Auto-detect re-exec block** (line ~149) extended with `-e OPENCLAW_OWNER_NAME -e OPENCLAW_PODBEAN_CLIENT_ID -e OPENCLAW_PODBEAN_CLIENT_SECRET` so env vars from the SSH session reach the container's `node`-user install
+- **New `inject_shared_operator_secrets()` function** — same logic as Mac v10.13.10 (writes to secrets/.env mode 600 + openclaw.json env.vars; warns if only one of the two is set)
+- **New "Step 1.5" call** between Step 1 (CLI verify) and Step 2 (credential discovery) so the values are in place before discovery runs
+- **CRED_LIST relabeled** — Podbean app creds now labeled "(shared)", new `PODBEAN_PODCAST_ID` listed as "(per-client)"
+- **Alias map updated** — `PODBEAN_API_KEY` and `PODBEAN_CLIENT_ID` are aliases of each other (canonical = CLIENT_ID); same for secret
+
+### Smoke test (verified)
+- Set `OPENCLAW_PODBEAN_CLIENT_ID="77c4ffb08971d5b8369df"` + `OPENCLAW_PODBEAN_CLIENT_SECRET="3d7d490e9a6e5ae238d2e"` in env
+- Ran `inject_shared_operator_secrets`
+- `/data/.openclaw/secrets/.env` contains both values, file mode `600` ✅
+
+### Files
+- `install.sh` — `OC_SECRETS_ENV` var, docker exec env forwarding, `inject_shared_operator_secrets()`, Step 1.5 call, Podbean alias/CRED_LIST updates
+- `version` → `v10.14.10`
+
+---
+
 ## [v10.14.9] — 2026-05-21 — Paste-block path corrections + INSTALL-CONTRACT.md Mac strip (P0 bug, Maria's bot surfaced it)
 
 **Two bugs surfaced live by Maria's bot reading the v10.14.8 paste block.**

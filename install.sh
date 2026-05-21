@@ -146,7 +146,15 @@ fi
         # so this same script's auto-detect will fall through and the
         # normal install path runs. Pass -i so any interactive prompts
         # (credential discovery, etc.) still work through the SSH session.
-        exec docker exec -i -u "$_oc_user" "$_oc_container" bash -c \
+        # v10.14.10: forward OPENCLAW_* env vars from host SSH session into
+        # the container so shared operator secrets (Podbean app credentials
+        # etc.) reach inject_shared_operator_secrets after re-exec.
+        # docker exec -e VAR (no value) reads VAR from the calling process's env.
+        exec docker exec -i -u "$_oc_user" \
+            -e OPENCLAW_OWNER_NAME \
+            -e OPENCLAW_PODBEAN_CLIENT_ID \
+            -e OPENCLAW_PODBEAN_CLIENT_SECRET \
+            "$_oc_container" bash -c \
             "curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash"
     fi
 fi
@@ -254,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.9"
+ONBOARDING_VERSION="v10.14.10"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -275,6 +283,7 @@ fi
 # ----------------------------------------------------------
 OC_CONFIG="/data/.openclaw"
 OC_JSON="/data/.openclaw/openclaw.json"
+OC_SECRETS_ENV="/data/.openclaw/secrets/.env"
 OC_WORKSPACE_DEFAULT="/data/.openclaw/workspace"
 OC_CREDENTIALS="/data/.openclaw/credentials"
 OC_AGENTS="/data/.openclaw/agents"
@@ -763,6 +772,69 @@ send_telegram_progress() {
 }
 
 # ----------------------------------------------------------
+# v10.14.10: Shared Operator Secrets Injector (VPS)
+# ----------------------------------------------------------
+# Some credentials (Podbean OAuth app etc.) are operator-level — same for
+# every client — and can't live in the public OpenClaw repo. Operator stores
+# them as OPENCLAW_* env vars in ~/.zshrc on their host machine, which get
+# forwarded into this container via `docker exec -e OPENCLAW_*` in the
+# auto-detect re-exec block at the top of this file.
+inject_shared_operator_secrets() {
+    local injected_count=0
+    local mode_oc_json_ready="no"
+    [ -f "$OC_JSON" ] && mode_oc_json_ready="yes"
+
+    mkdir -p "$(dirname "$OC_SECRETS_ENV")" 2>/dev/null || true
+    if [ ! -f "$OC_SECRETS_ENV" ]; then
+        touch "$OC_SECRETS_ENV"
+        chmod 600 "$OC_SECRETS_ENV" 2>/dev/null || true
+    fi
+
+    _shared_write_env() {
+        local var="$1"; local val="$2"
+        grep -v "^${var}=" "$OC_SECRETS_ENV" > "$OC_SECRETS_ENV.tmp" 2>/dev/null || true
+        mv "$OC_SECRETS_ENV.tmp" "$OC_SECRETS_ENV" 2>/dev/null || true
+        printf '%s=%s\n' "$var" "$val" >> "$OC_SECRETS_ENV"
+        chmod 600 "$OC_SECRETS_ENV" 2>/dev/null || true
+    }
+
+    _shared_write_ocjson() {
+        local var="$1"; local val="$2"
+        [ "$mode_oc_json_ready" != "yes" ] && return 0
+        VAR="$var" VAL="$val" OC_JSON="$OC_JSON" python3 - <<'PYEOF' 2>/dev/null || true
+import json, os
+p = os.environ['OC_JSON']
+v = os.environ['VAR']
+val = os.environ['VAL']
+try:
+    d = json.load(open(p))
+except Exception:
+    d = {}
+d.setdefault('env', {}).setdefault('vars', {})[v] = val
+json.dump(d, open(p, 'w'), indent=2)
+PYEOF
+    }
+
+    # Podbean shared OAuth app credentials
+    if [ -n "${OPENCLAW_PODBEAN_CLIENT_ID:-}" ] && [ -n "${OPENCLAW_PODBEAN_CLIENT_SECRET:-}" ]; then
+        _shared_write_env "PODBEAN_CLIENT_ID" "$OPENCLAW_PODBEAN_CLIENT_ID"
+        _shared_write_env "PODBEAN_CLIENT_SECRET" "$OPENCLAW_PODBEAN_CLIENT_SECRET"
+        _shared_write_ocjson "PODBEAN_CLIENT_ID" "$OPENCLAW_PODBEAN_CLIENT_ID"
+        _shared_write_ocjson "PODBEAN_CLIENT_SECRET" "$OPENCLAW_PODBEAN_CLIENT_SECRET"
+        success "Podbean shared OAuth app credentials injected from operator env (chmod 600)"
+        injected_count=$((injected_count + 2))
+    elif [ -n "${OPENCLAW_PODBEAN_CLIENT_ID:-}" ] || [ -n "${OPENCLAW_PODBEAN_CLIENT_SECRET:-}" ]; then
+        warn "Only one of OPENCLAW_PODBEAN_CLIENT_ID / OPENCLAW_PODBEAN_CLIENT_SECRET set — both required. Skipping Podbean injection."
+    fi
+
+    if [ "$injected_count" -gt 0 ]; then
+        note "Shared operator secrets: $injected_count value(s) written to $OC_SECRETS_ENV"
+    else
+        note "Shared operator secrets: none in env. Set OPENCLAW_PODBEAN_CLIENT_ID + _CLIENT_SECRET in ~/.zshrc on the host (before SSH/install) to inject."
+    fi
+}
+
+# ----------------------------------------------------------
 # Config Backup Protocol
 # ----------------------------------------------------------
 backup_config_file() {
@@ -826,10 +898,12 @@ get_alias_list() {
             echo "FISH_AUDIO_API_KEY FISHAUDIO_API_KEY FISH_API_KEY" ;;
         FISH_AUDIO_VOICE_ID)
             echo "FISH_AUDIO_VOICE_ID FISHAUDIO_VOICE_ID" ;;
-        PODBEAN_API_KEY)
-            echo "PODBEAN_API_KEY PODBEAN_CLIENT_ID" ;;
-        PODBEAN_API_SECRET)
-            echo "PODBEAN_API_SECRET PODBEAN_CLIENT_SECRET" ;;
+        PODBEAN_API_KEY|PODBEAN_CLIENT_ID)
+            echo "PODBEAN_CLIENT_ID PODBEAN_API_KEY" ;;
+        PODBEAN_API_SECRET|PODBEAN_CLIENT_SECRET)
+            echo "PODBEAN_CLIENT_SECRET PODBEAN_API_SECRET" ;;
+        PODBEAN_PODCAST_ID)
+            echo "PODBEAN_PODCAST_ID PODBEAN_CHANNEL_ID PODCAST_ID" ;;
         TAVILY_API_KEY)
             echo "TAVILY_API_KEY TAVILY_KEY" ;;
         KIE_API_KEY)
@@ -1037,8 +1111,14 @@ discover_all_credentials() {
     CRED_LIST="$CRED_LIST|GOHIGHLEVEL_LOCATION_ID:GHL Location ID"
     CRED_LIST="$CRED_LIST|FISH_AUDIO_API_KEY:Fish Audio"
     CRED_LIST="$CRED_LIST|FISH_AUDIO_VOICE_ID:Fish Audio Voice"
-    CRED_LIST="$CRED_LIST|PODBEAN_API_KEY:Podbean"
-    CRED_LIST="$CRED_LIST|PODBEAN_API_SECRET:Podbean Secret"
+    # v10.14.10: Podbean client_id + client_secret are SHARED operator-level
+    # credentials (Trevor's OAuth app — same for every client). Operator
+    # injects via OPENCLAW_PODBEAN_CLIENT_ID + _CLIENT_SECRET env vars
+    # (forwarded into the container via docker exec -e in the auto-detect
+    # re-exec block at the top of this file).
+    CRED_LIST="$CRED_LIST|PODBEAN_CLIENT_ID:Podbean App ID (shared)"
+    CRED_LIST="$CRED_LIST|PODBEAN_CLIENT_SECRET:Podbean App Secret (shared)"
+    CRED_LIST="$CRED_LIST|PODBEAN_PODCAST_ID:Podbean Podcast/Channel ID (per-client)"
     CRED_LIST="$CRED_LIST|TAVILY_API_KEY:Tavily Search"
     CRED_LIST="$CRED_LIST|KIE_API_KEY:KIE.ai (skill 27)"
     CRED_LIST="$CRED_LIST|TELEGRAM_BOT_TOKEN:Telegram Bot"
@@ -1553,6 +1633,12 @@ if ! command -v openclaw >/dev/null 2>&1; then
 fi
 
 success "OpenClaw CLI found: $(command -v openclaw)"
+
+# ----------------------------------------------------------
+# Step 1.5: Inject shared operator secrets (v10.14.10+)
+# ----------------------------------------------------------
+step "Step 1.5: Injecting shared operator secrets (Podbean app credentials etc.)"
+inject_shared_operator_secrets
 
 # ----------------------------------------------------------
 # Step 2: Silent Credential Discovery
