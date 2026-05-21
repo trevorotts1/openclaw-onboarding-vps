@@ -254,7 +254,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.7"
+ONBOARDING_VERSION="v10.14.8"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -2932,7 +2932,16 @@ Your AI workforce is ready to set up. There is just ONE thing you need to do to 
 
 ✂️━━━━━━━━━ COPY EVERYTHING BELOW THIS LINE ━━━━━━━━━✂️
 
-Start the OpenClaw onboarding process. Follow this procedure exactly:
+Start the OpenClaw onboarding process. Follow this procedure exactly.
+
+DEPLOYMENT PLATFORM — READ THIS BEFORE ANYTHING ELSE:
+This is a VPS install (Hostinger Docker container). All paths under /data/.openclaw/. When you read INSTALL-CONTRACT.md, START HERE.md, or any other doc that mentions BOTH "Mac mini" AND "VPS" sections side-by-side, USE ONLY THE VPS SECTION. Skip every "Mac mini" reference — those are for an alternate deployment that does not apply here. Specifically:
+- Wave concurrency cap: 5 helpers max (NOT 10 — that is the Mac mini cap)
+- File paths: /data/.openclaw/ (NOT $HOME/.openclaw or ~/.openclaw — those are Mac)
+- Backups: /data/.openclaw/backups/ (NOT ~/Downloads/openclaw-backups — that is Mac)
+- Process supervision: container nohup + openclaw cron create (NOT macOS launchd)
+
+If you find yourself uncertain whether a doc section applies, default to the VPS interpretation. Do NOT ask the owner ("are you a Mac or VPS?") — the answer is always VPS for this install.
 
 PHASE 1 — Read the docs first (do not skip):
 1. Read __SKILLS_DIR__/Start Here.md end to end.

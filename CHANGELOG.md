@@ -1,3 +1,38 @@
+## [v10.14.8] — 2026-05-21 — Explicit VPS deployment-platform header in paste block (Maria/Angela T platform confusion)
+
+Discovered live during Maria's onboarding. After she pasted the v10.14.7 kickoff block to her bot, the bot read `/data/.openclaw/INSTALL-CONTRACT.md` (Phase 1 step 2) and got confused — that doc has side-by-side wave-concurrency sections for **both Mac mini AND VPS** ("Mac mini installs: ≤ 10 concurrent / VPS: ≤ 5 concurrent"). Maria's bot interpreted the script as Mac-mini-shaped and surfaced the confusion to Trevor: "looks like the onboarding script was written for a different setup."
+
+### Risk: very low
+Single additive section at the top of the paste block. No removed content. No script logic change. Pure clarity improvement.
+
+### Code change
+
+Paste block now leads with a **"DEPLOYMENT PLATFORM — READ THIS BEFORE ANYTHING ELSE"** section that explicitly tells the receiving agent:
+- This is a VPS install (Hostinger Docker container)
+- All paths under `/data/.openclaw/`
+- When reading any doc with BOTH Mac mini AND VPS sections side-by-side, **use only the VPS section**
+- Specific differences called out:
+  - Wave cap: 5 (NOT 10 — that's Mac mini's cap)
+  - Paths: `/data/.openclaw/` (NOT `$HOME/.openclaw` — that's Mac)
+  - Backups: `/data/.openclaw/backups/` (NOT `~/Downloads/openclaw-backups` — that's Mac)
+  - Supervision: container nohup + `openclaw cron create` (NOT macOS launchd)
+- **"Do NOT ask the owner 'are you a Mac or VPS?'"** — the answer is always VPS for this install. If uncertain, default to VPS interpretation.
+
+This header appears between the scissor-line COPY-BELOW delimiter and the original "PHASE 1" content, so it's the first thing the agent reads after the user's "Start the OpenClaw onboarding process" trigger.
+
+### In-flight Maria + Angela T clarification
+
+Both received a follow-up Telegram message (Maria msg 812, Angela T msg 70) with the same VPS platform clarification as text. Their bots can apply it without needing to re-paste the now-updated v10.14.8 kickoff block.
+
+### Files touched
+`install.sh` (paste block intro), `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+NOT touched: anything else.
+
+Mac repo (`openclaw-onboarding` v10.13.1) has the inverse issue — its paste block could use a "DEPLOYMENT PLATFORM = MAC" header for symmetry. Defer Mac v10.13.2 until needed.
+
+---
+
 ## [v10.14.7] — 2026-05-21 — Telegram kickoff message rewrite + Bot API direct send + agent self-restart (P0)
 
 **Discovered live during Maria + Angela T onboardings.** The Telegram welcome message in v10.14.4-v10.14.6 told the owner to "look in your terminal for the long block of text and copy it" — but the owner doesn't have terminal access. Only the operator (Trevor) running the install has the terminal. Owners were getting messages directing them to a screen they couldn't see. Trevor was on a screen-share with Angela T watching her stare at a useless instruction.
