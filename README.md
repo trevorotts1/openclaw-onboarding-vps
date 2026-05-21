@@ -1,7 +1,71 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` — this repo at v10.6.2.
+> **Version:** see `/version` — this repo at v10.14.0.
 > Every release MUST agree across 5 files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
+
+---
+
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.14.0)
+
+OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
+
+### Model A — Containerized (the standard, what 99% of clients have)
+
+Deployed via **hPanel → VPS → Docker Manager → Catalog → OpenClaw** (the one-click template). OpenClaw runs entirely INSIDE a Docker container; the bare host has no `/data`, no `openclaw` CLI, no `node`/`pip3`. The container bind-mounts `/docker/<project>-<suffix>/data` from the host → `/data` inside the container.
+
+**You'll know you have Model A if:** `docker ps` on the host shows a container named like `openclaw-xxxx-openclaw-1`, AND `ls /data` on the host returns "No such file or directory".
+
+### Model B — Bare-metal (rare, custom installs)
+
+OpenClaw installed directly on the host filesystem at `/data/.openclaw/`. No Docker container in the picture.
+
+### Install command — same line, both models
+
+```
+ssh root@YOUR.VPS.IP
+curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
+```
+
+The script auto-detects the model and does the right thing. On **Model A** it re-executes itself inside the OpenClaw container as user `node` (because `/data` only exists in there). On **Model B** it runs as normal on the host. On a Model A box where the auto-detect can't reach the container (paused, renamed, etc.), the script **HARD FAILS** rather than silently installing to the wrong place.
+
+### Optional — explicit `docker exec` (for users who want to be deliberate)
+
+If you'd rather skip the auto-detect and target the container yourself:
+
+```
+ssh root@YOUR.VPS.IP
+docker exec -u node -i <openclaw-container-name> bash -c \
+  'curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash'
+```
+
+Find the container name with `docker ps | grep openclaw`.
+
+### Override env vars (Model A edge cases)
+
+| Variable | Purpose |
+|---|---|
+| `OPENCLAW_NO_CONTAINER_REEXEC=1` | Disable auto-detect entirely (force host install) |
+| `OPENCLAW_CONTAINER_NAME=<name>` | Target a specific container (e.g. custom-renamed) |
+| `OPENCLAW_CONTAINER_USER=<user>` | Override the user to exec as (defaults to container's `Config.User`, then `node`) |
+
+### Pre-install safety (recommended for client installs)
+
+Before running the install on a production client VPS, take a snapshot. This is free, fast, and gives you instant rollback:
+
+```
+# On the host, NOT in the container:
+docker commit <openclaw-container> <client>-pre-v10.14.0
+cd /docker/<project>-<suffix> && tar -czf /root/<client>-data-pre-v10.14.0.tar.gz data/
+```
+
+If the install goes sideways:
+
+```
+docker stop <openclaw-container> && docker rm <openclaw-container>
+# Then re-run from the snapshot tag using the same args, OR restore the tarball.
+```
+
+---
 
 
 <!-- BEGIN v2.1 SECTION -->

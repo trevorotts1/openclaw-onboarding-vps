@@ -266,12 +266,16 @@ A final summary message from your agent that looks roughly like:
 ## BLOCK 3 — VPS, Full Onboarding, via Terminal
 
 ### What this does
-Installs OpenClaw on your VPS (Hostinger, DigitalOcean, AWS, or any cloud server). Skills land at `/data/Downloads/openclaw-master-files/` because a VPS doesn't have a `~/Downloads` folder — the persistent volume is `/data/` instead. About 10–20 minutes.
+Installs OpenClaw on your VPS (Hostinger, DigitalOcean, AWS, or any cloud server). Skills land at `/data/.openclaw/skills/` — on Hostinger's Docker-Manager-deployed OpenClaw (the standard one-click) `/data` lives INSIDE the OpenClaw container; the v10.14.0 installer auto-detects this and re-executes inside the container as user `node`. About 10–20 minutes.
 
 ### Before you start
 - You need SSH access to your VPS (IP address, username, password or key)
 - You'll need a terminal app on your local Mac (built-in Terminal) or Windows (built-in Windows Terminal / PowerShell)
 - Have your GHL Private Integration Token and Location ID ready
+- **For client installs — take a snapshot first** (see README "Pre-install safety"):
+  ```
+  docker commit <openclaw-container> <client>-pre-v10.14.0
+  ```
 
 ### Step 1 — Open Terminal locally and SSH into your VPS
 
@@ -287,17 +291,41 @@ You'll know you're connected when the prompt changes to show the VPS hostname.
 
 ### Step 2 — Paste the VPS install command and press Return
 
+**Standard install (auto-detect handles containerized vs bare-metal):**
+
 ```
-curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
+curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 ```
+
+If you're on a Hostinger Docker-Manager-deployed OpenClaw VPS (the standard one-click — what 99% of clients have), v10.14.0+ will print a banner like this and re-execute itself inside the container:
+
+```
+════════════════════════════════════════════════════════════
+  Hostinger Docker host detected — re-executing inside container
+════════════════════════════════════════════════════════════
+  Container: openclaw-c54p-openclaw-1
+  User:      node
+  Reason:    /data lives inside this container, not on the host.
+════════════════════════════════════════════════════════════
+```
+
+That's expected and correct. If you see no banner, you're either on a bare-metal VPS or already inside the container — either way the install continues normally.
+
+**Explicit install (if you want to target the container yourself):**
+
+```
+docker exec -u node -i <openclaw-container-name> bash -c \
+  'curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash'
+```
+
+Find the container name with `docker ps | grep openclaw`.
 
 ### What you'll see while it runs
 
-Same as Block 1, but paths land under `/data/` instead of `~/`:
 - `Step 1` through `Step 11`
-- Skills copied to `/data/.openclaw/skills/`
-- `Silent Credential Discovery` checks `/data/.openclaw/secrets/.env`
-- `UPDATE PENDING flag written to /data/clawd/AGENTS.md`
+- Skills copied to `/data/.openclaw/skills/` (inside the container, persisted to the host via the bind mount)
+- `Silent Credential Discovery` reads container env vars (`OPENCLAW_GATEWAY_TOKEN`, etc.) + `/data/.openclaw/openclaw.json` + `/data/.openclaw/agents/main/agent/auth-profiles.json`. NO `.env` file usage on VPS.
+- `UPDATE PENDING flag written to /data/.openclaw/AGENTS.md`
 
 10–20 minutes total. Do not close the SSH session.
 
@@ -563,10 +591,13 @@ Same fixes as Block 2 — ask the agent in plain English what's happening, deman
 ## BLOCK 7 — VPS, Update, via Terminal
 
 ### What this does
-Updates an existing VPS install to the latest version. Same as Block 5 but for VPS paths (`/data/.openclaw/skills/` and `/data/Downloads/openclaw-master-files/`).
+Updates an existing VPS install to the latest version. Same as Block 5 but for VPS paths (`/data/.openclaw/skills/`). On Hostinger Docker-Manager-deployed OpenClaw, v10.14.0+ auto-detects and re-executes inside the container.
 
 ### Before you start
-Same as Block 3 — SSH access to your VPS.
+Same as Block 3 — SSH access to your VPS. **For client updates, snapshot first:**
+```
+docker commit <openclaw-container> <client>-pre-update-$(date +%Y%m%d)
+```
 
 ### Step 1 — SSH into your VPS
 
@@ -576,8 +607,19 @@ ssh root@YOUR.VPS.IP.ADDRESS
 
 ### Step 2 — Paste the VPS update command
 
+**Standard update (auto-detect handles container vs bare-metal):**
+
 ```
-curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/update-skills.sh | bash
+curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/update-skills.sh | bash
+```
+
+You'll see the same "Hostinger Docker host detected" banner from Block 3 if you're on a containerized install — that's the auto re-exec firing.
+
+**Explicit update:**
+
+```
+docker exec -u node -i <openclaw-container-name> bash -c \
+  'curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/update-skills.sh | bash'
 ```
 
 ### What you'll see

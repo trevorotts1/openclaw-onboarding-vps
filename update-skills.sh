@@ -1,12 +1,62 @@
 #!/usr/bin/env bash
+
+# ============================================================
+#  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
+#  v10.14.0
+#  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
+#  so $HOME/.openclaw resolves to /data/.openclaw correctly.
+# ============================================================
+
+# ============================================================
+# v10.14.0 — Hostinger Docker host auto-detect + container re-exec
+# Mirror of install.sh's auto-detect. See install.sh for rationale.
+# ============================================================
+if [ -z "${OPENCLAW_NO_CONTAINER_REEXEC:-}" ] \
+   && [ ! -d /data ] \
+   && command -v docker >/dev/null 2>&1; then
+
+    _oc_container="${OPENCLAW_CONTAINER_NAME:-}"
+    if [ -z "$_oc_container" ]; then
+        _oc_container=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'openclaw' | head -1)
+    fi
+
+    if [ -n "$_oc_container" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qF "$_oc_container"; then
+        _oc_user="${OPENCLAW_CONTAINER_USER:-}"
+        if [ -z "$_oc_user" ]; then
+            _oc_user=$(docker inspect "$_oc_container" --format '{{.Config.User}}' 2>/dev/null)
+            [ -z "$_oc_user" ] && _oc_user="node"
+        fi
+
+        echo ""
+        echo "════════════════════════════════════════════════════════════"
+        echo "  Hostinger Docker host detected — re-executing inside container"
+        echo "════════════════════════════════════════════════════════════"
+        echo "  Container: $_oc_container"
+        echo "  User:      $_oc_user"
+        echo "  Script:    update-skills.sh"
+        echo "════════════════════════════════════════════════════════════"
+        echo ""
+
+        exec docker exec -i -u "$_oc_user" "$_oc_container" bash -c \
+            "curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/update-skills.sh | bash"
+    fi
+fi
+
+# Safety belt
+if [ ! -d /data ] && command -v docker >/dev/null 2>&1 \
+   && docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qE 'openclaw'; then
+    echo "ERROR: An OpenClaw container is configured on this host but the" >&2
+    echo "       auto-detect re-exec did not complete. Refusing to update" >&2
+    echo "       host paths (the container cannot see them)." >&2
+    echo "" >&2
+    echo "       Run manually: docker exec -u node -i <container> bash -c \\" >&2
+    echo "         'curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/update-skills.sh | bash'" >&2
+    exit 1
+fi
+
 set -euo pipefail
 
-# ============================================================
-#  OpenClaw Skills Updater — Mac Version
-#  Updates skills from GitHub to ~/Downloads/openclaw-master-files/
-# ============================================================
-
-ONBOARDING_VERSION="v9.7.8"
+ONBOARDING_VERSION="v10.14.0"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 

@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 # ============================================================
-#  OpenClaw Onboarding Installer v10.13.0 — Hostinger Docker VPS
+#  OpenClaw Onboarding Installer v10.14.0 — Hostinger Docker VPS
 #  Run via: curl -fSL --progress-bar https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
 #
 #  This installer is for the Hostinger Docker VPS deployment of OpenClaw.
@@ -24,7 +23,94 @@ set -euo pipefail
 #    /data/.openclaw/agents/main/agent/auth-profiles.json. No .env files.
 # ============================================================
 
-ONBOARDING_VERSION="v10.13.0"
+# ============================================================
+# v10.14.0 — Hostinger Docker host auto-detect + container re-exec
+# ============================================================
+# DO NOT enable `set -euo pipefail` before this block. The auto-detect
+# uses conditional commands that may fail (docker missing, no container)
+# and that's fine — we want those to fall through silently, not abort.
+#
+# Why: Hostinger's Docker-Manager-deployed OpenClaw runs entirely INSIDE
+# a container. The host has no /data, no openclaw CLI, no node/pip3. If
+# this installer is run on the host (the documented "ssh + curl | bash"
+# path), it would `mkdir -p /data/.openclaw` on the host root filesystem
+# — a directory the container can't see — and silently land the entire
+# install in the wrong place. This block detects that scenario and
+# re-executes inside the container as the right user.
+#
+# Detection — ALL three must hold to trigger the re-exec:
+#   1. /data does NOT exist on host filesystem
+#   2. `docker` command IS available
+#   3. At least one running container has "openclaw" in its name
+#
+# If any condition fails, the script falls through to the normal path
+# (bare-metal VPS where the user is already on /data, or running INSIDE
+# the container directly).
+#
+# Overrides:
+#   OPENCLAW_NO_CONTAINER_REEXEC=1   — disable auto-detect entirely
+#   OPENCLAW_CONTAINER_NAME=<name>   — specify a particular container
+#   OPENCLAW_CONTAINER_USER=<user>   — specify the user to exec as
+# ============================================================
+if [ -z "${OPENCLAW_NO_CONTAINER_REEXEC:-}" ] \
+   && [ ! -d /data ] \
+   && command -v docker >/dev/null 2>&1; then
+
+    _oc_container="${OPENCLAW_CONTAINER_NAME:-}"
+    if [ -z "$_oc_container" ]; then
+        _oc_container=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E 'openclaw' | head -1)
+    fi
+
+    if [ -n "$_oc_container" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qF "$_oc_container"; then
+        _oc_user="${OPENCLAW_CONTAINER_USER:-}"
+        if [ -z "$_oc_user" ]; then
+            _oc_user=$(docker inspect "$_oc_container" --format '{{.Config.User}}' 2>/dev/null)
+            [ -z "$_oc_user" ] && _oc_user="node"
+        fi
+
+        echo ""
+        echo "════════════════════════════════════════════════════════════"
+        echo "  Hostinger Docker host detected — re-executing inside container"
+        echo "════════════════════════════════════════════════════════════"
+        echo "  Container: $_oc_container"
+        echo "  User:      $_oc_user"
+        echo "  Reason:    /data lives inside this container, not on the host."
+        echo "             Installing on host would silently land in the wrong"
+        echo "             place (host /data/.openclaw is invisible to the"
+        echo "             OpenClaw runtime, which only sees its bind mount)."
+        echo "  Override:  Set OPENCLAW_NO_CONTAINER_REEXEC=1 to skip this."
+        echo "════════════════════════════════════════════════════════════"
+        echo ""
+
+        # Re-fetch from GitHub inside the container. Inside, /data exists
+        # so this same script's auto-detect will fall through and the
+        # normal install path runs. Pass -i so any interactive prompts
+        # (credential discovery, etc.) still work through the SSH session.
+        exec docker exec -i -u "$_oc_user" "$_oc_container" bash -c \
+            "curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash"
+    fi
+fi
+
+# Safety belt: if we're still on a Docker host without /data AND an
+# OpenClaw container exists but the auto-detect re-exec didn't happen
+# (e.g., docker exec failed, or container is paused), HARD FAIL rather
+# than silently installing to host /data/.openclaw.
+if [ ! -d /data ] && command -v docker >/dev/null 2>&1 \
+   && docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qE 'openclaw'; then
+    echo "ERROR: An OpenClaw container is configured on this host but the" >&2
+    echo "       auto-detect re-exec did not complete. Refusing to install" >&2
+    echo "       to host /data/.openclaw (the container cannot see it)." >&2
+    echo "" >&2
+    echo "       Diagnose: docker ps -a | grep openclaw" >&2
+    echo "       Then either start the container and re-run, or run manually:" >&2
+    echo "         docker exec -u node -i <container> bash -c \\" >&2
+    echo "           'curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash'" >&2
+    exit 1
+fi
+
+set -euo pipefail
+
+ONBOARDING_VERSION="v10.14.0"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).

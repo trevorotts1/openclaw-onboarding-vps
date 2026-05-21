@@ -1,3 +1,60 @@
+## [v10.14.0] — 2026-05-21 — Hostinger Docker host auto-detect (P0 client-blocker)
+
+**The fix every client install was blocked on.** v10.13.0 and earlier had a critical mismatch between the documented install path (`ssh root@vps; curl ... | bash`) and the actual deployment model 99% of clients use (Hostinger's hPanel → Docker Manager → OpenClaw one-click). On those deployments OpenClaw runs entirely INSIDE a Docker container; `/data` lives inside the container, not on the bare host. Running the documented command would `mkdir -p /data/.openclaw` on the host root filesystem, install everything there, and the running OpenClaw container could not see ANY of it. The install reported success and accomplished nothing. Discovered while staging Evelyn Bethune's client install (VPS 1651955 / 2.24.85.21).
+
+### Risk: very low
+Auto-detect adds a pre-script block that only fires when ALL three conditions hold (no `/data` on host + `docker` installed + a running container with "openclaw" in its name). On every other deployment shape it falls through silently to the existing behavior. Backward compatible with bare-metal VPSes that already have `/data` mkdir'd. New behavior is fail-loud (with rollback instructions) rather than fail-silent.
+
+### Code changes
+
+- **`install.sh`** — new auto-detect block at the top (before `set -euo pipefail`). When triggered, it re-executes itself inside the running OpenClaw container as the right user (auto-detected from `docker inspect --format '{{.Config.User}}'`, defaulting to `node`). The re-exec pipes through `docker exec -i -u <user> <container> bash -c 'curl ... | bash'` so any interactive prompts during install still flow back to the user's SSH session. After the auto-detect, a **safety belt** hard-fails if the script is still on a Docker host with no `/data` AND an openclaw container exists — refusing to silently install to the wrong place.
+- **`update-skills.sh`** — symmetric auto-detect block. Also fixed stale header comment ("Mac Version" was misleading — kept since `$HOME` resolves to `/data` inside the container).
+- **`README.md`** — new "🔴 READ THIS FIRST — Deployment Models & Install Path (v10.14.0)" section near the top. Documents Models A (containerized) vs B (bare-metal), the auto-detect behavior, the 3 override env vars, the explicit `docker exec` variant, and the pre-install snapshot/tarball safety steps for client installs.
+- **`ONBOARDING-TRIGGERS.md`** — Blocks 3 and 7 rewritten. Both now show the standard auto-detect curl command AND the explicit `docker exec` variant. Both include the snapshot pre-install step. Banner output shown so users know what to expect.
+
+### Override env vars (Model A edge cases)
+
+| Variable | Purpose |
+|---|---|
+| `OPENCLAW_NO_CONTAINER_REEXEC=1` | Disable auto-detect entirely (force host install) |
+| `OPENCLAW_CONTAINER_NAME=<name>` | Target a specific container (renamed deployments) |
+| `OPENCLAW_CONTAINER_USER=<user>` | Override the exec user |
+
+### NOT touched (per instruction)
+
+- Mac repo `openclaw-onboarding` — untouched.
+- Dashboard `blackceo-command-center` — untouched.
+- `force-update.sh` — inherits auto-detect from install.sh since it re-fetches and re-runs install.sh.
+- `check-updates.sh` — runs inside the container via the Sunday cron registered by `openclaw cron create`; never runs from host directly, so no auto-detect needed.
+
+### How to verify on a containerized VPS
+
+```
+ssh root@<vps-ip>
+# Confirm Model A: no /data on host, docker present, openclaw container running
+ls /data 2>&1   # should say "No such file or directory"
+docker ps | grep openclaw
+
+# Now trigger the install — expect the auto-detect banner
+curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash
+```
+
+The banner should appear within 1-2 seconds of the curl-pipe-bash starting, and the install should proceed inside the container.
+
+### Roll-forward for the 10 client installs queued today
+
+Standard sequence per client:
+
+1. `ssh root@<vps>` (use Hostinger API to set/reset the password if unknown — see [[hostinger-vps-api]] reference)
+2. `docker commit <openclaw-container> <client>-pre-v10.14.0` (snapshot for rollback)
+3. `cd /docker/<project>/data && tar -czf /root/<client>-pre-v10.14.0.tar.gz .` (tarball persistent volume)
+4. `curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash`
+5. Wait for auto-detect banner, then for the 36-skill install to complete (~10-20 min)
+6. Verify: `docker exec <container> ls /data/.openclaw/skills/ | wc -l` should return 36
+7. Verify: `docker exec <container> cat /data/.openclaw/version` should return `v10.14.0`
+
+---
+
 ## [v10.13.0] — 2026-05-20 — v2.0 v10.12.0 audit closeout: 5 new P0s + every below-threshold phase
 
 The v10.12.0 audit (raw 8.74, F-floor from 7 below-threshold phases) found **2 NEW P0 blockers** that v10.12.0 introduced or missed:
