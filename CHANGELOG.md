@@ -1,3 +1,29 @@
+## [v10.14.2] — 2026-05-21 — unzip → python3 zipfile fallback (P0 client-blocker, discovered live on Evelyn)
+
+Discovered during the live install on Evelyn Bethune (VPS 1651955) at Step 4. The Hostinger `hvps-openclaw:latest` image **does not ship with `unzip`**. install.sh Step 4 called `unzip -qo ...` and died with `unzip: command not found`, leaving the container with a downloaded `/tmp/openclaw-onboarding-pkg.zip` but no extracted skills.
+
+### Fix
+
+install.sh Step 4 now tries `unzip` first (existing behavior), and falls back to **`python3 -m zipfile`-style extraction** (`python3 -c "import zipfile; zipfile.ZipFile(...).extractall(...)"`) if `unzip` is missing. Python 3 is always present in the Hostinger container (it's how the credential-discovery scripts run), so the fallback is universally available. Both methods are tested-equivalent for the zip the install downloads from GitHub.
+
+### Risk: very low
+Only changes behavior when `unzip` is absent. On systems with `unzip` (any bare-metal VPS that has it installed), behavior is unchanged from v10.14.1. The fallback fails loud with Telegram notification if neither tool is available.
+
+### How this slipped through the v10.14.1 audit
+
+The auto-detect, multi-container guard, and disk-space pre-flight checks all passed. None of them verified the container had `unzip` on PATH. The Hostinger image has `node`, `npm`, `python3`, `brew`, `git`, `curl` — but `unzip` was assumed (it's so universal) and not on the prerequisite list. **Action item for future hardening:** Skill 01 (Teach Yourself Protocol) prereq check should verify `unzip` (or `python3` for the fallback) is present. Out of scope for v10.14.2.
+
+### Files touched
+`install.sh` (Step 4 extraction block, ~20 lines added), `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+NOT touched: Mac repo (Macs always have unzip), dashboard, update-skills.sh (uses curl + tar, not zip), check-updates.sh, README, ONBOARDING-TRIGGERS.
+
+### Status on Evelyn
+
+Before v10.14.2 shipped: `brew install unzip` (~10 sec) ran inside her container as a one-time workaround, then install.sh re-fired with v10.14.1. The other 9 clients pick up v10.14.2 from here forward and won't need the workaround.
+
+---
+
 ## [v10.14.1] — 2026-05-21 — Bulletproof hardening before 10-client rollout
 
 Three small fixes to v10.14.0 before running the install on 10 client VPSes in one day. No behavior change for the standard happy path — these only fire in edge cases that would otherwise silently produce wrong results or confusing mid-install failures.

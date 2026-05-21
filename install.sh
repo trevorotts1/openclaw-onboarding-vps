@@ -152,7 +152,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.1"
+ONBOARDING_VERSION="v10.14.2"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1487,7 +1487,28 @@ send_telegram_progress "Downloaded onboarding package ${ONBOARDING_VERSION}"
 step "Step 4: Extracting Package"
 
 rm -rf "$TEMP_EXTRACT"
-unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
+
+# v10.14.2: Hostinger's hvps-openclaw image doesn't ship with unzip — fall back
+# to python3's stdlib zipfile module. Python 3 is always present in the container
+# (it's how the Hostinger entrypoint and credential-discovery scripts run).
+if command -v unzip >/dev/null 2>&1; then
+    unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
+elif command -v python3 >/dev/null 2>&1; then
+    note "unzip not available; falling back to python3 zipfile extraction"
+    mkdir -p "$TEMP_EXTRACT"
+    python3 -c "import zipfile,sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" \
+        "$TEMP_ZIP" "$TEMP_EXTRACT" || {
+        error "python3 zipfile extraction failed"
+        rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
+        send_telegram_progress "ERROR: Extract failed. Neither unzip nor python3 zipfile worked."
+        exit 1
+    }
+else
+    error "Neither unzip nor python3 is available — cannot extract package"
+    rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
+    send_telegram_progress "ERROR: Extract failed. Install unzip or python3."
+    exit 1
+fi
 
 if [ ! -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
     error "Unexpected archive structure"
