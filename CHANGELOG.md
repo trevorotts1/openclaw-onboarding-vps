@@ -1,3 +1,50 @@
+## [v10.14.9] — 2026-05-21 — Paste-block path corrections + INSTALL-CONTRACT.md Mac strip (P0 bug, Maria's bot surfaced it)
+
+**Two bugs surfaced live by Maria's bot reading the v10.14.8 paste block.**
+
+### Bug 1: paste block paths were wrong
+
+Phase 1 of the paste block told the receiving agent to read files like `${SKILLS_DIR}/Start Here.md` — i.e. `/data/.openclaw/skills/Start Here.md`. **Those files are NOT under `skills/`.** install.sh actually copies them one level up to `/data/.openclaw/` (the OC_CONFIG root). Maria's bot correctly reported "Start Here.md — not found, INSTALL-CONTRACT.md — not found, web-research-preflight.sh — not found, qc-system-integrity.sh — not found, create_role_workspaces.py — not found" and asked her whether to (A) work with what's actually present or (B) check with Trevor about missing files. The bot was right; my paste block was wrong.
+
+**Correct file locations (verified on Maria's box):**
+- `Start Here.md`, `INSTALL-CONTRACT.md` → `/data/.openclaw/` (config root, NOT under skills/)
+- `web-research-preflight.sh`, `check-wave-concurrency.sh`, `qc-system-integrity.sh` → `/data/.openclaw/scripts/`
+- `create_role_workspaces.py` → `/data/.openclaw/skills/23-ai-workforce-blueprint/scripts/`
+- Skill folders 01-36 → `/data/.openclaw/skills/`
+
+### Bug 2: VPS repo's INSTALL-CONTRACT.md still mentioned "Mac mini installs" (the platform confusion source)
+
+When Maria's bot read INSTALL-CONTRACT.md per Phase 1 step 2, it saw `- Mac mini installs: **≤ 10 worker sub-agents concurrent** / - VPS Hostinger Docker installs: **≤ 5 worker sub-agents concurrent**` in Rule 0 and surfaced "looks like the onboarding script was written for a different setup." Trevor's correct push-back: the VPS repo should have ZERO Mac references. The Mac variant has its own repo (`openclaw-onboarding`).
+
+### Fixes in v10.14.9
+
+1. **install.sh paste block now uses `__OC_CONFIG__` placeholder** (substituted to `$OC_CONFIG` = `/data/.openclaw`) for canonical docs (Start Here.md, INSTALL-CONTRACT.md) and the `/scripts/` subfolder for orchestration scripts. The old `__SKILLS_DIR__` substitution is kept as a backward-compat alias but no longer used for those paths. Skill-folder paths still resolve to `/data/.openclaw/skills/<NN>-...` correctly.
+
+2. **INSTALL-CONTRACT.md stripped of all Mac references** (was 4, now 0):
+   - Rule 0 wave concurrency cap: removed "Mac mini installs: ≤10" line; now reads "Hard cap: ≤ 5" with VPS-only context. No platform comparison.
+   - Credential search table: removed `~/.openclaw/secrets/.env (Mac canonical) / /data/.openclaw/secrets/.env (VPS canonical)` and the `~/clawd/secrets/.env (Mac legacy)` row. VPS paths only.
+   - `~/.openclaw/.install-resume.json (Mac) or /data/.openclaw/.install-resume.json (VPS)` → just `/data/.openclaw/.install-resume.json`.
+
+### What's still pending (deferred to v10.15.0 — bigger doc refactor)
+
+Other VPS repo files still have Mac references that should be stripped:
+- `Start Here.md` — 55 references (many in embedded bash code samples using `$HOME/.openclaw`; needs careful editing to preserve VPS code paths while removing Mac scaffolding)
+- `ONBOARDING-TRIGGERS.md` — 11 references (Blocks 1, 2, 5, 6 are Mac-only blocks that should be deleted from the VPS repo entirely; only Blocks 3, 4, 7, 8 belong here)
+- `README.md` — 10 references (mostly cross-reference link to Mac repo URL; some legitimate, some redundant)
+- `INSTALL-GOTCHAS.md` — 1 reference (small)
+- `direct-to-agent-install.md` — 1 reference (small)
+
+The deferred cleanup is non-blocking for the rollout — Maria's + Angela T's bots will not re-read those files in normal flow (the v10.14.9 paste block only routes them through INSTALL-CONTRACT.md + Start Here.md, and Start Here.md's Mac references are inside platform-specific code samples the bot can ignore on a VPS install). But for honest "VPS-only repo" stance, those files need a cleanup pass.
+
+### In-flight Maria + Angela T
+
+Both received a follow-up message (Maria msg 829, Angela T msg 76) with the CORRECT file paths so their bots can proceed without re-reading the broken paste block. Their bots will use those paths going forward.
+
+### Files touched
+`install.sh` (paste block path placeholders + substitution), `INSTALL-CONTRACT.md` (Rule 0 + credential table + resume file path — all Mac references removed), `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+---
+
 ## [v10.14.8] — 2026-05-21 — Explicit VPS deployment-platform header in paste block (Maria/Angela T platform confusion)
 
 Discovered live during Maria's onboarding. After she pasted the v10.14.7 kickoff block to her bot, the bot read `/data/.openclaw/INSTALL-CONTRACT.md` (Phase 1 step 2) and got confused — that doc has side-by-side wave-concurrency sections for **both Mac mini AND VPS** ("Mac mini installs: ≤ 10 concurrent / VPS: ≤ 5 concurrent"). Maria's bot interpreted the script as Mac-mini-shaped and surfaced the confusion to Trevor: "looks like the onboarding script was written for a different setup."

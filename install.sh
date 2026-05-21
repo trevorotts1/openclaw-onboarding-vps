@@ -254,7 +254,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.8"
+ONBOARDING_VERSION="v10.14.9"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -2944,26 +2944,27 @@ This is a VPS install (Hostinger Docker container). All paths under /data/.openc
 If you find yourself uncertain whether a doc section applies, default to the VPS interpretation. Do NOT ask the owner ("are you a Mac or VPS?") — the answer is always VPS for this install.
 
 PHASE 1 — Read the docs first (do not skip):
-1. Read __SKILLS_DIR__/Start Here.md end to end.
-2. Read __SKILLS_DIR__/INSTALL-CONTRACT.md end to end. Non-negotiable rules: Rule 0 (max 5 helpers at once on VPS), Rule 1 (read every .md before acting), Rule 16 (read INSTALL-GOTCHAS.md).
-3. Run web research pre-flight: bash __SKILLS_DIR__/web-research-preflight.sh
+1. Read __OC_CONFIG__/Start Here.md end to end. (At config root /data/.openclaw/, NOT under skills/.)
+2. Read __OC_CONFIG__/INSTALL-CONTRACT.md end to end. (Also at config root.) Non-negotiable rules: Rule 0 (wave concurrency cap = 5), Rule 1 (read every .md before acting), Rule 16 (read INSTALL-GOTCHAS.md).
+3. Run web research pre-flight: bash __OC_CONFIG__/scripts/web-research-preflight.sh
 4. Settings: maxChars=200000, maxTotalChars=400000, maxSpawnDepth=4, maxChildren=20, maxConcurrent=100, thinking=high.
 5. Set up workspace files (USER.md, AGENTS.md, TOOLS.md at workspace root, symlinked into per-role workspaces).
 
 PHASE 2 — Install skills in waves, with PROGRESS UPDATES to __OWNER_NAME__:
 Before each wave, send __OWNER_NAME__ a Telegram message in PLAIN ENGLISH (no jargon): Starting Wave 2 of 5 — about to set up X skills, ~Y minutes.
 After each wave: Wave 2 done. X skills working. Now starting Wave 3.
-Gate each wave: bash __SKILLS_DIR__/check-wave-concurrency.sh --proposed N --reason wave-N
+Gate each wave: bash __OC_CONFIG__/scripts/check-wave-concurrency.sh --proposed N --reason wave-N
+Skill folders live at __OC_CONFIG__/skills/01-... through __OC_CONFIG__/skills/36-... (33 active + 3 archived).
 Per skill: read all .md + scripts, execute INSTALL.md in order, score >= 8.5/10, up to 5 retry loops.
 
 PHASE 3 — Verify:
-6. Run skills/qc-system-integrity.sh — must exit 0.
+6. Run __OC_CONFIG__/scripts/qc-system-integrity.sh — must exit 0.
 7. Message __OWNER_NAME__: All skills installed. Ready for the 30-question business interview? About 35 min of your focused time — your answers shape your entire AI team. Reply yes when ready.
 Wait for confirmation before proceeding.
 
 PHASE 4 — Build the workforce:
 8. Run AI Workforce Interview (Skill 23) with __OWNER_NAME__.
-9. After interview, run create_role_workspaces.py to write per-department governing-personas.md.
+9. After interview, run __OC_CONFIG__/skills/23-ai-workforce-blueprint/scripts/create_role_workspaces.py to write per-department governing-personas.md.
 10. Message __OWNER_NAME__ confirming workforce is built and listing departments created.
 
 PHASE 5 — Wrap up:
@@ -2985,6 +2986,15 @@ Once you paste that back to me here and hit Send, I will respond within a minute
 TGMSG_EOF
 )
     tg_msg="${tg_msg_template//__OWNER_NAME__/$owner_name}"
+    # v10.14.9: paste block now uses __OC_CONFIG__ (the openclaw config ROOT
+    # at /data/.openclaw/) for canonical .md docs and the /scripts/ subfolder
+    # for orchestration scripts. The previous __SKILLS_DIR__ substitution
+    # pointed at /data/.openclaw/skills/ which is ONLY for skill folders
+    # (01-... through 36-...), not the orchestration files. Maria's bot
+    # correctly reported "Start Here.md not found" because we sent it the
+    # wrong path. OC_CONFIG is exported earlier in install.sh.
+    tg_msg="${tg_msg//__OC_CONFIG__/$OC_CONFIG}"
+    # Legacy alias kept for any references that still use __SKILLS_DIR__:
     tg_msg="${tg_msg//__SKILLS_DIR__/$skills_dir}"
 
     # Try Bot API direct first (most reliable — sidesteps gateway scope issues).

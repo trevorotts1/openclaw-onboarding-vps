@@ -14,30 +14,26 @@ Reading this contract once at the start of an install session is necessary but N
 
 ---
 
-## 🔴 Rule 0 — Wave concurrency caps (v10.8.0 P0-8)
+## 🔴 Rule 0 — Wave concurrency cap (v10.14.9: VPS-only)
 
-**Hard caps per platform:**
-- Mac mini installs: **≤ 10 worker sub-agents concurrent** within a single wave.
-- VPS Hostinger Docker installs: **≤ 5 worker sub-agents concurrent** within a single wave.
+**Hard cap: ≤ 5 worker sub-agents concurrent within a single wave** on this Hostinger Docker VPS deployment.
 
 Standing observers (Memory Wiki sub-agent + Devil's Advocate sub-agent) do
-NOT count toward these caps — they are persistent observers, not workers.
+NOT count toward this cap — they are persistent observers, not workers.
 
 Before spawning a wave, the Master Orchestrator MUST run:
 
 ```bash
-bash scripts/check-wave-concurrency.sh --proposed <N> --reason "wave-X-skill-install"
+bash /data/.openclaw/scripts/check-wave-concurrency.sh --proposed <N> --reason "wave-X-skill-install"
 ```
 
 Exit 0 → spawn allowed. Exit 1 → REJECT — orchestrator must split the wave
 into multiple smaller waves OR reduce parallelism until the gate accepts.
 Skipping this gate is an N14 violation; the wave's results are discarded.
 
-The caps exist because the audit found VPS runtime regularly running out of
+The cap exists because the audit found VPS runtime regularly running out of
 memory/CPU when more than 5 sub-agents tried to run concurrently against
-the same Hostinger Docker container. Mac is more forgiving (10) but not
-unlimited — beyond 10 the workspace lock contention starts producing race
-conditions in SQLite writes.
+the same Hostinger Docker container.
 
 ---
 
@@ -153,12 +149,12 @@ Before asking the owner for any credential, check ALL of these:
 
 | Order | Location |
 |-------|---|
-| 1 | `~/.openclaw/secrets/.env` (Mac canonical) / `/data/.openclaw/secrets/.env` (VPS canonical) |
-| 2 | `openclaw.json` `env.vars` |
-| 3 | `~/clawd/secrets/.env` (Mac legacy — migrate if found) |
-| 4 | `~/.env` |
-| 5 | `printenv | grep <var-name>` (live process env) |
-| 6 | Files matching `*.env*` in the workspace |
+| 1 | `/data/.openclaw/secrets/.env` (canonical) |
+| 2 | `/data/.openclaw/openclaw.json` `env.vars` block |
+| 3 | `/data/.openclaw/.env` |
+| 4 | `/data/.openclaw/channel-metadata.json` (non-credential channel metadata) |
+| 5 | `printenv \| grep <var-name>` (live container process env) |
+| 6 | Files matching `*.env*` under `/data/.openclaw/` |
 
 The agent SHOULD also detect DEPRECATED variable names and migrate them:
 - `GHL_PRIVATE_TOKEN` → migrate to canonical `GOHIGHLEVEL_API_KEY`
@@ -167,8 +163,8 @@ The agent SHOULD also detect DEPRECATED variable names and migrate them:
 - `GHL_PIT` → migrate to canonical `GOHIGHLEVEL_API_KEY`
 
 When the owner provides a credential, you write it to BOTH:
-- The canonical secrets file (`~/.openclaw/secrets/.env` / `/data/.openclaw/secrets/.env`) with `chmod 600`
-- `openclaw.json` `env.vars` (the gateway reads from here at runtime)
+- The canonical secrets file `/data/.openclaw/secrets/.env` with `chmod 600`
+- `/data/.openclaw/openclaw.json` `env.vars` block (the gateway reads from here at runtime)
 
 Never echo credentials into chat logs. Reference env-var names only.
 
@@ -324,7 +320,7 @@ When spawning a sub-agent, the timeout MUST be sized to the work the sub-agent i
 
 For long-running install sessions (a full onboarding install can take 30–60 min), recommend the owner start a fresh session with `/new` so the install gets a clean context. This is a recommendation, not a requirement.
 
-If they do `/new`, write a state-carryover file at `~/.openclaw/.install-resume.json` (Mac) or `/data/.openclaw/.install-resume.json` (VPS) containing:
+If they do `/new`, write a state-carryover file at `/data/.openclaw/.install-resume.json` containing:
 
 ```json
 {
