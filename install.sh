@@ -150,6 +150,38 @@ if [ ! -d /data ] && command -v docker >/dev/null 2>&1 \
     exit 1
 fi
 
+# v10.14.5: Pre-flight openclaw.json schema validation. Catches schema
+# violations BEFORE Step 10/11/12 (which call `openclaw config get` and
+# `openclaw cron list` — both validate config and exit non-zero if invalid).
+# Previously a schema violation would silently crash the install mid-Step 10
+# because `set -euo pipefail` propagates the CLI's non-zero exit. Now we
+# detect the problem up front and tell the operator exactly how to fix it.
+#
+# Common schema violations we've seen:
+#   - meta.ownerName added (meta is closed-schema; use channel-metadata.json
+#     sidecar at /data/.openclaw/channel-metadata.json instead)
+#   - channels.telegram.botName / .botUsername added (channels.telegram is
+#     closed-schema; use channel-metadata.json sidecar instead)
+#
+# See INSTALL-GOTCHAS.md #6 and #11 for the full sidecar pattern.
+if [ -f /data/.openclaw/openclaw.json ] && command -v openclaw >/dev/null 2>&1; then
+    if ! _validate_out=$(openclaw config validate 2>&1); then
+        echo "ERROR: /data/.openclaw/openclaw.json is invalid before install starts." >&2
+        echo "       The install will fail mid-Step 10 if we proceed." >&2
+        echo "" >&2
+        echo "       Validator output:" >&2
+        printf '         %s\n' "$_validate_out" | sed 's/^/         /' | head -10 >&2
+        echo "" >&2
+        echo "       Most likely cause: a custom key was added to meta.* or" >&2
+        echo "       channels.telegram (both blocks are schema-strict)." >&2
+        echo "       Fix: move owner/bot identity metadata to the sidecar at" >&2
+        echo "         /data/.openclaw/channel-metadata.json" >&2
+        echo "       See: $skills_dir/INSTALL-GOTCHAS.md (gotchas #6, #11)" >&2
+        echo "       Or:   openclaw doctor --fix" >&2
+        exit 1
+    fi
+fi
+
 # v10.14.3: Pre-flight prereq check. Hard-fail if curl or python3 missing
 # (these are mandatory — every fallback path in this installer relies on
 # one or both). Soft-warn for unzip/wget/lsof which have built-in fallbacks
@@ -180,7 +212,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.4"
+ONBOARDING_VERSION="v10.14.5"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1895,8 +1927,15 @@ except Exception: pass
 fi
 
 # Step 2: agents.defaults.workspace via CLI
+# v10.14.5: defensive `|| true` on the openclaw CLI pipeline. If the config
+# is invalid (e.g. schema violation in meta.* or channels.telegram), the
+# CLI exits non-zero, and `set -o pipefail` would otherwise propagate that
+# and kill the entire install at this exact line. The pre-flight schema
+# check at the top of install.sh catches this earlier with a clear error,
+# but we belt-and-suspender here too in case a sub-agent left config in a
+# weird state mid-install.
 if [ -z "$WORKSPACE_DIR" ] && command -v openclaw >/dev/null 2>&1; then
-    WORKSPACE_DIR=$(openclaw config get agents.defaults.workspace 2>/dev/null \
+    WORKSPACE_DIR=$( { openclaw config get agents.defaults.workspace 2>/dev/null \
         | head -1 | python3 -c "
 import sys, json
 try:
@@ -1904,7 +1943,7 @@ try:
     if raw.startswith('\"'): print(json.loads(raw))
     else: print(raw)
 except Exception: pass
-" 2>/dev/null)
+" 2>/dev/null; } || true )
 fi
 
 # Step 3: Hostinger canonical default
@@ -2761,16 +2800,42 @@ fire_install_kickoff_triplet() {
         openclaw_json="$HOME/.openclaw/openclaw.json"
     fi
 
-    # v10.14.4: Resolve the owner's first name for personalized greeting.
-    # Priority: OPENCLAW_OWNER_NAME env var → openclaw.json meta.ownerName /
-    # owner.name / wizard.ownerName → fall back to "there" (generic but warm).
-    # Only the first name is used in the greeting to keep it natural.
-    local owner_name
+    # v10.14.5: Resolve the owner's first name for personalized greeting.
+    # Read priority CHANGED in v10.14.5 to fix the meta.ownerName schema
+    # violation discovered during Maria's install:
+    #
+    #   1. OPENCLAW_OWNER_NAME env var (set via -e flag on docker exec)
+    #   2. /data/.openclaw/channel-metadata.json `ownerName` (sidecar — NEW
+    #      canonical location; outside openclaw.json schema validation, so
+    #      writing this never breaks the config)
+    #   3. openclaw.json meta.ownerName / owner.name / wizard.ownerName /
+    #      meta.owner.name / owner.firstName — LEGACY fallback ONLY for
+    #      backward compat. DO NOT write to these — they're schema-strict.
+    #      Reading is safe; writing would trigger the same crash that
+    #      ate Maria's Step 10/11/12.
+    #   4. Fall back to "there" (generic but warm).
+    #
+    # See INSTALL-GOTCHAS.md #11 for the full rationale.
+    local owner_name sidecar_path
+    if [ "$plat" = "vps" ]; then
+        sidecar_path="/data/.openclaw/channel-metadata.json"
+    else
+        sidecar_path="$HOME/.openclaw/channel-metadata.json"
+    fi
     owner_name=$(python3 -c "
 import json, os, sys
 candidates = []
+# 1. Env var
 env_name = os.environ.get('OPENCLAW_OWNER_NAME','').strip()
 if env_name: candidates.append(env_name)
+# 2. Sidecar (NEW canonical location)
+try:
+    s = json.load(open('$sidecar_path'))
+    n = s.get('ownerName','')
+    if isinstance(n, str) and n.strip(): candidates.append(n.strip())
+except Exception:
+    pass
+# 3. openclaw.json (LEGACY read-only fallback — never write here)
 try:
     d = json.load(open('$openclaw_json'))
     for path in (('meta','ownerName'), ('owner','name'), ('wizard','ownerName'),

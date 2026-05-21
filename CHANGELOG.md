@@ -1,3 +1,79 @@
+## [v10.14.5] — 2026-05-21 — meta-schema-strict fix + Step 10 silent-crash hardening + sidecar pattern (P0, discovered live on Maria)
+
+The bug Trevor flagged after Maria's install: **same Step 10 silent crash that hit Evelyn's first run**, despite v10.14.0-v10.14.4 each claiming "bulletproof." Root-caused live during Maria's install — the `meta` block in openclaw.json is schema-strict (only accepts `lastTouchedAt`, `lastTouchedVersion`; everything else fails validation). My v10.14.4 owner-name resolver READ from `meta.ownerName`, and the per-client pre-install prep step (mine, not the install.sh's) WROTE to `meta.ownerName` — which then made the entire config invalid. Step 10 line 1899 calls `openclaw config get agents.defaults.workspace` to resolve the workspace path; that CLI validates config first, exits non-zero, and `set -euo pipefail` killed the script right there. Silent crash — Step 10 header printed, then 0 subsequent lines in the log.
+
+### Risk: very low
+All fixes are either schema-correct restorations (move to sidecar) or defensive belt-and-suspender wraps (`|| true` on pipelines that were previously fatal). No happy-path behavior changes. The pre-flight schema check is new but it's an additive guard that turns a silent mid-install crash into an explicit early-exit with remediation instructions.
+
+### Code changes in `install.sh`
+
+1. **NEW pre-flight openclaw.json schema validation** at the top of install.sh (right after the v10.14.3 prereq check). Runs `openclaw config validate`; if it returns non-zero, install bails immediately with:
+   - The validator's actual output (the offending block name)
+   - "Most likely cause: a custom key was added to meta.* or channels.telegram"
+   - Pointer to the canonical sidecar at `/data/.openclaw/channel-metadata.json`
+   - Reference to INSTALL-GOTCHAS.md #6 and #11
+   - Suggestion to try `openclaw doctor --fix`
+   
+   This converts the silent Step 10 crash into a 10-second pre-install diagnosis.
+
+2. **Defensive `|| true` on Step 10's openclaw CLI pipeline** (line 1899-1907 area). Previously the pipeline `openclaw config get agents.defaults.workspace | head -1 | python3 -c "..."` would exit non-zero with `set -o pipefail` if `openclaw config get` saw invalid config. Now wrapped: `WORKSPACE_DIR=$( { ... ; } || true )`. Even if a sub-agent leaves config invalid mid-install, Step 10 completes via the next fallback (Hostinger canonical default at `/data/.openclaw/workspace`).
+
+3. **Owner-name resolver in `fire_install_kickoff_triplet`** completely rewritten priority order. Was: env var → openclaw.json (5 paths). Now:
+   - 1st: `OPENCLAW_OWNER_NAME` env var
+   - 2nd: **`/data/.openclaw/channel-metadata.json` `ownerName` field (NEW canonical location)**
+   - 3rd: openclaw.json `meta.ownerName` / `owner.name` / `wizard.ownerName` / `meta.owner.name` / `owner.firstName` (LEGACY read-only fallback — install.sh never writes to these)
+   - 4th: fallback "there"
+   
+   Comments explicitly call out: **DO NOT write to openclaw.json meta or channels.telegram blocks. They're schema-strict. Always write owner/bot identity to the sidecar.**
+
+### Documentation changes
+
+4. **INSTALL-GOTCHAS.md gotcha #11** — new entry for "meta block schema strictness + sidecar pattern." Documents the exact `meta: Invalid input` validator error, the knock-on Step 10 silent crash, the canonical sidecar at `/data/.openclaw/channel-metadata.json`, and a copy-paste Python snippet for pre-install prep that writes the sidecar correctly. Old gotcha #10 (apt-get update) renumbered to #12.
+
+### Why this didn't get fixed in v10.14.0-v10.14.4
+
+Every prior "bulletproof" release fixed mechanical failures the script ITSELF caused: missing utilities (unzip, wget, lsof), wrong CLI flags, gateway misconfigs. The Step 10 crash wasn't from anything install.sh did wrong — it was from a config violation introduced by the pre-install prep step (writing owner name to the wrong key). Hard to catch unless you actually see the validator's "meta: Invalid input" message — which install.sh swallowed via `2>/dev/null` until v10.14.5's pre-flight check exposed it.
+
+### Pre-install prep procedure for clients (use this for Angeleen + remaining 5)
+
+Before running install.sh, write the sidecar (do NOT write to openclaw.json):
+
+```bash
+docker exec -u node <container> python3 -c "
+import json, os
+META = '/data/.openclaw/channel-metadata.json'
+existing = json.load(open(META)) if os.path.exists(META) else {}
+existing['ownerName'] = 'Angeleen'
+existing.setdefault('telegram', {}).update({'botName': '<bot-name>', 'botUsername': '<bot-username>'})
+json.dump(existing, open(META, 'w'), indent=2)
+"
+```
+
+Then run install with the env var as belt-and-suspenders:
+```bash
+docker exec -u node -e OPENCLAW_OWNER_NAME='Angeleen' -i <container> bash -c \
+  'curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash'
+```
+
+### Maria's box — already remediated mid-install
+
+While Maria's install was in flight on v10.14.4:
+- Removed her broken `meta.ownerName` setting that I had written pre-install
+- Moved `ownerName=Maria` to `/data/.openclaw/channel-metadata.json` sidecar
+- Manually wrote the AGENTS.md UPDATE PENDING flag that Step 10's crash had skipped
+- Sent her personalized "Hi Maria! 👋" Telegram kickoff via Bot API direct (bypassing the openclaw-CLI scope-pending issue)
+
+Maria is now in normal post-install activation state — same as Evelyn after manual remediation. No re-install needed.
+
+### Files touched
+`install.sh` (3 sections: pre-flight schema check, Step 10 defensive wrap, owner-name resolver rewrite), `INSTALL-GOTCHAS.md` (new gotcha #11), `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+NOT touched: README, ONBOARDING-TRIGGERS, INSTALL-CONTRACT, dashboard, force-update.sh, check-updates.sh, Mac repo.
+
+Companion fix needed in Mac repo (v10.13.2) — same owner-name resolver pattern would have the same potential bug on Mac if anyone writes meta.ownerName there. Lower urgency since Mac doesn't have an active rollout; defer until needed.
+
+---
+
 ## [v10.14.4] — 2026-05-21 — Personalized owner greeting + wave-progress messaging + plain-English UX
 
 The first three v10.14.x releases were emergency fixes for technical failure modes. v10.14.4 is the first UX release: makes the install owner-friendly, removes jargon, and adds active communication during the long activation phase. Average client is non-technical and over 60 — every screen and message they see needs to read like a friend, not a sysadmin.

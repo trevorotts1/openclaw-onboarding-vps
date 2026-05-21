@@ -176,7 +176,67 @@ device is asking for more scopes than currently approved
 
 ---
 
-## 10. `apt-get update` not needed (and would fail anyway)
+## 11. 🔴 `meta` block in openclaw.json is schema-strict — sidecar pattern for owner identity
+
+**Symptom (discovered live during Maria's install):**
+```
+openclaw cron list
+OpenClaw config is invalid
+File: ~/.openclaw/openclaw.json
+Problem:
+  - meta: Invalid input
+Fix: openclaw doctor --fix
+```
+
+And as a knock-on effect — install.sh's Step 10 dies silently:
+```
+Step 10: Writing UPDATE PENDING Flag to AGENTS.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<install log just stops here>
+```
+
+**Cause:** The `meta` block in openclaw.json is a **closed schema** — it accepts only specific keys (`lastTouchedAt`, `lastTouchedVersion`). Adding any other property (e.g. `meta.ownerName`) makes the entire config invalid. Then install.sh's Step 10 (line 1899 in v10.14.4) calls `openclaw config get agents.defaults.workspace` to resolve the workspace path; that CLI call validates config first, exits non-zero, and `set -euo pipefail` kills the entire script right there. No error message — the script just stops mid-step.
+
+**Same family as Gotcha #6 (channels.telegram schema-strict).** Both `meta` and `channels.telegram` reject unknown properties.
+
+**Workaround (canonical, shipped in v10.14.5):**
+
+Owner identity and bot identity metadata both belong in a **sidecar file** outside openclaw.json:
+
+`/data/.openclaw/channel-metadata.json`:
+```json
+{
+  "_about": "Channel + owner identity metadata — outside openclaw.json schema. Read by install.sh v10.14.5+.",
+  "ownerName": "Maria",
+  "telegram": {
+    "botName": "Sir Jordan",
+    "botUsername": "SirJordanbot"
+  }
+}
+```
+
+install.sh v10.14.5+ reads this sidecar FIRST when resolving the owner's first name for the personalized greeting (Hi Maria! 👋), then falls back to `OPENCLAW_OWNER_NAME` env var, then to legacy openclaw.json fields (read-only fallback for backward compat). It **never writes** to openclaw.json's `meta` or `channels.telegram` blocks.
+
+**Pre-install prep (recommended for client rollouts):** before running install.sh, write the sidecar:
+```bash
+docker exec -u node <container> python3 -c "
+import json, os
+META = '/data/.openclaw/channel-metadata.json'
+existing = json.load(open(META)) if os.path.exists(META) else {}
+existing['ownerName'] = 'Maria'
+existing.setdefault('telegram', {}).update({'botName': 'Sir Jordan', 'botUsername': '@SirJordanbot'})
+json.dump(existing, open(META, 'w'), indent=2)
+print('Sidecar written:', existing)
+"
+```
+
+**v10.14.5 also adds a pre-flight schema check at the top of install.sh** — if openclaw.json is invalid for ANY reason (not just meta.ownerName), install.sh bails immediately with a clear error message + pointer to this gotcha, instead of silently crashing mid-Step 10.
+
+**Defensive belt-and-suspender:** Step 2 of Step 10's workspace resolver (line 1898-1907 in install.sh) now wraps the `openclaw config get` pipeline with `|| true`, so even if a sub-agent leaves config invalid mid-install, the script continues to a successful UPDATE PENDING flag write.
+
+---
+
+## 12. `apt-get update` not needed (and would fail anyway)
 
 **Symptom (when someone ports install logic from a normal Debian/Ubuntu host):**
 ```
