@@ -236,7 +236,56 @@ print('Sidecar written:', existing)
 
 ---
 
-## 12. `apt-get update` not needed (and would fail anyway)
+## 13. 🔴 Hostinger image ships TWO openclaw CLIs at different versions — auto-cleanup in v10.14.6+
+
+**Symptom (discovered live during Evelyn's gateway restart):**
+```
+gateway connect failed: GatewayClientRequestError: protocol mismatch
+protocol mismatch conn=… client=cli cli v2026.4.21 min=3 max=3 expected=4
+```
+
+And from the bot to the owner:
+> "The openclaw cron commands are blocked by a CLI version mismatch (CLI is v2026.4.21, gateway is v2026.5.19)."
+
+**Cause:** The Hostinger `hvps-openclaw:latest` image is built with `npm install -g openclaw` at image-build time. With default npm settings that installs to `/usr/local/lib/node_modules/openclaw` and symlinks to `/usr/local/bin/openclaw` — **pinned to whatever CLI version was current on the day the image was built**. We've seen baked-in versions as old as **v2026.4.21** (April images) and **v2026.5.7** (May images).
+
+Meanwhile the container's runtime sets `NPM_CONFIG_PREFIX=/data/.npm-global` so that the `node` user can `npm install -g openclaw@latest` without root. When ANYTHING later does that (Hostinger startup, our install.sh, a skill, an operator), it installs the newer version to `/data/.npm-global/bin/openclaw` — leaving the old one at `/usr/local/bin/openclaw` orphaned but still callable.
+
+PATH puts `/data/.npm-global/bin` first, so `openclaw` from a shell resolves to the new one. But:
+- Any code that hardcodes `/usr/local/bin/openclaw`
+- Anything that uses `npx openclaw` with a wrong package cache
+- The Hostinger entrypoint's own subprocess paths in some cases
+
+…will hit the STALE CLI. The newer gateway rejects the stale CLI's connection with `protocol mismatch` (the wire protocol bumped from v3 → v4 between 2026.5.7 and 2026.5.19). Result: `openclaw cron create` silently fails (Step 12), `openclaw message send` silently fails (Step 10/11 Telegram kickoff), the bot tells the owner to `/restart` but that doesn't fix the underlying duplicate.
+
+**This affects EVERY Hostinger Docker-Manager-deployed OpenClaw VPS** — same baseline image, same dual-install defect.
+
+**Workaround (auto-fix shipped in v10.14.6):**
+
+install.sh v10.14.6+ detects the dual install in the auto-detect block (host-side, BEFORE the node-user install runs). It calls `docker exec -u root <container>` to:
+- Compare versions of `/usr/local/bin/openclaw` vs `/data/.npm-global/bin/openclaw`
+- If they differ, back up the stale one to `/data/.openclaw/backups/cli-cleanup-<ts>/`
+- Remove `/usr/local/bin/openclaw` and `/usr/local/lib/node_modules/openclaw`
+
+Idempotent — re-running is safe; if only one CLI exists, no action.
+
+**For POST-INSTALL clients** (anyone already installed on v10.14.5 or earlier — Evelyn, Maria, Angela T as of 2026-05-21), use the standalone cleanup script:
+
+```bash
+# From the host, naming the container:
+ssh root@<vps>
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/fix-dual-cli.sh -o /tmp/fix-dual-cli.sh
+bash /tmp/fix-dual-cli.sh <openclaw-container-name>
+
+# Or all-in-one:
+ssh root@<vps> "bash <(curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/fix-dual-cli.sh) <openclaw-container-name>"
+```
+
+After cleanup, the bot's `openclaw cron create` and `openclaw message send` calls succeed — no `/restart` needed if the gateway has been hot-reloading. If the bot is still acting confused, send `/restart` once and it'll come back clean.
+
+---
+
+## 14. `apt-get update` not needed (and would fail anyway)
 
 **Symptom (when someone ports install logic from a normal Debian/Ubuntu host):**
 ```

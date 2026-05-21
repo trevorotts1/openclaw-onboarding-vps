@@ -1,3 +1,64 @@
+## [v10.14.6] — 2026-05-21 — Hostinger CLI dual-install auto-cleanup (P0, affects every Hostinger client)
+
+**Discovered live** during Evelyn's gateway restart. Her bot surfaced the error to her in Telegram:
+> "The openclaw cron commands are blocked by a CLI version mismatch (CLI is v2026.4.21, gateway is v2026.5.19)."
+
+**This is a baseline-image defect affecting EVERY Hostinger `hvps-openclaw:latest` client.** Hostinger bakes openclaw into the image at build time at `/usr/local/bin/openclaw` (pinned to whatever version was current on build day — Evelyn's was v2026.4.21, Maria's + Angela T's was v2026.5.7). The runtime sets `NPM_CONFIG_PREFIX=/data/.npm-global` so the `node` user can `npm install -g openclaw@latest` without sudo. Result: **two CLI installations at different versions**. The newer gateway (protocol v4) rejects the stale CLI (protocol v3) with `protocol mismatch`. PATH puts the new one first so shell-level calls work — but any code hardcoding `/usr/local/bin/openclaw` or using a stale npx cache hits the OLD one and gets blocked.
+
+Silent failures from the dual install:
+- `openclaw cron create` blocked → Sunday update cron never registers (Step 12)
+- `openclaw message send` blocked → install kickoff Telegram never delivers (Step 10/11)
+- Skills that hardcode `/usr/local` paths break in subtle ways
+- Owner sees "version mismatch" bot message and is told to `/restart`, but restart doesn't fix the underlying defect
+
+### Risk: very low
+The cleanup runs as root via `docker exec -u root` AND backs up the stale CLI to `/data/.openclaw/backups/cli-cleanup-<ts>/` before removal. Idempotent — re-running on already-clean systems does nothing. Only fires when BOTH CLIs exist AND their versions differ.
+
+### Code changes
+
+- **`install.sh` auto-detect block (host-side, before node-user re-exec)**: new `docker exec -u root` cleanup pass that detects + removes the stale `/usr/local/bin/openclaw` + `/usr/local/lib/node_modules/openclaw`. Backs up first, then removes. Only fires inside the auto-detect path (host → container re-exec); the normal happy path on bare-metal VPS is untouched.
+
+- **NEW `scripts/fix-dual-cli.sh`** — standalone cleanup script for POST-INSTALL clients (anyone already installed on v10.14.5 or earlier with the dual CLI still present). Works two ways:
+  - From inside the container (auto-detects the dual install, runs the cleanup directly)
+  - From the host with container name arg: `bash scripts/fix-dual-cli.sh <container-name>` — wraps the cleanup in a `docker exec -u root` call
+  
+  One-liner for remote use:
+  ```
+  ssh root@<vps> "bash <(curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/scripts/fix-dual-cli.sh) <openclaw-container-name>"
+  ```
+
+- **`INSTALL-GOTCHAS.md` gotcha #13** — full diagnostic walkthrough with symptom (bot message + gateway log), cause (image baseline + npm prefix split), and the two fix paths (auto via v10.14.6 install.sh, manual via the standalone script). Old gotcha #13 (`apt-get update` not needed) renumbered to #14.
+
+### Status of in-flight clients (cleaned during v10.14.6 development)
+
+- Evelyn (1651955 / openclaw-c54p-openclaw-1): stale v2026.4.21 removed ✅
+- Maria (1681940 / openclaw-qxqt-openclaw-1): stale v2026.5.7 removed ✅
+- Angela T (1681598 / openclaw-prji-openclaw-1): stale v2026.5.7 removed ✅
+
+All 3 now have ONLY the v2026.5.19 CLI matching their gateway. Evelyn's bot can now run `openclaw cron create` and `openclaw message send` cleanly.
+
+### Remaining 5 client VPSes that still need the cleanup (post-v10.14.6 will auto-clean on install)
+
+Per Hostinger API inventory:
+- Corey (1395190 / 187.77.204.227)
+- Monique Tucker (1626913 / 177.7.42.223)
+- Angeleen (1424386 / 187.77.223.62)
+- Beverly Sanders (1683068 / 72.62.170.43)
+- Trevor's blackceo-not-real-domain (1147727 / 72.60.119.151)
+
+Each needs either v10.14.6 install (auto-cleans before installing) OR the standalone `scripts/fix-dual-cli.sh` if they don't have openclaw-onboarding installed yet but have the Hostinger baseline OpenClaw container.
+
+### Files touched
+`install.sh` (auto-detect cleanup block added), `scripts/fix-dual-cli.sh` (new), `INSTALL-GOTCHAS.md` (gotcha #13 added; #13 renumbered to #14), `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+NOT touched: README, ONBOARDING-TRIGGERS, INSTALL-CONTRACT, dashboard, force-update.sh, check-updates.sh, Mac repo.
+
+### Mac repo status
+
+Mac repo (`openclaw-onboarding` v10.13.1) does NOT have the same dual-install vulnerability — Mac uses Homebrew/npm rather than a baked-in Docker image. But operators COULD have multiple openclaw CLIs on a Mac if they ran both `brew install openclaw` AND `npm install -g openclaw` (or similar). Lower priority; defer adding similar detection to Mac install.sh until we see an actual case. Mark as v10.13.2 candidate.
+
+---
+
 ## [v10.14.5] — 2026-05-21 — meta-schema-strict fix + Step 10 silent-crash hardening + sidecar pattern (P0, discovered live on Maria)
 
 The bug Trevor flagged after Maria's install: **same Step 10 silent crash that hit Evelyn's first run**, despite v10.14.0-v10.14.4 each claiming "bulletproof." Root-caused live during Maria's install — the `meta` block in openclaw.json is schema-strict (only accepts `lastTouchedAt`, `lastTouchedVersion`; everything else fails validation). My v10.14.4 owner-name resolver READ from `meta.ownerName`, and the per-client pre-install prep step (mine, not the install.sh's) WROTE to `meta.ownerName` — which then made the entire config invalid. Step 10 line 1899 calls `openclaw config get agents.defaults.workspace` to resolve the workspace path; that CLI validates config first, exits non-zero, and `set -euo pipefail` killed the script right there. Silent crash — Step 10 header printed, then 0 subsequent lines in the log.

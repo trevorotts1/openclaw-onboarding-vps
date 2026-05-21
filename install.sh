@@ -100,6 +100,48 @@ if [ -z "${OPENCLAW_NO_CONTAINER_REEXEC:-}" ] \
         echo "════════════════════════════════════════════════════════════"
         echo ""
 
+        # v10.14.6: Hostinger image baseline pre-installs openclaw at
+        # /usr/local/bin/openclaw (pinned to whatever version was current at
+        # image build time — often older than the gateway runtime). Then
+        # NPM_CONFIG_PREFIX=/data/.npm-global means later `npm install -g`
+        # calls put a newer CLI at /data/.npm-global/bin/openclaw. Result:
+        # two CLI installations at different versions. PATH puts the new one
+        # first so `openclaw` from a shell prompt is correct, but anything
+        # that hardcodes /usr/local/bin/openclaw or uses npx with the wrong
+        # package cache hits the stale one and gets "protocol mismatch"
+        # rejected by the gateway. This silently breaks `openclaw cron
+        # create` (Step 12), `openclaw message send` (Step 10/11), and any
+        # skill that hardcodes /usr/local paths.
+        #
+        # Fix: detect + remove the stale /usr/local CLI BEFORE the install
+        # runs. Must run as root (the OLD CLI is in root-owned paths). Done
+        # here in the host-side auto-detect, as a separate `docker exec -u
+        # root` step before the node-user install re-exec. Backs up to
+        # /data/.openclaw/backups/cli-cleanup-<ts>/ for rollback.
+        #
+        # See INSTALL-GOTCHAS.md #13.
+        docker exec -u root "$_oc_container" sh -c '
+OLD=/usr/local/bin/openclaw
+NEW=/data/.npm-global/bin/openclaw
+if [ -e "$OLD" ] && [ -e "$NEW" ]; then
+    OLD_VER=$("$OLD" --version 2>&1 | head -1)
+    NEW_VER=$("$NEW" --version 2>&1 | head -1)
+    if [ "$OLD_VER" != "$NEW_VER" ]; then
+        echo "[install] CLI dual-install mismatch detected (Hostinger image baseline)" >&2
+        echo "[install]   stale:   $OLD_VER at $OLD" >&2
+        echo "[install]   current: $NEW_VER at $NEW (matches gateway)" >&2
+        TS=$(date +%Y%m%d-%H%M%S)
+        BAK=/data/.openclaw/backups/cli-cleanup-$TS
+        mkdir -p "$BAK"
+        cp -a "$OLD" "$BAK/openclaw.symlink" 2>/dev/null || true
+        cp -a /usr/local/lib/node_modules/openclaw "$BAK/" 2>/dev/null || true
+        rm -f "$OLD"
+        rm -rf /usr/local/lib/node_modules/openclaw
+        echo "[install] Removed stale CLI; backup at $BAK" >&2
+    fi
+fi
+' 2>&1 || true
+
         # Re-fetch from GitHub inside the container. Inside, /data exists
         # so this same script's auto-detect will fall through and the
         # normal install path runs. Pass -i so any interactive prompts
@@ -212,7 +254,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.5"
+ONBOARDING_VERSION="v10.14.6"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
