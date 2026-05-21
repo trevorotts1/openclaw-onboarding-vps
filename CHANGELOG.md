@@ -1,3 +1,59 @@
+## [v10.14.4] — 2026-05-21 — Personalized owner greeting + wave-progress messaging + plain-English UX
+
+The first three v10.14.x releases were emergency fixes for technical failure modes. v10.14.4 is the first UX release: makes the install owner-friendly, removes jargon, and adds active communication during the long activation phase. Average client is non-technical and over 60 — every screen and message they see needs to read like a friend, not a sysadmin.
+
+### Risk: very low
+Pure UX changes: greeting personalization, terminal block rewrite, expanded paste block. No behavior change to install steps, schema writes, or fallback logic. The install does exactly the same work; the human-facing text just becomes warm + clear.
+
+### Changes
+
+- **Personalized greeting** in install.sh's `fire_install_kickoff_triplet`:
+  - New owner-name resolver tries `OPENCLAW_OWNER_NAME` env var → openclaw.json (`meta.ownerName` / `owner.name` / `wizard.ownerName` / `meta.owner.name` / `owner.firstName`) → falls back to "there" (warm but generic). Uses the first name only for natural-feeling greetings ("Hi Maria!" not "Hi Maria Hernandez Esq.!").
+  - Telegram kickoff message rewritten: opens with "Hi {Name}! 👋" and 6 numbered steps explaining exactly how to find the paste block, copy it, and send it to the bot. No technical jargon.
+- **Terminal completion block** completely rewritten:
+  - Banner now says `✓ All set, {Name}! Your AI workforce is installed.` instead of "OpenClaw Onboarding Kickoff — Triple-Fire Trigger".
+  - Step-by-step "what to do next" with 6 numbered actions (open Telegram, find bot, highlight, copy, paste, send).
+  - Paste block uses `📋 COPY EVERYTHING BELOW THIS LINE 📋` and `📋 COPY EVERYTHING ABOVE THIS LINE 📋` delimiters — visually unmissable.
+  - Removed all internal terminology ("Triple-Fire Trigger", "N22 enforcement", etc.) from owner-facing surfaces.
+  - Added concrete "you'll see" timeline (Minute 0, 5, 15, 30, 40-45, 45-80, 80-90) so the owner can predict what's happening.
+  - "If something seems off" section uses plain language: "If the bot says 'Calibre didn't install' — that's expected and doesn't block anything."
+- **Paste block** (the message owners send to their bot) expanded with **mandatory wave-progress messaging instructions**:
+  - Before each wave, the bot must send a Telegram message in plain English: "Starting Wave 2 of 5 now. About to set up 18 utility skills in parallel — this should take about 10 minutes."
+  - After each wave: "Wave 2 is done. 18 skills are working. Now starting Wave 3."
+  - Before the workforce interview: "We're about to do the most important step: a 30-question interview about your business…"
+  - Final summary in plain English ("Here's what I installed, here's what's ready to use today, here's anything that didn't work and why").
+  - Hard rule (N28 binding): NO jargon — no "QC", no "sub-agent", no "manifest", no technical paths. The bot must speak like a friend updating the client.
+
+### Why this matters for the rollout
+
+The remaining 9 client installs (Maria next, plus 8 after) are mostly non-technical owners. v10.14.0-v10.14.3 made the install MECHANICALLY bulletproof. v10.14.4 makes it HUMAN bulletproof — owners won't be lost staring at terminal output or wondering what their bot is doing during the ~30 minutes between paste and interview.
+
+### How to set the owner's name before running an install
+
+Three options, any one works:
+
+1. **Env var (cleanest for Docker exec):**
+   ```
+   docker exec -u node -e OPENCLAW_OWNER_NAME="Maria" -i <container> bash -c \
+     'curl -fSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/install.sh | bash'
+   ```
+
+2. **openclaw.json before install:**
+   ```
+   python3 -c "import json; d=json.load(open('/data/.openclaw/openclaw.json')); d.setdefault('meta',{})['ownerName']='Maria'; open('/data/.openclaw/openclaw.json','w').write(json.dumps(d,indent=2))"
+   ```
+
+3. **Skip and let it default to "there"** — works fine, just less personal.
+
+### Files touched
+`install.sh` (3 sections: owner-name resolver, Telegram message, terminal block), `version`, `23-ai-workforce-blueprint/skill-version.txt`, `23-ai-workforce-blueprint/templates/role-library/_index.json`, `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`, `CHANGELOG.md`.
+
+NOT touched: dashboard, force-update.sh, check-updates.sh, README, ONBOARDING-TRIGGERS, INSTALL-GOTCHAS.md, INSTALL-CONTRACT.md.
+
+**Companion Mac repo update shipping as openclaw-onboarding v10.13.1** with the same personalization + wave-progress messaging changes.
+
+---
+
 ## [v10.14.3] — 2026-05-21 — Hostinger Docker edge-case bulletproofing + INSTALL-GOTCHAS.md
 
 The remaining edge cases discovered during Evelyn Bethune's live install (VPS 1651955), beyond the v10.14.2 unzip fix. Every issue below was a real soft-failure or misleading warning seen during her install. This release fixes them in code AND documents them centrally so the next 9 client rollouts won't surprise anyone.

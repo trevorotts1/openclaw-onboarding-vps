@@ -180,7 +180,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.3"
+ONBOARDING_VERSION="v10.14.4"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -2750,14 +2750,43 @@ print_install_summary
 fire_install_kickoff_triplet() {
     local plat
     if [ -d "/data/.openclaw" ]; then plat="vps"; else plat="mac"; fi
-    local agents_md skills_dir
+    local agents_md skills_dir openclaw_json
     if [ "$plat" = "vps" ]; then
         agents_md="/data/.openclaw/AGENTS.md"
         skills_dir="/data/.openclaw/skills"
+        openclaw_json="/data/.openclaw/openclaw.json"
     else
         agents_md="$HOME/.openclaw/AGENTS.md"
         skills_dir="$HOME/.openclaw/skills"
+        openclaw_json="$HOME/.openclaw/openclaw.json"
     fi
+
+    # v10.14.4: Resolve the owner's first name for personalized greeting.
+    # Priority: OPENCLAW_OWNER_NAME env var → openclaw.json meta.ownerName /
+    # owner.name / wizard.ownerName → fall back to "there" (generic but warm).
+    # Only the first name is used in the greeting to keep it natural.
+    local owner_name
+    owner_name=$(python3 -c "
+import json, os, sys
+candidates = []
+env_name = os.environ.get('OPENCLAW_OWNER_NAME','').strip()
+if env_name: candidates.append(env_name)
+try:
+    d = json.load(open('$openclaw_json'))
+    for path in (('meta','ownerName'), ('owner','name'), ('wizard','ownerName'),
+                 ('meta','owner','name'), ('owner','firstName')):
+        cur = d
+        for k in path:
+            cur = cur.get(k, {}) if isinstance(cur, dict) else {}
+        if isinstance(cur, str) and cur.strip():
+            candidates.append(cur.strip())
+            break
+except Exception:
+    pass
+for n in candidates:
+    print(n.split()[0]); sys.exit(0)
+" 2>/dev/null)
+    owner_name="${owner_name:-there}"
 
     local tg_fired="false" flag_fired="false"
     local tg_reason="" flag_reason=""
@@ -2773,7 +2802,22 @@ fire_install_kickoff_triplet() {
     # (resolved earlier in install.sh Step 0) with `telegram:<chat_id>`
     # target format.
     local tg_msg
-    tg_msg="🚀 OpenClaw onboarding ${ONBOARDING_VERSION:-?} installed. Copy the PASTE-READY block from your terminal output (the long instructions starting with 'Start the OpenClaw onboarding process') and send it to this bot. The bot will then walk you through the workforce setup interview (~30 questions, ~35 min) and skill activation."
+    tg_msg="Hi ${owner_name}! 👋
+
+Your AI workforce is almost ready. Here's what to do next — it's just one step:
+
+1. Open the terminal window where the installer just finished running
+2. Look for the long block of text inside the lines that say
+   'COPY EVERYTHING BELOW THIS LINE' and 'COPY EVERYTHING ABOVE THIS LINE'
+3. Copy that whole block (highlight it, then Cmd+C on Mac or Ctrl+C on Windows)
+4. Paste it into this chat (where you're reading this message)
+5. Hit Send
+
+That's it. I'll respond within 30 seconds and start setting up your team.
+
+Total setup time: about an hour. I'll send you updates as I work so you always know what's happening. The most important part is a 30-question interview about your business — that's when you'll need ~35 minutes of focused time. I'll let you know before we get there.
+
+Ready when you are. 🚀"
     if command -v openclaw >/dev/null 2>&1; then
         local tg_target_for_send="${TELEGRAM_TARGET_CACHED:-}"
         # Ensure the target has the channel prefix (telegram:<id>)
@@ -2830,85 +2874,149 @@ fire_install_kickoff_triplet() {
     cat <<TERMEOF
 
 ═══════════════════════════════════════════════════════════════════════
-  ✓ OpenClaw ${ONBOARDING_VERSION:-?} install complete on $plat
+  ✓ All set, ${owner_name}! Your AI workforce is installed.
 ═══════════════════════════════════════════════════════════════════════
 
-  Skills directory:   $skills_dir
-  Telegram delivery:  $tg_fired ${tg_reason:+($tg_reason)}
-  AGENTS.md flag:     $flag_fired ${flag_reason:+($flag_reason)}
+  Version: ${ONBOARDING_VERSION:-?}
+  Installed on: $plat ($(date +%Y-%m-%d at %H:%M))
 
 ═══════════════════════════════════════════════════════════════════════
-  📋  WHAT TO DO NEXT — ONE STEP
+  📋  WHAT TO DO NEXT — JUST ONE STEP
 ═══════════════════════════════════════════════════════════════════════
 
-  Open your Telegram bot (the one connected to this OpenClaw account)
-  and PASTE THE FOLLOWING ENTIRE BLOCK as a single message:
+  Open your Telegram bot (the one your agent runs on) and paste in the
+  long block of text below. That message tells your bot exactly what to
+  do — it'll take it from there and keep you posted along the way.
 
-────────────────────────── BEGIN PASTE BLOCK ──────────────────────────
+  Step-by-step:
+    1. Open Telegram on your phone or computer
+    2. Find your bot (the AI agent you talk to)
+    3. Highlight everything between the two long lines below
+       (between "COPY EVERYTHING BELOW" and "COPY EVERYTHING ABOVE")
+    4. Copy it (Cmd+C on Mac, Ctrl+C on Windows)
+    5. Paste it into the chat with your bot
+    6. Hit Send
 
-Start the OpenClaw onboarding process. Procedure:
+  Your bot will reply within 30 seconds.
 
-1. Read $skills_dir/Start\ Here.md end to end.
-2. Read $skills_dir/INSTALL-CONTRACT.md end to end. Rule 0 (wave
-   concurrency: VPS=5) and Rule 1 (read every .md before acting) are
-   non-negotiable. Rule 12: read INSTALL-GOTCHAS.md for known edge
-   cases on Hostinger Docker containers.
-3. Run the web research pre-flight:
-      bash $skills_dir/web-research-preflight.sh
-4. Confirm bootstrap + sub-agent settings per PRD §4:
-      maxChars=200000, maxTotalChars=400000, maxSpawnDepth=4,
-      maxChildren=20, maxConcurrent=100, thinking=high.
-5. Set up canonical workspace files (USER.md, AGENTS.md, TOOLS.md
-   at workspace root; symlinked into every per-role workspace).
-6. Install skills in waves; gate each wave with:
+────────── 📋 COPY EVERYTHING BELOW THIS LINE 📋 ──────────
+
+Hi! Please start the OpenClaw onboarding process now. Here's the procedure
+to follow exactly:
+
+PHASE 1 — Read the docs first (don't skip):
+  1. Read $skills_dir/Start\ Here.md end to end.
+  2. Read $skills_dir/INSTALL-CONTRACT.md end to end. Rules that are
+     non-negotiable: Rule 0 (max 5 helpers running at once on VPS),
+     Rule 1 (read every .md file in a skill before doing anything),
+     Rule 16 (read INSTALL-GOTCHAS.md for Hostinger Docker edge cases).
+  3. Run the web research pre-flight to make sure model and pricing
+     info is current:
+        bash $skills_dir/web-research-preflight.sh
+  4. Confirm settings: maxChars=200000, maxTotalChars=400000,
+     maxSpawnDepth=4, maxChildren=20, maxConcurrent=100, thinking=high.
+  5. Set up canonical workspace files (USER.md, AGENTS.md, TOOLS.md
+     at workspace root, symlinked into every per-role workspace).
+
+PHASE 2 — Install the skills in waves, with PROGRESS UPDATES:
+
+  This is mandatory in v10.14.4+: tell me (the owner) what you're doing
+  in PLAIN ENGLISH before and after each wave. Keep it short and warm.
+  Average owner is non-technical and may be over 60 — no jargon, no
+  acronyms ("QC", "sub-agent", "manifest"), no technical paths.
+
+  BEFORE each wave, send a Telegram message like:
+    "Starting on Wave 2 of 5 now. About to set up 18 utility skills
+     in parallel — this should take about 10 minutes."
+
+  AFTER each wave, send a Telegram message like:
+    "Wave 2 is done. 18 skills are working. Now starting Wave 3."
+
+  If anything goes wrong in a wave, message me with what broke and
+  what you're going to try next, in plain English.
+
+  Wave gating command (use before each wave):
       bash $skills_dir/check-wave-concurrency.sh --proposed <N> --reason "wave-N"
-7. Per skill: independent sub-agent reads all skill .md + scripts,
-   executes INSTALL.md in order, independent QC ≥ 8.5 (5-loop cap).
-8. Run skills/qc-system-integrity.sh — must exit 0.
-9. Run AI Workforce Interview (Skill 23) to build ZHC structure.
-10. After workforce build, create_role_workspaces.py writes
-    per-dept governing-personas.md.
-11. Reply with installed skills, QC failures, ZHC location.
 
-Hard rules: no shortcuts; no self-QC; all sub-agents non-Anthropic;
-persona governance on EVERY non-mechanical task; Master Orchestrator
-does NO work.
+  Per skill: read all of the skill's .md files and scripts, execute
+  its INSTALL.md in order, score it ≥ 8.5/10, up to 5 retry loops.
 
-─────────────────────────── END PASTE BLOCK ───────────────────────────
+PHASE 3 — Verify everything:
+  6. Run skills/qc-system-integrity.sh — must exit 0.
+  7. Send me a Telegram message:
+       "All skills installed and verified. Now we're going to do the
+        most important step: a 30-question interview about your
+        business. This will take about 35 minutes of your time. Your
+        answers shape your entire AI team — please block out
+        uninterrupted time. Ready to start?"
+     Wait for "yes" or equivalent before proceeding.
 
-  Your bot will respond within 10-30 seconds and start working.
+PHASE 4 — Build the AI workforce:
+  8. Run the AI Workforce Interview (Skill 23) to build the company
+     structure from my answers.
+  9. After the interview, run create_role_workspaces.py to write
+     per-department governing-personas.md.
+  10. Send me a Telegram message confirming the workforce is built
+      and which departments were created.
+
+PHASE 5 — Wrap up:
+  11. Walk me through the Telegram supergroup setup (Skill 32 INSTALL.md
+      Phase 2 — 7 manual steps on my phone, one at a time, with
+      screenshots if you can describe them in words).
+  12. Final summary in plain English: "Here's what I installed,
+      here's what's ready to use today, here's anything that didn't
+      work and why."
+
+HARD RULES (v10.14.4+):
+  • No shortcuts. No self-QC.
+  • All helpers (sub-agents) use non-Anthropic models — Ollama Cloud
+    primary, OpenRouter fallback.
+  • Persona governance applies to every non-mechanical task.
+  • Master Orchestrator does NO work directly — only dispatches and
+    reports.
+  • Send Telegram progress updates between waves (N28 binding).
+  • Speak to the owner in plain English. NO jargon. They're paying
+    you to make this easy.
+
+────────── 📋 COPY EVERYTHING ABOVE THIS LINE 📋 ──────────
 
 ═══════════════════════════════════════════════════════════════════════
-  ⏱  WHAT TO EXPECT — TIMELINE
+  ⏱  WHAT YOU'LL SEE — APPROXIMATE TIMELINE
 ═══════════════════════════════════════════════════════════════════════
 
-  • Minutes  0-5:   Bot reads onboarding docs (Start Here.md, etc.)
-  • Minutes  5-15:  Web research pre-flight + Wave 1 foundation skills
-  • Minutes 15-30:  Wave 2 (18 utility skills, 5 in parallel)
-  • Minutes 30-40:  Skill 22 Book-to-Persona (Calibre soft-fails on
-                    Linux — ebook extraction limited to PDF/EPUB; not
-                    blocking. See $skills_dir/INSTALL-GOTCHAS.md)
-  • Minutes 40-75:  Skill 23 AI Workforce Interview — ~30 questions
-                    about your business (mission, KPIs, departments).
-                    Block 35 min for this. Your answers shape the
-                    entire AI workforce.
-  • Minutes 75-90:  Department generation, persona assignment,
-                    Skill 32 Telegram supergroup setup (7 manual
-                    steps on your phone).
+  Minute 0:        Your bot starts reading the docs (silent)
+  Minute 5:        Bot messages you "Starting Wave 1"
+  Minute 15:       Bot messages you "Wave 1 done, starting Wave 2"
+  Minute 30:       Bot messages you "Wave 2 done, starting Wave 3"
+  Minute 40-45:    Bot says "Now we need to interview you about your
+                   business — ready for 35 min of focused time?"
+  Minute 45-80:    The 30-question interview happens — this is YOUR
+                   active time. Best answers = best AI workforce.
+  Minute 80-90:    Bot builds your departments and helps you set up
+                   the Telegram supergroup.
+
+  Total: about an hour and a half. Half of that is reading the
+  interview questions and answering them.
 
 ═══════════════════════════════════════════════════════════════════════
-  ⚠  KNOWN GOTCHAS — READ IF SOMETHING SEEMS OFF
+  ℹ️  IF SOMETHING SEEMS OFF
 ═══════════════════════════════════════════════════════════════════════
 
-  • Sunday update cron — pending owner approval for operator.admin
-    scope. After bot activation, reply 'approve admin scope' if asked.
-  • Calibre missing — Hostinger image doesn't support it on Linux;
-    Skill 22 still works for PDF/EPUB books.
-  • Gateway "Service: systemd user (disabled)" status is MISLEADING
-    inside a container — the gateway IS running, just via nohup not
-    systemd. Don't try to systemctl start it.
-  • Full list: $skills_dir/INSTALL-GOTCHAS.md (or
-    /data/.openclaw/INSTALL-GOTCHAS.md)
+  • If you don't hear from your bot within 2 minutes of pasting the
+    block above, paste it once more.
+  • If the bot says "Calibre didn't install" — that's expected on
+    Hostinger Docker servers and doesn't block anything. Your books
+    will still work as PDF or EPUB files.
+  • If the bot asks for "admin permission" or "scope upgrade" approval,
+    reply "approve" or "yes". This is a one-time thing for the
+    automatic Sunday updates.
+  • Full troubleshooting guide: $skills_dir/INSTALL-GOTCHAS.md
+
+═══════════════════════════════════════════════════════════════════════
+
+  Backup safety net: if anything goes wrong, your old setup is saved
+  as a Docker snapshot. Tell whoever installed this for you and they
+  can restore in under a minute.
 
 ═══════════════════════════════════════════════════════════════════════
 TERMEOF
