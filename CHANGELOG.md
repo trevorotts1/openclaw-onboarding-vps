@@ -1,3 +1,35 @@
+## [v10.14.13] — 2026-05-23 — Docs/version sync + lift "never restart" rule + git tag/release habit
+
+### Why
+Two pieces of housekeeping that kept biting us:
+
+1. **The bump-version.sh script only tracked 5 files**, so after every release the README's "this repo at vX.Y.Z" line and `update-skills.sh:ONBOARDING_VERSION` drifted to whatever they were last manually edited to. After v10.14.12 shipped, README still said "v10.14.0" and update-skills.sh still said v10.14.0 — clients running the weekly Sunday auto-update saw FALSE "you're up to date" reports.
+2. **The "Never trigger a gateway restart" rule** in CONTRIBUTING.md (#9), Start Here.md, and several skill docs was an old precaution from when restarts caused real damage. That class of bug is fixed. Trevor lifted the rule 2026-05-23: master agents CAN restart freely; only sub-agents are still forbidden.
+
+### What changed
+- `README.md`: bumped "Version:" line to v10.14.13, added a NOTE that bump-script coverage was extended in this release. Replaced scattered v10.14.0 refs in the Model A/B and snapshot examples with v10.14.13.
+- `update-skills.sh`: `ONBOARDING_VERSION` bumped to v10.14.13. This is the field clients see during weekly auto-updates.
+- `CONTRIBUTING.md` rule #9: was *"Never trigger a gateway restart. Always instruct the user to type /restart in Telegram."* — now: *"Master agent CAN trigger `openclaw gateway restart` autonomously when a config edit requires it. Sub-agents CANNOT."*
+- `Start Here.md` line 475: was *"Tell the user: Type /restart in Telegram to apply the change."* — now: *"Restart the gateway yourself (master agent); then tell the user."*
+- `14-google-workspace-integration/INSTALL.md`: "Correct Process" + "Forbidden Actions" sections rewritten — master is now trusted, sub-agents still escalate.
+- `31-upgraded-memory-system/FULL-DOC.md`: update-notification template no longer asks user to restart.
+
+### Bump-script blind spots (to be fixed in a follow-up)
+This release manually edited README.md and update-skills.sh because `scripts/bump-version.sh` doesn't track them. **Open follow-up:** extend the bump script to track these two so the next bump touches them automatically. Marked as a TODO in the script comments. Until that follow-up lands, the README has a NOTE listing every place a future contributor must touch.
+
+### Tag + Release habit (new for v10.14.13+)
+Tags HAVE been getting created sporadically (v10.14.0–v10.14.9) but the last 3 versions never got tagged. GitHub Releases (the user-facing version of tags with download links + release notes) has NEVER been done on this repo. Starting with v10.14.13 the post-merge ritual is:
+
+```
+git tag vX.Y.Z && git push --tags
+gh release create vX.Y.Z --notes-from-tag  # uses the CHANGELOG entry as the release body
+```
+
+I'm backfilling tags v10.14.10, v10.14.11, v10.14.12 as part of this release so the GitHub Releases page shows a continuous history.
+
+### Risk: low
+Version-string-only changes + docs + one rule inversion (the gateway-restart rule). No code paths changed. The rule inversion is gated on agent role (master vs sub-agent) so sub-agents continue to behave as before.
+
 ## [v10.14.12] — 2026-05-23 — Auto-kickoff (BMW-off-the-lot) + dreaming + Gemini embedding model pin
 
 ### Why
