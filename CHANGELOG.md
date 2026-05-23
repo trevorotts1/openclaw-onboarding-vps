@@ -1,3 +1,52 @@
+## [v10.14.16] — 2026-05-23 — Autonomous workforce-build resume infrastructure
+
+### Why (root cause)
+Post-interview workforce builds have NO autonomous-recovery layer. If a build session ends after writing N of M departments (token limit, tool error, network blip, agent decides "good enough"), the remaining departments sit un-built **forever**. There is no cron, no state tracker, no resume invocation. Diagnosed today on Evelyn Bethune's VPS: 5 of 6 BPH departments built at 2026-05-22 17:17 EDT, then nothing for 18 hours. Marketing-Support stayed as a stub. HITMCN never started. No log line, no error — the session simply ended.
+
+This pattern repeats across every client because Skill 23's "Generation Orchestration" was documentation, not orchestration. The doc described a 6-stage parallel build but nothing in the repo invoked or resumed those stages on session interruption.
+
+### What changed
+
+**Three new files under `23-ai-workforce-blueprint/`:**
+- `build-state-schema.json` — JSON-schema-Draft-7 contract for `.workforce-build-state.json`. Tracks every department + role with `status` (pending/building/done/failed), `lastAttemptAt`, `rolesPlanned`, `rolesDone`, `failureReason`, `resumeAttempts`, `maxResumeAttempts`.
+- `scripts/resume-workforce-build.sh` — autonomous resume script. Reads state, detects pending/failed/stale-building depts, self-pings the agent via `openclaw message send` from a paired chat (owner first, Trevor fallback). 10-minute lockfile prevents concurrent firings. `maxResumeAttempts` cap (default 12) prevents infinite loops; after cap, escalates to Trevor's chat with explicit error.
+- `resume-prompt.txt` — the cron prompt. `[WORKFORCE-RESUME]`-tagged message that tells the agent: "this is internal, not the owner. Read state, flip pending → building, build the dept, flip building → done, persist. Do NOT message the owner until ALL depts done."
+
+**Skill 23 INSTRUCTIONS.md — new "Post-Interview Handoff Protocol" section (BINDING).** Three required moments:
+1. When `interview-handoff.md` flips COMPLETE: write `.workforce-build-state.json` with all planned depts in `pending` + verify resume cron is installed.
+2. Before EACH department: flip `pending → building`, set `lastAttemptAt`, atomic write.
+3. After EACH department: flip `building → done` (with `filesPresent`) or `failed` (with `failureReason`), atomic write.
+
+State file is the contract between Skill 23 and the resume layer. Never assume "I'll finish in the same session."
+
+**install.sh — new Step 13 "Install workforce-build resume cron".** Idempotent. Modeled on Step 12 (Sunday weekly cron) with the same 4-attempt escalation pattern. Schedule: `*/15 * * * *`, America/New_York. Falls back to a manual-install hint if all 4 cron-create attempts fail.
+
+### What this prevents going forward
+- An interrupted build no longer sits forever. Cron wakes the agent every 15 min if state is dirty.
+- The agent never has to guess where it left off — the state file is authoritative.
+- The owner stops getting half-built workforces with no follow-up.
+- Operators (Trevor) no longer have to manually nudge clients' bots to finish builds.
+
+### Version bumps
+- [x] `./VERSION` v10.14.16
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.16
+- [x] `23-ai-workforce-blueprint/skill-version.txt` 10.14.16
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.16
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.16
+- [x] `README.md` v10.14.16 (manual)
+- [x] `update-skills.sh:ONBOARDING_VERSION` v10.14.16 (manual)
+
+### Hot-patches needed on existing fleet
+For boxes with completed Skill 23 v10.14.14/15 but still missing the resume cron, run:
+```
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/update-skills.sh | bash
+```
+
+### Risk: low
+Pure additive. No existing behavior changes. If `jq` or `openclaw` CLI is missing, the resume script no-ops cleanly. The cron job only fires WORK if state file shows dirt — clean state = no-op every 15 min. Lockfile + attempt cap prevent runaway.
+
+---
+
 ## [v10.14.15] — 2026-05-23 — Consolidated apt-deps + ownership fix + RESTORE v10.14.11 Calibre fix
 
 ### Why
