@@ -1,3 +1,44 @@
+## [v10.14.14] — 2026-05-23 — Skill 23 interview redesign: persona-driven, drill-down, clarity-agent
+
+### Why
+The static 30-question survey felt mechanical to clients. Owners over 60 (our typical client demographic) need warmth, context, and drill-down — not a checklist. Trevor's directive 2026-05-23: *"It needs to feel like Katie Couric or Oprah Winfrey is interviewing them. The agent needs to take on a persona. They need to feel like they've been interviewed by a real person."*
+
+### What changed
+Replaced Phase 1-6 fixed-question script in `23-ai-workforce-blueprint/INSTRUCTIONS.md` with a **dynamic, theme-driven interview spec** (v2.2 Interview Doctrine):
+
+- **Persona directive** added at top of interview section: agent embodies a Katie Couric / Oprah Winfrey interviewer. Warm, deeply curious, makes clients feel like rockstars.
+- **Clarity Agent identity** — agent is dual-purpose: COLLECT info AND CLARIFY the owner's understanding of their own business. Bar: client should leave thinking *"I just figured out something about myself."*
+- **One question at a time, no two interviews identical** — agent generates the next question based on the previous answer, not from a fixed script.
+- **Drill-Down Detection Protocol** — explicit scoring of every answer on Specificity / Emotion / Surprise (1-10). If under threshold, agent MUST drill down before moving on. Shallow answers ("I run a marketing company") are rejected.
+- **Themes, not scripts** — every theme MUST be covered with a clear, specific, true answer, but the specific question wording is the agent's invention. Themes added/reframed:
+  - Identity & behavior (hard conversations, failure response, money decisions, voice/style, anti-mentors)
+  - Mission, purpose, vision, **revenue goals (safe + stretch tiers — five/six/seven figure ladder)**
+  - **Brand depth** (what world should know about YOU, your company, what they should understand)
+  - **Vulnerability themes** (fears, frustrations, real bad habits, real weaknesses, past failures with 4-part drill, the thing you keep doing even though you know it's not working)
+  - Customer & business context
+  - Department arcs (D-1 through D-13) — kept structurally but reframed as conversational, not bundled checklist
+- **Drill-down moves vocabulary** added — explicit examples of "say more," "give me a specific example," "what's the thing under the thing you just said," etc.
+- **Total time updated** — was "~28-30 questions, ~35 minutes" (fixed) — now "dynamic, typically 25-40 questions, ~35-50 minutes" (depends on how much drilling).
+
+### What's preserved
+- Phase 0 — Pre-Interview Asset Drop (unchanged in this PR; will get a separate GHL Media Library enhancement later)
+- The "I Don't Know" 6-step flow (unchanged)
+- The 16 mandatory departments (unchanged)
+- Industry vertical packs (unchanged)
+- Post-interview generation orchestration (unchanged)
+- Universal How-To Template (unchanged)
+
+### Version bumps (manual where bump-script doesn't track yet)
+- [x] `./version` v10.14.14 (bump-script)
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.14 (bump-script)
+- [x] `23-ai-workforce-blueprint/skill-version.txt` 10.14.14 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` 10.14.14 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.14 (bump-script)
+- [x] `README.md` v10.14.14 (manual — bump-script doesn't track yet)
+- [x] `update-skills.sh` v10.14.14 (manual — bump-script doesn't track yet)
+
+### Risk: medium
+This changes how clients experience the most important onboarding ritual. Worst case the agent doesn't follow the new drill-down protocol consistently — but the existing INSTRUCTIONS.md was getting ignored in places too. Net direction is up. Reversible by reverting this commit.
 ## [v10.14.13] — 2026-05-23 — Docs/version sync + lift "never restart" rule + git tag/release habit
 
 ### Why
