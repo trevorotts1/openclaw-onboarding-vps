@@ -1,3 +1,72 @@
+## [v10.14.17] — 2026-05-23 — Skill 37 ZHC Closeout: state-machine-driven post-build celebration pipeline
+
+### Why (root cause)
+After Skill 23 finished building a client's zero-human workforce (depts + roles), the existing repo had NO enforced mechanism to actually CLOSE THE LOOP with the client. Diagnosed today on Dr. Evelyn Bethune's VPS:
+- Build completed at 2026-05-23T20:22 → state file flipped `buildCompletedAt`
+- BUT: Temperance (her bot) never messaged her with the completion announcement
+- Skill 32 (Command Center) was installed but never RAN for her
+- No celebration, no infographics, no closeout doc, no nothing
+
+Root pattern: Skill 23's INSTRUCTIONS.md says "🔴 AUTOMATIC NEXT STEP — SKILL 32 — Do NOT wait for the user to ask" but that's documentation, not enforcement. Exact same failure mode as the build-resume gap we just fixed in v10.14.16 — the architecture was missing a state-machine-driven enforcement layer.
+
+### What changed
+
+**New skill: `37-zhc-closeout/`** (full mirror in VPS + Mac repos):
+- `SKILL.md`, `INSTRUCTIONS.md`, `INSTALL.md`, `CORE_UPDATES.md`, `CHANGELOG.md`
+- `scripts/run-closeout.sh` — top-level orchestrator with idempotent 6-step pipeline
+- `scripts/generate-infographics.sh` — KIE.AI `gpt-image-1` calls (fallback `nano-banana-pro`) for Workforce Structure + How Work Flows
+- `scripts/generate-celebration-video.sh` — KIE.AI Veo 3.1 (`veo3_fast` default; `ZHC_VIDEO_MODEL=veo3` override)
+- `scripts/create-notion-closeout.sh` — Notion API creates a 9-section page tree in the client's own workspace (using their `NOTION_API_TOKEN`)
+- `scripts/send-telegram-celebration.sh` — paced 6-message Telegram delivery sequence
+- `templates/infographic-1-prompt.md`, `infographic-2-prompt.md`, `veo-prompt.txt`, `notion-page-tree.json`
+- `skill-version.txt = 1.0.0`
+
+The 6-step pipeline:
+1. Fire Skill 32 (Command Center) — capture `commandCenterUrl`.
+2. Generate Workforce Structure infographic (org chart, branded).
+3. Generate How Work Flows infographic (process flow, branded).
+4. Generate 15-sec celebration video (Veo 3.1).
+5. Build Notion page tree — 9 top-level sections + nested department/role sub-pages.
+6. Telegram delivery: announcement → infographic 1 → infographic 2 → video → Notion link → Command Center URL (sequenced + paced).
+
+**Schema extension — `23-ai-workforce-blueprint/build-state-schema.json`:** Added top-level fields `closeoutStatus` (pending/generating/sent/done/failed), `closeoutStartedAt`, `closeoutCompletedAt`, `closeoutFailureReason`, `commandCenterStatus`, `commandCenterUrl`, `n8nStatus`, `n8nUrl`, `infographic1Url`, `infographic2Url`, `celebrationVideoUrl`, `notionRootPageUrl`, `messagesDelivered`, plus `companyName`/`industry`/`brandColor` (used by Skill 37 prompts).
+
+**Resume cron extension — `23-ai-workforce-blueprint/scripts/resume-workforce-build.sh`:** Dirty-state detection now also fires when `buildCompletedAt` is set AND `closeoutStatus NOT IN {done, sent}`. Dispatches a `[CLOSEOUT-RESUME]` self-ping (separate tag from build's `[WORKFORCE-RESUME]`). Same 10-min lockfile, same `maxResumeAttempts` cap, same fallback-to-Trevor escalation.
+
+**Resume prompt rewrite — `23-ai-workforce-blueprint/resume-prompt.txt`:** Now branches between BUILD FLOW (depts still pending) and CLOSEOUT FLOW (build done, closeout dirty) so the agent picks the right work without guesswork.
+
+**Skill 23 INSTRUCTIONS.md — new "Moment 4: Closeout Pipeline (BINDING)"** added to the Post-Interview Handoff Protocol section. Says: after `buildCompletedAt`, master orchestrator MUST set `closeoutStatus = "pending"`. The owner does NOT hear anything between interview-end and Skill 37 Step 6 — silence is intentional and makes the closeout feel like a moment.
+
+**install.sh — new Step 14** "Install Skill 37 (ZHC Closeout)". Idempotent same pattern as Steps 12/13. Copies skill files, `chmod +x` scripts, warns on missing `KIE_API_KEY` / `NOTION_API_TOKEN` env vars but continues. No separate cron — piggy-backs on Step 13's `workforce-build-resume` cron via the v10.14.17 closeout-dirty extension.
+
+### What this prevents going forward
+- Clients never again finish a build without hearing a celebration. Closeout fires automatically.
+- If closeout dies mid-step, the resume cron picks it up within 15 min and resumes from the first un-completed step.
+- Cost is capped at ~$0.60 / client in KIE credits (worst case: 3 image retries + 2 video retries).
+- Trevor no longer manually nudges clients' bots to deliver the closeout. The state file is the contract.
+- Per-message idempotency on Telegram delivery means a partial delivery is recoverable, not re-spammed.
+
+### Hot-patches needed on existing fleet
+For boxes with completed Skill 23 v10.14.16 builds but missing Skill 37, run:
+```
+curl -fsSL https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main/update-skills.sh | bash
+```
+The next workforce-build-resume cron fire (within 15 min) will detect any dirty closeoutStatus and run Skill 37 automatically. For Evelyn Bethune's VPS specifically: set `closeoutStatus = "pending"` in her state file after the update; cron handles the rest.
+
+### Version bumps
+- [x] `./version` v10.14.17 (bump-script)
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.17 (bump-script)
+- [x] `23-ai-workforce-blueprint/skill-version.txt` 10.14.17 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.17 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.17 (bump-script)
+- [x] `README.md` v10.14.17 (manual)
+- [x] `update-skills.sh:ONBOARDING_VERSION` v10.14.17 (manual)
+
+### Risk: low
+Pure additive. No existing behavior changes. Skill 37 only runs if `buildCompletedAt` is set + `closeoutStatus` is dirty. Skipped cleanly if `KIE_API_KEY` / `NOTION_API_TOKEN` missing (per-step warn + abort to "failed" state — never crashes the agent or the build). Lockfile + attempt cap prevent runaway. Per-message Telegram delivery is idempotent via `messagesDelivered: [1..6]` so re-runs never double-send.
+
+---
+
 ## [v10.14.16] — 2026-05-23 — Autonomous workforce-build resume infrastructure
 
 ### Why (root cause)
