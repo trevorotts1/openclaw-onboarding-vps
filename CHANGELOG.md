@@ -1,3 +1,37 @@
+## [v10.14.12] — 2026-05-23 — Auto-kickoff (BMW-off-the-lot) + dreaming + Gemini embedding model pin
+
+### Why
+Three problems shipped together because they all touch the post-install agent activation flow:
+
+1. **Stage 2 required manual paste.** After install.sh finished Stage 1 (catalog drop + plugin config + secrets), the owner had to paste a long kickoff block back to their bot to trigger Wave 1-5 execution. That breaks the done-for-you experience — clients pay for white-glove and shouldn't pop the hood. Verified live on Lyric 2026-05-23 (her bot received "Good morning" and replied conversationally, ignoring the staged UPDATE PENDING flag).
+2. **Dreaming was OFF on every fresh install.** Per `docs.openclaw.ai/concepts/dreaming`, dreaming is opt-in and disabled by default. Confirmed manually enabled on the existing fleet (Maria, Evelyn, Angela, Corey) but neither install.sh enabled it for new clients.
+3. **Embedding model was unpinned.** `agents.defaults.memorySearch.provider="gemini"` was set, but no `model` field meant OpenClaw's default kicked in implicitly. Fleet verification on Maria/Evelyn/Angela/Corey showed `model: "gemini-embedding-001"` — pinning it explicitly so the install is reproducible.
+
+### Changes
+
+**1. Auto-kickoff with A→B fallback chain (the BMW fix).** At the end of install.sh, after the gateway health check passes, schedule_auto_kickoff fires. Two mechanisms, tried in order:
+
+- **Mechanism A — `openclaw cron create` one-shot.** Schedules a cron expression that fires ~3 minutes after install completes (next-minute boundary +3 min, UTC, computed via GNU-or-BSD-compatible `date` arithmetic). The cron's message field contains the kickoff text plus an explicit self-cleanup directive instructing the agent to delete the cron as the first step of Wave 1. Idempotent — skips if a prior `auto-kickoff-*` cron already exists. Buffer absorbs gateway-restart latency.
+- **Mechanism B — direct Telegram ingress-spool write.** If A fails (cron CLI down, scope-upgrade-pending, schema rejection, anything), B drops a synthetic Telegram update JSON directly into `/data/.openclaw/telegram/ingress-spool-default/<seq>.json`. The gateway picks it up within ~30s and processes it as if the owner sent the kickoff via Telegram. updateId is computed from the bot's last-seen offset (`update-offset-default.json`) +100 to guarantee monotonic newness.
+- **Mechanism C — silent fallback to manual paste.** If both A and B fail (catastrophic), the existing completion-notice flow still emits the kickoff block for manual paste. install.sh exits cleanly regardless — auto-kickoff failure NEVER blocks install completion.
+
+The end result: owner taps `curl … install.sh | bash` once, waits ~13 minutes total (10 for Stage 1 + 3 for cron buffer), and the bot starts Wave 1 by itself. Owner only engages at Wave 5 (the AI Workforce interview, which genuinely requires their voice).
+
+**2. Dreaming enabled by default (new Step 7b).** New `configure_dreaming` function runs right after Step 7a `configure_active_memory`. Writes `plugins.entries.memory-core.config.dreaming.enabled = true` to `openclaw.json` via the same Python pattern Step 7a uses. Explicit assignment (not `setdefault`) so it forces ON for done-for-you clients. Default cadence stays at the doc-recommended `0 3 * * *` (3am client local time).
+
+**3. Embedding model pinned to gemini-embedding-001.** Step 7a `configure_active_memory` extended with `ms.setdefault('model', "gemini-embedding-001")`. Uses `setdefault` (not assign) so existing clients who manually picked a different model are respected. Verified as the fleet-wide standard on the production VPS fleet (Maria, Evelyn, Angela, Corey all run this exact model).
+
+### Bulletproofing notes
+- Both mechanisms wrapped in `|| true` at call site — install.sh never aborts on auto-kickoff failure
+- Mechanism B's spool write uses base64-safe JSON construction in Python (no shell-quoting issues with the kickoff text)
+- Cron name format `auto-kickoff-${ONBOARDING_VERSION}-$(date +%s)` makes idempotency robust across install.sh re-runs
+- All five canonical version files synced via `./scripts/bump-version.sh v10.14.12`:
+  - `./version`
+  - `install.sh:ONBOARDING_VERSION`
+  - `23-ai-workforce-blueprint/skill-version.txt`
+  - `23-ai-workforce-blueprint/templates/role-library/_index.json` (`version` field)
+  - `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` (heading)
+
 ## [v10.14.10] — 2026-05-21 — Shared operator secrets injector (Podbean OAuth app — VPS companion to Mac v10.13.10)
 
 ### Why

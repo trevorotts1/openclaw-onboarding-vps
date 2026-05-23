@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.10"
+ONBOARDING_VERSION="v10.14.12"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1935,6 +1935,9 @@ try:
     # Provider: prefer "gemini" if available, fall back to "openai"
     ms.setdefault('provider', "gemini")
     ms.setdefault('fallback', "openai")
+    # v10.14.12: Pin the embedding model. gemini-embedding-001 is the
+    # fleet-confirmed standard (verified on Maria, Evelyn, Angela, Corey).
+    ms.setdefault('model', "gemini-embedding-001")
 
     # plugins.slots.memory — point at memory-core (the canonical memory backend)
     slots = plugins.setdefault('slots', {})
@@ -1954,6 +1957,44 @@ PYEOF
 }
 
 configure_active_memory
+
+# ----------------------------------------------------------
+# Step 7b: Enable Dreaming (memory consolidation)
+# ----------------------------------------------------------
+# v10.14.12: Per docs.openclaw.ai/concepts/dreaming, dreaming is opt-in and
+# OFF by default. Every client we onboard wants the nightly memory
+# consolidation sweep, so we flip it on here. Cadence stays at the doc
+# default (0 3 * * * — 3am client local time). Verified enabled on the
+# existing fleet (Maria, Evelyn, Angela, Corey).
+configure_dreaming() {
+    step "Step 7b: Enabling Dreaming (memory consolidation)"
+    local OPENCLAW_JSON="$OC_JSON"
+    if [ ! -f "$OPENCLAW_JSON" ]; then
+        warn "openclaw.json not found - skipping dreaming config"
+        return
+    fi
+    backup_config_file "$OPENCLAW_JSON"
+    OPENCLAW_JSON="$OPENCLAW_JSON" python3 << 'PYEOF_INNER'
+import json, os, sys
+path = os.environ['OPENCLAW_JSON']
+try:
+    with open(path) as f:
+        cfg = json.load(f)
+    mc = cfg.setdefault('plugins', {}).setdefault('entries', {}).setdefault('memory-core', {})
+    mc_cfg = mc.setdefault('config', {})
+    dreaming = mc_cfg.setdefault('dreaming', {})
+    # EXPLICIT assignment (not setdefault) — we force this ON for done-for-you clients
+    dreaming['enabled'] = True
+    with open(path, 'w') as f:
+        json.dump(cfg, f, indent=2)
+    print("  \u2713 plugins.entries.memory-core.config.dreaming.enabled = true")
+    print("  \u2713 Default cadence: 0 3 * * * (3am client local time)")
+except Exception as e:
+    print(f"  \u2717 Could not enable dreaming: {e}", file=sys.stderr)
+PYEOF_INNER
+}
+
+configure_dreaming
 
 # ----------------------------------------------------------
 # Step 8: Exec Security Configuration
@@ -2864,6 +2905,188 @@ if command -v openclaw >/dev/null 2>&1; then
 else
     warn "openclaw command not found - restart manually if needed: openclaw gateway restart"
 fi
+
+# ----------------------------------------------------------
+# v10.14.12: Auto-kickoff Stage 2 / Wave execution
+# ----------------------------------------------------------
+# BMW-off-the-lot fix: previously the owner had to paste the kickoff text
+# block to their bot to trigger Wave 1-5 execution. Now install.sh schedules
+# a one-shot cron that fires ~3 minutes after install completes, delivering
+# the kickoff synthetically. The agent receives it, reads AGENTS.md's
+# UPDATE PENDING block, and starts Wave 1 autonomously. Owner only needs
+# to engage at Wave 5 (the AI Workforce interview, which requires owner
+# input that can't be delegated).
+#
+# Bulletproof design:
+# - 3-minute buffer absorbs gateway restart latency
+# - Idempotent: skips if an auto-kickoff cron already exists from a prior run
+# - Self-cleanup: the kickoff message instructs the agent to delete the cron
+#   after firing Wave 1, so it never fires twice
+# - Graceful fallback: if cron creation fails for ANY reason (gateway down,
+#   scope upgrade pending, schema rejected), the existing manual-paste
+#   completion notice flow remains and the owner can still paste the kickoff
+# - Failure does NOT block install completion (always exits 0 for this step)
+# --- Mechanism A: openclaw cron one-shot (preferred) ---
+_kickoff_mech_a_cron() {
+    local chat_id="$1"
+    local kickoff_msg="$2"
+
+    if ! command -v openclaw >/dev/null 2>&1; then
+        return 1
+    fi
+
+    # Idempotency: skip if a prior install already scheduled the kickoff
+    if openclaw cron list 2>/dev/null | grep -qE "auto-kickoff-"; then
+        note "Auto-kickoff cron already present from a prior install — skipping mechanism A (treat as success)."
+        return 0
+    fi
+
+    # Compute target fire time (3 minutes from now, next minute boundary).
+    # Use UTC to avoid host/container TZ drift. Handle both GNU and BSD date.
+    local target_ts target_min target_hour target_day target_month
+    if date -u -d '+3 minutes' '+%s' >/dev/null 2>&1; then
+        target_ts=$(date -u -d '+3 minutes' '+%s')
+    else
+        target_ts=$(date -u -v+3M '+%s' 2>/dev/null)
+    fi
+    [ -z "$target_ts" ] && return 1
+
+    target_min=$(date -u -d "@$target_ts" '+%M' 2>/dev/null || date -u -r "$target_ts" '+%M' 2>/dev/null)
+    target_hour=$(date -u -d "@$target_ts" '+%H' 2>/dev/null || date -u -r "$target_ts" '+%H' 2>/dev/null)
+    target_day=$(date -u -d "@$target_ts" '+%d' 2>/dev/null || date -u -r "$target_ts" '+%d' 2>/dev/null)
+    target_month=$(date -u -d "@$target_ts" '+%m' 2>/dev/null || date -u -r "$target_ts" '+%m' 2>/dev/null)
+
+    local cron_expr="$target_min $target_hour $target_day $target_month *"
+    local cron_name="auto-kickoff-${ONBOARDING_VERSION}-$(date +%s)"
+    local full_msg
+    full_msg="$kickoff_msg
+
+IMPORTANT — Cron self-cleanup (do this BEFORE Wave 1): install.sh scheduled this kickoff via a one-shot cron named '$cron_name'. Delete it NOW so it does not fire again:
+
+  openclaw cron delete --name '$cron_name'
+
+Then proceed with Wave 1."
+
+    if openclaw cron create \
+         --name "$cron_name" \
+         --cron "$cron_expr" \
+         --tz UTC \
+         --channel telegram \
+         --to "$chat_id" \
+         --agent main \
+         --message "$full_msg" >> "$LOG_FILE" 2>&1; then
+        success "Auto-kickoff (mechanism A: cron) scheduled — Wave 1 starts in ~3 min (cron '$cron_name' @ '$cron_expr' UTC)."
+        return 0
+    fi
+    return 1
+}
+
+# --- Mechanism B: Direct Telegram ingress-spool write (fallback) ---
+# When mechanism A (cron) fails, we drop a synthetic inbound Telegram update
+# directly into the gateway's spool. The gateway processes it as if it came
+# from the owner via Telegram — agent receives an inbound message, reads
+# AGENTS.md UPDATE PENDING, starts Wave 1. No cron needed, no self-cleanup
+# required (the spool message is processed once and moves to processed/).
+_kickoff_mech_b_spool() {
+    local chat_id="$1"
+    local kickoff_msg="$2"
+
+    local spool_dir="/data/.openclaw/telegram/ingress-spool-default"
+    local offset_file="/data/.openclaw/telegram/update-offset-default.json"
+    local bot_info="/data/.openclaw/telegram/bot-info-default.json"
+
+    if [ ! -d "$spool_dir" ]; then
+        note "Mechanism B unavailable: spool dir '$spool_dir' missing."
+        return 1
+    fi
+
+    # Pick an updateId that is HIGHER than the bot's last-seen offset
+    # so the gateway considers it new. Fall back to a current-time-based id.
+    local last_offset new_update_id
+    last_offset=$(python3 -c "import json,sys;d=json.load(open('$offset_file'));print(d.get('offset',0))" 2>/dev/null)
+    if [ -n "$last_offset" ] && [ "$last_offset" -gt 0 ] 2>/dev/null; then
+        new_update_id=$((last_offset + 100))
+    else
+        new_update_id=$(date +%s)
+    fi
+    local now_sec=$(date +%s)
+    local now_ms=$((now_sec * 1000))
+    local spool_file
+    spool_file=$(printf "%s/%016d.json" "$spool_dir" "$new_update_id")
+
+    OC_KICKOFF_MSG="$kickoff_msg" CHAT_ID="$chat_id" UPDATE_ID="$new_update_id" \
+    NOW_SEC="$now_sec" NOW_MS="$now_ms" SPOOL_FILE="$spool_file" \
+    python3 - << 'PYEOF_INNER' 2>>"$LOG_FILE"
+import json, os
+payload = {
+    "version": 1,
+    "updateId": int(os.environ["UPDATE_ID"]),
+    "receivedAt": int(os.environ["NOW_MS"]),
+    "update": {
+        "update_id": int(os.environ["UPDATE_ID"]),
+        "message": {
+            "message_id": int(os.environ["UPDATE_ID"]),
+            "from": {
+                "id": int(os.environ["CHAT_ID"]),
+                "is_bot": False,
+                "first_name": "Owner",
+                "language_code": "en",
+            },
+            "chat": {
+                "id": int(os.environ["CHAT_ID"]),
+                "first_name": "Owner",
+                "type": "private",
+            },
+            "date": int(os.environ["NOW_SEC"]),
+            "text": os.environ["OC_KICKOFF_MSG"],
+        }
+    }
+}
+with open(os.environ["SPOOL_FILE"], "w") as f:
+    json.dump(payload, f)
+os.chmod(os.environ["SPOOL_FILE"], 0o600)
+print(f"  spool file written: {os.environ['SPOOL_FILE']}")
+PYEOF_INNER
+
+    local rc=$?
+    if [ "$rc" -eq 0 ] && [ -f "$spool_file" ]; then
+        success "Auto-kickoff (mechanism B: spool write) injected — gateway will pick it up within ~30s as if owner sent the kickoff via Telegram."
+        return 0
+    fi
+    return 1
+}
+
+# --- Auto-kickoff orchestrator: try A, fall back to B, then manual ---
+schedule_auto_kickoff() {
+    local chat_id="$1"
+
+    # Gate on a usable chat target
+    if [ -z "$chat_id" ] || [ "$chat_id" = "skipped" ] || [ "$chat_id" = "no-openclaw-cli" ] || [ "$chat_id" = "no-telegram-target" ] || [ "${chat_id#failed:}" != "$chat_id" ]; then
+        warn "Auto-kickoff skipped — no Telegram chat target resolved ('$chat_id'). Owner can still paste the kickoff manually from the completion notice below."
+        return 0
+    fi
+    chat_id="${chat_id#sent:}"
+
+    local kickoff_msg="I just ran the OpenClaw onboarding install. There is an UPDATE PENDING flag at the top of my AGENTS.md. Please follow the 5-Phase Processing Order in that flag to activate all skills. Start with Phase A (parallel install in waves). Do not skip any phase. Run QC after each skill. Send me a summary when complete."
+
+    note "Auto-kickoff: trying mechanism A (openclaw cron one-shot)..."
+    if _kickoff_mech_a_cron "$chat_id" "$kickoff_msg"; then
+        note "Owner does NOT need to paste the kickoff. The bot will begin Wave 1 autonomously and send progress updates."
+        return 0
+    fi
+
+    warn "Mechanism A (cron) failed. Falling back to mechanism B (direct spool write)..."
+    if _kickoff_mech_b_spool "$chat_id" "$kickoff_msg"; then
+        note "Owner does NOT need to paste the kickoff. The bot will begin Wave 1 autonomously and send progress updates."
+        return 0
+    fi
+
+    warn "Both mechanisms A and B failed (see $LOG_FILE). Owner CAN still paste the kickoff manually from the completion notice — that path remains supported."
+    return 0
+}
+
+# Schedule the auto-kickoff. Failure here never blocks install completion.
+schedule_auto_kickoff "$TELEGRAM_LAST_RESULT" || true
 
 # ----------------------------------------------------------
 # Install summary (v10.0.2) — scan log for warnings/errors, print actionable
