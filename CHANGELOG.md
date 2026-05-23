@@ -1,3 +1,42 @@
+## [v10.14.15] — 2026-05-23 — Consolidated apt-deps + ownership fix + RESTORE v10.14.11 Calibre fix
+
+### Why
+Two operational gotchas that bit the fleet today AND a silent regression discovered while fixing them:
+
+1. **update-skills.sh fails on missing unzip.** Hostinger Docker image doesn't ship `unzip`; update-skills.sh's tarball extract hits "unzip: command not found" and bails. Every existing client hit this when I pushed the Skill 23 v10.14.14 update today — had to manually install unzip on each box first.
+2. **update-skills.sh fails on root-owned skills dir.** If `/data/.openclaw/skills` or `/data/.openclaw/onboarding` are root-owned (which happens whenever any step ran via `docker exec -u root`), update-skills.sh hits "Permission denied" trying to overwrite skill files as the node user.
+3. **The v10.14.11 Calibre apt fix got silently overwritten** by v10.14.12 (the v10.14.12 branch was cut from v10.14.10 base, NOT from v10.14.11, so when it merged it reverted v10.14.11's changes). Current install.sh on main is back to the broken official-Linux-installer Calibre path. None of today's fresh installs have working `ebook-convert` until I hot-patched manually.
+
+### What changed
+Consolidated all 3 fixes into ONE apt-elevation block in install.sh (replacing the broken Calibre block at lines 1815-1864):
+
+- **APT_BIN resolution** — uses `/usr/bin/apt-get` absolute path to bypass Hostinger's shim
+- **APT_CMD elevation** — direct if root, `sudo -n` if available, warn-and-skip otherwise
+- **Step 1: `unzip` install** (preventative — protects every future update-skills.sh run)
+- **Step 2: Calibre install** via `apt-get install -y --no-install-recommends calibre` (restores the v10.14.11 fix)
+- **Step 3: chown -R node:node** on skills + onboarding dirs (idempotent, fixes root-ownership drift)
+
+All 3 steps wrapped in the same apt-update call, single APT_LOG, single elevation check. Backward-safe: skips cleanly if apt-get is missing OR can't elevate.
+
+### What this prevents going forward
+- Fresh client installs get unzip + Calibre + correct ownership from day one
+- Weekly Sunday auto-updates (via update-skills.sh) no longer fail on missing unzip
+- Re-runs of install.sh on existing boxes self-heal ownership without manual chown
+
+### Version bumps
+- [x] `./version` v10.14.15
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.15
+- [x] `23-ai-workforce-blueprint/skill-version.txt` 10.14.15 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` 10.14.15
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.15
+- [x] `README.md` v10.14.15 (manual — still not bump-script-tracked)
+- [x] `update-skills.sh:ONBOARDING_VERSION` v10.14.15 (manual)
+
+### Hot-patches already applied today (this release just makes them permanent)
+All 8 client VPS were manually upgraded today via `docker exec -u root <container> /usr/bin/apt-get install -y unzip calibre --no-install-recommends` and `chown -R node:node /data/.openclaw/skills /data/.openclaw/onboarding`. This release ensures any NEW install or RE-INSTALL gets the same fixes automatically.
+
+### Risk: low
+Pure additive fixes. The new block degrades gracefully if apt is unavailable. Existing installs are idempotent.
 ## [v10.14.14] — 2026-05-23 — Skill 23 interview redesign: persona-driven, drill-down, clarity-agent
 
 ### Why
