@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.10"
+ONBOARDING_VERSION="v10.14.11"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1812,55 +1812,62 @@ else
 fi
 
 # ----------------------------------------------------------
-# v10.3.0: Install Calibre (ebook-convert) for Skill 22 book extraction
+# v10.3.0:  Install Calibre (ebook-convert) for Skill 22 book extraction
+# v10.14.11: Switched from official Calibre Linux installer to apt-get install.
+#   The official installer ran "successfully" on the Hostinger Docker image
+#   (ghcr.io/hostinger/hvps-openclaw:latest) but the ebook-convert binary
+#   never landed at the expected path — fleet-wide regression confirmed on
+#   all 8 client VPS on 2026-05-23. Apt drops ebook-convert directly at
+#   /usr/bin/ebook-convert which is on the default PATH.
+#   IMPORTANT: Hostinger's image ships a shim at /usr/local/bin/apt[-get]
+#   that prints "apt is not available, use brew instead." The real apt is
+#   intact at /usr/bin/apt-get — bypass the shim by using the absolute path.
 # ----------------------------------------------------------
-# On Hostinger Docker VPS, Calibre is installed via Linuxbrew (already at
-# /data/linuxbrew/.linuxbrew/bin) OR the official Calibre Linux installer.
-# Without Calibre, Skill 22 silently skips MOBI/AZW/AZW3/KFX formats and
-# only processes PDF/EPUB. Auto-install here so it's ready by Wave 5.
 if command -v ebook-convert >/dev/null 2>&1; then
     success "Calibre (ebook-convert) already installed: $(ebook-convert --version 2>&1 | head -1)"
 else
     note "Installing Calibre (ebook-convert) for Skill 22 ebook extraction..."
+    CAL_LOG="$OC_INSTALL_LOG_DIR/calibre-install-$(date +%Y%m%d-%H%M%S).log"
 
-    # v10.14.3: Skip Linuxbrew on Linux — the calibre formula refuses Linux
-    # ("macOS is required for this software"). Go directly to the official
-    # installer with curl (wget is missing from Hostinger's image; curl is
-    # always present). Install to a user-writable path so we don't need sudo
-    # or /usr/local/bin. Symlink into /data/.npm-global/bin which is already
-    # on the node user's PATH per the container's PATH env.
-    if [ "$(uname -s)" = "Darwin" ] && [ -x /opt/homebrew/bin/brew ]; then
-        # Mac path (not used in VPS install but kept for cross-platform safety)
-        note "Mac detected — trying Homebrew install..."
-        /opt/homebrew/bin/brew install --cask calibre >> "$LOG_FILE" 2>&1 || true
+    # Resolve real apt-get (bypass Hostinger's /usr/local/bin/apt shim).
+    APT_BIN=""
+    if [ -x /usr/bin/apt-get ]; then
+        APT_BIN="/usr/bin/apt-get"
+    elif command -v apt-get >/dev/null 2>&1; then
+        APT_BIN="$(command -v apt-get)"
     fi
 
-    if ! command -v ebook-convert >/dev/null 2>&1; then
-        if command -v curl >/dev/null 2>&1; then
-            note "Running official Calibre Linux installer via curl..."
-            mkdir -p /data/.openclaw/calibre
-            CAL_LOG="$OC_INSTALL_LOG_DIR/calibre-install-$(date +%Y%m%d-%H%M%S).log"
-            if curl -fsSL https://download.calibre-ebook.com/linux-installer.sh -o /tmp/calibre-installer.sh 2>>"$CAL_LOG"; then
-                sh /tmp/calibre-installer.sh install_dir=/data/.openclaw/calibre isolated=y >> "$CAL_LOG" 2>&1 || true
-                # Symlink to a user-writable PATH location (no sudo needed)
-                CAL_BIN="/data/.openclaw/calibre/calibre/ebook-convert"
-                if [ -x "$CAL_BIN" ]; then
-                    mkdir -p /data/.npm-global/bin
-                    ln -sf "$CAL_BIN" /data/.npm-global/bin/ebook-convert 2>>"$CAL_LOG" || true
-                    success "Calibre installed via official Linux installer: $(/data/.npm-global/bin/ebook-convert --version 2>&1 | head -1)"
-                else
-                    warn "Official Calibre installer ran but $CAL_BIN is missing. Skill 22 ebook extraction limited to PDF/EPUB. See $CAL_LOG."
-                fi
-                rm -f /tmp/calibre-installer.sh
-            else
-                warn "curl could not fetch the Calibre installer. Skill 22 ebook extraction limited to PDF/EPUB."
-            fi
+    if [ -z "$APT_BIN" ]; then
+        warn "apt-get not found on this host. Skill 22 ebook extraction limited to PDF/EPUB."
+    else
+        # apt-get must run as root. install.sh is normally re-exec'd inside the
+        # container as the `node` user; resolve elevation if needed.
+        if [ "$(id -u)" = "0" ]; then
+            APT_CMD="$APT_BIN"
+        elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+            APT_CMD="sudo -n $APT_BIN"
         else
-            warn "Neither curl nor wget available — cannot run Calibre installer. Skill 22 ebook extraction limited to PDF/EPUB."
+            APT_CMD=""
+        fi
+
+        if [ -z "$APT_CMD" ]; then
+            warn "Running as non-root and passwordless sudo unavailable — cannot install Calibre."
+            warn "Recovery: docker exec -u root <container> /usr/bin/apt-get install -y --no-install-recommends calibre"
+        else
+            note "Installing calibre via apt (log: $CAL_LOG)..."
+            if (DEBIAN_FRONTEND=noninteractive $APT_CMD update -qq && \
+                DEBIAN_FRONTEND=noninteractive $APT_CMD install -y --no-install-recommends calibre) >> "$CAL_LOG" 2>&1; then
+                if command -v ebook-convert >/dev/null 2>&1; then
+                    success "Calibre installed via apt: $(ebook-convert --version 2>&1 | head -1)"
+                else
+                    warn "apt reported success but ebook-convert still not on PATH. See $CAL_LOG."
+                fi
+            else
+                warn "apt-get install calibre failed (exit $?). See $CAL_LOG. Skill 22 limited to PDF/EPUB."
+            fi
         fi
     fi
 fi
-
 # ----------------------------------------------------------
 # Step 7: Configure Concurrency
 # ----------------------------------------------------------

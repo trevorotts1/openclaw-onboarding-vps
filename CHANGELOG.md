@@ -1,3 +1,25 @@
+## [v10.14.11] — 2026-05-23 — Calibre install fix (fleet-wide ebook-convert regression)
+
+### What broke
+On every client VPS (all 8 — Lyric, Angela, Evelyn, Maria, Corey, Angeleen, Monique, Beverly), the previous Calibre install path silently failed: the official Linux installer ran, claimed success in its log, but the `ebook-convert` binary never landed at `/data/.openclaw/calibre/calibre/ebook-convert` (where install.sh expected it). Verified `which ebook-convert` returned nothing on every box. Skill 22 (`book-to-persona-coaching-leadership-system`) silently fell back to PDF/EPUB-only on the entire fleet.
+
+### Root cause
+Two layers:
+1. The official Calibre Linux installer's behavior on the headless Hostinger Docker image (`ghcr.io/hostinger/hvps-openclaw:latest`) doesn't deposit the binary at the path install.sh expected. The installer's own log claimed it succeeded — but the file simply wasn't there afterward.
+2. The Hostinger image ships a **shim at `/usr/local/bin/apt[-get]`** that intercepts `apt` calls and prints *"Error: apt is not available. Please use brew instead."* The real `apt-get` is intact at `/usr/bin/apt-get` — but any patch that uses `apt-get` without the absolute path gets eaten by the shim.
+
+### What changed
+- Replaced the official-installer logic with an `apt-get install` path using **`/usr/bin/apt-get` (absolute path)** to bypass the Hostinger shim
+- `--no-install-recommends` skips ~200-300 MB of Qt/X11 GUI dependencies (headless container)
+- Removed the now-dead Darwin/Homebrew block from the Calibre logic — this is the VPS-only repo, Mac onboarding lives in the separate `openclaw-onboarding` repo
+- Resolves elevation cleanly: runs `apt-get` directly if EUID 0, falls back to `sudo -n` if available, warns with the exact recovery command if neither works
+- New post-install validation: if `apt-get` reports success but `ebook-convert` still isn't on PATH, log and warn explicitly (no more silent failure)
+
+### Hot-patch applied
+The 8 client VPS already in production had been broken since their respective install dates. Each was hot-patched via `docker exec -u root <container> /usr/bin/apt-get install -y --no-install-recommends calibre` on 2026-05-23. Calibre 8.5.0 confirmed installed and `ebook-convert` on PATH on all 8 boxes. Future `install.sh` re-runs (Sunday auto-update etc.) will preserve this via the existing `command -v ebook-convert` short-circuit at the top of the block.
+
+### Version files synced
+`./version`, `install.sh:ONBOARDING_VERSION`, `23-ai-workforce-blueprint/skill-version.txt`, `templates/role-library/_index.json`, `templates/role-library/_qc-summary.md` — all moved to v10.14.11 via `./scripts/bump-version.sh`.
 ## [v10.14.10] — 2026-05-21 — Shared operator secrets injector (Podbean OAuth app — VPS companion to Mac v10.13.10)
 
 ### Why
