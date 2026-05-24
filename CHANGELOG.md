@@ -1,4 +1,4 @@
-## [v10.14.27] — 2026-05-24 — persona-selector v2: fix list_available_personas + orchestrator phase-5 path + phase-6 categories.json append
+## [v10.14.28] — 2026-05-24 — persona-selector v2: fix list_available_personas + orchestrator phase-5 path + phase-6 categories.json append
 
 ### The bugs
 
@@ -10,7 +10,7 @@
 
 1. **`persona-selector-v2.py:458-473`** — `list_available_personas()` now descends into `data["personas"]` when present (dict or list shape), with a legacy-flat-dict fallback that filters out known meta-keys.
 2. **`orchestrator.py:1213` (Phase 5)** — replaced hardcoded legacy path `~/clawd/scripts/gemini-indexer.py` with a 3-path candidate search (`~/.openclaw/workspace/scripts/`, `/data/.openclaw/workspace/scripts/`, `~/clawd/scripts/`). Old hardcode would silently skip re-indexing on every modern install (Mac-new + VPS), leaving new persona blueprints un-embedded and invisible to Layer 5 semantic search.
-3. **`orchestrator.py` (new Phase 6)** — added `_append_persona_to_categories()` that auto-appends a new persona stub (with empty domain + perspective tag arrays) to `persona-categories.json` when the orchestrator's `process_book()` finishes Phase 3 directly. Pre-v10.14.27 only the `add-persona-from-source.sh` wrapper did this; direct orchestrator calls (`orchestrator.py --single-book`) left the persona invisible to the selector even after the bug-1 fix.
+3. **`orchestrator.py` (new Phase 6)** — added `_append_persona_to_categories()` that auto-appends a new persona stub (with empty domain + perspective tag arrays) to `persona-categories.json` when the orchestrator's `process_book()` finishes Phase 3 directly. Pre-v10.14.28 only the `add-persona-from-source.sh` wrapper did this; direct orchestrator calls (`orchestrator.py --single-book`) left the persona invisible to the selector even after the bug-1 fix.
 
 ### Net effect
 
@@ -20,6 +20,81 @@ Persona-selector now actually picks from 40 personas instead of 5 meta-keys. The
 
 - `semantic_task_fit` silent fallback through 3 methods needs operator visibility (P3 — needs stderr warning + top-level JSON propagation of `_task_fit_method`).
 - `gemini-embedding-2-preview` model name needs doc-confirmation against current Google catalog (P4 — `feedback-openclaw-research-first.md` mandates doc check before changing).
+
+---
+
+## [v10.14.27] — 2026-05-24 — add-department.sh: one-command pipeline for adding a NEW department to a live Command Center
+
+### The gap
+
+Today, once a client's Command Center is live, there is NO scripted path to add
+a brand-new department to it. v10.14.26 ships `seed-workspaces.py`, `seed-
+dashboard-content.py`, and `materialize-dept-agents.sh` — all run during the
+initial install. But if Trevor wants to add "Podcast Production" to Lyric next
+week, today that requires hand-editing the SQLite DB (workspaces + agents +
+tasks rows), hand-editing the role-library `_index.json`, hand-editing
+`openclaw.json` bindings, and re-running `generate-brand-css.py`. Every one of
+those steps is a manual SQL/JSON edit waiting to drift.
+
+### What ships
+
+A new script at `32-command-center-setup/scripts/add-department.sh` that does
+the full chain in one shot. Args: `--slug X --name "Y" [--icon 🔧]
+[--head-name "Z Lead"] [--description "..."]`. The chain it executes:
+
+1. INSERT into `workspaces` (id == slug, with next-available `sort_order`)
+2. INSERT into `agents` — department-head row with `status='standby'`,
+   `specialist_type='permanent'`, mirroring the v10.14.26 seeder's CHECK-safe
+   shape (status MUST be one of standby/working/offline; specialist_type MUST
+   be permanent/on-call).
+3. INSERT into `tasks` — one starter "Welcome to <Dept>" task at
+   `status='backlog'`, both `assigned_agent_id` and `created_by_agent_id` set
+   to the head agent's id so the dashboard's author-avatar renders correctly.
+4. Upsert `23-ai-workforce-blueprint/templates/role-library/_index.json`:
+   `departments.<slug> = { count: 1, roles: ["head-of-<slug>"] }`.
+5. If `openclaw.json` already has a `telegram.bindings` array on any agent,
+   append a placeholder binding entry (`topic_id: null`) for the new dept so
+   the operator sees the slot exists. Skips gracefully if no bindings shape.
+6. Re-run `generate-brand-css.py` so dept-specific styling lands.
+7. Drop `/data/.openclaw/skills/23-ai-workforce-blueprint/.persona-index-stale`
+   so `persona-selector-v2.py` knows to rebuild any cached dept-tag → persona
+   map next run.
+
+Idempotent (safe to re-run): if the slug already exists, the script short-
+circuits with `{"status":"already_exists"}`, no duplicate rows. The role-
+library upsert + persona-stale marker are also idempotent. The script exits 0
+on both `created` and `already_exists`, and emits a single JSON line
+(`---SUMMARY---` separator + payload) so it's machine-parseable from a CI
+runner or dashboard API endpoint.
+
+### Verification
+
+Tested live on Lyric tonight (2026-05-24): created `--slug test-podcast`,
+verified workspace + agent + task rows landed, verified `/api/workspaces/
+test-podcast` returns 200 and the browser route `/workspace/test-podcast`
+returns 200. Re-ran with the same args — got `already_exists`, no duplicates.
+Then DELETEd the test rows and the role-library entry so Lyric's data stayed
+clean.
+
+### Risk
+
+**Low.** Pure-additive — a new script in `32-command-center-setup/scripts/`.
+Existing install paths (`run-full-install.sh`) don't call it; it's an
+on-demand tool for adding departments AFTER the initial install. No existing
+code paths change behavior.
+
+### Files version-bumped
+
+- [x] `./version` v10.14.27
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.27
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.27
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.27
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.27
+- [x] `README.md` v10.14.27
+- [x] `update-skills.sh` v10.14.27 (header + `ONBOARDING_VERSION`)
+
+`install-pm2-restart-hook.sh`'s `v10.14.23` marker is intentionally NOT bumped
+— it's a feature-introduction marker, not a current-version reference.
 
 ---
 
