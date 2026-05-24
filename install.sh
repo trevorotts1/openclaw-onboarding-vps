@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.33"
+ONBOARDING_VERSION="v10.14.34"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -3211,6 +3211,28 @@ esac
 if command -v openclaw >/dev/null 2>&1; then
     step "Running openclaw doctor --fix to strip any stale plugin-injected config keys"
     openclaw doctor --fix 2>&1 | tail -5 || warn "doctor --fix had issues — continuing anyway (gateway may complain at start)"
+fi
+
+# ----------------------------------------------------------
+# v10.14.34: 2-day-learnings install hardening bundle
+# ----------------------------------------------------------
+# Findings discovered Sat 2026-05-23 + Sun 2026-05-24, encoded as defensive
+# install-time checks/fixes so the next fresh install gets them automatically:
+#   #10 Hostinger compose `command:` pin detection
+#   #12 PORT env var leak — unset before any pm2 invocation
+#   #13 hooks.token auto-generate when hooks.enabled but no token
+#   #14 Cloudflared pm2-safe wrapper script ships in scripts/
+#   #15 Fresh-VPS CLI scope auto-approval (devices/pending.json)
+#   #17 SSL_CERT_FILE phantom Linuxbrew path → canonical Debian path
+#   #18 Python deps backfill (httpx, requests, certifi)
+# Idempotent + non-blocking — every defense is best-effort.
+_hardening_self="$ONBOARDING_DIR/scripts/install-hardening.sh"
+if [ -f "$_hardening_self" ]; then
+    step "Step 16: Running install hardening (2-day-learnings defenses)"
+    # shellcheck source=/dev/null
+    bash "$_hardening_self" 2>&1 | tail -30 || warn "install-hardening returned non-zero (treated as informational)"
+else
+    note "install-hardening.sh not in bundle — skipping (older onboarding bundle, harmless)"
 fi
 
 # ----------------------------------------------------------
