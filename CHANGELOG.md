@@ -1,3 +1,38 @@
+## [v10.14.24] — 2026-05-24 — Dashboard content seeder (companies + agents + tasks) — fixes empty Kanban on first load
+
+### The bug
+After install, every client's Mission Control dashboard rendered with demo BlackCEO branding in the header and an empty Kanban board (5 status columns, zero cards). Two root causes:
+
+1. **`seed-workspaces.py` was never wired into `run-full-install.sh`.** The script existed in `32-command-center-setup/scripts/` but no orchestrator phase invoked it, so the dashboard's `npm run db:seed` left demo workspaces in place and the client's real departments were never loaded.
+2. **No script populated `companies`, `agents`, or `tasks`.** Even after the workspaces were patched in manually, the dashboard's header brand name + colors come from the `companies` table (not from `config/company-config.json` — the diagnostic audit on 2026-05-24 confirmed this), and the Kanban only renders cards if there are rows in `tasks`. Both tables stayed empty.
+
+### What changed
+- `32-command-center-setup/scripts/seed-dashboard-content.py` (NEW) — schema-tolerant Python seeder that:
+  - Reads company info from `config/company-config.json` → ZHC `company-config.json` → `.workforce-build-state.json` → env vars (priority chain).
+  - INSERT OR REPLACE into `companies` (idempotent on slug).
+  - INSERT one agent per workspace (skipped if workspace already has agents).
+  - INSERT one starter task per workspace with `status='backlog'` (skipped if workspace already has tasks).
+  - Sets `public/logo-config.json` to empty `logoUrl` so the dashboard's `useLogoUrl` hook falls through to text-SVG (renders company name from `companies` row). Drop a per-client `public/logo-<slug>.png` + update `logo-config.json` to override.
+- `32-command-center-setup/scripts/run-full-install.sh` — Phase 6 now invokes `seed-workspaces.py` then `seed-dashboard-content.py` after `npm run db:seed`, so the orchestrator pipeline is end-to-end complete.
+
+### Verification
+Diagnostic audit of `trevorotts1/blackceo-command-center` confirmed: `MissionQueue.tsx:74-86` filters empty `tasks` array (no rows → empty Kanban); `TaskCard.onClick` at `MissionQueue.tsx:341` correctly opens `TaskModal` (no code bug — "cards do nothing" was actually "no cards exist"). Manual smoke test on Lyric + Evelyn dashboards in v10.14.23 confirmed the data shape works; v10.14.24 ships it as code.
+
+### Risk
+Low. Both seeders use INSERT OR REPLACE / skip-if-exists patterns and are schema-tolerant (PRAGMA table_info → only INSERT existing columns), so they survive dashboard repo schema drift. If they fail, dashboard still starts (Phase 6 logs a WARN and continues to pm2 start). v10.14.23 boxes that already have manual seed data won't get duplicates on next install.
+
+### Version-bump-tracking checklist
+- [x] `./version` v10.14.24 (manual bump)
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.24
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.24
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.24
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.24
+- [x] `README.md` v10.14.24
+- [x] `update-skills.sh` v10.14.24
+- [x] `32-command-center-setup/scripts/install-pm2-restart-hook.sh` — v10.14.23 idempotency marker INTENTIONALLY LEFT IN PLACE (it's a feature-marker, not a version marker).
+
+---
+
 ## [v10.14.23] — 2026-05-24 — Container-restart durability for Mission Control dashboard + cloudflared
 
 ### The bug
