@@ -1,3 +1,37 @@
+## [v10.14.26] — 2026-05-24 — seed-dashboard-content.py: fix CHECK-constraint violations
+
+### The bug(s)
+
+1. **Agent inserts silently fail because `status = 'active'` violates the CHECK constraint.** The `agents` table on every live VPS dashboard enforces `status IN ('standby', 'working', 'offline')`. The v10.14.24 seeder built `ag_data['status'] = 'active'`. Because the schema-tolerant `[c for c in ag_data if c in ag_cols]` filter sees `status` in `ag_cols`, the column IS included in the INSERT — and the INSERT raises `IntegrityError: CHECK constraint failed`. The bare `except sqlite3.Error` prints to stderr and moves on. Net result on every install: **0 agents inserted, 0 tasks inserted** (tasks require `ag_id`, which is `None` when the agent insert fails).
+2. **Task inserts silently drop the author because the column name is wrong.** The seeder set `tk_data['created_by_id'] = ag_id`. The actual schema column is `created_by_agent_id`. The schema-tolerant filter drops the bogus column entirely, so the INSERT didn't fail — but every seeded "Welcome" task ended up with a NULL author, breaking the dashboard's author-avatar render.
+3. **Bonus polish:** agents now ship with `description` ("Heads the {dept} department in your AI workforce.") and `specialist_type = 'permanent'` so the dashboard's Specialist Type cards render correctly out of the box.
+
+### Why it went unnoticed in v10.14.24
+
+The seeder catches `sqlite3.Error` and writes to `sys.stderr`. The caller (`run-full-install.sh`) redirects with `2>&1`, collapsing stderr into stdout, and then greps for specific success/failure tokens — none of which include "IntegrityError" or "CHECK". The `agents_added` / `tasks_added` counters print at the end, but the install summary doesn't surface them as failures when they're 0. Plus, v10.14.25 just exposed the *separate* issue that `update-skills.sh` was pulling from the wrong repo entirely — meaning the broken v10.14.24 seeder hadn't actually reached most VPSes via the update path. It only showed up tonight on fresh installs that ran the new (correct) installer.
+
+### Verification
+
+Tested live on Lyric + Evelyn + Angeleen VPSes tonight (2026-05-24). With the fix applied: **17 agents + 17 tasks per box** (one per workspace), all visible in the dashboard with proper status badges, specialist type cards, and author avatars on the welcome tasks.
+
+### Risk
+
+**Low.** Single-file behavioral change in `32-command-center-setup/scripts/seed-dashboard-content.py`. The idempotent skip-if-exists guards (`existing_agents == 0` / `existing_tasks == 0`) are unchanged, so re-running the seeder is still safe on partially-seeded boxes.
+
+### Files version-bumped
+
+- [x] `./version` v10.14.26
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.26
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.26
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.26
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.26
+- [x] `README.md` v10.14.26
+- [x] `update-skills.sh` v10.14.26 (header + `ONBOARDING_VERSION`)
+
+`install-pm2-restart-hook.sh`'s `v10.14.23` marker is intentionally NOT bumped — it's a feature-introduction marker, not a current-version reference.
+
+---
+
 ## [v10.14.25] — 2026-05-24 — update-skills.sh: pull from VPS repo + survive non-interactive mode
 
 ### The bugs
