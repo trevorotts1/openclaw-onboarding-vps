@@ -211,6 +211,33 @@ else
     log "WARN" "phase=6: npm run db:seed failed — dashboard will still start but workspace selector may be empty"
   fi
 
+  # v10.14.24: Skill 32's own workspace + content seeders. Before this version
+  # the dashboard rendered with demo BlackCEO content and an empty Kanban
+  # board because seed-workspaces.py was never invoked by the orchestrator
+  # and the companies/agents/tasks tables were never populated for the
+  # client. These two scripts overwrite demo workspaces with the client's
+  # real departments and then insert the companies row + one agent + one
+  # starter task per workspace so the Kanban renders cards on first load.
+  SKILL32_SEED_WS="$SKILL_DIR/scripts/seed-workspaces.py"
+  if [[ -f "$SKILL32_SEED_WS" ]]; then
+    log "INFO" "phase=6: seeding client workspaces (seed-workspaces.py)"
+    if ! python3 "$SKILL32_SEED_WS" >>"$LOG_FILE" 2>&1; then
+      log "WARN" "phase=6: seed-workspaces.py exited non-zero — dashboard may show demo departments"
+    fi
+  else
+    log "WARN" "phase=6: seed-workspaces.py not found at $SKILL32_SEED_WS"
+  fi
+
+  SKILL32_SEED_CONTENT="$SKILL_DIR/scripts/seed-dashboard-content.py"
+  if [[ -f "$SKILL32_SEED_CONTENT" ]]; then
+    log "INFO" "phase=6: seeding companies + agents + tasks (seed-dashboard-content.py)"
+    if ! python3 "$SKILL32_SEED_CONTENT" >>"$LOG_FILE" 2>&1; then
+      log "WARN" "phase=6: seed-dashboard-content.py exited non-zero — Kanban may render empty"
+    fi
+  else
+    log "WARN" "phase=6: seed-dashboard-content.py not found at $SKILL32_SEED_CONTENT"
+  fi
+
   # Explicit PORT=4000 is the fix for the EADDRINUSE / random-port bug that
   # bit Lyric tonight. Some upstream env was leaking a different PORT which
   # caused Next.js to bind somewhere unpredictable. Pinning it here makes
