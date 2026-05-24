@@ -494,6 +494,21 @@ Expected: 200. If not 200 after 30 seconds, check that PM2 shows the cloudflare-
 
 **🔴 GATE CHECK: DO NOT proceed to Phase 7 until the URL returns 200. The cloudflare-tunnel PM2 process must be running. Do NOT create a Cloudflare account. Do NOT go to the Cloudflare website. The tunnel is created inside Trevor's Cloudflare account. The token comes directly from Trevor's system in the webhook response.**
 
+### Phase 6c — Make pm2 survive container restarts (added v10.14.23)
+
+`pm2 save` writes `/data/.pm2/dump.pm2` but `pm2 resurrect` doesn't run automatically on container boot. Without a startup hook, every `docker compose restart` kills both the Mission Control dashboard + cloudflared connector, and the client's `<slug>.zerohumanworkforce.com` URL returns Cloudflare Error 1033 until someone manually re-runs pm2 resurrect.
+
+**Run this on the HOST (Hostinger VPS host shell), not inside the container:**
+
+```bash
+bash /docker/<project>/data/.openclaw/skills/32-command-center-setup/scripts/install-pm2-restart-hook.sh /docker/<project>
+cd /docker/<project> && docker compose up -d --force-recreate
+```
+
+After ~60s of container boot, pm2 brings back command-center + cloudflared autonomously. Verify with `docker exec -u node <container> pm2 list` — should show 2 online processes.
+
+This is a one-time per-client setup. Lives in `/docker/<project>/docker-compose.yml`.
+
 ## Phase 7: Verification (Agent Does This Automatically)
 
 💬 Send Telegram message: "⏳ [Phase 7] Running final verification tests across all departments..."
