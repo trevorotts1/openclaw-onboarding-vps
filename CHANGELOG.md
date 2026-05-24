@@ -80,6 +80,31 @@ all !!! need to SHARE THE SAME USER, AGENTS, AND TOOLS.md."
 
 ---
 
+## [v10.14.28] — 2026-05-24 — persona-selector v2: fix list_available_personas + orchestrator phase-5 path + phase-6 categories.json append
+
+### The bugs
+
+**Forensic finding.** Trevor's smoke test showed `persona-selector-v2.py` returning `Schemaversion` (score 0.58) for every task. Root cause: `list_available_personas()` (line 458-473) returned `list(data.keys())` of `persona-categories.json` — which yields the 5 top-level meta-keys (`schemaVersion`, `created`, `domainTags`, `perspectiveTags`, `personas`) instead of the 40 real persona IDs nested under `data["personas"]`. The selector then scored each meta-key as if it were a persona, all got identical 0.5925 (heuristic mode neutral), and the title-cased alphabetic winner — `Schemaversion` — was returned for every task across the entire fleet. The 40 real persona blueprints (Voss, Hormozi, Cialdini, Sinek, Brown, Robbins, etc.) have **never been scored against a task since v2 shipped**.
+
+**Three contrasting tasks before fix:** all returned `schemaVersion` 0.5925. After fix: journaling-habit task → `duhigg-power-of-habit` 0.63, viral-marketing-hook → `godin-this-is-marketing` 0.6375 (with `kane-hook-point` #2). Real differentiation restored.
+
+### The fixes
+
+1. **`persona-selector-v2.py:458-473`** — `list_available_personas()` now descends into `data["personas"]` when present (dict or list shape), with a legacy-flat-dict fallback that filters out known meta-keys.
+2. **`orchestrator.py:1213` (Phase 5)** — replaced hardcoded legacy path `~/clawd/scripts/gemini-indexer.py` with a 3-path candidate search (`~/.openclaw/workspace/scripts/`, `/data/.openclaw/workspace/scripts/`, `~/clawd/scripts/`). Old hardcode would silently skip re-indexing on every modern install (Mac-new + VPS), leaving new persona blueprints un-embedded and invisible to Layer 5 semantic search.
+3. **`orchestrator.py` (new Phase 6)** — added `_append_persona_to_categories()` that auto-appends a new persona stub (with empty domain + perspective tag arrays) to `persona-categories.json` when the orchestrator's `process_book()` finishes Phase 3 directly. Pre-v10.14.28 only the `add-persona-from-source.sh` wrapper did this; direct orchestrator calls (`orchestrator.py --single-book`) left the persona invisible to the selector even after the bug-1 fix.
+
+### Net effect
+
+Persona-selector now actually picks from 40 personas instead of 5 meta-keys. The book-to-persona auto-update chain (Phase 1-6) now works end-to-end via either the wrapper script OR a direct orchestrator call.
+
+### Out of scope tonight (tracking only)
+
+- `semantic_task_fit` silent fallback through 3 methods needs operator visibility (P3 — needs stderr warning + top-level JSON propagation of `_task_fit_method`).
+- `gemini-embedding-2-preview` model name needs doc-confirmation against current Google catalog (P4 — `feedback-openclaw-research-first.md` mandates doc check before changing).
+
+---
+
 ## [v10.14.27] — 2026-05-24 — add-department.sh: one-command pipeline for adding a NEW department to a live Command Center
 
 ### The gap
