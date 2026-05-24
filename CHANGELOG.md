@@ -1,3 +1,97 @@
+## [v10.14.36] — 2026-05-24 — workforce-build-resume self-stop hotfix
+
+**Bug**: The `workforce-build-resume` cron registered by Skill 23 in
+v10.14.16 was supposed to self-remove when the workforce build reached a
+terminal state (`buildCompletedAt` set AND `closeoutStatus` in
+`{done, sent}`). It didn't. Today (2026-05-24) we found it actively
+looping on Lyric (25 sessions in 6 hours) and Evelyn — every 15 min,
+firing a DeepSeek-V4-Pro thinking-high session for no work. Both
+manually killed.
+
+**Symptoms** (operator-facing):
+- Trevor's Telegram filled with `[WORKFORCE-RESUME]` self-pings hours
+  after a build was already done + delivered.
+- DeepSeek-V4-Pro usage spike with no corresponding workforce work
+  (the agent was no-op'ing after reading a terminal state file).
+
+**Root cause**: The cron's prompt (`23-ai-workforce-blueprint/resume-prompt.txt`)
+told the agent "if both are clean → nothing to do, exit silently." It
+gave the agent NO instruction to remove the cron, and NO command to do
+so. The agent treated the state as "nothing to do this fire, but I'll
+get another fire in 15 min" instead of "I am no longer needed, terminate
+my schedule." Pure advisory instruction with no enforcement.
+
+**Fix — three-layer defense-in-depth:**
+
+### Belt — explicit self-stop in `resume-workforce-build.sh`
+
+Top of script (before lock acquisition):
+- Reads state file. If `status == done|failed|complete`, OR if
+  `buildCompletedAt` is set AND `closeoutStatus in {done, sent}`,
+  resolves the cron's UUID via `openclaw cron list | awk` and runs
+  `openclaw cron rm <uuid>`, then exits 0.
+- Idempotent. No-op when state is healthy.
+- Falls back gracefully if `openclaw cron list` schema drifts.
+
+### Suspenders — max-runs counter
+
+- Increments `$OC_ROOT/workspace/.workforce-build-resume-runs.count`
+  on each fire.
+- After 24 runs (≈6 hours at 15-min cadence) the script auto-removes
+  the cron regardless of state. A build that hasn't completed in 6h
+  is stuck — the cron is no longer useful, kill it.
+- Escalates to Trevor's chat (`OPENCLAW_TREVOR_CHAT`) when the cap
+  trips so a stuck build doesn't silently disappear.
+
+### Suspenders + safety net — `harden_check_cron_loops` in install.sh
+
+- New idempotent function in `scripts/install-hardening.sh`. Runs
+  during every install (Step 16) and every `update-skills.sh` pass.
+- Lists all `openclaw cron` entries; for any name ending in `-resume`
+  whose `last_fired > 24h ago` AND `created > 7d ago`, runs
+  `openclaw cron rm`. Handles both `--json` and plaintext output.
+- Conservative: requires BOTH age conditions to be reported; missing
+  data means "we don't know" → skip (no false-positive removes).
+
+### Prompt update — `resume-prompt.txt`
+
+- NEW Step -1: agent runs `resume-workforce-build.sh` FIRST so the
+  shell guard's belt/suspenders apply before any LLM work.
+- Step 0 branch C ("both clean → nothing to do") is now an explicit
+  instruction to resolve the UUID and run `openclaw cron rm <uuid>`
+  with the exact awk-grep command. No more "exit silently."
+
+### Files changed
+
+- `23-ai-workforce-blueprint/scripts/resume-workforce-build.sh`
+  — belt (terminal-state self-remove), suspenders (max-runs counter +
+  Trevor escalation), `find_self_cron_uuid()` + `self_remove_cron()`
+  helpers.
+- `23-ai-workforce-blueprint/resume-prompt.txt` — new Step -1 (shell
+  guard invocation) and Step 0-C (explicit `openclaw cron rm` block).
+- `scripts/install-hardening.sh` — `harden_check_cron_loops()` added
+  + wired into `run_install_hardening()`.
+
+### Risk profile
+
+LOW. All three layers are defensive guards:
+- Belt no-ops when state is non-terminal (the healthy case).
+- Suspenders cap is 24 runs — well above the longest legitimate build
+  observed in production (~12 runs / 3h on the largest fleet build).
+- Hardening sweep requires BOTH `last_fired > 24h` AND `created > 7d`
+  with concrete timestamps; abstains otherwise. No healthy resume cron
+  can match those gates.
+
+### Validation
+
+- `bash -n` clean on the resume script and `install-hardening.sh`.
+- The bump-version.sh `--check` pass is green across all 8 tracked
+  files (CI `version-consistency.yml` will confirm).
+- Manual Lyric+Evelyn cron rm done in parallel with this ship so no
+  more spam in flight while the fix rolls fleet-wide.
+
+---
+
 ## [v10.14.35] — 2026-05-24 — Follow-up bundle from cross-pollination QA
 
 Clears the four open follow-ups left after v10.14.34 (mega
