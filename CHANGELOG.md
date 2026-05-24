@@ -80,6 +80,53 @@ all !!! need to SHARE THE SAME USER, AGENTS, AND TOOLS.md."
 
 ---
 
+## [v10.14.30] — 2026-05-24 — persona-selector-v2: anti-repetition variety (recency penalty + top-N weighted sampling)
+
+### The bug
+
+Trevor's complaint, 2026-05-24: "the system did not properly assign persona to the task and some time i just keep using the same on over and over again without any consideration." The v10.14.x persona-selector did a pure top-1 pick by 5-layer weighted score. When the top 2–3 candidates were clustered within a few percent of each other (which is the common case once a workspace has a dozen-plus personas), the highest-scoring persona ALWAYS won — every single time. End result on Lyric tonight: `godin-this-is-marketing` for everything marketing-shaped, regardless of the actual task semantics.
+
+v10.14.28 (Track B, PR #24) fixed the related `list_available_personas` wrap-unwrap bug that surfaced metadata keys as personas. v10.14.30 stacks on top: even with the right 40 personas in the pool, the selector would still pick the same one until variety logic was added.
+
+### The fix (algorithm summary)
+
+In `23-ai-workforce-blueprint/scripts/persona-selector-v2.py`:
+
+1. **Recency penalty.** After the base 5-layer score is computed, read `persona_selection_log` for the `(department_id, task_category)` pair within the last 24h, count uses per persona, and multiply the base score by `1 - 0.08 * min(uses, 5)`. Personas used 0 times recently get full base; 5+ uses get 60% of base. Capped at 40% total to prevent runaway penalization.
+2. **Top-N weighted sampling.** Sort the adjusted scores. If top-1 dominates top-3 by ≥1.5x, pick top-1 (clear winner — quality preserved). Otherwise sample from the top-3 weighted by adjusted score, so over many calls the cluster gets distributed across all three.
+3. **Per-pick history write.** After each fresh selection, INSERT a row into `persona_selection_log` (additive — no schema change). The next call's variety lookup sees it. Stuffs `task_category` into the existing `layer_scores` JSON column (compact JSON, no spaces) so the scope-by-category query works without a migration.
+4. **Opt-out flag.** `--no-variety` reproduces pre-v10.14.30 behavior (pure top-1, no penalty, no sampling) for deterministic debugging.
+
+### Verification
+
+Tested live on Lyric (`openclaw-4pkz-openclaw-1`) in `SCORING_MODE=heuristic` (zero Gemini API calls — stayed inside Trevor's 30-call test budget; used heuristic mode end-to-end):
+
+- **10x same task** ("Plan a marketing campaign", department=`fresh-marketing-batch`, fresh log state): **9 distinct personas returned across 10 calls** (`godin-this-is-marketing` 2x, `collins-good-to-great-summary` 1x, `tawwab-set-boundaries-find-peace` 1x, `jones-exactly-what-to-say` 1x, `sinek-find-your-why` 1x, `charvet-words-change-minds` 1x, `pink-to-sell-is-human` 1x, `goggins-cant-hurt-me` 1x, `pink-when` 1x). Pre-fix baseline (verified via `--no-variety`): 10/10 `godin-this-is-marketing`.
+- **10 diverse tasks across 5 departments** (sales, operations, finance, product, hr): 5 distinct personas returned, sensible per-task. One marginal pick: "review cash burn rate" → `godin-this-is-marketing` (heuristic-mode quirk where the persona-id keyword "marketing" lit up on the cash/burn task; LLM mode would do better here; this is NOT a regression vs. baseline behavior).
+- **`--no-variety` regression check**: 3x same-task run with the flag returned 3/3 `godin-this-is-marketing` at score 0.795 — pre-fix baseline exactly preserved.
+
+Persona history table writes confirmed end-to-end (`persona_selection_log` populated 22 rows, scoped by `(department_id, task_category)`, 24h window matched). Compact-JSON `layer_scores` column queryable via tolerant `LIKE %task_category%` + `LIKE %<cat>%` two-clause filter.
+
+### Risk
+
+**Low.** Single-file behavioral change in one script. Opt-out flag (`--no-variety`) reproduces the prior behavior exactly for deterministic flows. Variety logic degrades gracefully — if the dashboard DB is missing, locked, or empty, `read_recent_use_counts` returns `{}`, the penalty becomes a no-op, and the selector still picks the top-1 (i.e., variety enabled with empty history == pre-fix baseline). Tune-points (`VARIETY_WINDOW_HOURS`, `VARIETY_PENALTY_PER_USE`, `VARIETY_DOMINANCE_RATIO`, `VARIETY_SAMPLE_TOP_N`) are top-of-file constants so future tuning is one PR.
+
+### Coordination
+
+This release was originally tracked against "Track A" (`fix/persona-matching-per-task`, separate task) for the `persona_assignment` / dashboard DB write permissions. Track A's PR was not merged at the time of authoring; the new `write_persona_selection_log_row` writes to the existing-and-already-writable `persona_selection_log` table (not `persona_assignment`), so this PR does NOT depend on Track A landing first. If Track A's perm fix never ships, variety still works — it only needs `persona_selection_log` to be writeable, which it already is on every live VPS.
+
+### Files version-bumped
+
+- [x] `./version` v10.14.30
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.30
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.30
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.30
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.30
+- [x] `README.md` v10.14.30
+- [x] `update-skills.sh` v10.14.30 (header + `ONBOARDING_VERSION`)
+
+---
+
 ## [v10.14.28] — 2026-05-24 — persona-selector v2: fix list_available_personas + orchestrator phase-5 path + phase-6 categories.json append
 
 ### The bugs
