@@ -1,3 +1,36 @@
+## [v10.14.25] — 2026-05-24 — update-skills.sh: pull from VPS repo + survive non-interactive mode
+
+### The bugs
+
+1. **Wrong repo URL — pulled skill content from the Mac repo, not the VPS repo.** `update-skills.sh:393` and `:547` both pointed at `trevorotts1/openclaw-onboarding` (the Mac onboarding repo) instead of `trevorotts1/openclaw-onboarding-vps`. Lines `:400-401` likewise looked for an `openclaw-onboarding-main/` extracted folder. Net effect: every VPS update run silently downloaded Mac-targeted skill content over the VPS install. Any VPS-only script — including v10.14.24's `seed-dashboard-content.py` — never reached production VPS containers via the standard `update-skills.sh` path.
+2. **Silent `exit 0` on the UPDATE PENDING prompt when stdin is not a TTY.** Lines `:354-366` did `read -p "Continue with update? (y/N)"`. Under `curl … | bash` (the documented invocation pattern in this same script's reexec banner), stdin gets EOF immediately; `$REPLY` stays empty; the `^[Yy]$` regex fails; script exits 0 with `Update cancelled.` and zero indication anything went wrong. Updates appeared to "succeed" but actually skipped.
+3. **Same silent `exit 0` on the "Already up to date. Force re-install?" prompt.** Lines `:373-381` had the identical EOF-on-pipe bug.
+
+### Why this matters
+VPS clients have been silently pulling Mac-repo skill content for an unknown number of releases. Any VPS-only file we shipped (like v10.14.24's `seed-dashboard-content.py`) never landed because the updater pulled from the wrong source. After this fix, VPS clients get VPS skills, and a `curl … | bash` run won't silently no-op when an UPDATE PENDING flag is present or when versions match.
+
+### What changed
+- `update-skills.sh:393` — `openclaw-onboarding` → `openclaw-onboarding-vps` (download URL).
+- `update-skills.sh:400-401` — extracted-folder check `openclaw-onboarding-main` → `openclaw-onboarding-vps-main`.
+- `update-skills.sh:547` — fallback `REPO_URL` corrected from Mac repo to VPS repo (the `[ -d "/data/.openclaw" ]` override on `:548` was masking this for in-container runs, but the fallback was still wrong for any caller hitting it).
+- `update-skills.sh:354-366` — UPDATE PENDING `read` now wrapped in `if [ -t 0 ]`; non-interactive mode proceeds past the flag with a loud log line.
+- `update-skills.sh:373-381` — "Already up to date" `read` now wrapped in `if [ -t 0 ]`; non-interactive mode logs and exits 0 (correct behavior — we're already current and the operator isn't there to force a re-install).
+
+### Risk
+Low. Three localized changes in a single script. No behavior change for interactive (TTY) runs. Non-interactive runs now do the right thing instead of silently no-op'ing.
+
+### Version-bump-tracking checklist
+- [x] `./version` v10.14.25 (manual bump)
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.25
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.25
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.25
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.25
+- [x] `README.md` v10.14.25
+- [x] `update-skills.sh` v10.14.25 (header + `ONBOARDING_VERSION`)
+- [x] `32-command-center-setup/scripts/install-pm2-restart-hook.sh` — v10.14.23 idempotency marker INTENTIONALLY LEFT IN PLACE (it's a feature-marker, not a version marker).
+
+---
+
 ## [v10.14.24] — 2026-05-24 — Dashboard content seeder (companies + agents + tasks) — fixes empty Kanban on first load
 
 ### The bug
