@@ -307,6 +307,47 @@ Add the LABELED sections from CORE_UPDATES.md ONLY to:
 
 Do NOT touch IDENTITY.md, HEARTBEAT.md, USER.md, or SOUL.md from this skill.
 
+### Step 8.5: (v2.1.0) Set up the content calendar (optional, enables `weekly-batch.sh`)
+
+The cron line documented in `INSTRUCTIONS.md` (`0 9 * * 1 bash …/weekly-batch.sh`) reads `~/.openclaw/config/content-calendar.json` and runs `run-publishing-cycle.sh` once per scheduled topic. The file is **opt-in** — `weekly-batch.sh` exits 0 with an informational message if it's missing, so it's safe to leave un-configured.
+
+To enable weekly automation, copy the starter template and edit it:
+
+```bash
+mkdir -p ~/.openclaw/config
+cp ~/.openclaw/skills/35-social-media-planner/scripts/content-calendar.example.json \
+   ~/.openclaw/config/content-calendar.json
+```
+
+**Schema (v1.0):**
+
+```json
+{
+  "version": "v1.0",
+  "entries": [
+    {
+      "date": "2026-05-25",
+      "topic": "How to delegate to AI without losing control",
+      "platforms": ["linkedin", "medium", "x", "wordpress"],
+      "schedule": "auto"
+    }
+  ]
+}
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `date` | yes | `YYYY-MM-DD` in the box's local timezone. The batch fires for entries whose date falls in the current Monday-Sunday window. |
+| `topic` | yes | Free-form string passed to `run-publishing-cycle.sh --topic`. |
+| `platforms` | yes | Array. Same list `run-publishing-cycle.sh --platforms` accepts (`linkedin`, `medium`, `x`, `wordpress`, `substack`, `ghl`, `youtube`, `facebook`, `instagram`, `tiktok`, `threads`, `pinterest`, `email`, `podcast`). |
+| `schedule` | no  | `"auto"` (cadence-driven, default), `"now"` (publish immediately), or an ISO 8601 timestamp. |
+
+**Cron line** (add to the container's crontab):
+
+```cron
+0 9 * * 1 bash $HOME/.openclaw/skills/35-social-media-planner/scripts/weekly-batch.sh
+```
+
 ### Step 9: Add weekly theme request to HEARTBEAT.md
 
 ```markdown

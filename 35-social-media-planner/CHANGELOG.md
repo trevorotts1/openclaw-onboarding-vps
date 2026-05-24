@@ -1,5 +1,39 @@
 # Changelog - Social Media Planner (Skill 35)
 
+## v2.1.0 - May 24, 2026 (Track M — closes v10.14.33 gap)
+
+### Added — the three trigger paths INSTRUCTIONS.md has always referenced
+- `scripts/run-publishing-cycle.sh` — single-topic orchestrator with full
+  `--topic / --platforms / --schedule / --dry-run / --help` interface.
+  Validates pre-reqs (SOUL/IDENTITY/USER/secrets, Skills 22/31), detects
+  whether the 21-agent roster (15 producers + 6 QC) is configured in
+  `openclaw.json`, and either prepares the per-phase workdir +
+  `cycle-manifest.json` for the master orchestrator OR emits a clear
+  "run Skill 23 build-workforce with the social-media-planner role-bundle"
+  next-step message.
+- `scripts/weekly-batch.sh` — cron-driven (`0 9 * * 1`) batch runner.
+  Reads `~/.openclaw/config/content-calendar.json`, filters entries to
+  the current Monday-Sunday window, invokes `run-publishing-cycle.sh`
+  once per topic. Logs to `/tmp/skill-35-weekly-<date>.log`. Exits 0 with
+  an informational message if the calendar file is absent.
+- `scripts/content-calendar.example.json` — starter template documenting
+  the schema (`{version, entries: [{date, topic, platforms, schedule}]}`).
+- INSTALL.md — Step 8 new section documenting the content-calendar
+  schema and the example template.
+
+### Why
+INSTRUCTIONS.md `## How to trigger this skill` has referenced these three
+paths since v10.12.0, but the scripts themselves never existed. Skill 35
+was installed on all 8 client boxes but unusable end-to-end. This PR
+closes the gap.
+
+### Companion change
+Dashboard repo (`blackceo-command-center`) — separate PR for the
+Marketing-department "Publish" button + `/api/skill-35/publish`
+endpoint that queues a cycle and emits an SSE event.
+
+---
+
 ## v1.4.0 - April 14, 2026
 
 ### Added/Updated

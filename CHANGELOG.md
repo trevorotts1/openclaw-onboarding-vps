@@ -1,3 +1,95 @@
+## [v10.14.33] — 2026-05-24 — Skill 35: build the trigger scripts INSTRUCTIONS.md has always referenced
+
+### Why
+
+Skill 35 (`35-social-media-planner`) is installed on all 8 client boxes but
+unusable end-to-end. INSTRUCTIONS.md `## How to trigger this skill` has
+documented three trigger paths since v10.12.0:
+
+1. `scripts/run-publishing-cycle.sh` — single-topic publishing cycle
+2. `scripts/weekly-batch.sh` — cron-driven (`0 9 * * 1`) batch runner
+3. The dashboard Marketing-department "Publish" button
+
+None of the three existed in code. This PR closes the gap on (1) and (2);
+(3) ships in a companion `blackceo-command-center` PR.
+
+### What changed
+
+**`35-social-media-planner/scripts/run-publishing-cycle.sh` (NEW)**
+- Full arg interface matching INSTRUCTIONS.md (`--topic`, `--platforms`,
+  `--schedule`, plus `--dry-run`, `--workdir`, `--help`).
+- Validates the variable-source files (SOUL/IDENTITY/USER/secrets/.env/
+  openclaw.json) per the INSTRUCTIONS.md "Variable sources (NEVER
+  hardcode)" table; exits 3 with a STOP message if any are missing
+  (honors N22 — does not invent defaults).
+- Validates required prerequisite skills (22, 31); exits 4 if missing.
+- Detects the 21-agent roster (15 producers + 6 QC) in `openclaw.json`
+  and, if any are missing, exits 5 with the "run Skill 23 build-workforce
+  with the social-media-planner role-bundle" instructional message —
+  per the PR spec, this prevents shipping a half-orchestrator that
+  silently does nothing.
+- When pre-reqs pass, writes a `cycle-manifest.json` + per-phase
+  workdirs and signals `READY-FOR-ORCHESTRATOR` for the master agent to
+  pick up. Mirrors the Skill 23 build-workforce convention (the AI agent
+  spawns the sub-agents under its own control, NOT a script).
+
+**`35-social-media-planner/scripts/weekly-batch.sh` (NEW)**
+- Reads `~/.openclaw/config/content-calendar.json`.
+- Filters entries to the current Monday-Sunday window (Python `datetime`).
+- Invokes `run-publishing-cycle.sh` once per due topic.
+- Logs to `/tmp/skill-35-weekly-<date>.log`.
+- Exits 0 with an informational "how to populate" message if the
+  calendar file is missing — the file is opt-in, not required.
+
+**`35-social-media-planner/scripts/content-calendar.example.json` (NEW)**
+- Starter template documenting the v1.0 calendar schema.
+
+**`35-social-media-planner/INSTALL.md`**
+- Step 8.5 added: full calendar schema reference + cron line.
+
+**Version bumps (per the version-bump checklist memory)**
+- `version`, `install.sh`, `23-ai-workforce-blueprint/skill-version.txt`,
+  `_index.json`, `_qc-summary.md` via `scripts/bump-version.sh v10.14.33`.
+- `README.md` line 3 + "READ THIS FIRST" heading.
+- `update-skills.sh` line 5 + `ONBOARDING_VERSION="v10.14.33"`.
+- `35-social-media-planner/skill-version.txt`: v2.0.0 → v2.1.0.
+- `35-social-media-planner/CHANGELOG.md`: new v2.1.0 entry.
+
+### Risk
+
+Low. Both new scripts default to dry-run-friendly behavior:
+`run-publishing-cycle.sh` never spawns agents itself (it prepares the
+manifest + signals the orchestrator); `weekly-batch.sh` exits 0 cleanly
+if the calendar file is absent. No existing skill behavior changes.
+
+### Fleet deploy
+
+After merge: `update-skills.sh` on all 8 client VPSes. The `scripts/`
+directory under `35-social-media-planner/` is new — `update-skills.sh`
+already syncs the whole skill folder, so no extra wiring needed.
+
+**Smoke test on Lyric** (or any client box):
+```bash
+docker exec -u node openclaw-4pkz-openclaw-1 \
+  bash /data/.openclaw/skills/35-social-media-planner/scripts/run-publishing-cycle.sh --help
+```
+Expected: usage output, exit 0.
+
+### Open gap (next step)
+
+Smoke testing on the fleet will likely surface that the 21-agent
+roster (researcher, strategist, writer, editor, image-prompt-engineer,
+image-generator, video-script-writer, video-producer, audio-generator,
+thumbnail-designer, publisher, podcast-publisher, email-designer,
+email-publisher, engagement-monitor, plus 6 QC agents) is NOT yet
+configured in `openclaw.json` on most boxes. The script's exit-5 path
+documents the remediation: invoke Skill 23 `build-workforce.py` with a
+`social-media-planner` role-bundle. That role-bundle does not yet
+exist in `23-ai-workforce-blueprint/templates/role-library/`. Track
+this as a follow-on (next PR after v10.14.33).
+
+---
+
 ## [v10.14.32] — 2026-05-24 — Skill 22 (book-to-persona): YouTube + local-video pipeline rewrite
 
 ### Source
