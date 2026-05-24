@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.14.31
+#  v10.14.32
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.31"
+ONBOARDING_VERSION="v10.14.32"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -528,6 +528,45 @@ main() {
 
   # Mark the check timestamp so the catchup logic in future runs is accurate
   date -u +%Y-%m-%dT%H:%M:%SZ > "$SKILLS_DIR/.last-update-check" 2>/dev/null || true
+
+  # ----------------------------------------------------------
+  # v10.14.32: Backfill yt-dlp + whisper-cpp + ffmpeg for Skill 22
+  # ----------------------------------------------------------
+  # Existing clients running update-skills.sh need these tools the same as
+  # fresh installs — install.sh's install_media_tools won't fire on update.
+  # Mirror the same path priority (Linuxbrew → apt → pip).
+  echo ""
+  echo "  Checking Skill 22 media tools (yt-dlp + whisper-cpp + ffmpeg)..."
+  UPD_LBREW="/data/linuxbrew/.linuxbrew/bin/brew"
+  UPD_MEDIA_MISSING=""
+  for tool in yt-dlp whisper-cpp ffmpeg; do
+      if ! command -v "$tool" >/dev/null 2>&1 \
+         && [ ! -x "/data/linuxbrew/.linuxbrew/bin/$tool" ]; then
+          UPD_MEDIA_MISSING="$UPD_MEDIA_MISSING $tool"
+      fi
+  done
+  if [ -n "$UPD_MEDIA_MISSING" ]; then
+      echo "    Missing:$UPD_MEDIA_MISSING — attempting install..."
+      if [ -x "$UPD_LBREW" ]; then
+          for tool in $UPD_MEDIA_MISSING; do
+              "$UPD_LBREW" install "$tool" >> "$LOG_FILE" 2>&1 \
+                  && echo "    ✓ brew install $tool" \
+                  || echo "    ⚠ brew install $tool failed (see $LOG_FILE)"
+          done
+      fi
+      # pip fallback for yt-dlp + whisper (only if still missing)
+      if ! command -v yt-dlp >/dev/null 2>&1 && [ ! -x "/data/linuxbrew/.linuxbrew/bin/yt-dlp" ]; then
+          pip3 install --user yt-dlp --break-system-packages >> "$LOG_FILE" 2>&1 \
+              || pip3 install --user yt-dlp >> "$LOG_FILE" 2>&1 || true
+      fi
+      if ! command -v whisper-cpp >/dev/null 2>&1 && ! command -v whisper >/dev/null 2>&1 \
+         && [ ! -x "/data/linuxbrew/.linuxbrew/bin/whisper-cpp" ]; then
+          pip3 install --user openai-whisper --break-system-packages >> "$LOG_FILE" 2>&1 \
+              || pip3 install --user openai-whisper >> "$LOG_FILE" 2>&1 || true
+      fi
+  else
+      echo "    ✓ All media tools already installed"
+  fi
 
   # ----------------------------------------------------------
   # Ensure the Sunday weekly update-check cron exists (idempotent)
