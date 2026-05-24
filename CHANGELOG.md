@@ -1,3 +1,85 @@
+## [v10.14.29] — 2026-05-24 — Per-agent file architecture: IDENTITY/SOUL/MEMORY/HEARTBEAT for every dept-head agent + shared USER/AGENTS/TOOLS via symlink
+
+### The gap
+
+Per Trevor's spec (2026-05-24): every top-level agent (non-sub-agent) MUST have
+its own `IDENTITY.md`, `SOUL.md`, `MEMORY.md`, and `HEARTBEAT.md`. The "shared"
+files — `USER.md`, `AGENTS.md`, `TOOLS.md` — live ONCE at the workspace root
+and every agent reads them through a symlink. Sub-agents (role folders inside
+a dept) are excluded; they already get their own scaffold via
+`23-ai-workforce-blueprint/scripts/post-build-role-workspaces.py`.
+
+When we audited Lyric live, 16 of 17 dept-head folders had SOUL/MEMORY/HEARTBEAT
++ symlinked USER/AGENTS/TOOLS — but were missing IDENTITY.md. Only
+`master-orchestrator` had one. Skill 23's `build-workforce.py` was writing
+SOUL/MEMORY/HEARTBEAT for the dept head but skipped IDENTITY — the gap Trevor
+flagged.
+
+### What ships
+
+1. **NEW** `32-command-center-setup/scripts/scaffold-agent-files.sh` — single-
+   responsibility scaffolder. Takes `--agent-slug X --agent-name "Y" [--department Z]
+   [--workspace-dir P] [--shared-root R] [--force]`. Writes IDENTITY/SOUL/MEMORY/
+   HEARTBEAT if missing (never overwrites), and creates/refreshes USER/AGENTS/
+   TOOLS symlinks. Idempotent. Refuses to clobber regular files that share the
+   shared-file names — warns and leaves operator to convert.
+
+2. **PATCHED** `23-ai-workforce-blueprint/scripts/build-workforce.py` — now also
+   writes `IDENTITY.md` for the dept-head right after SOUL.md. New helper
+   `generate_identity_md()` produces a lightweight stub (Name field deliberately
+   blank — the agent fills in its persona name during the first conversation
+   with the owner). Same idempotency contract as the existing SOUL/MEMORY/
+   HEARTBEAT writes (only writes if missing).
+
+3. **PATCHED** `32-command-center-setup/scripts/materialize-dept-agents.sh` —
+   after the openclaw.json mutation succeeds, the python pass emits a tab-
+   separated manifest of (agent_id, name, workspace_path, dept_slug) tuples.
+   The bash wrapper reads the manifest and invokes
+   `scaffold-agent-files.sh` for each — so any agent that lands in
+   `agents.list[]` automatically also gets per-agent files written. Manifest
+   is removed after consumption.
+
+4. **PATCHED** `32-command-center-setup/scripts/seed-dashboard-content.py` —
+   after each `INSERT INTO agents` succeeds, calls a new
+   `scaffold_agent_files()` helper that subprocesses out to
+   `scaffold-agent-files.sh`. Best-effort — never fails the dashboard seed.
+
+5. **PATCHED** `32-command-center-setup/scripts/add-department.sh` (v10.14.27,
+   Track B) — added step 8 that calls a new `scaffold_agent_files()` python
+   helper, so every NEW department added live also gets the per-agent files.
+
+### Backfill on live VPSes
+
+After CI green + self-merge, this PR's launcher runs `scaffold-agent-files.sh`
+once per dept head on Lyric, Evelyn, and Angeleen — writing the missing
+IDENTITY.md files and confirming symlinks. Idempotent on re-run.
+
+### Risk
+
+LOW. All per-agent file writes are guarded by `if not isfile()`. Symlink writes
+check current target and skip if correct. The scaffolder NEVER overwrites a
+regular file that shares a shared-file name (USER.md as file vs symlink) — it
+warns and leaves the operator to convert. `materialize-dept-agents.sh` already
+backed up `openclaw.json` and that path is unchanged.
+
+### Spec source
+
+Trevor 2026-05-24: "every agent [excluding subagents] gets its own MEMORY and
+SOUL and IDENTITY .md files and HEARTBEAT. when a new agent is created they
+all !!! need to SHARE THE SAME USER, AGENTS, AND TOOLS.md."
+
+### Version-bump-tracking checklist
+- [x] `./version` v10.14.29 (bump-script)
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.29 (bump-script)
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.29 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.29 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.29 (bump-script)
+- [x] `README.md` v10.14.29 (manual)
+- [x] `update-skills.sh:ONBOARDING_VERSION` v10.14.29 (manual)
+- [x] `CHANGELOG.md` v10.14.29 entry (manual — this one)
+
+---
+
 ## [v10.14.28] — 2026-05-24 — persona-selector v2: fix list_available_personas + orchestrator phase-5 path + phase-6 categories.json append
 
 ### The bugs

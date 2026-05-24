@@ -26,9 +26,43 @@ Schema-tolerant: reads PRAGMA table_info for each table and only INSERTs
 columns that actually exist. This survives schema drift between dashboard
 repo versions.
 """
-import sqlite3, json, os, sys, secrets
+import sqlite3, json, os, sys, secrets, subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def scaffold_agent_files(agent_slug, agent_name, department):
+    """Invoke scaffold-agent-files.sh for a dept-head agent.
+
+    Writes IDENTITY/SOUL/MEMORY/HEARTBEAT (if missing) and (re)creates
+    USER/AGENTS/TOOLS symlinks. Safe to call repeatedly — script is
+    idempotent.
+
+    Trevor's agent-file architecture (v10.14.29):
+      - SHARED across all agents: USER.md, AGENTS.md, TOOLS.md
+      - PER-AGENT: IDENTITY.md, SOUL.md, MEMORY.md, HEARTBEAT.md
+      - Sub-agents are excluded (handled by Skill 23 post-build).
+    """
+    scaffolder = Path(__file__).resolve().parent / "scaffold-agent-files.sh"
+    if not scaffolder.is_file():
+        print(f"  [scaffold] WARN: {scaffolder} not found — skipping per-agent file scaffold", file=sys.stderr)
+        return False
+    try:
+        result = subprocess.run(
+            ["bash", str(scaffolder),
+             "--agent-slug", agent_slug,
+             "--agent-name", agent_name,
+             "--department", department],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            print(f"  [scaffold] WARN: scaffolder exited rc={result.returncode} for {agent_slug}: "
+                  f"{result.stderr.strip()[:300]}", file=sys.stderr)
+            return False
+        return True
+    except (subprocess.TimeoutExpired, OSError) as e:
+        print(f"  [scaffold] WARN: scaffolder failed for {agent_slug}: {e}", file=sys.stderr)
+        return False
 
 
 def find_db():
@@ -222,6 +256,11 @@ def insert_agents_and_tasks(db, info):
             try:
                 db.execute(sql, [ag_data[c] for c in insert_cols])
                 agents_added += 1
+                # Trevor's agent-file architecture (v10.14.29): every new
+                # dept-head agent gets its per-agent IDENTITY/SOUL/MEMORY/
+                # HEARTBEAT files + symlinks to shared USER/AGENTS/TOOLS.
+                # Best-effort — never fails the dashboard seed.
+                scaffold_agent_files(ws_slug, ag_data["name"], ws_slug)
             except sqlite3.Error as e:
                 print(f"  agent insert for {ws_slug} failed: {e}", file=sys.stderr)
                 ag_id = None
