@@ -1,3 +1,65 @@
+## [v10.14.32] — 2026-05-24 — Skill 22 (book-to-persona): YouTube + local-video pipeline rewrite
+
+### Source
+
+Track-I forensic report (2026-05-23) traced every YouTube → persona failure to
+four separate bugs in the pipeline. `add-persona-from-source.sh` could
+silently exit 0 while writing zero bytes; the YouTube branch called a CLI
+(`summarize`) that has never existed as an executable; the local-video branch
+required tools (`yt-dlp`/`whisper-cpp`/`ffmpeg`) that aren't installed by
+`install.sh` or `update-skills.sh`; and on fresh VPS installs the first
+persona's category index entry was silently dropped. Net effect: every
+client's YouTube source path was broken, and Lyric's fresh VPS produced 0
+selector candidates because `persona-categories.json` was never bootstrapped.
+
+### The four fixes
+
+**Fix A — Install yt-dlp + whisper-cpp + ffmpeg fleet-wide.**
+`install.sh` Step 6.5 (new) installs all three via Linuxbrew
+(`/data/linuxbrew/.linuxbrew/bin/brew install yt-dlp whisper-cpp ffmpeg`)
+with apt-get and pip fallbacks. `update-skills.sh` mirrors the same logic
+after the skill-extract step so existing clients backfill on next update.
+
+**Fix B — Rewrite YouTube + local-video branches of
+`22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh`.**
+YouTube branch now calls `yt-dlp --write-auto-subs` first (free, no API
+cost, seconds-fast), converts VTT to plain text via inline Python (strips
+timestamps, speaker tags, dedupes), and falls back to `yt-dlp -x` audio
+download + `whisper-cpp` transcription only when auto-subs aren't
+available. Local-video branch uses `ffmpeg` audio extraction +
+`whisper-cpp` directly (prefers `whisper-cpp`, falls back to
+`whisper-cli`, then the Python `whisper` package).
+
+**Fix D — Bootstrap `persona-categories.json` if missing.**
+The bash wrapper's category-update gate (`if [ -f "$CAT_FILE" ]`) now has an
+upstream "create-if-missing" block that writes the minimal v1.0 schema
+shell. On a fresh VPS this means the FIRST persona produced gets indexed
+correctly. (Track C v10.14.28 already handled the Python orchestrator's
+copy of this gate — Fix D closes the bash-wrapper sibling.)
+
+**Fix E — `set -o pipefail` in `add-persona-from-source.sh`.**
+Failures inside `cmd | tee log` chains no longer return exit 0. Documented
+in INSTRUCTIONS.md N32 with a `${PIPESTATUS[0]}` note for callers wrapping
+the script in their own pipelines.
+
+### Files touched
+
+- `22-book-to-persona-coaching-leadership-system/scripts/add-persona-from-source.sh` — version banner v9.6.4 → v10.14.32, `set -o pipefail`, YouTube + local-video branches rewritten, persona-categories.json bootstrap added
+- `22-book-to-persona-coaching-leadership-system/INSTRUCTIONS.md` — header bumped, source-types table updated, new N32 note
+- `install.sh` — new `install_media_tools` Step 6.5
+- `update-skills.sh` — media-tools backfill after skill-extract
+- 5 version-tracked files via `scripts/bump-version.sh v10.14.32`
+
+### Fleet deploy
+
+Run `update-skills.sh` on all 8 client VPSes. The backfill block will fetch
+yt-dlp + whisper-cpp + ffmpeg via Linuxbrew (idempotent — re-runs are
+no-ops if tools already present). Verify with:
+`add-persona-from-source.sh --source https://www.youtube.com/watch?v=XPHvqkSUOQ8 --title "Test" --author "Test Author"`
+on at least one box.
+
+---
+
 ## [v10.14.31] — 2026-05-24 — Skill 35 (social-media-planner): Fish Audio is now optional
 
 ### The bug

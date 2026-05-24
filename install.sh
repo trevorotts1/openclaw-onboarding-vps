@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.31"
+ONBOARDING_VERSION="v10.14.32"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1860,6 +1860,109 @@ else
         fi
     fi
 fi
+
+# ----------------------------------------------------------
+# v10.14.32: Install yt-dlp + whisper-cpp + ffmpeg for Skill 22 YouTube/video → persona
+# ----------------------------------------------------------
+# Pre-v10.14.32 add-persona-from-source.sh's YouTube branch shelled out to a
+# `summarize` CLI (Skill 16) that never existed as an executable on any VPS
+# install. Track-I forensic (2026-05-23) traced every YouTube persona failure
+# to that branch. Fix: rewire the script to call yt-dlp + whisper-cpp directly,
+# and bake those dependencies into the installer so they're guaranteed present.
+#
+# Path priority (Hostinger Docker VPS — runs as `node` user inside the container):
+#   1. /data/linuxbrew/.linuxbrew (already on the image, no sudo needed)
+#   2. apt-get  (fallback — needs root, will usually fail in container; non-fatal)
+#   3. pip3 install --user yt-dlp + openai-whisper (final fallback)
+install_media_tools() {
+    step "Step 6.5: Installing yt-dlp + whisper-cpp + ffmpeg (Skill 22 YouTube/video)"
+
+    local LBREW="/data/linuxbrew/.linuxbrew/bin/brew"
+    local MISSING_TOOLS=""
+
+    for tool in yt-dlp whisper-cpp ffmpeg; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            # Also check linuxbrew's bin (may not be on PATH yet)
+            if [ ! -x "/data/linuxbrew/.linuxbrew/bin/$tool" ]; then
+                MISSING_TOOLS="$MISSING_TOOLS $tool"
+            fi
+        fi
+    done
+
+    if [ -z "$MISSING_TOOLS" ]; then
+        success "yt-dlp + whisper-cpp + ffmpeg already installed — skipping"
+        return 0
+    fi
+
+    note "Missing tools:$MISSING_TOOLS"
+
+    # ── Attempt 1: Linuxbrew (preferred — no sudo needed on Hostinger image) ──
+    if [ -x "$LBREW" ]; then
+        note "Installing missing tools via Linuxbrew at /data/linuxbrew..."
+        for tool in $MISSING_TOOLS; do
+            if "$LBREW" install "$tool" >> "$LOG_FILE" 2>&1; then
+                success "  brew install $tool ✓"
+            else
+                warn "  brew install $tool failed (see $LOG_FILE)"
+            fi
+        done
+    else
+        note "Linuxbrew not found at $LBREW — skipping brew path"
+    fi
+
+    # ── Attempt 2: apt (only if missing tools remain and we have root) ──
+    local STILL_MISSING=""
+    for tool in $MISSING_TOOLS; do
+        if ! command -v "$tool" >/dev/null 2>&1 && [ ! -x "/data/linuxbrew/.linuxbrew/bin/$tool" ]; then
+            STILL_MISSING="$STILL_MISSING $tool"
+        fi
+    done
+
+    if [ -n "$STILL_MISSING" ] && command -v apt-get >/dev/null 2>&1 && [ "$(id -u)" = "0" ]; then
+        note "Trying apt-get for remaining tools:$STILL_MISSING"
+        apt-get update >> "$LOG_FILE" 2>&1 || true
+        for tool in $STILL_MISSING; do
+            case "$tool" in
+                yt-dlp)      apt-get install -y yt-dlp >> "$LOG_FILE" 2>&1 || true ;;
+                whisper-cpp) apt-get install -y whisper-cpp >> "$LOG_FILE" 2>&1 || true ;;
+                ffmpeg)      apt-get install -y ffmpeg >> "$LOG_FILE" 2>&1 || true ;;
+            esac
+        done
+    fi
+
+    # ── Attempt 3: pip fallback for yt-dlp + openai-whisper ──
+    if ! command -v yt-dlp >/dev/null 2>&1 && [ ! -x "/data/linuxbrew/.linuxbrew/bin/yt-dlp" ]; then
+        note "Falling back to pip3 install --user yt-dlp..."
+        pip3 install --user yt-dlp --break-system-packages >> "$LOG_FILE" 2>&1 \
+          || pip3 install --user yt-dlp >> "$LOG_FILE" 2>&1 || true
+    fi
+    if ! command -v whisper-cpp >/dev/null 2>&1 && ! command -v whisper >/dev/null 2>&1 \
+       && [ ! -x "/data/linuxbrew/.linuxbrew/bin/whisper-cpp" ]; then
+        note "Falling back to pip3 install --user openai-whisper (slower than whisper.cpp)..."
+        pip3 install --user openai-whisper --break-system-packages >> "$LOG_FILE" 2>&1 \
+          || pip3 install --user openai-whisper >> "$LOG_FILE" 2>&1 || true
+    fi
+
+    # ── Final report ──
+    local FINAL_MISSING=""
+    for tool in yt-dlp whisper-cpp ffmpeg; do
+        if ! command -v "$tool" >/dev/null 2>&1 && [ ! -x "/data/linuxbrew/.linuxbrew/bin/$tool" ]; then
+            # whisper-cpp is acceptable if `whisper` (pip) is available
+            if [ "$tool" = "whisper-cpp" ] && command -v whisper >/dev/null 2>&1; then
+                continue
+            fi
+            FINAL_MISSING="$FINAL_MISSING $tool"
+        fi
+    done
+
+    if [ -z "$FINAL_MISSING" ]; then
+        success "All Skill 22 media tools available (yt-dlp + whisper backend + ffmpeg)"
+    else
+        warn "Missing after all install attempts:$FINAL_MISSING — Skill 22 YouTube/video personas will fail until these are installed manually."
+    fi
+}
+
+install_media_tools
 
 # ----------------------------------------------------------
 # Step 7: Configure Concurrency
