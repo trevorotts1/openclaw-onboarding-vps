@@ -1,3 +1,76 @@
+## [v10.14.35] — 2026-05-24 — Follow-up bundle from cross-pollination QA
+
+Clears the four open follow-ups left after v10.14.34 (mega
+cross-pollination): #89 ROLE.md substitution forensics + fix, #90 Mac
+add-department port decision, #91 CI version-check expansion to 8 files,
+#92 hardening bundle smoke test.
+
+### #89 — Per-agent file personalization (dept-head IDENTITY/SOUL/MEMORY)
+
+**Root cause**: `32-command-center-setup/scripts/scaffold-agent-files.sh`
+writes IDENTITY/SOUL/MEMORY/HEARTBEAT for each dept-head with no
+company-name reference at all — just the dept slug. The `fill_tokens()`
+function in `23-ai-workforce-blueprint/scripts/create_role_workspaces.py`
+substitutes `{{COMPANY_NAME}}` correctly for sub-agent how-to.md files
+(via `try_library_fill`), but the dept-head scaffolder bypasses
+`fill_tokens` entirely because its templates contain no tokens to begin
+with. On Lyric, the dept-head IDENTITY.md is impersonal ("Master
+Orchestrator (CEO Agent)", "marketing department's performance") with no
+mention of the owner's actual company, while sub-agent how-tos correctly
+name the company. The "substitution bypass" symptom is actually a
+"template never had the tokens" bug.
+
+**Fix**:
+- `scaffold-agent-files.sh` now reads `company-config.json` (auto-detected
+  across the three known layouts: per-active-company dir,
+  zero-human-company root, legacy workspace root) and personalises
+  IDENTITY.md / SOUL.md / MEMORY.md with the company name + industry.
+  Apostrophe-safe (tested with `John's Bakery`). Caller can override via
+  `OC_COMPANY_NAME` / `OC_COMPANY_INDUSTRY` env vars (used by
+  add-department.sh and the backfill script).
+- `32-command-center-setup/scripts/backfill-dept-agent-personalization.sh`
+  (NEW) — retroactive fix for already-installed clients. Detects
+  scaffolder-written dept-head files that lack the company name, backs
+  them up to a timestamped `.backfill-backup-<TS>/` directory, then
+  re-scaffolds with the new personalised templates. Idempotent (skips
+  depts where the company name is already in IDENTITY.md). Falls back to
+  parsing `workspace/memory/workforce-interview-answers.md` when
+  `company-config.json` has an empty `companyName` (the state on early
+  v10.14.x installs). bash-3.2 compatible (pretty-name lookup uses a
+  case statement, not `declare -A`, so it runs on macOS without homebrew
+  bash).
+
+### #90 — Mac add-department.sh port
+
+Decision: **ported** to the Mac repo. The VPS `add-department.sh` already
+auto-detects both `/data/.openclaw` (VPS) and `~/.openclaw` (Mac) for
+every path it touches, and the dashboard `mission-control.db` lives at
+the same `~/projects/command-center/mission-control.db` on both
+platforms. The script is functionally identical across platforms; the
+Mac copy is a byte-for-byte port (see `32-command-center-setup/scripts/
+add-department.sh`).
+
+### #91 — CI version-check modernization (5 files → 8 files)
+
+`.github/workflows/version-consistency.yml` now checks all 8
+version-bearing files instead of the original 5. Matches
+`scripts/bump-version.sh` coverage. New locations checked:
+`update-skills.sh` (ONBOARDING_VERSION), `README.md` ("this repo at
+vX.Y.Z"), `DIRECT-TO-AGENT-UPDATE-MESSAGE.md` (**vX.Y.Z** boldface).
+Failure message references the 8-file pattern so anyone tripping the
+gate runs `bump-version.sh` instead of hand-editing.
+
+### #92 — install-hardening.sh smoke test
+
+7/7 hardening functions PASS for idempotency + non-blocking semantics
+against synthetic-state local exercise. Three branches remain
+production-only (real pm2 / real `openclaw devices approve` API call /
+real pip install on barebones Hostinger image) — deferred to next
+Hostinger client install as built-in acceptance test. Detailed report
+in the PR body.
+
+---
+
 ## [v10.14.34] — 2026-05-24 — 2-day-learnings install hardening bundle
 
 ### Why
