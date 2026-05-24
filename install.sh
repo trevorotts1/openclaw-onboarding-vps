@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.19"
+ONBOARDING_VERSION="v10.14.20"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -3090,6 +3090,25 @@ case "$TELEGRAM_LAST_RESULT" in
         warn "Telegram progress messages didn't all go through (this install's notifications only — your daily Telegram chats are unaffected)."
         ;;
 esac
+
+# ----------------------------------------------------------
+# v10.14.20: proactive config heal before gateway-boot check.
+# ----------------------------------------------------------
+# The Telegram/whatsapp plugin auto-config-append step (which fires inside
+# the gateway on every container restart) can write deprecated field names
+# (e.g. messages.groupChat.unmentionedInbound) that fail validation against
+# the current OpenClaw schema. When that happens the gateway exits 0 on
+# next start and the entire bot goes silent — confirmed on Lyric's VPS
+# 2026-05-23, gateway exited with "Invalid config at /data/.openclaw/openclaw.json.
+# messages.groupChat: Unrecognized key: 'unmentionedInbound'".
+#
+# `openclaw doctor --fix` strips deprecated/unknown keys cleanly. Idempotent
+# and safe — no-op when config is already clean. We run it BEFORE the
+# gateway-health probe so the health probe sees a valid config to begin with.
+if command -v openclaw >/dev/null 2>&1; then
+    step "Running openclaw doctor --fix to strip any stale plugin-injected config keys"
+    openclaw doctor --fix 2>&1 | tail -5 || warn "doctor --fix had issues — continuing anyway (gateway may complain at start)"
+fi
 
 # ----------------------------------------------------------
 # Final: Conditional gateway restart (v10.14.3 — idempotent)

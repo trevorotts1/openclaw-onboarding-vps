@@ -1,3 +1,60 @@
+## [v10.14.20] — 2026-05-24 — Skill 32 actually runs now + proactive doctor --fix hook
+
+### Why (root cause)
+Skill 32 actually runs now. The 8-phase Command Center install was prose, not code, for 4 versions running. Skill 37 was claiming `commandCenterStatus: done` after only running Phase 4 (the materialize-dept-agents fix from v10.14.19). Phases 6 (dashboard deploy), 6b (n8n webhook + cloudflared tunnel), 7 (verification) never ran. That's why no client's BlackCEO Command Center dashboard came up + why Trevor never got n8n notifications for completed builds.
+
+Plus a proactive `openclaw doctor --fix` hook to defend against the telegram/whatsapp plugin auto-config writing deprecated field names that crash the gateway on restart. Confirmed in the wild tonight on Lyric's VPS — gateway exited with `Invalid config at /data/.openclaw/openclaw.json. messages.groupChat: Unrecognized key: "unmentionedInbound"` after a `docker compose restart`, NEXORA went silent until `openclaw doctor --fix` + restart cleaned it up. This will hit every container restart whenever a plugin's auto-config appends a stale field — the repo needs proactive defense, not a reactive remediation.
+
+### What changed
+- **NEW** `32-command-center-setup/scripts/run-full-install.sh` — the missing 8-phase orchestrator. Runs Phase 1 (pm2 install + `openclaw doctor --fix`), Phase 3 (workspace folders), Phase 4 (materialize-dept-agents from v10.14.19), Phase 5 (logs TODO — Telegram topic creation requires manual phone steps), Phase 6 (dashboard deploy: clone `https://github.com/trevorotts1/blackceo-command-center.git` to `~/projects/command-center`, npm install, npm run db:push, npm run db:seed, pm2 start with **explicit `PORT=4000`** — fixes tonight's EADDRINUSE / random-port bind), Phase 6b (invoke create-tunnel.sh with client metadata), Phase 7 (verify :4000 + subdomain return 2xx). Each phase idempotent — re-running picks up at the first un-completed step. Atomic state updates. Signature: `run-full-install.sh <client-slug> <company-name> <contact-email>`.
+- `37-zhc-closeout/scripts/run-closeout.sh` STEP 1 rewritten — replaces the v10.14.19 "only run materialize-dept-agents.sh" preflight with a full delegation to Skill 32's `run-full-install.sh`. Reads `companyName`, `companySlug`, `ownerEmail`, `companyDomain` from `.workforce-build-state.json`. If `ownerEmail` is missing, uses `noreply@<companyDomain>` (or `noreply@example.com` if the domain is also missing), logs a WARN, and proceeds. On any failure, propagates the actual `commandCenterFailureReason` into `closeoutFailureReason` so the resume cron sees a real reason instead of a generic "Skill 32 failed".
+- `install.sh` — new proactive heal step before the final gateway-health check. Runs `openclaw doctor --fix` to strip any deprecated/unknown config keys that the telegram/whatsapp plugin auto-config-append might have written into `openclaw.json` since the last install. Idempotent — no-op when the config is already clean. Logs warnings via the existing `warn` helper but never aborts the install.
+- `23-ai-workforce-blueprint/scripts/resume-workforce-build.sh` — runs `openclaw doctor --fix` immediately before any gateway interaction. If the agent gateway is wedged by a stale-config crash, the cron's `openclaw message send` dispatch would fail silently and the build would never resume. Pre-healing eliminates that failure mode at zero cost (the call is a fast no-op when config is clean).
+
+### Remediation for existing clients
+For clients already on v10.14.19 whose Skill 37 closeout marked `commandCenterStatus: done` with a localhost URL (i.e. only Phase 4 ran):
+
+```bash
+# 1. Force re-run of all 8 phases (idempotent — picks up what's missing)
+jq '.commandCenterStatus = "pending" | del(.commandCenterPhase1Done, .commandCenterPhase3Done, .commandCenterPhase4Done, .commandCenterPhase6Done, .commandCenterPhase6bDone)' \
+  /data/.openclaw/workspace/.workforce-build-state.json > /tmp/state.json \
+  && mv /tmp/state.json /data/.openclaw/workspace/.workforce-build-state.json
+
+# 2. Invoke the new orchestrator directly (the resume cron will pick it up otherwise within 15 minutes)
+bash /data/.openclaw/skills/32-command-center-setup/scripts/run-full-install.sh \
+  "<client-slug>" "<company-name>" "<owner-email>"
+
+# 3. Heal any plugin-injected deprecated config keys
+openclaw doctor --fix
+```
+
+For clients hit by the unmentionedInbound crash on a restart:
+
+```bash
+openclaw doctor --fix
+# inside docker container; if gateway is exited 0:
+docker compose restart <openclaw-container>
+```
+
+### Files touched
+- **NEW**: `32-command-center-setup/scripts/run-full-install.sh`
+- `install.sh` (new proactive doctor --fix block before gateway-health probe)
+- `23-ai-workforce-blueprint/scripts/resume-workforce-build.sh` (top-of-script doctor --fix)
+- `37-zhc-closeout/scripts/run-closeout.sh` (STEP 1 delegates to run-full-install.sh)
+- Version bump v10.14.19 → v10.14.20 via `scripts/bump-version.sh` + manual sweep of README.md and update-skills.sh per the repo version-bump checklist.
+
+### Version-bump-tracking checklist
+- [x] `./version` v10.14.20 (bump-script)
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.20 (bump-script)
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.20 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.20 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.20 (bump-script)
+- [x] `README.md` v10.14.20 (manual sweep)
+- [x] `update-skills.sh:ONBOARDING_VERSION` v10.14.20 (manual sweep)
+- [x] `CHANGELOG.md` v10.14.20 entry (this entry)
+
+---
+
 ## [v10.14.19] — 2026-05-23 — Stop the "agent build" lie
 
 ### Why (root cause)
