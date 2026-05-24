@@ -211,7 +211,9 @@ def insert_agents_and_tasks(db, info):
                 "name": f"{ws_name} Lead",
                 "role": f"{ws_name} Department Head",
                 "persona": f"dept-{ws_slug}",
-                "status": "active",
+                "description": f"Heads the {ws_name} department in your AI workforce.",
+                "specialist_type": "permanent",
+                "status": "standby",
                 "created_at": now,
                 "updated_at": now,
             }
@@ -249,7 +251,7 @@ def insert_agents_and_tasks(db, info):
                 "status": "backlog",
                 "priority": "medium",
                 "assigned_agent_id": ag_id,
-                "created_by_id": ag_id,
+                "created_by_agent_id": ag_id,
                 "created_at": now,
                 "updated_at": now,
             }
