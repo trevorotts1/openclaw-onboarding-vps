@@ -456,13 +456,38 @@ def read_owner_profile(paths: dict) -> str:
 
 
 def list_available_personas(paths: dict) -> list:
-    """Read persona-categories.json or scan personas dir."""
+    """Read persona-categories.json or scan personas dir.
+
+    Schema 1.0 wraps the 40 persona IDs under a top-level "personas" key alongside
+    metadata fields (schemaVersion, created, domainTags, perspectiveTags). The
+    pre-v10.14.27 version returned `list(data.keys())` which yielded the 5 meta
+    fields instead of the 40 real persona IDs — causing the selector to score
+    "schemaVersion" / "created" / "domainTags" / "perspectiveTags" / "personas"
+    as if they were personas and return the title-cased meta-key
+    ("Schemaversion") as the chosen persona for every task. Fixed here so that
+    we descend into the nested "personas" key when present, with a safe fallback
+    for legacy flat-dict and list-of-dicts schemas.
+    """
     pc_file = paths["persona_categories"]
     if pc_file.exists():
         try:
             data = json.loads(pc_file.read_text(encoding="utf-8"))
             if isinstance(data, dict):
-                return list(data.keys())
+                # Schema 1.0 (current): personas live under data["personas"].
+                if isinstance(data.get("personas"), dict):
+                    return list(data["personas"].keys())
+                if isinstance(data.get("personas"), list):
+                    return [
+                        d.get("id") or d.get("name")
+                        for d in data["personas"]
+                        if isinstance(d, dict)
+                    ]
+                # Legacy flat-dict schema: filter out known meta-keys.
+                META_KEYS = {"schemaVersion", "schema_version", "created",
+                             "updated", "domainTags", "domain_tags",
+                             "perspectiveTags", "perspective_tags",
+                             "personas", "metadata", "version"}
+                return [k for k in data.keys() if k not in META_KEYS]
             if isinstance(data, list):
                 return [d.get("id") or d.get("name") for d in data if isinstance(d, dict)]
         except Exception:
