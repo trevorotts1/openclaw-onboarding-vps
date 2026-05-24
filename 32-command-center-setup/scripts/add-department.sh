@@ -274,6 +274,12 @@ def main():
     # ─── 7. Persona-selector re-index hint ──────────────────────────────────
     mark_persona_stale()
 
+    # ─── 8. Per-agent file scaffold (Trevor's agent-file architecture v10.14.29) ─
+    # SHARED across all agents: USER.md, AGENTS.md, TOOLS.md (workspace root)
+    # PER-AGENT: IDENTITY.md, SOUL.md, MEMORY.md, HEARTBEAT.md (dept folder)
+    # Subagents excluded — Skill 23 handles those.
+    scaffold_agent_files(SLUG, HEAD_NAME)
+
     emit_summary({
         "slug": SLUG,
         "workspace_id": ws_id,
@@ -425,6 +431,35 @@ def regen_brand_css():
                   file=sys.stderr)
     except (subprocess.TimeoutExpired, Exception) as e:
         print(f"  [brand-css] WARN regeneration failed: {e}", file=sys.stderr)
+
+
+def scaffold_agent_files(slug, head_name):
+    """Invoke scaffold-agent-files.sh to write per-agent IDENTITY/SOUL/MEMORY/
+    HEARTBEAT and (re)create USER/AGENTS/TOOLS symlinks for the new dept-head
+    agent. Best-effort — never fails the parent.
+
+    Sub-agents (role folders inside this dept) are NOT scaffolded here — they
+    are excluded from Trevor's agent-file architecture spec (they inherit from
+    the dept head)."""
+    scaffolder = Path(SCRIPT_DIR) / "scaffold-agent-files.sh"
+    if not scaffolder.is_file():
+        print(f"  [scaffold] {scaffolder} not found, skipping per-agent file scaffold")
+        return
+    try:
+        result = subprocess.run(
+            ["bash", str(scaffolder),
+             "--agent-slug", slug,
+             "--agent-name", head_name,
+             "--department", slug],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode == 0:
+            print(f"  ~ scaffold       per-agent files written for dept-{slug}")
+        else:
+            print(f"  [scaffold] WARN: scaffolder exited rc={result.returncode}: "
+                  f"{result.stderr.strip()[:300]}", file=sys.stderr)
+    except (subprocess.TimeoutExpired, Exception) as e:
+        print(f"  [scaffold] WARN: scaffolder failed: {e}", file=sys.stderr)
 
 
 def mark_persona_stale():
