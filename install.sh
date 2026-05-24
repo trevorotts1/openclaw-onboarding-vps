@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.30"
+ONBOARDING_VERSION="v10.14.31"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -2393,7 +2393,7 @@ For EACH skill folder in ~/.openclaw/skills/:
 **Skills requiring special handling:**
 - Skill 22: Book-to-Persona (main orchestrator only)
 - Skill 23: AI Workforce Blueprint (main orchestrator only, check interview state first)
-- Skill 35: Social Media Planner (requires Skills 22, 30, 31)
+- Skill 35: Social Media Planner (requires Skills 22, 31; Skill 30 / Fish Audio is OPTIONAL — enables podcast voiceover only)
 
 **STEP 4: VERIFY MEMORY ARCHITECTURE**
 ```
