@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.32"
+ONBOARDING_VERSION="v10.14.33"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
