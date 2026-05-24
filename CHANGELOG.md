@@ -1,3 +1,29 @@
+## [v10.14.23] — 2026-05-24 — Container-restart durability for Mission Control dashboard + cloudflared
+
+### The bug
+After tonight's setup, every `docker compose restart openclaw` killed the Next.js Mission Control dashboard AND the cloudflared connector. pm2 saved the process list to `/data/.pm2/dump.pm2` but never resurrected it on container boot. Result: client URLs returned Cloudflare Error 1033 until manual SSH intervention.
+
+### What changed
+- `32-command-center-setup/scripts/install-pm2-restart-hook.sh` (NEW) — host-side script that adds a `command:` override to `docker-compose.yml`. The override backgrounds a 45-second delayed `pm2 resurrect` call, then exec's the Hostinger image's default `node server.mjs`. Idempotent; validates compose config before committing.
+- `32-command-center-setup/INSTALL.md` — new Phase 6c documents the one-time host-side install step.
+
+### Verification
+Tested live on Lyric VPS 2026-05-24: applied hook → `docker compose up -d --force-recreate` → at T+60s pm2 had command-center + cloudflare-tunnel both online, external URL = HTTP 200, no manual intervention.
+
+### Risk
+Low. The hook only adds a backgrounded pm2 resurrect; if it fails the openclaw gateway still starts via `exec node server.mjs`. The 45s delay leaves room for gateway warmup. Backup of original compose is created automatically.
+
+### Version-bump-tracking checklist
+- [x] `./version` v10.14.23 (bump-script)
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.23 (bump-script)
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.23 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.23 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.23 (bump-script)
+- [x] `README.md` v10.14.23 (manual sweep)
+- [x] `update-skills.sh` v10.14.23 (manual sweep)
+
+---
+
 ## [v10.14.22] — 2026-05-24 — Token rotation playbook for Option B (n8n workflow v4)
 
 ### Why
