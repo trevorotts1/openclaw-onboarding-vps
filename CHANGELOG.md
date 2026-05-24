@@ -1,3 +1,107 @@
+## [v10.14.31] — 2026-05-24 — Skill 35 (social-media-planner): Fish Audio is now optional
+
+### The bug
+
+Three places gate Skill 35 install on Fish Audio (Skill 30) being installed,
+which blocks every client who does NOT use podcasts from getting Skill 35 at
+all. Trevor surfaced this on 2026-05-24: 6 of 7 client boxes have no
+`FISH_AUDIO_API_KEY` and the cron-prompt install loop refuses to mark Skill 35
+complete because of it.
+
+Concrete gates found:
+
+1. `install.sh:2396` — orchestrator-level prereq line literally said
+   `Skill 35: Social Media Planner (requires Skills 22, 30, 31)`.
+   This is the load-bearing one: the cron-orchestrator reads it as a hard prereq
+   and never dispatches the Skill 35 sub-agent on a Fish-Audio-less box.
+2. `35-social-media-planner/INSTALL.md:38-44` — the auto-check loop prints
+   `✗ 30-fish-audio-api-reference MISSING` (red X, same severity as a missing
+   Skill 01). Sub-agents interpret a red X as a blocker per
+   `INSTALL-CONTRACT.md` Rule 4.
+3. `35-social-media-planner/README.md` Requirements list — bullet-listed Skill
+   30 + `Fish Audio API key and Voice ID` + `Podbean account` under
+   "Requirements" with no OPTIONAL tag, so install agents reading top-down
+   conclude the skill cannot proceed.
+4. `35-social-media-planner/INSTALL.md` Step 7.8 — asked the human "Do you
+   want podcasts?" which a) requires a human in the loop (the cron orchestrator
+   often runs unattended) and b) doesn't auto-defer on a Fish-Audio-less box.
+
+The QC scripts (`qc-skill35.sh`, `qc-social-media-planner.sh`) already used
+`warn_only` for Fish Audio keys — those were fine. The blockers were upstream
+of QC.
+
+### The fix
+
+- `install.sh:2396` — line now reads `(requires Skills 22, 31; Skill 30 / Fish
+  Audio is OPTIONAL — enables podcast voiceover only)`.
+- `35-social-media-planner/INSTALL.md` — prereq auto-check loop split into
+  REQUIRED (01/02/22/31 — red X if missing) and OPTIONAL (30/36 — info-tag if
+  missing, with an explanation of which feature degrades). New paragraph under
+  the loop spells out the soft-fail contract: Skill 35 still installs and runs
+  without Skill 30, podcast pipeline is skipped, `PODCAST_DEFERRED=true` is
+  written to MEMORY.md so downstream agents know the skip is intentional.
+- `35-social-media-planner/INSTALL.md` Step 7.8 — auto-detects Fish Audio
+  availability. If absent, the install agent does NOT ask the human; it
+  auto-writes `PODCAST_DEFERRED=true` and sends the client an info note that
+  podcasts are off but everything else runs. If Fish Audio IS present, the old
+  "Do you want podcasts?" prompt still fires.
+- `35-social-media-planner/INSTALL.md` completion checklist — Fish-Audio /
+  Podbean rows now tagged `(OPTIONAL — either state is acceptable, install
+  does not block)`.
+- `35-social-media-planner/README.md` — Requirements split into REQUIRED and
+  OPTIONAL sections; degradation note added; weekly cost section now says
+  podcast cost is $0 if Fish Audio is not configured.
+- `35-social-media-planner/qc-skill35.sh` + `qc-social-media-planner.sh` —
+  new Skill 30 detection block: present → green INFO, absent → yellow INFO +
+  auto-writes `PODCAST_DEFERRED=true` to MEMORY.md if not already there. Never
+  contributes to the FAIL count. (Existing `warn_only` checks on
+  `FISH_AUDIO_API_KEY` / `FISH_AUDIO_VOICE_ID` / `PODBEAN_PODCAST_ID` retained
+  — they're warnings, not failures, and they accept `PODCAST_DEFERRED` in
+  MEMORY.md as the all-clear marker.)
+
+The Fish Audio happy path is unchanged. When a client DOES have
+`FISH_AUDIO_API_KEY` set, every podcast step runs exactly like before
+(playbook.md, S2 emotion tags, Podbean upload). The diff only changes what
+happens when Fish Audio is absent.
+
+### Verification
+
+Smoke test: install Skill 35 on Corey's box (`openclaw-hy5t-openclaw-1`) which
+has no `FISH_AUDIO_API_KEY`, no `FISH_AUDIO_VOICE_ID`, no `PODBEAN_PODCAST_ID`,
+no Skill 30 installed.
+
+Expected:
+- `qc-skill35.sh` exits 0
+- MEMORY.md contains `PODCAST_DEFERRED=true`
+- All other Skill 35 features (image gen, video gen, blog, carousel, email,
+  GHL Social Planner scheduling) install and pass QC
+
+Risk: LOW. Fish Audio path unchanged when the key is present. The only
+behavioral diff is that boxes without Fish Audio now succeed instead of
+blocking.
+
+### Files changed (manual + bump-script tracked)
+
+- [x] `./version` v10.14.31 (bump-script)
+- [x] `install.sh:ONBOARDING_VERSION` v10.14.31 (bump-script)
+- [x] `install.sh:2396` Skill 35 prereq line softened (manual)
+- [x] `23-ai-workforce-blueprint/skill-version.txt` v10.14.31 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_index.json` v10.14.31 (bump-script)
+- [x] `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md` v10.14.31 (bump-script)
+- [x] `README.md` v10.14.31 (manual)
+- [x] `update-skills.sh:ONBOARDING_VERSION` v10.14.31 (manual — bump-script doesn't cover this yet despite the comment claiming it does; per Trevor's MEMORY note `openclaw-repo-version-bump-checklist.md`)
+- [x] `35-social-media-planner/README.md` — REQUIRED / OPTIONAL split + degradation note (manual)
+- [x] `35-social-media-planner/INSTALL.md` — soft-fail prereq loop, Step 7.8 auto-detect, completion checklist optional tags (manual)
+- [x] `35-social-media-planner/qc-skill35.sh` — Skill 30 INFO detection + auto-PODCAST_DEFERRED (manual)
+- [x] `35-social-media-planner/qc-social-media-planner.sh` — mirror of qc-skill35.sh (manual)
+- [x] `CHANGELOG.md` v10.14.31 entry (manual — this one)
+
+### Co-authored
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+
+---
+
 ## [v10.14.29] — 2026-05-24 — Per-agent file architecture: IDENTITY/SOUL/MEMORY/HEARTBEAT for every dept-head agent + shared USER/AGENTS/TOOLS via symlink
 
 ### The gap
