@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.14.24
+#  v10.14.25
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.14.24"
+ONBOARDING_VERSION="v10.14.25"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -357,11 +357,15 @@ main() {
     echo "  ⚠️  UPDATE PENDING flag found at: $PENDING_FILE"
     echo "      Review this file before updating: cat $PENDING_FILE"
     echo ""
-    read -p "Continue with update? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      echo "  Update cancelled."
-      exit 0
+    if [ -t 0 ]; then
+      read -p "Continue with update? (y/N) " -n 1 -r
+      echo
+      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "  Update cancelled."
+        exit 0
+      fi
+    else
+      echo "  Non-interactive mode (curl | bash) — proceeding past UPDATE PENDING flag automatically."
     fi
   fi
 
@@ -372,10 +376,15 @@ main() {
     echo "  Latest version:  $ONBOARDING_VERSION"
     if [ "$CURRENT_VERSION" = "$ONBOARDING_VERSION" ]; then
       echo ""
-      read -p "Already up to date. Force re-install? (y/N) " -n 1 -r
-      echo
-      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "  Update cancelled."
+      if [ -t 0 ]; then
+        read -p "Already up to date. Force re-install? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+          echo "  Update cancelled."
+          exit 0
+        fi
+      else
+        echo "  Already up to date — non-interactive mode, skipping update."
         exit 0
       fi
     fi
@@ -390,15 +399,15 @@ main() {
   TEMP_ZIP="/tmp/openclaw-onboarding-update.zip"
   TEMP_EXTRACT="/tmp/openclaw-onboarding-update"
 
-  curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
+  curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
 
   rm -rf "$TEMP_EXTRACT"
   unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
 
   # Find extracted folder
   EXTRACTED_DIR=""
-  if [ -d "$TEMP_EXTRACT/openclaw-onboarding-main" ]; then
-    EXTRACTED_DIR="$TEMP_EXTRACT/openclaw-onboarding-main"
+  if [ -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
+    EXTRACTED_DIR="$TEMP_EXTRACT/openclaw-onboarding-vps-main"
   else
     EXTRACTED_DIR=$(find "$TEMP_EXTRACT" -maxdepth 1 -mindepth 1 -type d | head -1)
   fi
@@ -544,7 +553,7 @@ except: pass
       fi
       if [ -n "$TG_TARGET" ]; then
         PROMPT_TMP="/tmp/openclaw-cron-prompt-$$.txt"
-        REPO_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding/main"
+        REPO_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main"
         [ -d "/data/.openclaw" ] && REPO_URL="https://raw.githubusercontent.com/trevorotts1/openclaw-onboarding-vps/main"
         if curl -fsSL --max-time 15 "${REPO_URL}/cron-prompt.txt" -o "$PROMPT_TMP" 2>/dev/null && [ -s "$PROMPT_TMP" ]; then
           PROMPT_CONTENT=$(cat "$PROMPT_TMP")
