@@ -1,15 +1,15 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` — this repo at v10.14.33.
+> **Version:** see `/version` — this repo at v10.14.34.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
 >
-> **NOTE (v10.14.18):** Bump-script coverage extended to track README.md and update-skills.sh — both used to drift independently of the 5 originally-tracked files. If you find a NEW version-bearing file in the future, ADD it to `scripts/bump-version.sh` before fixing the drift.
+> **NOTE (v10.14.34):** Bump-script coverage extended to track README.md and update-skills.sh — both used to drift independently of the 5 originally-tracked files. If you find a NEW version-bearing file in the future, ADD it to `scripts/bump-version.sh` before fixing the drift.
 >
 > **After every release:** `git tag vX.Y.Z && git push --tags && gh release create vX.Y.Z --notes-from-tag` so the GitHub Releases page mirrors the CHANGELOG.
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.14.33)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.14.34)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 

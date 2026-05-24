@@ -1,3 +1,75 @@
+## [v10.14.34] — 2026-05-24 — 2-day-learnings install hardening bundle
+
+### Why
+
+Across Sat 2026-05-23 and Sun 2026-05-24 we discovered 25 operational findings
+(per the per-client incident triage). Many were patched live on specific VPSes
+but never made it back into `install.sh` — so the next fresh install would hit
+the same traps. This bundle closes the install-time gap.
+
+### What changed (install-time defenses)
+
+**`scripts/install-hardening.sh` (NEW)** — sourceable + standalone hardening
+script invoked as Step 16 of `install.sh`. Each defense is idempotent and
+non-blocking (returns 0 even on partial failure — install must not abort
+because hardening can't apply a defense). Defenses shipped:
+
+| # | Defense | Source-date |
+|---|---------|------------|
+| 10 | Hostinger `command:` pin detection in `/docker/*/docker-compose.yml` (warn-only) | Sat 2026-05-23 |
+| 12 | `unset PORT` / `HTTP_PORT` / `SERVICE_PORT` before any pm2 invocation | Sat 2026-05-23 |
+| 13 | Auto-generate `hooks.token` (64 hex) when `hooks.enabled=true` and token is missing | Sat 2026-05-23 |
+| 14 | Ship `scripts/cloudflared-tunnel-run.sh` pm2-safe wrapper | Sat 2026-05-23 |
+| 15 | Auto-approve persistent CLI scope requestIds from `devices/pending.json` | Sat 2026-05-23 |
+| 17 | Write `SSL_CERT_FILE` / `SSL_CERT_DIR` / `REQUESTS_CA_BUNDLE` to `secrets/.env` (Debian path, not phantom Linuxbrew) | Sat 2026-05-23 |
+| 18 | Backfill missing Python deps: `httpx`, `requests`, `certifi` (`google-genai` already covered by Step 6) | Sat 2026-05-23 |
+
+**`scripts/bump-version.sh`** — expanded from 5-file to 8-file coverage
+(finding #23 — README.md and update-skills.sh have always drifted because
+nothing tracked them; DIRECT-TO-AGENT-UPDATE-MESSAGE.md was stuck on
+v10.12.0 since 2026-05-20). New trackers: `README.md`, `update-skills.sh`,
+`DIRECT-TO-AGENT-UPDATE-MESSAGE.md`. `--check` mode now reports all 8.
+
+**`35-social-media-planner/scripts/run-publishing-cycle.sh`** — finding #25.
+The hard exit-5 for missing 21-agent roster made basic single-topic usage
+impossible on every install (the `social-media-planner` role-bundle the
+exit message tells you to install does not exist in the role-library
+catalog — only individual roles do). Downgraded to a warning by default;
+operators who want strict 21-agent enforcement can set
+`OPENCLAW_STRICT_ROSTER=1`.
+
+### What did NOT change (already in place — verified)
+
+- #11 `openclaw doctor --fix` — already present at line 3211 (v10.14.20)
+- #19 unzip fallback — already present (v10.14.2 + Step 4 fallback)
+- #20 yt-dlp + whisper-cpp + ffmpeg — already present (v10.14.32 Step 6.5)
+- #21 n8n workflow ID `i0P3OWCEsXZxVo0N` — already correct; the wrong
+      ID `CKn45PNOPiCY3aAM` does not appear in this repo at all
+- #24 state machine — verified `run-full-install.sh` enforces commandCenterStatus
+      transitions through `state_set` + `fail_install` (no prose-only "done")
+- #1-4 cross-pollination items 1-4 listed in the brief — already shipped
+       in v10.14.23 / v10.14.31 / v10.14.33 / v10.14.29
+
+### What was DEFERRED to next session
+
+- #22 Skill 23 ROLE.md substitution — `create_role_workspaces.py` already
+  has `fill_tokens()` substituting `{{COMPANY_NAME}}` etc. when the library
+  filler runs. Reports of unsubstituted tokens in per-agent folders need
+  forensic reproduction (which call path skipped fill_tokens?) before
+  the right fix can land. Tracked for next session.
+- #16 brew-not-apt — Mac install.sh has zero `apt-get` references already.
+  The defensive `harden_brew_check` lives in the Mac bundle. VPS hardening
+  uses brew first, apt fallback (the existing yt-dlp/whisper code).
+
+### Co-pollinated to Mac repo as v10.13.26
+
+Mac repo carries the cross-pollinated subset: items 5, 6, 7, 8, 11, 13, 16,
+20, 21, 22 (deferred), 23, 25.
+
+Co-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+
+---
+
 ## [v10.14.33] — 2026-05-24 — Skill 35: build the trigger scripts INSTRUCTIONS.md has always referenced
 
 ### Why
