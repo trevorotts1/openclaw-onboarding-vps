@@ -1,3 +1,79 @@
+## [v10.14.38] — 2026-05-25 — Skill 31 memory-stack auto-activation script
+
+### Why
+
+The 8-layer memory stack (memory-core + dreaming + Gemini embeddings) has
+existed in Skill 31 for months, but every fresh client install left it
+*structurally enabled but functionally inert* — the canonical
+`agents.defaults.memorySearch` block, the `plugins.entries.memory-core`
+toggle, and the `memory.backend = "builtin"` setting all had to be
+hand-merged into `openclaw.json` after the fact. Three live clients
+(Lyric / Evelyn / Angeleen) had to be manually patched today before their
+memory was actually searchable.
+
+On OpenClaw 2026.5.20+ the obvious one-liner —
+`openclaw config set agents.defaults.memorySearch.provider gemini` —
+fails with `Invalid input` because the schema validator rejects deeply
+nested keys when the parent path doesn't exist yet. The supported
+pattern is a direct JSON deep-merge against `openclaw.json`. Until
+now, that pattern lived nowhere in this repo.
+
+### What changed
+
+- **New script**: `31-upgraded-memory-system/scripts/activate-memory-stack.sh`.
+  Idempotent activator that:
+  - Auto-detects `/data/.openclaw/openclaw.json` (VPS container) vs
+    `$HOME/.openclaw/openclaw.json` (Mac mini host).
+  - Deep-merges the canonical `memorySearch` block (`provider: gemini`,
+    `fallback: openai`, `model: gemini-embedding-001`, hybrid search,
+    session-memory + sync settings), the `plugins.entries.memory-core`
+    block (`enabled: true`, `dreaming.enabled: true`), and
+    `memory.backend = "builtin"`.
+  - Canonicalizes the Gemini env-var name to `GEMINI_API_KEY` in
+    `secrets/.env` (rewrites from `GOOGLE_API_KEY` or
+    `GOOGLE_GEMINI_API_KEY` if those are the only ones present on the
+    client box).
+  - Chowns config + secrets back to `node:node` inside the OpenClaw
+    container.
+  - Runs `openclaw config validate` and prints `openclaw memory status`
+    for verification.
+- **INSTALL.md Phase 8.0** rewritten to point at the script as the only
+  canonical activation path. The previous "hand-merge this JSON block"
+  instructions are kept as reference-only with a flag explaining why
+  `openclaw config set` of nested keys fails on 2026.5.20+.
+- **Skill 31 bumped to v7.2.0** (`31-upgraded-memory-system/skill-version.txt`).
+
+### Risk
+
+- The script writes directly to `openclaw.json`. Worst-case failure
+  mode is a malformed merge that fails `openclaw config validate` —
+  the script aborts non-zero in that case and the operator can
+  diff against `openclaw.json.bak` (Python's atomic write keeps the
+  previous file recoverable via `git`-tracked workspace, but no
+  explicit backup is taken; the merge is pure-structural so this
+  is a low risk).
+- The script is idempotent — re-running on Lyric/Evelyn/Angeleen (the
+  three already-patched live clients) is a no-op because the
+  deep-merge detects no delta and skips the write.
+- No change to the three live clients in this release — they pick up
+  the script automatically on the next `update-skills.sh` weekly run.
+
+### How to apply
+
+Existing clients: `update-skills.sh` picks it up on the next weekly
+auto-update. To apply immediately on a fresh box:
+
+```bash
+docker exec -it <client>-openclaw bash
+cd /data/.openclaw/skills/31-upgraded-memory-system
+git pull && ./scripts/activate-memory-stack.sh
+```
+
+Fresh installs: `install.sh` chains Skill 31's INSTALL.md which now
+runs the script.
+
+---
+
 ## [v10.14.37] — 2026-05-25 — Skill 32 SOP V2 Library (2,555 SOPs, 17 departments)
 
 ### Why
