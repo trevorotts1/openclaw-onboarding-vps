@@ -1,3 +1,61 @@
+## [v10.15.0]  -  2026-05-25  -  Skill 23 canonical departments reconciliation gate
+
+### Why
+
+Maria Anderson's 2026-05-23 zero-human-company build (`Marico Consulting LLC`)
+shipped with 9 departments  -  Executive Office, Accounting, Tax, HR,
+Risk & Compliance, Operations, Gov Contracting, Marketing, Sales  -  instead
+of the canonical 16 mandatory departments defined in
+`23-ai-workforce-blueprint/department-naming-map.json`. The build was missing
+Web Dev, App Dev, Graphics, Video, Audio, Research, Communications, CRM,
+OpenClaw Maintenance, Customer Support, Social Media, Paid Advertisement,
+Billing & Finance, and Legal.
+
+Diagnosis: Phase 4's 13 conversational arcs (D-1..D-13) bundle the 16
+mandatory departments into themes for a non-jargon interview  -  but if the
+owner answers in their *current* business language ("I do bookkeeping, tax,
+government contracts"), the agent can lock those phrases in as the dept
+names and never surface the canonical floor. Phase 5 only confirmed industry
+vertical pack additions. Phase 6 advanced straight to final review. There
+was no gate that said "here is our canonical recommendation  -  here is what
+you do NOT have yet  -  want to add any?"
+
+Clients have blind spots. They don't know they need Video, Graphics, CRM,
+or OpenClaw Maintenance until someone shows them the canonical list and
+asks.
+
+### What
+
+- `23-ai-workforce-blueprint/INSTRUCTIONS.md`  -  adds new **Phase 5.5
+  Canonical Departments Reconciliation (BINDING)** between Phase 5 Industry
+  Vertical Pack Confirmation and Phase 6 Final Review. Phase 5.5 has five
+  binding steps:
+    1. Compute the gap (semantic match canonical 16 against owner's locked
+       departments).
+    2. Show the canonical list verbatim in one message  -  every canonical
+       dept marked ALREADY-COVERED or NOT-YET-COVERED, plus a list of
+       CUSTOM_KEEPS the owner added.
+    3. One-by-one pitch the MISSING canonical departments, each with a
+       business-specific one-sentence pitch and three explicit options:
+       YES / NO / LATER.
+    4. Hard rules: never skip Step 2, never auto-decide, never advance
+       to Phase 6 with pending decisions, NOs are excluded + LATERs go
+       to `90-day-reassessment.md`.
+    5. Telegram-friendly chunking guidance  -  send the canonical list as
+       ONE message (do not split).
+- Decisions recorded into `.workforce-build-state.json` under
+  `canonicalReconciliation` with the git SHA of the active map file for
+  audit traceability.
+- `department-naming-map.json` unchanged  -  the 16 mandatory entries
+  defined in v2.1.0 of that file remain the canonical source of truth.
+
+### Migration
+
+No data migration. Skill files are re-read at the next interview turn.
+Existing builds (Maria, Evelyn, Lyric, Beverly, Angela, Angeleen, Monique,
+Corey) are NOT auto-retro-fitted  -  that requires a separate
+"departments-reconciliation-retroactive" run per client.
+
 ## [v10.14.39] — 2026-05-25 — Remote Rescue v1: operator chat ID config key + Remote Rescue agent
 
 ### Risk: medium
