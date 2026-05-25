@@ -509,6 +509,33 @@ After ~60s of container boot, pm2 brings back command-center + cloudflared auton
 
 This is a one-time per-client setup. Lives in `/docker/<project>/docker-compose.yml`.
 
+## Phase 6c: SOP V2 Library Ingestion (Agent Does This Automatically — v10.14.37+)
+
+💬 Send Telegram message: "⏳ [Phase 6c] Loading the canonical 2,555-SOP V2 library into mission-control.db..."
+
+The agent runs the new library ingester. This pulls the version-pinned
+`sops-library-v2.jsonl.gz` asset from the onboarding repo's GitHub
+Release, applies migration 028 (V2 schema additions + sop_dependencies
++ client_template_vars tables), upserts all 2,555 SOPs keyed by stable
+slug-derived IDs, and seeds 19 platform-default template variables for
+this client.
+
+```bash
+cd /data/.openclaw/skills/32-command-center-setup
+./scripts/ingest-sop-library.sh "$CLIENT_SLUG" v10.14.37
+```
+
+**Expected result (verification queries the script prints at the end):**
+- `sops total: 2555` (or more if a prior release shipped additions)
+- `v2 sops: 2448` and `v1 sops: 107` (V1-only SOPs are flagged for the
+  next library refresh)
+- `sop_dependencies: 19` (real edges; ~2,576 aspirational refs skipped)
+- `client_template_vars: 19` seeded for this client
+
+If the SOPs total is < 2,000, treat as a failed ingestion and re-run.
+
+---
+
 ## Phase 7: Verification (Agent Does This Automatically)
 
 💬 Send Telegram message: "⏳ [Phase 7] Running final verification tests across all departments..."
