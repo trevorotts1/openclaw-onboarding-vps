@@ -1,3 +1,70 @@
+## [v10.14.37] — 2026-05-25 — Skill 32 SOP V2 Library (2,555 SOPs, 17 departments)
+
+### Why
+
+Every client install previously bootstrapped with only 3 generic SOPs in
+`universal-sops/` (cross-dept-request-template, interdepartmental-comm-
+guidelines, persona-re-evaluation-protocol). Every department head agent
+across the fleet was operating with effectively zero procedural guidance
+— each one re-inventing how to run cadence, escalate, hand off, etc.
+This release ships the canonical V2 SOP library Trevor curated in
+Notion: 2,555 SOPs across 17 departments, each enriched with a Layer 2
+autonomous-execution envelope (prerequisites, tools, inputs, outputs,
+failure-handling, decision-tree, validation-checks, dependencies,
+template_vars).
+
+### What changed
+
+- **New release asset**: `sops-library-v2.jsonl.gz` (~14MB) — one
+  JSON-Lines row per SOP, schema matches migration 028. Attached to
+  this release tag so install scripts download by version-pinned URL
+  instead of bloating the repo.
+- **New skill ingestion script**: `32-command-center-setup/scripts/
+  ingest-sop-library.sh` (+ `.py` companion). Downloads the release
+  asset, applies **migration 028** (adds `cadence`, `source_role`,
+  `confidence`, `confidence_tier`, `estimated_minutes`, `time_of_day`,
+  `source_file_url`, `prerequisites`, `template_vars_used`,
+  `layer_version` columns to `sops`; creates `sop_dependencies` and
+  `client_template_vars` tables), upserts all 2,555 SOPs by stable
+  slug-derived ID, resolves upstream dependencies by slug, and seeds
+  19 platform-default template vars (CRM=GoHighLevel, automation=N8N,
+  etc.). Idempotent — safe to re-run when a refreshed library ships.
+- **Skill 32 bumped to v6.6.0** (`32-command-center-setup/skill-version.txt`).
+- **Migration 028** is now the canonical V2 schema marker. Recorded
+  in `_migrations` with name `sop_v2_autonomous_execution`.
+- **Pre-applied to existing live clients**: Lyric, Evelyn, Angeleen
+  dashboards (2026-05-25). DB backups created at
+  `mission-control.db.bak-pre-sop-v2-<UTC>` on each box.
+
+### Risk
+
+- Library asset is ~14MB. Install adds ~30s download time on a typical
+  VPS. Verified curl-able from GitHub release CDN.
+- `INSERT OR REPLACE` semantics mean a re-run with the same release
+  tag is a no-op (same content), but a NEW release tag will overwrite
+  any client edits made directly to `sops` rows. Client edits should
+  be tracked via the `client_template_vars` table instead — those are
+  preserved across re-ingestion.
+- 2,576 dependency edges in the v2.jsonl reference slugs that aren't
+  yet in the library (aspirational future SOPs). These are silently
+  skipped in Pass 2; only 19 real dependency edges are inserted today.
+
+### How to apply
+
+Existing clients: `update-skills.sh` picks it up on the next weekly
+auto-update. To apply immediately:
+
+```bash
+docker exec -it <client>-openclaw bash
+cd /data/.openclaw/skills/32-command-center-setup
+git pull && ./scripts/ingest-sop-library.sh <client-slug> v10.14.37
+```
+
+Fresh installs: `install.sh` calls Skill 32's run-full-install which
+chains into ingest-sop-library.sh automatically.
+
+---
+
 ## [v10.14.36] — 2026-05-24 — workforce-build-resume self-stop hotfix
 
 **Bug**: The `workforce-build-resume` cron registered by Skill 23 in
