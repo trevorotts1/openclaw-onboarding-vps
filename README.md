@@ -1,15 +1,15 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` — this repo at v10.14.39.
+> **Version:** see `/version` — this repo at v10.15.0.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
 >
-> **NOTE (v10.14.39):** Skill 32 now ships the canonical **SOP V2 Library** — 2,555 enriched SOPs across 17 departments, attached as a GitHub Release asset (`sops-library-v2.jsonl.gz`). New `32-command-center-setup/scripts/ingest-sop-library.sh` downloads + applies migration 028 + upserts into the client's `mission-control.db`. Existing clients pick this up via the standard update path; fresh installs get it automatically.
+> **NOTE (v10.15.0):** Skill 32 now ships the canonical **SOP V2 Library** — 2,555 enriched SOPs across 17 departments, attached as a GitHub Release asset (`sops-library-v2.jsonl.gz`). New `32-command-center-setup/scripts/ingest-sop-library.sh` downloads + applies migration 028 + upserts into the client's `mission-control.db`. Existing clients pick this up via the standard update path; fresh installs get it automatically.
 >
 > **After every release:** `git tag vX.Y.Z && git push --tags && gh release create vX.Y.Z --notes-from-tag` so the GitHub Releases page mirrors the CHANGELOG.
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.14.39)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.15.0)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 
