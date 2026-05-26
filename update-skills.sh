@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.15.1
+#  v10.15.2
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.15.1"
+ONBOARDING_VERSION="v10.15.2"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
