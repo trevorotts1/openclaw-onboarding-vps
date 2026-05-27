@@ -1,3 +1,20 @@
+## [v10.15.12]  -  2026-05-27  -  Fix workforce build pipeline dept-agent bugs (variant-slug phantom dup, per-agent agentDir/identity, schema-valid subagents)
+
+### Why
+
+Three confirmed bugs in 23-ai-workforce-blueprint/scripts/build-workforce.py surfaced during a live multi-client remediation and were first fixed in the Mac onboarding repo (openclaw-onboarding v10.14.12 / 9b0532b). This ports the identical fixes to the VPS repo.
+
+### Fixed
+
+- Bug 1 (variant-slug phantom duplicate): reconcile_canonical_floor() only matched a canonical id + its single alias, so a dept stored under a variant slug (legal-compliance, finance-ops, graphics-design, customer-service) was auto-added as a phantom duplicate. Added CANONICAL_VARIANT_SLUGS + _canonical_present() (membership check only), and folded variants into the client-customs computation. Canonical-floor behavior unchanged. Idempotent.
+- Bug 2 (duplicate agentDir + shared identity): add_agent_to_config() now gives each dept agent its own unique agentDir (platform-aware state root, mirroring the gateway default of <stateDir>/agents/<id>/agent) and its own per-department identity name from dept_info; added a guard that refuses to write two agents sharing one agentDir.
+- Bug 4 (invalid subagents keys): removed the strict-schema-rejected subagents keys (thinking, maxChildrenPerAgent, maxConcurrent, maxSpawnDepth, timeoutSeconds) and the top-level bootstrapMaxChars / bootstrapTotalMaxChars. Now writes only subagents.allowAgents + subagents.model. Verified against the 2026.5.22 AgentEntrySchema.
+
+### Files touched
+
+- 23-ai-workforce-blueprint/scripts/build-workforce.py
+- version, install.sh, update-skills.sh, README.md, DIRECT-TO-AGENT-UPDATE-MESSAGE.md, 23-ai-workforce-blueprint/skill-version.txt, templates/role-library/_index.json, templates/role-library/_qc-summary.md (version bump)
+
 ## [v10.15.11]  -  2026-05-27  -  Canonical department floor + Command Center build-state sync + operator closeout summary + conditional GHL media upload
 
 ### Why
