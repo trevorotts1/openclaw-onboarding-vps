@@ -1,6 +1,6 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` — this repo at v10.15.6.
+> **Version:** see `/version` - this repo at v10.15.7.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
 >
 > **NOTE (v10.15.5):** Skill 32 now ships the canonical **SOP V2 Library** — 2,555 enriched SOPs across 17 departments, attached as a GitHub Release asset (`sops-library-v2.jsonl.gz`). New `32-command-center-setup/scripts/ingest-sop-library.sh` downloads + applies migration 028 + upserts into the client's `mission-control.db`. Existing clients pick this up via the standard update path; fresh installs get it automatically.
