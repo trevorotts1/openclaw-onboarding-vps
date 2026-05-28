@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.16.3
+#  v10.16.4
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.3"
+ONBOARDING_VERSION="v10.16.4"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -624,6 +624,22 @@ except: pass
   fi
 
   # ----------------------------------------------------------
+  # v10.16.4: Post-pull qc-completeness check. Read-only. Runs against the live
+  # workforce after every successful skill pull. The script self-Telegrams the
+  # operator on != PASS, so we just append the human-readable STATUS line to
+  # the existing "update complete" Telegram for visibility.
+  # ----------------------------------------------------------
+  QC_COMPLETENESS_SCRIPT="$SKILLS_DIR/23-ai-workforce-blueprint/scripts/qc-completeness.sh"
+  QC_STATUS_LINE=""
+  if [ -x "$QC_COMPLETENESS_SCRIPT" ]; then
+    echo ""
+    echo "  Running qc-completeness.sh against live workforce..."
+    QC_OUTPUT="$(bash "$QC_COMPLETENESS_SCRIPT" 2>&1 || true)"
+    QC_STATUS_LINE="$(printf '%s\n' "$QC_OUTPUT" | grep -E '^STATUS:' | tail -1)"
+    echo "  ${QC_STATUS_LINE:-qc-completeness ran (no STATUS line captured)}"
+  fi
+
+  # ----------------------------------------------------------
   # Post-update: write UPDATE PENDING flag + Telegram + backup block
   # ----------------------------------------------------------
   echo ""
@@ -634,6 +650,8 @@ except: pass
   send_telegram_progress "✅ OpenClaw skill update ${ONBOARDING_VERSION} complete.
 
 New skills (need activation): ${NEW_SKILLS_CSV:-none — updates only}.
+
+Workforce QC: ${QC_STATUS_LINE:-not run}
 
 Paste this to your agent:
 
