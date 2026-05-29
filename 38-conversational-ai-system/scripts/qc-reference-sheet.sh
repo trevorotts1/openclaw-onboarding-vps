@@ -45,6 +45,10 @@
 #   - the POST-BUILD VERIFICATION section ("After Build with AI runs"/"VERIFY") that
 #     covers the TRIGGER, the CUSTOM WEBHOOK, and PUBLISH (the Teresa gotcha: a blank/
 #     non-existent tag in a "does not contain" filter)
+#   - the NEW-PLAYBOOK CREATION experience (client-facing): the personal "trigger word"
+#     concept explained voice-assistant style ("like Alexa / Hey Siri"); the "I Do / You
+#     Do" process + the ~15-30 minute expectation; and the brainstorm "things to think
+#     about" list + the "if you're unsure, that's what I'm here to brainstorm" reassurance
 #
 # Exit codes: 0 = sheet carries all required markers;
 #             1 = one or more markers missing;
@@ -308,6 +312,30 @@ grep -Eiq 'book appointments|create and book appointments|appointment' "$SHEET" 
 # The explicit "you have an AI connected to your Convert and Flow account — just ask" line.
 grep -Eiq 'connected to your Convert and Flow account' "$SHEET" || \
   MISSING+=('the explicit "you have an AI that is connected to your Convert and Flow account and can do these things for you — just ask" statement')
+
+# --- NEW-PLAYBOOK CREATION experience (client-facing): trigger word + I-Do/You-Do + brainstorm prep ---
+# The client doc must explain HOW a new playbook gets built, so the client knows
+# (1) they can set a personal trigger word, (2) the I-Do/You-Do split + that it
+# takes ~15-30 min, and (3) the brainstorm "things to think about". The matching
+# agent behavior lives in protocols/conversation-workflows-protocol.md A.0/A.1/A.2.
+
+# (1) The personal TRIGGER WORD concept — named AND explained voice-assistant style.
+grep -Eiq 'trigger word' "$SHEET" || \
+  MISSING+=('the personal "trigger word" concept (client can set a word that tells the AI to build a playbook)')
+grep -Eiq 'Alexa|Hey Siri|Hey, Siri' "$SHEET" || \
+  MISSING+=('the trigger word must be explained voice-assistant style ("like Alexa / Hey Siri")')
+
+# (2) The "I Do / You Do" process + the ~15-30 minute time expectation.
+grep -Eiq 'I Do / You Do|"I Do / You Do"|I-Do/You-Do|I do / you do' "$SHEET" || \
+  MISSING+=('the "I Do / You Do" process overview (who does what when building a playbook)')
+grep -Eiq '15[ -]?(to|-)?[ -]?30 ?min|15-30 ?min|about 15-30|15 to 30 min' "$SHEET" || \
+  MISSING+=('the time expectation that a good playbook takes about 15-30 minutes')
+
+# (3) The brainstorm "things to think about" + the reassurance.
+grep -Eiq 'things to think about|think about before' "$SHEET" || \
+  MISSING+=('the brainstorm "things to think about" list (goal / audience / channel / offer / tone / timing / win action)')
+grep -Eiq 'if you (are|'"'"'re) unsure|that is (exactly )?what (I am|I'"'"'m) here to brainstorm|here to brainstorm' "$SHEET" || \
+  MISSING+=('the reassurance: "if you'"'"'re unsure, that is what I am here to brainstorm"')
 
 if [ "$JSON_MODE" = "1" ]; then
   miss_json="["

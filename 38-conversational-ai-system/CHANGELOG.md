@@ -1,5 +1,64 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.17] - 2026-05-29 - New-playbook CREATION experience: personal trigger word + "I Do / You Do" + brainstorm prep
+
+### Why
+Clients knew they *could* ask for a new communication playbook (v1.4.16), but the skill never taught the
+agent to make the experience feel guided and personal, and the client doc never explained the experience.
+Three pieces were missing: (1) a personal **trigger word** (like "Alexa"/"Hey Siri") so the client has a
+fast, memorable way to start a build; (2) an **"I Do / You Do"** overview so the client knows who is
+responsible for what and that a good playbook takes **~15-30 minutes** (not 30 seconds); and (3) the
+**brainstorm "things to think about"** so the client comes prepared and knows the AI's job is to brainstorm
+the perfect playbook WITH them.
+
+### Added — AGENT BEHAVIOR (the playbook-CREATION flow)
+- **`protocols/conversation-workflows-protocol.md`** — extended the new-playbook creation flow (Section A +
+  Part 3) with three new agent behaviors, NOT a duplicate flow:
+  - **A.0 — Offer a personal TRIGGER WORD (FIRST build only, BINDING).** On the client's first playbook
+    build, the agent OFFERS a personal trigger word, explained voice-assistant style (*"like 'Alexa' or
+    'Hey Siri'"*; e.g. *"Playbook time!"*), asks for it, confirms it, and **REMEMBERS it** — stored in the
+    client's **USER.md** (`Playbook trigger word: "<word>"`), in the `conversation-workflows/registry.md`
+    header (`Trigger word: "<word>"`), and added to the AGENTS.md Step 1.85/1.75 trigger set. On later
+    builds, recognizing the stored word (or any Section A phrase) starts the flow without re-offering.
+  - **A.1 — Present the "I Do / You Do" overview (every build start, BINDING).** The agent presents a short
+    8-step who-does-what map (YOU trigger → AI brainstorms → YOU answer → AI drafts → YOU review → AI
+    finalizes+stores+builds the Workflow AI prompt → AI wires tag/calendar/appointment actions → YOU
+    approve, go live) and sets the **~15-30 minute** expectation up front.
+  - **A.2 — Brainstorm prep (the agent's job + "things to think about").** The agent states its job is to
+    BRAINSTORM the perfect playbook WITH the client, and gives the things to think about — goal / audience
+    / channel(s) / offer-hook / tone / timing & cadence / win action — with the reassurance *"if you're
+    unsure, that's what I'm here to brainstorm."* Then asks only smart-gap questions, never a 50-question
+    form.
+- **`references/communications-playbook-standard.md`** — new **§8** pointer mirroring A.0/A.1/A.2 so the
+  three behaviors ship with every playbook build (author-to-the-protocol, no duplication).
+- **`references/workflow-ai-instructions-standard.md`** — new **§7** pointer mirroring the same flow (the
+  Workflow-AI prompt is built during the same creation flow).
+- **`INSTRUCTIONS.md`** — extended the "Your Communication Playbooks" BINDING rule to name the new
+  client-facing content (🔑 trigger word, 🤝 I-Do/You-Do + ⏱️ ~15-30 min, 🧠 brainstorm things-to-think-
+  about) and to point at the matching agent behavior in the protocol.
+
+### Added — CLIENT DOC (the client-facing explanation)
+- **`scripts/21-generate-client-reference-sheet.sh`** — extended the **💬 Your Communication Playbooks**
+  section (still AFTER 🚀 Quick Start, BEFORE Reference & explanation; FLAT 23-key body + Quick-Start-first
+  ordering unchanged) with three emoji-rich blocks: **🔑 Your personal trigger word** (voice-assistant
+  style, with a copyable *"Playbook time!"* example and the "your AI remembers it" note); **🤝 How we build
+  it together — the "I Do / You Do" process** (the 8-step split + the ⏱️ ~15-30 minute expectation); and
+  **🧠 Things to think about before we brainstorm** (the goal/audience/channel/offer/tone/timing/win-action
+  list + the "if you're unsure, that's what I'm here to brainstorm" reassurance).
+
+### QC
+- **`scripts/qc-reference-sheet.sh`** — now ENFORCES the generated client doc carries the new content, and
+  FAILs the build if missing: the **"trigger word"** concept explained voice-assistant style (**Alexa /
+  Hey Siri**); the **"I Do / You Do"** process + the **~15-30 minute** time expectation; and the brainstorm
+  **"things to think about"** list + the **"here to brainstorm"** reassurance. Negative-tested: stripping
+  any of the three from a generated sheet makes the gate exit non-zero. Wired into
+  `scripts/11-run-qc-checklist.sh` + CI `.github/workflows/qc-static.yml` (unchanged wiring — same gate).
+
+### Notes
+- Additive only; no schema/config changes. THE TRINITY, the 23-key body, the send-directive, the
+  conversation-memory, the per-playbook doc, the Telegram doc-delivery, and the Authorization two-block
+  rule are all unchanged.
+
 ## [1.4.16] - 2026-05-29 - Authorization two-block fix + enriched "Your Communication Playbooks" (just-ask CTA + Convert-and-Flow abilities)
 
 ### Root cause this prevents

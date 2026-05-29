@@ -7,6 +7,11 @@
      label (Automations → Build with AI); the 3-PART build framing + brainstorm-trigger rule added to
      match v6.0-source-playbook.md Step 9.20. GHL Automations have NO API and NO MCP — the Build with
      AI button is the only programmatic path. -->
+<!-- v1.4.17: added the new-playbook CREATION agent behavior — A.0 personal TRIGGER WORD offer
+     (Alexa/Hey-Siri style, offered+confirmed+REMEMBERED in USER.md + registry + AGENTS.md triggers on the
+     FIRST build), A.1 the "I Do / You Do" 8-step overview (~15-30 min expectation), A.2 brainstorm prep
+     (agent's job to brainstorm + the "things to think about"). Mirrored in the two reference standards +
+     the client doc (scripts/21). -->
 
 ## DISTINCTION MAP — four terms operators confuse (read this first)
 
@@ -131,6 +136,10 @@ confirmation. On **YES**: build Part 1 → build Part 2 → write the pointer in
 MEMORY.md (wherever it belongs) → **create the human-facing doc for that playbook in the CLIENT's account
 and RECORD it (BINDING, machine-enforced)** → register it.
 
+> Before the brainstorm questions, on the FIRST playbook build the agent OFFERS a personal trigger word
+> (Section A.0) and presents the "I Do / You Do" overview (Section A.1). Both happen once, up front, then
+> the brainstorm runs. See Section A.0 / A.1 / A.2 below.
+
 > **BINDING — per-playbook human-facing doc (not optional prose).** Creating the playbook on disk is not
 > enough: a human-facing copy MUST be created in the **CLIENT's own account** in the fallback order
 > **(a) the client's Notion → (b) Google Docs → (c) a plain-text doc the client can access**, and its
@@ -160,6 +169,77 @@ The operator should be able to start the workflow builder by saying ANY of these
 When the agent (during normal operation, post-setup) detects one of these from the operator, it kicks off the workflow-builder flow described below.
 
 The trigger-recognition rule goes into AGENTS.md as part of Step 1.75 (the workflow check). Specifically, AGENTS.md gets a small addition that says: "If the message is from the operator AND matches workflow-builder trigger phrases, start the workflow-builder flow per conversation-workflows-protocol.md."
+
+### A.0 — Offer a personal TRIGGER WORD (FIRST playbook build only — BINDING agent behavior)
+
+On the **FIRST** playbook build (or the first time the operator hits any Section A trigger phrase or the
+Step 9.34 brainstorm prompt), the agent — BEFORE asking brainstorm questions — OFFERS to set the client's
+own personal **trigger word**: a word or short phrase that instantly tells the AI they want to build a
+playbook. Explain it the way a voice assistant works — *"like 'Alexa' or 'Hey Siri'"* — a wake phrase the
+client picks themselves (e.g. *"Playbook time!"*). The agent:
+
+1. **Offers + explains it** in plain language, e.g.:
+   > "Quick thing before we start — want to pick a personal trigger word? It's like saying 'Alexa' or
+   > 'Hey Siri': a word or phrase that instantly tells me you want to build a communication playbook, so
+   > you never have to remember the long way to ask. A lot of people use something like **'Playbook time!'**
+   > — but it's yours, pick anything you like. Want to set one? (You can always skip this and just say
+   > 'help me build a [purpose] playbook'.)"
+2. **Asks for it** and lets the client choose (or skip).
+3. **Confirms it back** — *"Got it — from now on, when you say **'<their word>'**, I'll know you want to
+   build a playbook and I'll kick this off."*
+4. **REMEMBERS it (BINDING).** The agent STORES the chosen trigger word so future builds recognize it.
+   Write it to the client's profile/config so it survives across sessions, in BOTH places:
+   - the client's **USER.md** (a `Playbook trigger word: "<word>"` line — the operator-facing profile), AND
+   - the **conversation-workflows registry** (a `Trigger word: "<word>"` line at the top of
+     `registry.md`, so the builder reads it on every build).
+   Then add the chosen word to the AGENTS.md Step 1.85 / Step 1.75 trigger-phrase set (alongside the
+   Section A phrases) so the runtime recognizes it like any other builder trigger.
+
+On **LATER** builds the agent does NOT re-offer — recognizing the stored trigger word (or any Section A
+phrase) starts the flow directly. If the client said "skip", honor it and just use the Section A phrases;
+the agent MAY re-offer once later if the client builds several playbooks and never set one.
+
+### A.1 — Present the "I Do / You Do" overview (every build start — BINDING agent behavior)
+
+When a build STARTS (trigger word fired, or a Section A phrase, or the operator said yes to the brainstorm
+prompt), the agent presents a SHORT **"I Do / You Do"** overview so the client knows who does what, what to
+expect, and that **a good playbook takes about 15-30 minutes** (set the time expectation up front — don't
+let them think it's a 30-second thing). Keep it tight and friendly; this is an at-a-glance map, not a wall
+of text:
+
+> "Here's how we'll build this together — takes about **15-30 minutes** for a good one:
+> 1. **YOU:** trigger it — say your trigger word (or *'Help me build a [purpose] playbook'*).
+> 2. **I (your AI) DO:** ask you a few quick brainstorm questions, using what I already know about your
+>    business — **not** a 50-question interrogation.
+> 3. **YOU:** answer them — the goal, who it's for, the channel, the offer, the tone.
+> 4. **I DO:** draft the full playbook + the conversation flow for your approval.
+> 5. **YOU:** review it and tell me any tweaks.
+> 6. **I DO:** finalize it, store it (in your `conversation-workflows/` folder, mirrored to Notion), and
+>    build the matching Workflow AI prompt wired to your Convert and Flow account.
+> 7. **I DO:** wire the actions — create the tags, update your calendar, create/book the appointments.
+> 8. **YOU:** approve it, and we go live."
+
+The agent presents this once at the start of a build (every build, not just the first — it's the contract
+for the session), then proceeds into Section A.2 / B.
+
+### A.2 — Brainstorm prep: the agent's job + "things to think about"
+
+The agent's job here is to **BRAINSTORM WITH the client to land the PERFECT playbook** — it is a
+collaborator, not a form. Before/while asking the smart-gap questions (Section B), the agent tells the
+client the things to think about, so they can come to the conversation with answers (but reassures them
+they don't have to have it all figured out):
+
+- **The goal** — what's the win? (book a call / recover a sale / get a review / answer an FAQ).
+- **Who it's for** — the audience (new lead, returning customer, hot vs. cold, existing client).
+- **The channel(s)** — SMS, email, Facebook, Instagram, WhatsApp, live chat, etc.
+- **The offer / hook** — what makes them respond? the value or the reason to reply.
+- **The tone / brand voice** — how it should sound (matched to the channel communication playbook baseline).
+- **Timing & follow-up cadence** — when it fires and how the follow-ups are spaced.
+- **The "win" action** — what fires on success (booked / replied / tagged / purchased).
+
+End with the reassurance, verbatim-style: *"And if you're unsure on any of these — that's exactly what I'm
+here to brainstorm. We'll figure it out together."* THEN ask only the smart-gap questions (Section B),
+using what's already known about the business; do NOT turn this list into 7 mandatory form fields.
 
 ### B. Subagent walks the operator through INITIAL workflow creation
 
