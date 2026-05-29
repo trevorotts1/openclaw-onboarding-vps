@@ -148,6 +148,36 @@
       "type": "integer",
       "description": "Count of dept entries actually present in openclaw.json agents.list[] (excludes the default 'main'). Written by Skill 37 Step 1 after running materialize-dept-agents.sh. Cross-check against the number of departments where status==done — a mismatch means the closeout MUST fail rather than send a celebration the runtime can't back up. Added v10.14.19."
     },
+    "roleLibraryStatus": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "pulling",
+        "done",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "ENFORCED build step (added v10.16.8). Tracks whether the ROLE LIBRARY has been pulled into the built workforce — i.e. every role folder's how-to.md was filled from templates/role-library/ (the '<!-- Filled from role-library v... -->' marker present), NOT left as a STUB. 'done' ONLY when qc-completeness.sh reports library_pct >= 95 across all departments. A workforce with departments status=done but roleLibraryStatus != done is NOT complete — the resume layer treats this as dirty and re-fires. Last-night incident (Kofi/Teresa/Evelyn/Maria/Lyric 2026-05-28): workforces scaffolded but the role library was never connected/pulled. Prose 'AUTOMATIC NEXT STEP' is NOT enforcement; this state field + the resume/verify gate is."
+    },
+    "sopLibraryStatus": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "populating",
+        "done",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "ENFORCED build step (added v10.16.8). Tracks whether the SOP LIBRARY has been authored/pulled — i.e. populate-sops-from-manifest.py filled the per-role SOP files (01-*.md..09-*.md) and replaced the '[Step X — to be personalized]' DMAIC stubs. 'done' ONLY when qc-completeness.sh reports sop_stubs_remaining == 0 and avg_sop_per_role > 0 across all departments. A workforce with departments status=done but sopLibraryStatus != done is NOT complete — the resume layer treats this as dirty and re-fires. Companion to roleLibraryStatus; both must be 'done' before buildCompletedAt/closeout."
+    },
+    "librariesVerifiedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "When qc-completeness.sh last confirmed BOTH roleLibraryStatus=done AND sopLibraryStatus=done. Written by the verify/resume gate. Until this is set, the build is not considered complete even if every department is status=done."
+    },
     "openItems": {
       "type": "array",
       "items": {

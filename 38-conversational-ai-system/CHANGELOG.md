@@ -1,5 +1,49 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.4] - 2026-05-29 - THE TRINITY + communications-playbook & workflow-AI standards
+
+Teaches the connection between a GHL workflow, its communications playbook, and its workflow-AI prompt
+(THE TRINITY — one implies the other two, never ship one alone), and ships two standardized
+reference/protocol docs with must-appear checklists. CORE md files stay lean: AGENTS.md gets only
+concise pointers; full content lives in the reference docs. No stripped GHL bodies introduced — the
+one embedded body is the full 23-key flat body (messageTemplate placeholder-free, no nesting).
+
+### Added
+- `references/communications-playbook-standard.md` — the FULL communications-playbook standard:
+  must-appear checklist (slug/id, owner agent id, channel, trigger phrases/intent, goal, step-by-step
+  flow, the GHL reply mechanism via the GHL Conversations API per TOOLS.md, cross-playbook transition
+  rules, edge cases incl. frustration/refund/legal, on-success/tagging, tone, honesty floor), the
+  canonical format skeleton, STORAGE (always under `conversation-workflows/` + register in
+  `registry.md`), and the CLIENT-account STORAGE ORDER fallback chain (Notion → Google Docs → plain
+  text, always in that order).
+- `references/workflow-ai-instructions-standard.md` — the FULL workflow-AI (Build-with-AI) standard:
+  WHERE the prompt goes (GHL Automations → "Build with AI" button — no API, no MCP), the must-appear
+  checklist, the explicit Custom Webhook field-by-field steps (EVENT=CUSTOM, METHOD=POST via dropdown,
+  URL = the REAL hook url not the sample placeholder, AUTHORIZATION dropdown=None, HEADERS via
+  "Add item" → Authorization Bearer token + Content-Type, CONTENT-TYPE=application/json, RAW BODY =
+  the full 23-key flat body via the Custom Values picker — not shortened to 4 keys), the
+  Build-with-AI VERIFICATION CHECKLIST, and MULTI-ACTION teaching (if/else branches, Add-Tag,
+  tag-check, multiple sequential actions, create-tag-first via the GHL skill).
+
+### Changed
+- `protocols/conversation-workflows-protocol.md` — added the binding "THE TRINITY" section at the top;
+  pointed §D.2 at the workflow-AI standard and §E at the communications-playbook standard +
+  client-account storage-order fallback chain.
+- `scripts/05-update-agents-md.sh` — AGENTS.md Step 1.85 block now carries a concise THE TRINITY
+  pointer + pointers to both standard docs; Step 1.8 (BLOCK_B) points the active-playbook reader at
+  the communications-playbook standard and the GHL-Conversations-API reply mechanism. Pointers only —
+  no playbook bodies in AGENTS.md.
+- `templates/sms-workflow-ai-prompt-template.md` — Custom Webhook action rewritten to the precise
+  field-by-field format (EVENT=CUSTOM, METHOD dropdown, real URL not sample placeholder, HEADERS via
+  "Add item", CONTENT-TYPE, RAW BODY via Custom Values); added a Multi-action note (if/else, Add-Tag,
+  tag-check, multiple actions, create-tag-first). Renamed "Workflow AI" usage to "Build with AI" in
+  the how-to. Body unchanged (still the 23-key flat body).
+- `templates/workflow-verification-checklist-template.md` — prepended the concise BUILD-WITH-AI
+  VERIFICATION CHECKLIST (trigger/filter, exact actions, METHOD=POST, real URL, AUTHORIZATION=None,
+  headers via Add item, content-type, 23-key flat body, tags, Published) above the detailed
+  click-by-click checklist.
+- `skill-version.txt` bumped to `1.4.4`.
+
 ## [1.4.3] - 2026-05-29 - Enforce 23-key GHL body everywhere
 
 Owner directive (non-negotiable): EVERY GHL Custom Webhook RAW BODY example in Skill 38 must contain

@@ -607,9 +607,50 @@ The script is idempotent — it can be run after EVERY dept flips to `done`, OR 
 
 **Why this is binding:** Pre-v10.14.19, Skill 23 marked depts `"done"` purely on file presence, then Skill 37 sent a celebration to the client claiming an N-dept M-role workforce was "LIVE" — when in reality `agents.list[]` contained one entry (`main`). The materialize step is the contract that makes the celebration honest.
 
+### Moment 3.7 — Role library + SOP library AUTO-PULL (ENFORCED — added v10.16.8)
+
+A department's `status: "done"` and its materialized agent are **still NOT enough**. The ZHC workforce
+build MUST ALWAYS pull in the **role library** AND author/pull the **SOP library** as part of creation.
+**A workforce is NOT complete until both libraries are populated.**
+
+> **Why this exists.** On 2026-05-28 several clients (Kofi, Teresa, Evelyn, Maria, Lyric) had workforces
+> scaffolded — departments + role folders existed — but the **role library was never connected/pulled**
+> and the **SOPs were never populated**. Prose like "AUTOMATIC NEXT STEP" in INSTRUCTIONS is NOT
+> enforcement. Enforcement = a **state field + a verify/resume gate** (same shape as the v10.14.16
+> build-resume fix and the Moment 3.5 materialize gate).
+
+**Two state fields (in `.workforce-build-state.json`, schema v10.16.8):**
+- `roleLibraryStatus`: `pending → pulling → done` (or `failed`).
+- `sopLibraryStatus`: `pending → populating → done` (or `failed`).
+- `librariesVerifiedAt`: ISO timestamp, set ONLY when BOTH are `done`.
+
+**The master orchestrator MUST, once all departments are `done`, BEFORE setting `buildCompletedAt`:**
+
+1. **Pull the role library.** Every role folder's `how-to.md` must be filled from
+   `templates/role-library/` — the `<!-- Filled from role-library v... -->` marker present — NOT left
+   as a `STUB`. `create_role_workspaces.py` does this via `try_library_fill` during the build; if any
+   `how-to.md` is still a STUB, re-run it for that role. Set `roleLibraryStatus = "pulling"` while
+   working.
+2. **Author/pull the SOP library.** Run `scripts/populate-sops-from-manifest.py` so the per-role SOP
+   files (`01-*.md`..`09-*.md`) are filled and the `[Step X — to be personalized]` DMAIC stubs are
+   replaced. Set `sopLibraryStatus = "populating"` while working.
+3. **Verify with `scripts/qc-completeness.sh`.** It must report, for EVERY department:
+   `library_pct >= 95` AND `sop_stubs_remaining == 0` (with `avg_sop_per_role > 0`). Only on PASS:
+   - set `roleLibraryStatus = "done"`, `sopLibraryStatus = "done"`, `librariesVerifiedAt = <now>`
+     (atomic write), THEN proceed to set `buildCompletedAt` + `closeoutStatus = "pending"`.
+   - On non-PASS: set the offending field to `"failed"` and DO NOT set `buildCompletedAt`. The resume
+     cron will fire a `[LIBRARIES-RESUME]` self-ping (see below) and you re-run steps 1-3.
+
+**The verify/resume gate (binding).** `scripts/resume-workforce-build.sh` treats the build as **dirty**
+when all departments are `done` but `roleLibraryStatus != "done"` OR `sopLibraryStatus != "done"`. In
+that state it dispatches a `[LIBRARIES-RESUME]` self-ping (which fires BEFORE any `[CLOSEOUT-RESUME]`,
+because closeout must NOT run on an incomplete library). This is the contract that makes "workforce
+complete" honest — a scaffold with no role docs and no SOPs can never reach closeout.
+
 ### When ALL departments are `done`
 
-The master orchestrator:
+The master orchestrator (ONLY after Moment 3.7 has set BOTH `roleLibraryStatus` and `sopLibraryStatus`
+to `"done"` and stamped `librariesVerifiedAt`):
 1. Sets `buildCompletedAt` in the state file.
 2. Sets `closeoutStatus = "pending"` in the state file (atomic write). **This is the v10.14.17 contract** — Skill 37 ZHC Closeout reads this field and picks up the celebration handoff.
 3. Either invokes `~/.openclaw/skills/37-zhc-closeout/scripts/run-closeout.sh` inline (preferred — owner gets the celebration faster) OR exits and lets the resume cron fire a `[CLOSEOUT-RESUME]` self-ping on its next 15-minute cycle (safer if you're near a token limit).
@@ -636,8 +677,9 @@ All steps are idempotent. The resume cron (this same `resume-workforce-build.sh`
 - Reads `.workforce-build-state.json`.
 - Fires if ANY of:
   - `interviewComplete: true` AND ANY department is `pending` / `failed` / stale `building` (>15 min since `lastAttemptAt`), OR
+  - all departments are `done` AND (`roleLibraryStatus NOT = done` OR `sopLibraryStatus NOT = done`) (v10.16.8 libraries-dirty gate), OR
   - `buildCompletedAt` is set AND `closeoutStatus NOT IN {done, sent}` (v10.14.17 closeout-dirty extension).
-- Dispatches a `[WORKFORCE-RESUME]` or `[CLOSEOUT-RESUME]` Telegram self-message to a paired chat (owner first, Trevor fallback). That message invokes the agent, who reads `resume-prompt.txt` and continues building OR closing out.
+- Dispatches a `[WORKFORCE-RESUME]`, `[LIBRARIES-RESUME]`, or `[CLOSEOUT-RESUME]` Telegram self-message to a paired chat (owner first, Trevor fallback). `[LIBRARIES-RESUME]` fires BEFORE `[CLOSEOUT-RESUME]` — closeout must not run on an incomplete library. That message invokes the agent, who reads `resume-prompt.txt` and continues building, pulling the libraries, OR closing out.
 - Caps at `maxResumeAttempts` (default 12) to prevent infinite loops. After cap, pings Trevor's chat directly with an escalation instead of continuing to self-ping.
 - Holds a 10-minute lockfile so concurrent cron firings don't double-dispatch.
 

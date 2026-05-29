@@ -8,6 +8,32 @@
      match v5.14-source-playbook.md Step 9.20. GHL Automations have NO API and NO MCP — the Build with
      AI button is the only programmatic path. -->
 
+## THE TRINITY — workflow ⇄ communications playbook ⇄ workflow-AI prompt (BINDING)
+
+Three artifacts always travel together. **One implies the other two:**
+
+1. a GHL **workflow/automation** (the routing that delivers the conversation to OpenClaw),
+2. a **communications playbook** (Layer 2 — what the agent does once the conversation lands), and
+3. a **workflow-AI prompt** (the Build-with-AI instruction set that constructs the workflow).
+
+Rules:
+- If you build a **workflow**, you MUST also have its **communications playbook** AND its
+  **workflow-AI prompt**.
+- If you create a **communications playbook**, you MUST create the matching **workflow-AI prompt**
+  (and the workflow).
+- Never ship one alone. THE 3-PART BUILD below produces all three on every build.
+- The hook path wires the trio: the GHL automation POSTs to
+  `https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>` → the hook delivers the inbound to OpenClaw →
+  OpenClaw runs the communications playbook.
+
+> **Standards:** the FULL format + must-appear checklists live in two reference docs (kept lean here,
+> full there):
+> - Communications playbook → `references/communications-playbook-standard.md`
+> - Workflow-AI prompt (Build-with-AI) → `references/workflow-ai-instructions-standard.md`
+> - Canonical 23-key GHL body authority → `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14
+
+---
+
 ## Step 9.20 — Install Conversation Workflow Builder (3-Layer Architecture)
 
 The Conversation Workflow Builder is the system's biggest single differentiator. Other conversational AI platforms make operators BUILD workflows in visual node-based UIs (n8n, Zapier, GHL/Convert and Flow Workflow Builder). This system makes operators TALK through workflows — the agent asks intelligent questions, synthesizes a Conversation Playbook, AND auto-builds the GHL routing layer the customer needs to reach the AI in the first place.
@@ -204,6 +230,12 @@ The agent saves the tag list (names + IDs) to the workflow's `--ghl-side.md` fil
 
 #### D.2 — Generate the Build-with-AI prompt
 
+> **Standard:** write the Build-with-AI prompt to `references/workflow-ai-instructions-standard.md` —
+> it has the must-appear checklist, the explicit Custom Webhook field-by-field steps (EVENT=CUSTOM,
+> METHOD=POST, real URL not the sample placeholder, HEADERS via "Add item" → Authorization Bearer
+> token, CONTENT-TYPE application/json, RAW BODY = full 23-key flat body via Custom Values), and
+> MULTI-ACTION teaching (if/else branches, Add-Tag, tag-check, multiple actions, create-tag-first).
+
 The agent writes a precise prompt the operator pastes into Convert and Flow's built-in **Build with AI**
 automation builder (Automations → new workflow → **Build with AI**, top-right). GHL Automations have
 NO API and NO MCP — Build with AI is the only programmatic path to build one. The prompt is saved as
@@ -381,6 +413,14 @@ execution log and bring it back to the agent.
 Each verification item is generated from the same source-of-truth as the prompt — so they're guaranteed to match.
 
 ### E. Layer 2 — OpenClaw Side (always built)
+
+> **Communications playbook standard.** The Layer 2 playbook below is a communications playbook —
+> author it to the must-appear checklist + format in `references/communications-playbook-standard.md`.
+> **Storage (master-files):** always save it under `<MASTER_FILES_DIR>/conversation-workflows/<workflow-id>.md`
+> and register it in `conversation-workflows/registry.md`.
+> **Storage order in the CLIENT's account (fallback chain, ALWAYS in this order):** (a) the client's
+> Notion account first; (b) if no Notion → the client's Google Docs; (c) if no Google Docs → a plain
+> text document the client can access later. The master-files copy is required regardless.
 
 After Layer 1 is done (or skipped per Layer 0), the agent builds the conversation playbook itself at `<MASTER_FILES_DIR>/conversation-workflows/<workflow-id>.md`:
 

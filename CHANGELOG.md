@@ -1,3 +1,85 @@
+## [v10.16.8]  -  2026-05-29  -  Skill 38 THE TRINITY + comms/workflow-AI standards; Skill 23 enforced role-library + SOP-library gate
+
+### Why
+
+Two gaps surfaced. (1) Skill 38 taught the 3-part build but did not codify the **standardized format +
+must-appear checklist** for a communications playbook or for a workflow-AI prompt, and did not state the
+**connection rule** that a workflow, its communications playbook, and its workflow-AI prompt always
+travel together — so operators shipped one without the other two. The Build-with-AI Custom Webhook
+fields (METHOD, real URL vs the sample placeholder, headers via "Add item", the full 23-key body) were
+the recurring failure, and multi-action workflows (if/else, Add-Tag) weren't taught. (2) On 2026-05-28
+several clients (Kofi, Teresa, Evelyn, Maria, Lyric) had workforces **scaffolded** but the **role
+library was never connected/pulled** and the **SOPs were never populated** — and nothing re-fired,
+because "pull the libraries" was prose, not an enforced state-field + verify/resume gate.
+
+### How
+
+Skill 38: two new lean reference/protocol docs (full content) + concise pointers in AGENTS.md (CORE md
+stays lean). Skill 23: two new build-state fields + a verify/resume gate (same shape as the v10.14.16
+build-resume and v10.14.19 materialize gates) so a workforce is never "complete" until both libraries
+are populated. No stripped GHL bodies introduced — the only embedded body is the full 23-key flat body.
+
+### Added
+
+- `38-conversational-ai-system/references/communications-playbook-standard.md` (NEW) — the FULL
+  communications-playbook standard: must-appear checklist (slug/id, owner agent id, channel, trigger
+  phrases/intent, goal, step-by-step flow, GHL reply mechanism via the GHL Conversations API per
+  TOOLS.md, cross-playbook transitions, edge cases incl. frustration/refund/legal, on-success/tagging,
+  tone, honesty floor), the canonical format skeleton, master-files STORAGE (`conversation-workflows/`
+  + `registry.md`), and the CLIENT-account STORAGE ORDER fallback chain (Notion → Google Docs → plain
+  text, always in that order). Includes THE TRINITY at the top.
+- `38-conversational-ai-system/references/workflow-ai-instructions-standard.md` (NEW) — the FULL
+  workflow-AI (Build-with-AI) standard: WHERE the prompt goes (GHL Automations → "Build with AI"
+  button — no API, no MCP); must-appear checklist; the explicit Custom Webhook field-by-field steps
+  (EVENT=CUSTOM, METHOD=POST via dropdown, URL = the REAL hook url not the sample placeholder,
+  AUTHORIZATION dropdown=None, HEADERS via "Add item" → Authorization Bearer token + Content-Type,
+  CONTENT-TYPE=application/json, RAW BODY = the full 23-key flat body via the Custom Values picker —
+  not shortened); the Build-with-AI VERIFICATION CHECKLIST; and MULTI-ACTION teaching (if/else,
+  Add-Tag, tag-check, multiple actions, create-tag-first via the GHL skill).
+- `23-ai-workforce-blueprint/build-state-schema.json` — three new fields: `roleLibraryStatus`,
+  `sopLibraryStatus` (each `pending → pulling/populating → done`/`failed`), and `librariesVerifiedAt`.
+
+### Updated
+
+- `38-conversational-ai-system/protocols/conversation-workflows-protocol.md` — added the binding
+  "THE TRINITY" section; pointed §D.2 at the workflow-AI standard and §E at the communications-playbook
+  standard + client-account storage-order chain.
+- `38-conversational-ai-system/scripts/05-update-agents-md.sh` — AGENTS.md Step 1.85 carries a concise
+  THE TRINITY pointer + pointers to both standards; Step 1.8 (BLOCK_B) points at the comms-playbook
+  standard + the GHL-Conversations-API reply mechanism. Pointers only — no bodies in AGENTS.md.
+- `38-conversational-ai-system/templates/sms-workflow-ai-prompt-template.md` — Custom Webhook rewritten
+  to the precise field-by-field format; added a Multi-action note (if/else, Add-Tag, tag-check, multiple
+  actions, create-tag-first). Body unchanged (23-key flat).
+- `38-conversational-ai-system/templates/workflow-verification-checklist-template.md` — prepended the
+  concise BUILD-WITH-AI VERIFICATION CHECKLIST.
+- `38-conversational-ai-system/skill-version.txt` 1.4.3 → 1.4.4; `38-.../CHANGELOG.md` v1.4.4 entry.
+- `23-ai-workforce-blueprint/scripts/resume-workforce-build.sh` — ENFORCED libraries gate: when all
+  departments are `done` but `roleLibraryStatus != done` OR `sopLibraryStatus != done`, the build is
+  dirty and dispatches a `[LIBRARIES-RESUME]` self-ping (fires BEFORE `[CLOSEOUT-RESUME]` — closeout
+  must not run on an incomplete library).
+- `23-ai-workforce-blueprint/scripts/build-workforce.py` — stamps `roleLibraryStatus`/`sopLibraryStatus`
+  (provisional, from the post-build + SOP-populate rc) into build-state at end of build via a new
+  `_write_library_status` helper; qc-completeness.sh remains the final authority and the resume gate
+  re-fires until both reach `done`.
+- `23-ai-workforce-blueprint/INSTRUCTIONS.md` — added "Moment 3.7 — Role library + SOP library
+  AUTO-PULL (ENFORCED)" documenting the state fields, the pull/populate/verify steps (library_pct>=95,
+  sop_stubs_remaining==0), and the verify/resume gate; updated "How the resume layer uses this".
+- `23-ai-workforce-blueprint/resume-prompt.txt` — added the LIBRARIES FLOW + the A2 decision-tree
+  branch (libraries gate fires before closeout).
+- Version bump to v10.16.8 across all 8 version-tracked files via `scripts/bump-version.sh`.
+
+### Migration for existing clients
+
+Re-pull via the standard update path. Existing workforces that were scaffolded without libraries: the
+next `resume-workforce-build.sh` cron fire detects `roleLibraryStatus`/`sopLibraryStatus` absent (treated
+as not-done once all depts are done) and dispatches a `[LIBRARIES-RESUME]` to pull the role library +
+populate SOPs, then verify via `qc-completeness.sh` before closeout.
+
+### Risk + rollback
+
+Doc + script + schema-additive-field changes only. The new state fields are optional with `pending`
+defaults — older state files are tolerated. Rollback via `git revert <merge>`.
+
 ## [v10.16.7]  -  2026-05-28  -  Skill 38 → v1.4.0: GHL inbound hardening (Build-with-AI prompt, 4-token model, verified APIs, calendar-sync)
 
 ### Added (cont. — two additive layers, no version bump)

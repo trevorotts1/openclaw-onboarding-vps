@@ -198,14 +198,35 @@ if [[ -n "$build_completed_at" ]]; then
   esac
 fi
 
-total_attention=$(( pending_count + stale_building_count + closeout_dirty ))
+# ---- v10.16.8: ENFORCED role-library + SOP-library gate ----
+# A workforce is NOT complete until BOTH libraries are populated. If every
+# department is done but roleLibraryStatus or sopLibraryStatus is not "done",
+# the build is dirty and must re-fire. This is the verify/resume half of the
+# enforced build step (state field added in build-state-schema.json v10.16.8).
+# Last-night incident (Kofi/Teresa/Evelyn/Maria/Lyric): scaffolded depts but
+# role library + SOPs never connected/pulled. Prose isn't enforcement — this is.
+role_library_status=$(jq -r '.roleLibraryStatus // "pending"' "$STATE_FILE")
+sop_library_status=$(jq -r '.sopLibraryStatus // "pending"' "$STATE_FILE")
+done_dept_count=$(jq -r '[.departments[] | select(.status == "done")] | length' "$STATE_FILE")
+total_dept_count=$(jq -r '.departments | length' "$STATE_FILE")
+libraries_dirty=0
+# Only gate once there is real build progress: all planned departments done
+# (no pending/failed/stale) AND at least one department exists.
+if (( pending_count == 0 )) && (( stale_building_count == 0 )) \
+   && (( total_dept_count > 0 )) && (( done_dept_count == total_dept_count )); then
+  if [[ "$role_library_status" != "done" || "$sop_library_status" != "done" ]]; then
+    libraries_dirty=1
+  fi
+fi
+
+total_attention=$(( pending_count + stale_building_count + libraries_dirty + closeout_dirty ))
 if (( total_attention == 0 )); then
   done_count=$(jq -r '[.departments[] | select(.status == "done")] | length' "$STATE_FILE")
   total_count=$(jq -r '.departments | length' "$STATE_FILE")
   if (( done_count == total_count )) && (( total_count > 0 )); then
-    log "ALL ${total_count} departments done + closeout terminal (status=$closeout_status) — nothing to do"
+    log "ALL ${total_count} departments done + libraries done (role=$role_library_status sop=$sop_library_status) + closeout terminal (status=$closeout_status) — nothing to do"
   else
-    log "no pending/stale departments and closeout clean (pending=$pending_count, stale=$stale_building_count, closeout=$closeout_status) — nothing to do"
+    log "no pending/stale departments, libraries done (role=$role_library_status sop=$sop_library_status), closeout clean (pending=$pending_count, stale=$stale_building_count, closeout=$closeout_status) — nothing to do"
   fi
   exit 0
 fi
@@ -253,13 +274,17 @@ if [[ -z "$TARGET_CHAT" ]]; then
   exit 0
 fi
 
-if (( closeout_dirty == 1 )) && (( pending_count == 0 )) && (( stale_building_count == 0 )); then
+if (( libraries_dirty == 1 )); then
+  # v10.16.8: libraries gate fires BEFORE closeout — a workforce with un-pulled
+  # role library or un-populated SOPs is NOT complete; closeout must not run yet.
+  msg="[LIBRARIES-RESUME] ${agent_name}: all departments are status=done but the libraries are NOT populated (roleLibraryStatus=${role_library_status}, sopLibraryStatus=${sop_library_status}). A workforce is NOT complete until BOTH the role library is pulled (every role's how-to.md filled from templates/role-library/, NOT a STUB) AND the SOP library is authored (per-role SOP files populated, no '[Step X — to be personalized]' stubs). DO THIS: (1) re-run create_role_workspaces.py / try_library_fill for any STUB how-to.md; (2) re-run scripts/populate-sops-from-manifest.py to fill remaining SOP stubs; (3) run scripts/qc-completeness.sh — it must report library_pct>=95 and sop_stubs_remaining==0 for every dept; (4) ONLY THEN set roleLibraryStatus=done + sopLibraryStatus=done + librariesVerifiedAt in .workforce-build-state.json, set buildCompletedAt + closeoutStatus=pending, and proceed to closeout. Resume attempt $((attempts + 1)) of $max_attempts. Do NOT message the owner about this — this is internal."
+elif (( closeout_dirty == 1 )) && (( pending_count == 0 )) && (( stale_building_count == 0 )); then
   msg="[CLOSEOUT-RESUME] ${agent_name}: workforce build is done (buildCompletedAt set) but closeout is incomplete (closeoutStatus=${closeout_status:-unset}). Read /data/.openclaw/skills/37-zhc-closeout/INSTRUCTIONS.md and invoke scripts/run-closeout.sh. The script is idempotent — it picks up from the first un-completed step. Resume attempt $((attempts + 1)) of $max_attempts. Do NOT message the owner about this — the owner only hears from you when Skill 37 Step 6 fires."
 else
-  msg="[WORKFORCE-RESUME] ${agent_name}: continue the workforce build per the Post-Interview Handoff Protocol in Skill 23. Read .workforce-build-state.json. Pending: ${pending_list:-none}. Stale: ${stale_list:-none}. Closeout status: ${closeout_status:-unset}. Resume attempt $((attempts + 1)) of $max_attempts. Do NOT message the owner about this — the resume is internal. When all departments are done, set closeoutStatus=pending and either invoke ~/.openclaw/skills/37-zhc-closeout/scripts/run-closeout.sh inline OR exit and let the next cron fire pick up the closeout."
+  msg="[WORKFORCE-RESUME] ${agent_name}: continue the workforce build per the Post-Interview Handoff Protocol in Skill 23. Read .workforce-build-state.json. Pending: ${pending_list:-none}. Stale: ${stale_list:-none}. Role library: ${role_library_status}. SOP library: ${sop_library_status}. Closeout status: ${closeout_status:-unset}. Resume attempt $((attempts + 1)) of $max_attempts. Do NOT message the owner about this — the resume is internal. When all departments are done, pull the role library + author the SOP library (BOTH must be 'done' — see [LIBRARIES-RESUME] criteria), then set closeoutStatus=pending and either invoke ~/.openclaw/skills/37-zhc-closeout/scripts/run-closeout.sh inline OR exit and let the next cron fire pick up the closeout."
 fi
 
-log "dispatching resume to chat $TARGET_CHAT (attempt $((attempts + 1))/$max_attempts; pending='$pending_list'; stale='$stale_list'; closeout_dirty=$closeout_dirty closeout_status='$closeout_status')"
+log "dispatching resume to chat $TARGET_CHAT (attempt $((attempts + 1))/$max_attempts; pending='$pending_list'; stale='$stale_list'; libraries_dirty=$libraries_dirty role_library_status='$role_library_status' sop_library_status='$sop_library_status'; closeout_dirty=$closeout_dirty closeout_status='$closeout_status')"
 if openclaw message send --channel telegram -t "$TARGET_CHAT" -m "$msg" 2>>"$LOG_FILE"; then
   log "resume dispatch ok"
 else

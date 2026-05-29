@@ -311,6 +311,34 @@ def _write_canonical_reconciliation(record):
         print(f"[CANONICAL WARNING] Could not write reconciliation to {path}: {e}", file=sys.stderr)
 
 
+def _write_library_status(role_status, sop_status, verified=False):
+    """
+    Merge roleLibraryStatus + sopLibraryStatus into build-state (v10.16.8).
+
+    ENFORCED build step: a workforce is NOT complete until BOTH libraries are
+    populated. This stamps the two state fields so the verify/resume gate in
+    resume-workforce-build.sh can detect a libraries-dirty build (all depts
+    done but a library not pulled/populated) and re-fire a [LIBRARIES-RESUME].
+
+    Idempotent + non-destructive. Never raises.
+    """
+    path = _build_state_path()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        state = _load_build_state()
+        state["roleLibraryStatus"] = role_status
+        state["sopLibraryStatus"] = sop_status
+        if verified and role_status == "done" and sop_status == "done":
+            state["librariesVerifiedAt"] = datetime.now().isoformat()
+        with open(path, "w") as f:
+            json.dump(state, f, indent=2)
+        print(f"[LIBRARIES] Wrote roleLibraryStatus={role_status} "
+              f"sopLibraryStatus={sop_status} to {path}", file=sys.stderr)
+    except OSError as e:
+        print(f"[LIBRARIES WARNING] Could not write library status to {path}: {e}",
+              file=sys.stderr)
+
+
 def reconcile_canonical_floor(selected_departments, core_answers, departments_config):
     """
     Enforce the canonical floor on the client's selected departments.
@@ -698,6 +726,24 @@ def build_from_config(config):
         f"sop_populate_rc={_sop_rc}",
         file=sys.stderr,
     )
+
+    # v10.16.8: ENFORCED libraries gate — stamp roleLibraryStatus + sopLibraryStatus
+    # so the verify/resume gate can detect a libraries-dirty build. The role
+    # library is pulled by create_role_workspaces.try_library_fill (during build)
+    # + post-build-role-workspaces.py; the SOP library is populated by
+    # populate-sops-from-manifest.py. These rc-derived values are PROVISIONAL —
+    # qc-completeness.sh is the final authority and the resume gate re-fires a
+    # [LIBRARIES-RESUME] until both reach "done" (library_pct>=95, sop stubs==0).
+    _role_status = "done" if _post_build_rc == 0 else "failed"
+    # _sop_rc: 0 = all populated; -1 = no manifest/not run; 3 = owner-input-required.
+    if _sop_rc == 0:
+        _sop_status = "done"
+    elif _sop_rc == -1:
+        _sop_status = "pending"
+    else:
+        _sop_status = "failed"
+    _write_library_status(_role_status, _sop_status,
+                          verified=(_role_status == "done" and _sop_status == "done"))
 
     print(f"\n[NON-INTERACTIVE] Build complete!", file=sys.stderr)
     print(f"[NON-INTERACTIVE] Company: {company_name}", file=sys.stderr)

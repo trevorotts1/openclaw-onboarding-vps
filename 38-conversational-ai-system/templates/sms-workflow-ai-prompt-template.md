@@ -13,11 +13,14 @@ You don't have to build this workflow by hand. Convert and Flow has a built-in t
 ## How to use this
 
 1. Open your Convert and Flow account.
-2. Click **Automations** on the left menu.
-3. Click **Create workflow** → choose **Use Workflow AI**.
-4. Copy the entire block below (the one starting with `Build a workflow for me with these exact specifications:`) and paste it into Workflow AI.
-5. Let Workflow AI build the workflow.
-6. Open the **Workflow Verification Checklist** (Section 4 of this Notion page, or the matching `.md` file on your Mac) and verify each item before publishing.
+2. Click **Automations** on the left menu. (GHL Automations have NO API and NO MCP — the **Build with AI** button is the only programmatic path.)
+3. Create a **new** automation/workflow → click **Build with AI** (top-right).
+4. Copy the entire block below (the one starting with `Build a workflow for me with these exact specifications:`) and paste it into **Build with AI**.
+5. Let Build with AI construct the SHAPE (trigger, filters, the Custom Webhook step).
+6. Open the **Build-with-AI Verification Checklist** (Section 4 of this Notion page, or the matching `.md` file on your Mac) and verify each item before publishing. Build-with-AI populates the webhook fields poorly — verification is mandatory.
+
+> **Standard:** the full field-by-field Custom Webhook spec + multi-action teaching live in
+> `references/workflow-ai-instructions-standard.md`. This template is the rendered SMS case.
 
 ## The copy-paste prompt
 
@@ -38,17 +41,19 @@ FILTERS (in this exact order):
 
 ACTIONS (in this exact order):
 - Action 1: Send Custom Webhook
-  - URL: https://<PUBLIC_HOSTNAME>/hooks/<ROUTE_ID>
-  - Method: POST
+  - EVENT: CUSTOM  (this is a Custom Webhook, not a templated/integration webhook)
+  - METHOD: POST  (pick POST from the Method dropdown — not GET, not PUT)
+  - URL: https://<PUBLIC_HOSTNAME>/hooks/<ROUTE_ID>  (paste this EXACT url — do NOT leave the Build-with-AI sample-url placeholder; no trailing slash, correct hostname + /hooks/ path)
   - AUTHORIZATION dropdown: None  (the token goes in Headers, NOT in the Authorization dropdown — leave the dropdown set to None)
-  - Headers:
-    - Authorization: Bearer <HOOKS_TOKEN>
-    - Content-Type: application/json
-  - Content-Type dropdown: application/json
+  - HEADERS (click "Add item" once per header):
+    - Add item → Key: Authorization, Value: Bearer <HOOKS_TOKEN>
+    - Add item → Key: Content-Type, Value: application/json
+  - CONTENT-TYPE dropdown: application/json
   - Body type: Raw JSON
-  - Body (Raw JSON) — MUST be FLAT (no nested objects) and MUST contain ALL 23 keys (23 = minimum, no
+  - RAW BODY — MUST be FLAT (no nested objects) and MUST contain ALL 23 keys (23 = minimum, no
     stripped/short bodies). The KEY names are what OpenClaw reads; insert the data VALUES via GHL's
-    Custom Values picker. Keep `messageTemplate` placeholder-free (no `{{…}}`) so GHL never mangles it:
+    Custom Values picker (typed-as-text tokens send EMPTY). Keep `messageTemplate` placeholder-free
+    (no `{{…}}`) so GHL never mangles it:
     {
       "id": "<ROUTE_ID>",
       "match": "<ROUTE_ID>",
@@ -91,6 +96,24 @@ After you paste the prompt above, Workflow AI should produce a workflow with:
 - **Run schedule**: All Day.
 
 If the workflow Workflow AI produced doesn't match this shape, that's normal — Workflow AI is a helper, not infallible. Use the verification checklist (Section 4) to fix the gaps.
+
+## Multi-action note (when this workflow needs more than one action)
+
+This SMS template is the simplest case — one trigger, two filters, one Custom Webhook. Real workflows
+often need **more than one action**. A Build-with-AI prompt can describe **trigger + (optional if/else)
++ one-or-more actions**:
+
+- **if/else (if-else) branches** — additional filtering after the trigger (e.g. "IF contact has tag
+  `vip` → branch A; ELSE → branch B"). Spell out each branch's condition + its actions.
+- **Add-Tag actions** — apply a tag at a point in the flow (e.g. tag `pricing-interest` after the webhook).
+- **tag-check conditions** — branch on whether a contact already has a tag.
+- **multiple sequential actions** — e.g. Custom Webhook → Add-Tag → if/else; each webhook in the chain
+  gets the SAME full field-by-field spec as Action 1 above.
+
+**Create the tag FIRST.** If a workflow references a tag, the agent creates that tag via the GHL skill
+BEFORE building the workflow, then references the now-existing tag in the prompt. Never tell the
+operator to create tags by hand, and never reference a tag that doesn't exist yet. Full multi-action
+skeleton + standard: `references/workflow-ai-instructions-standard.md` §5.
 
 ## Common Workflow AI mistakes to verify against the checklist
 

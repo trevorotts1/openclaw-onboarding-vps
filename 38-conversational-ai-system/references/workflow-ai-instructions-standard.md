@@ -1,0 +1,191 @@
+<!-- OPERATOR HEADER -->
+<!-- Skill 38 reference/protocol doc: Workflow-AI Instructions Standard. -->
+<!-- This is the FULL standard for the prompt pasted into GHL's "Build with AI" button. -->
+<!-- AGENTS.md / TOOLS.md get only a 1-2 line pointer to this file — never the body inline. -->
+<!-- Canonical 23-key body authority: references/GHL-INBOUND-AND-PLAYBOOKS.md §14 (verified LIVE 2026-05-29). -->
+<!-- Companion: communications-playbook-standard.md, conversation-workflows-protocol.md (THE TRINITY). -->
+
+# Workflow-AI Instructions Standard
+
+A **workflow-AI prompt** is the natural-language instruction set the operator pastes into GHL's
+**"Build with AI"** button to construct a GHL automation/workflow. GHL Automations have **NO API and
+NO MCP** — the "Build with AI" button is the ONLY programmatic path to build one. This document is the
+single standard for the MUST-APPEAR checklist, WHERE the prompt goes, the explicit field-by-field
+Custom Webhook steps (the part Build-with-AI fails at most), and how to teach MULTI-ACTION workflows.
+
+> **THE TRINITY.** A workflow-AI prompt never ships alone. It travels with its communications playbook
+> and its GHL workflow. See `conversation-workflows-protocol.md` → "THE TRINITY".
+
+---
+
+## 1. WHERE the prompt goes (exact)
+
+1. Open the client's GHL / Convert and Flow account.
+2. Click **Automations** in the left menu.
+3. Create a **new** automation/workflow → click **Build with AI** (top-right).
+4. Paste the workflow-AI prompt (saved at
+   `<MASTER_FILES_DIR>/conversation-workflows/<slug>--build-with-ai-prompt.md`).
+5. Let Build-with-AI construct the SHAPE (trigger, filters, branches, tags, the Custom Webhook step).
+6. Run the Build-with-AI Verification Checklist (§4) before publishing — Build-with-AI populates the
+   webhook fields poorly, so verification is mandatory, not optional.
+
+There is no GHL API and no MCP for Automations. Do not propose one. The "Build with AI" button is it.
+
+---
+
+## 2. MUST-APPEAR CHECKLIST (every workflow-AI instruction set)
+
+- [ ] **Workflow name** + **PUBLISH instruction** ("publish when done — do not leave as draft").
+- [ ] **Trigger** — type (e.g. "Customer Replied") + sub-option (e.g. "On Reply") + **filters**
+      (e.g. Channel = SMS, Message Direction = Inbound), in exact order.
+- [ ] **For EACH action, EVERY field spelled out.** No "configure the webhook" hand-waving.
+- [ ] **Custom Webhook action — field by field (see §3).** Build-with-AI repeatedly fails to populate
+      these; spell out all of them.
+- [ ] **RAW BODY = the FULL 23-key flat JSON** (§3) via the Custom Values picker. Do NOT shorten to
+      4 keys (or any sub-23 count). 23 is the MINIMUM.
+- [ ] **MULTI-ACTION teaching where applicable (see §5)** — if/else branches, Add-Tag, tag-check
+      conditions, and multiple sequential actions. If a tag is needed, CREATE the tag first via the
+      GHL skill (before building the workflow), then reference it in the prompt.
+
+---
+
+## 3. CUSTOM WEBHOOK — explicit field-by-field (the part Build-with-AI gets wrong)
+
+In the Build-with-AI prompt, specify the Custom Webhook action exactly like this. Each line maps to a
+field in the GHL Custom Webhook action editor:
+
+- **EVENT = `CUSTOM`** (the action is a Custom Webhook, not a templated/integration webhook).
+- **METHOD = `POST`** — pick POST from the Method dropdown (not GET, not PUT).
+- **URL = the EXACT hook URL** — `https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>`. Do **NOT** leave the
+  Build-with-AI sample-url placeholder. Paste the real, character-for-character URL (no trailing slash,
+  correct hostname + `/hooks/` path segment).
+- **AUTHORIZATION dropdown = `None`** — the token goes in HEADERS, not in this dropdown. (Common
+  Build-with-AI mistake: setting this to "Bearer Token" — leave it None.)
+- **HEADERS** — click **"Add item"** and add, exactly:
+  - Key = `Authorization`, Value = `Bearer <HOOKS_TOKEN>`
+  - Key = `Content-Type`, Value = `application/json`
+  - (Add any other header the same way via "Add item".)
+- **CONTENT-TYPE = `application/json`** (the content-type dropdown).
+- **RAW BODY = the FULL 23-key flat JSON below**, inserted via GHL's **Custom Values picker** (typed-
+  as-text tokens send EMPTY). FLAT (no nesting — nesting makes every field arrive empty). Keep
+  `messageTemplate` **placeholder-free** (no `{{…}}` in the body's messageTemplate, or GHL throws
+  "Error while parsing the object to JSON"). Do NOT shorten to 4 keys — all 23 are required.
+
+### The canonical 23-key body (embed this exactly; per-channel variants change only `channel` + the `session_key` prefix)
+
+```json
+{
+  "id": "ghl-sales",
+  "match": "ghl-sales",
+  "action": "agent",
+  "agent_id": "sales",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:sms:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
+  "channel": "sms",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
+  "contact_id": "{{contact.id}}",
+  "first_name": "{{contact.first_name}}",
+  "last_name": "{{contact.last_name}}",
+  "email": "{{contact.email}}",
+  "phone": "{{contact.phone}}",
+  "subject": "{{message.subject}}",
+  "message_body": "{{message.body}}",
+  "location_id": "{{location.id}}",
+  "location_name": "{{location.name}}"
+}
+```
+
+The 23 keys (exact, in order): `id`, `match`, `action`, `agent_id`, `model`, `wakeMode`, `name`,
+`session_key`, `messageTemplate`, `deliver`, `timeoutSeconds`, `channel`, `to`, `thinking`,
+`contact_id`, `first_name`, `last_name`, `email`, `phone`, `subject`, `message_body`, `location_id`,
+`location_name`. See `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14 for the cardinal rule, the per-channel
+variant table, and the two-objects note (the GHL body = object A; the OpenClaw server `hooks.mappings`
+entry = object B, which keeps its OWN templated `messageTemplate`).
+
+---
+
+## 4. BUILD-WITH-AI VERIFICATION CHECKLIST (run AFTER Build-with-AI finishes)
+
+Build-with-AI populates poorly, so run this every time — even when the prompt "succeeded". (The
+per-workflow rendered version lives at `<slug>--verification-checklist.md`; the canonical pattern is in
+`templates/workflow-verification-checklist-template.md` and `references/GHL-INBOUND-AND-PLAYBOOKS.md` §4.)
+
+- [ ] **Trigger type + filter** are correct (e.g. "Customer Replied", filtered to the intended channel
+      — not all channels).
+- [ ] **Exactly the intended action(s)** exist — no extra actions, none missing (for multi-action
+      workflows, every branch + Add-Tag + tag-check is present, §5).
+- [ ] **Custom Webhook METHOD = POST.**
+- [ ] **URL is the REAL hook URL** (`https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>`) — NOT the sample-url
+      placeholder, no trailing slash, correct path.
+- [ ] **AUTHORIZATION dropdown = None** (token is in Headers, not here).
+- [ ] **HEADERS contains `Authorization: Bearer <HOOKS_TOKEN>`** (added via "Add item") **and**
+      `Content-Type: application/json`.
+- [ ] **CONTENT-TYPE = application/json.**
+- [ ] **RAW BODY = all 23 keys, FLAT** (no nesting), `messageTemplate` placeholder-free, no stripped/
+      short body. Re-paste the full 23-key body if any key is missing.
+- [ ] **Any required tags created/applied** (created beforehand via the GHL skill).
+- [ ] **Workflow Published** (not Draft).
+
+---
+
+## 5. MULTI-ACTION workflows (not just one webhook)
+
+A workflow-AI prompt must support **trigger + (optional if/else) + one-or-more actions** — not only a
+single Custom Webhook. Teach the operator (and write the prompt) for:
+
+- **if/else (if-else) branches** — additional filtering after the trigger (e.g. "If contact has tag
+  `vip` → branch A; else → branch B"). Spell out each branch's condition and its actions.
+- **Add-Tag actions** — apply a tag at a point in the flow (e.g. tag `pricing-interest` after the
+  webhook fires).
+- **tag-check conditions** — branch on whether a contact already has a tag.
+- **multiple sequential actions** — e.g. Custom Webhook → wait → Add-Tag → if/else. Each action gets
+  its full field spec, same rigor as §3 for any webhook in the chain.
+
+**CREATE-TAG-FIRST rule (binding).** If the workflow needs a tag, the agent CREATES the tag FIRST via
+the GHL skill (per conversation-workflows-protocol.md §D.1) BEFORE building the workflow, then
+references the now-existing tag in the Build-with-AI prompt. Do not tell the operator to create tags
+by hand, and do not reference a tag that does not exist yet.
+
+### Multi-action prompt skeleton
+
+```
+Build a workflow for me with these exact specifications:
+
+WORKFLOW NAME: <name>
+
+TRIGGER:
+- Type: <e.g. Customer Replied>  Sub-option: <e.g. On Reply>
+FILTERS (exact order):
+- Filter 1: <Field> = <Value>
+- Filter 2: <Field> = <Value>
+
+IF/ELSE (optional):
+- IF <condition, e.g. contact has tag `vip`>:
+    - Action: <...>
+- ELSE:
+    - Action: <...>
+
+ACTIONS (exact order):
+- Action 1: Send Custom Webhook
+    EVENT: CUSTOM
+    METHOD: POST
+    URL: https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>   (the REAL url — not the sample placeholder)
+    AUTHORIZATION dropdown: None
+    HEADERS (click "Add item" for each):
+      - Authorization: Bearer <HOOKS_TOKEN>
+      - Content-Type: application/json
+    CONTENT-TYPE: application/json
+    RAW BODY (Custom Values picker; FLAT; ALL 23 keys; messageTemplate placeholder-free):
+      <the full 23-key body from §3>
+- Action 2: Add Tag — `<tag>` (tag already created via the GHL skill)
+- Action 3 (optional): <...>
+
+PUBLISH: Yes — publish when done. Do NOT leave it as a draft.
+RUN SCHEDULE: <e.g. All Day>
+```
