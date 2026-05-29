@@ -132,6 +132,12 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
 - [ ] **Any required tags created/applied** (created beforehand via the GHL skill).
 - [ ] **Workflow Published** (not Draft).
 
+> **Machine-enforced.** Every GHL RAW BODY example in this skill (references/ + templates/ + scripts/) is
+> scanned by `scripts/qc-23-key-bodies.sh`, which asserts exactly 23 flat keys, a placeholder-free
+> `messageTemplate`, no nested objects, and no literal `\n` — and exits non-zero on any violation (it also
+> runs in CI). THE TRINITY (this prompt ⇄ its communications playbook ⇄ its registry row) is enforced by
+> `scripts/qc-trinity-registry.sh`. The 23-key rule is a check, not just a human checklist item.
+
 ---
 
 ## 5. MULTI-ACTION workflows (not just one webhook)

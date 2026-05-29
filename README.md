@@ -1,7 +1,9 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` - this repo at v10.16.8.
+> **Version:** see `/version` - this repo at v10.16.9.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
+>
+> **NOTE (v10.16.9):** The 8 rated Skill 38 + Skill 23 improvements (push to 10). Skill 38 → v1.4.5: two QC linters that machine-enforce the **23-key GHL body rule** (`scripts/qc-23-key-bodies.sh`, also in CI) and **THE TRINITY** (`scripts/qc-trinity-registry.sh`); the "Use Workflow AI" mislabel corrected to GHL **Automations → "Build with AI"** everywhere operator-facing; stale self-counts fixed (protocols=32, scripts=27, references=15); all 7 stub journey templates fleshed out; a distinction-map table at the top of `conversation-workflows-protocol.md`. Skill 23 → **ENFORCED cross-skill chain to Skill 38** (new `commsAutomationStatus` build-state field + `[COMMS-AUTOMATION-RESUME]` gate so a Comms/Sales/Support workforce hands off to Skill 38) and operator-facing library-gate status surfacing near the resume cap.
 >
 > **NOTE (v10.16.8):** Skill 38 → v1.4.4 (THE TRINITY: a GHL workflow, its communications playbook, and its workflow-AI prompt travel together; new `references/communications-playbook-standard.md` + `references/workflow-ai-instructions-standard.md` with must-appear checklists, the Build-with-AI Custom Webhook field-by-field steps, multi-action teaching, and the Notion→Google Docs→text client-account storage order). Skill 23 → enforced role-library + SOP-library gate (new build-state fields `roleLibraryStatus`/`sopLibraryStatus` + a `[LIBRARIES-RESUME]` verify/resume gate so a workforce is never complete until both libraries are populated).
 >
@@ -13,7 +15,7 @@
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.8)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.9)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 

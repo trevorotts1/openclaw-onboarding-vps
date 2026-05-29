@@ -1,3 +1,62 @@
+## [v10.16.9]  -  2026-05-29  -  Skill 38 + 23: the 8 rated improvements (push to 10)
+
+### Why
+
+Eight rated improvements to harden the Skill 23 ⇄ Skill 38 sibling pair and make the 23-key / TRINITY /
+self-count invariants machine-enforced instead of human-checklist prose. Skill 38 bumps its own
+`skill-version.txt` → `1.4.5`; the repo version bumps to `v10.16.9` because Skill 23 (the 8-file version
+set) changed (build-state-schema.json, resume-workforce-build.sh, INSTRUCTIONS.md, SKILL.md).
+
+### Added
+
+- **(1) Cross-skill chain Skill 23 → Skill 38 — ENFORCED.** New `commsAutomationStatus` state field
+  (+ `commsAutomationDepartments`, `commsAutomationVerifiedAt`) in `build-state-schema.json`. When a
+  workforce builds a Communications / Sales / Customer-Support department, `resume-workforce-build.sh`
+  treats the build as dirty until Skill 38 has scaffolded the matching comms automations, and dispatches
+  a `[COMMS-AUTOMATION-RESUME]` self-ping (fires after `[LIBRARIES-RESUME]`). New binding **Moment 3.8**
+  in Skill 23 INSTRUCTIONS.md. Reciprocal cross-references added: Skill 23 SKILL.md → Skill 38; Skill 38
+  SKILL.md + conversation-workflows-protocol.md → Skill 23 as the upstream trigger. (Was: zero
+  cross-references between the two siblings.)
+- **(4) Programmatic 23-key linter** `38-conversational-ai-system/scripts/qc-23-key-bodies.sh` — scans
+  every GHL RAW BODY (object A) in references/ + templates/ + scripts/ and asserts exactly 23 flat keys,
+  placeholder-free `messageTemplate`, no nesting, no literal `\n`; exits non-zero on violation. Wired into
+  `scripts/11-run-qc-checklist.sh` AND a new CI step in `.github/workflows/qc-static.yml`. The verbatim
+  historical `v5.14-source-playbook.md` is excluded by name (superseded by GHL-INBOUND §14). Object-B
+  server mappings (camelCase `agentId`) are skipped by the discriminator.
+- **(5) Machine-checkable TRINITY validator** `scripts/qc-trinity-registry.sh` — flags a
+  conversation-workflows registry row that has a communications playbook but no Build-with-AI prompt (or
+  an orphan prompt, or registered-with-no-files); honors the Layer-1="No (uses existing inbound)" exemption.
+  Wired into `11-run-qc-checklist.sh` and referenced from the verification checklist + standards.
+
+### Changed
+
+- **(2) Mislabel fixed.** `templates/sms-workflow-ai-prompt-template.md`,
+  `templates/workflow-verification-checklist-template.md`, and `scripts/21-generate-client-reference-sheet.sh`
+  no longer say "Use Workflow AI" / "Create workflow → Workflow AI". They now name the authoritative
+  location: GHL **Automations → "Build with AI"** button (top-right) on a NEW automation. Also corrected
+  in `scripts/09-install-conversation-workflows.sh` (file-naming → `--build-with-ai-prompt.md`) and
+  `scripts/20-seed-design-principles.sh`.
+- **(3) Stale self-counts corrected.** Skill 38 `SKILL.md` (and `INSTALL.md`) now state the real counts
+  (protocols=32, scripts=27, references=15, journeys=8) with a `SELF-COUNTS` re-verify comment. A
+  re-verification checklist note was added to `scripts/bump-version.sh`.
+- **(6) 7 stub journey templates fleshed out** (consulting, course-creator, e-commerce, real-estate, saas,
+  service-provider, wellness) — each now has vertical-specific triggers, conversation phases, and success
+  actions at or beyond the coach reference depth (109–121 lines each).
+- **(7) Library-gate status surfacing.** `resume-workforce-build.sh` now emits a one-line OPERATOR-FACING
+  status when libraries stay dirty into the last 2 resume attempts (throttled via `librariesNearCapNotified`),
+  and names the library status in the hard-cap escalation — a persistently-failing library pull is visible
+  instead of silently retrying to the cap.
+- **(8) Distinction-map table** added at the top of `protocols/conversation-workflows-protocol.md`
+  distinguishing channel communication playbook vs communications playbook vs workflow-AI prompt vs GHL
+  automation (what / where / who-for / cardinality) — one table to cut operator confusion.
+
+### Version
+
+- Repo version → `v10.16.9` (all 8 locations via `bump-version.sh`).
+- `38-conversational-ai-system/skill-version.txt` → `1.4.5`.
+
+---
+
 ## [v10.16.8]  -  2026-05-29  -  Skill 38 THE TRINITY + comms/workflow-AI standards; Skill 23 enforced role-library + SOP-library gate
 
 ### Why

@@ -647,6 +647,48 @@ that state it dispatches a `[LIBRARIES-RESUME]` self-ping (which fires BEFORE an
 because closeout must NOT run on an incomplete library). This is the contract that makes "workforce
 complete" honest — a scaffold with no role docs and no SOPs can never reach closeout.
 
+### Moment 3.8 — Comms-automation handoff to Skill 38 (ENFORCED cross-skill chain — added v10.16.9)
+
+If the built workforce includes a **Communications**, **Sales**, or **Customer-Support** department,
+the build is **still not fully delivered** until **Skill 38 (Conversational AI System)** has scaffolded
+the matching **comms automations**. A Sales/Support workforce with no conversational automations wired
+is a half-delivered company. This is enforced the SAME way as the role/SOP library gate — a **state
+field + a verify/resume self-ping**, NOT prose.
+
+> **Why this exists.** Skill 23 and Skill 38 are siblings that historically had **zero cross-references**:
+> Skill 23 could build a Sales department and Skill 38 could build comms automations, but nothing made
+> the build hand off. Prose like "remember to also do Skill 38" is NOT enforcement (same lesson as the
+> v10.16.8 library gate and v10.14.16 build-resume). Enforcement = the `commsAutomationStatus` state field
+> + the `[COMMS-AUTOMATION-RESUME]` gate in `resume-workforce-build.sh`.
+
+**One state field (in `.workforce-build-state.json`, schema v10.16.9):** `commsAutomationStatus`:
+`not-applicable | pending → scaffolding → done | failed`, plus `commsAutomationDepartments` (the slugs
+that triggered it) and `commsAutomationVerifiedAt`.
+
+**The master orchestrator MUST, once all departments are `done` AND Moment 3.7 has set both libraries to
+`done`:**
+
+1. **Decide applicability.** If NONE of Communications / Sales / Customer-Support was built, set
+   `commsAutomationStatus = "not-applicable"` and skip the rest of this moment. Otherwise set
+   `commsAutomationStatus = "pending"` and record the triggering slugs in `commsAutomationDepartments`.
+2. **Hand off to Skill 38.** Read `~/.openclaw/skills/38-conversational-ai-system/SKILL.md` +
+   `protocols/conversation-workflows-protocol.md`. Set `commsAutomationStatus = "scaffolding"`.
+3. **Scaffold via THE TRINITY.** Build, at minimum, the **appointment-booking starter** (the first
+   playbook every client gets) AND a department-matched playbook (pricing/FAQ for Sales, refund/escalation
+   for Customer-Support, an announcement/PR playbook for Communications) — each as the full TRINITY:
+   communications playbook (`<slug>.md`) + its Build-with-AI prompt (`<slug>--build-with-ai-prompt.md`) +
+   a registry row in the client's `conversation-workflows/registry.md`.
+4. **Verify.** Run `~/.openclaw/skills/38-conversational-ai-system/scripts/qc-trinity-registry.sh` — it
+   MUST PASS (every registered workflow has its playbook + prompt). Only on PASS: set
+   `commsAutomationStatus = "done"` + `commsAutomationVerifiedAt = <now>`. On failure, set `"failed"` and
+   let the resume gate re-fire.
+
+**The verify/resume gate (binding).** `resume-workforce-build.sh` treats the build as **dirty** when all
+departments + libraries are `done` but `commsAutomationStatus NOT IN {done, not-applicable}`, and
+dispatches a `[COMMS-AUTOMATION-RESUME]` self-ping (after `[LIBRARIES-RESUME]`, alongside/with closeout).
+See Skill 38 `references/communications-playbook-standard.md` + `templates/journey-templates/` for the
+vertical journey that tells you WHICH playbooks a given business needs.
+
 ### When ALL departments are `done`
 
 The master orchestrator (ONLY after Moment 3.7 has set BOTH `roleLibraryStatus` and `sopLibraryStatus`
@@ -678,8 +720,10 @@ All steps are idempotent. The resume cron (this same `resume-workforce-build.sh`
 - Fires if ANY of:
   - `interviewComplete: true` AND ANY department is `pending` / `failed` / stale `building` (>15 min since `lastAttemptAt`), OR
   - all departments are `done` AND (`roleLibraryStatus NOT = done` OR `sopLibraryStatus NOT = done`) (v10.16.8 libraries-dirty gate), OR
+  - all departments + libraries are `done` AND `commsAutomationStatus NOT IN {done, not-applicable}` (v10.16.9 comms-automation cross-skill gate to Skill 38), OR
   - `buildCompletedAt` is set AND `closeoutStatus NOT IN {done, sent}` (v10.14.17 closeout-dirty extension).
-- Dispatches a `[WORKFORCE-RESUME]`, `[LIBRARIES-RESUME]`, or `[CLOSEOUT-RESUME]` Telegram self-message to a paired chat (owner first, Trevor fallback). `[LIBRARIES-RESUME]` fires BEFORE `[CLOSEOUT-RESUME]` — closeout must not run on an incomplete library. That message invokes the agent, who reads `resume-prompt.txt` and continues building, pulling the libraries, OR closing out.
+- Dispatches a `[WORKFORCE-RESUME]`, `[LIBRARIES-RESUME]`, `[COMMS-AUTOMATION-RESUME]`, or `[CLOSEOUT-RESUME]` Telegram self-message to a paired chat (owner first, Trevor fallback). Order: `[LIBRARIES-RESUME]` fires before `[COMMS-AUTOMATION-RESUME]` fires before `[CLOSEOUT-RESUME]` — closeout must not run on an incomplete library, and comms automations sit on top of a complete workforce. That message invokes the agent, who reads `resume-prompt.txt` and continues building, pulling the libraries, scaffolding the Skill 38 comms automations, OR closing out.
+- v10.16.9: when the libraries stay dirty into the last 2 resume attempts, it ALSO emits a one-line OPERATOR-FACING status (a persistently-failing library pull is surfaced before the cap, throttled via `librariesNearCapNotified`).
 - Caps at `maxResumeAttempts` (default 12) to prevent infinite loops. After cap, pings Trevor's chat directly with an escalation instead of continuing to self-ping.
 - Holds a 10-minute lockfile so concurrent cron firings don't double-dispatch.
 
