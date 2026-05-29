@@ -253,9 +253,9 @@ QC_REF="$SCRIPT_DIR/qc-reference-sheet.sh"
 [ -f "$QC_REF" ] || QC_REF="$SKILL38_ROOT/scripts/qc-reference-sheet.sh"
 if [ -f "$QC_REF" ]; then
   if bash "$QC_REF" >/dev/null 2>&1; then
-    report_pass "generated client reference sheet carries the bearer token, a copyable \`\`\`json GHL Raw Body, and the hook URL"
+    report_pass "generated client reference sheet leads with 🚀 Quick Start (separate Authorization key+value + Content-Type key+value code blocks) then a full explanation, and carries the bearer token + copyable \`\`\`json Raw Body + hook URL + manual-fill steps + create-tag-first (Settings -> Tags) + post-build verification"
   else
-    report_fail "qc-reference-sheet.sh: the generated reference sheet is MISSING the bearer token and/or the copyable \`\`\`json GHL Raw Body and/or the hook URL (this strands the client) — run it directly for detail"
+    report_fail "qc-reference-sheet.sh: the generated reference sheet is MISSING a required artifact — 🚀 Quick Start, the after-it explanation, the separate Authorization/Content-Type key+value code blocks, the bearer token, the copyable \`\`\`json Raw Body, the hook URL, the manual-fill steps, the create-tag-first/Settings -> Tags instruction, or the post-build verification (this strands the client) — run it directly for detail"
   fi
 else
   report_fail "qc-reference-sheet.sh not found (looked in scripts/)"

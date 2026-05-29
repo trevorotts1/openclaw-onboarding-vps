@@ -172,19 +172,24 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce that the generated CLIENT REFERENCE SHEET always
-          # carries the two copy-paste artifacts a client cannot proceed without:
-          # the Authorization Bearer token and the GHL Custom Webhook RAW BODY as a
-          # real ```json fenced code block (plus the hook URL). On a live client
-          # (Teresa) the generated sheet had NO bearer token and NO copyable JSON —
-          # nothing to paste into GHL's Build-with-AI — which stranded the client.
-          # qc-reference-sheet.sh drives 21-generate-client-reference-sheet.sh in a
-          # sandbox (no openclaw on PATH → offline Layer-3 markdown) and FAILS if the
-          # rendered sheet lacks "Bearer", a ```json fence, or the hook URL, so a
+          # Machine-enforce that the generated CLIENT REFERENCE SHEET is bulletproof:
+          # it must LEAD with a literal "🚀 Quick Start" section and STILL carry a
+          # full "Reference & explanation" section after it (both, in that order);
+          # each copyable value must be in its OWN code block — the Authorization KEY
+          # and the "Bearer <token>" VALUE in SEPARATE blocks (never combined), and
+          # the Content-Type KEY and "application/json" VALUE in SEPARATE blocks (50+
+          # clients copy each field individually); plus the copyable ```json GHL Raw
+          # Body, the hook URL, the manual Custom-Webhook fill steps, the
+          # create-tag-FIRST + "Settings → Tags" instruction, and the post-build
+          # verification section (Trigger / Custom Webhook / Publish, including the
+          # blank/non-existent-tag-in-a-"does not contain"-filter gotcha that stranded
+          # a live client, Teresa). qc-reference-sheet.sh drives
+          # 21-generate-client-reference-sheet.sh in a sandbox (no openclaw on PATH →
+          # offline Layer-3 markdown) and FAILS if any marker is missing, so a
           # template/script regression that drops them fails the build. BASH (with an
-          # inline grep core), so it respects the .py claude-/anthropic ban.
+          # inline grep/awk core), so it respects the .py claude-/anthropic ban.
           bash 38-conversational-ai-system/scripts/qc-reference-sheet.sh
-          echo "✓ Skill 38 client reference sheet carries the bearer token + copyable GHL Raw Body JSON + hook URL"
+          echo "✓ Skill 38 client reference sheet: 🚀 Quick Start + after-it explanation + separate Authorization/Content-Type key+value blocks + bearer token + copyable Raw Body JSON + hook URL + manual-fill + create-tag-first + post-build verification"
 
       - name: Skill 38 config schema-safety (no config-invalidating install scripts)
         shell: bash

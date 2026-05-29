@@ -364,16 +364,28 @@ REF_AGENT_ID="${AGENT_ID:-${ROUTING_AGENT_ID:-main}}"
 REF_ENDPOINT_URL="https://${PUBLIC_HOSTNAME}/hooks/${REF_HOOK_NAME}"
 
 # ============================================================================
-# LEAD block — the sheet must LEAD with the copy-paste values, in this EXACT
-# order, BEFORE any explanation/reference:
+# LEAD block — the sheet must LEAD with a literal "🚀 Quick Start" section that
+# carries the copy-paste values, in this EXACT order, BEFORE any explanation/
+# reference (the explanation is NOT dropped — it follows under "Reference &
+# explanation"):
 #   1) Webhook URL
-#   2) Authorization / Bearer token (REVEALED real value)
-#   3) Raw Body JSON (fenced json, FLAT 23-key)
-#   4) Manual Custom-Webhook fill steps ("Build-with-AI won't fill it, do it yourself")
-#   5) Workflow-AI prompt pointer (the full prompt is Section 2 of this doc)
-# The template's explanation/reference body follows AFTER this lead block.
-# qc-reference-sheet.sh machine-enforces the presence of the bearer token, a
-# ```json fence, the hook URL, AND the manual-fill instructions.
+#   2) Authorization header — TWO separate copy boxes: the key "Authorization"
+#      and the value "Bearer <token>" (NEVER combined; 50+ clients copy each
+#      field individually)
+#   3) Content-Type header — TWO separate copy boxes: "Content-Type" and
+#      "application/json"
+#   4) Raw Body JSON (fenced json, FLAT 23-key)
+#   5) Tags — create FIRST (where to check: Settings -> Tags; what you should see)
+#   6) Manual Custom-Webhook fill steps ("Build-with-AI won't fill it, do it yourself")
+#   7) Workflow-AI prompt pointer (the full prompt is Section 2 of this doc)
+#   8) Post-build verification — Trigger / Custom Webhook / Publish, each with
+#      WHERE-to-go + WHAT-you-should-SEE + WHAT-to-put-if-missing. Includes the
+#      Teresa gotcha: a blank/non-existent tag in a "does not contain" filter.
+# qc-reference-sheet.sh machine-enforces: "🚀 Quick Start", a "Reference &
+# explanation" section AFTER it, separate Authorization key + value code blocks,
+# the bearer token, a ```json fence, the hook URL, the manual-fill instructions,
+# the create-tag-first/Settings -> Tags instruction, and the post-build
+# verification section.
 # ============================================================================
 LEAD="$STAGE_DIR/.reference-sheet.lead.md"
 {
@@ -381,29 +393,45 @@ LEAD="$STAGE_DIR/.reference-sheet.lead.md"
   printf 'Everything you need to copy-paste is right here at the top, in order. Explanation and reference notes follow below — but the copy-paste values come first.\n\n'
   printf -- '---\n\n'
 
+  printf '## 🚀 Quick Start\n\n'
+  printf 'Do these in order. Each value below sits in its OWN copy box — tap the copy button on the box, do not retype it by hand. (A full explanation of every piece, plus troubleshooting, follows the Quick Start, under **Reference & explanation**.)\n\n'
+
   # 1) Webhook URL
-  printf '## 1. Webhook URL\n\n'
+  printf '### 1. Webhook URL\n\n'
   printf 'Copy this into the GHL Custom Webhook **URL** field (no trailing slash):\n\n'
   printf '```\n'
   printf '%s\n' "$REF_ENDPOINT_URL"
   printf '```\n\n'
 
-  # 2) Authorization / Bearer token (REVEALED)
-  printf '## 2. Authorization / Bearer Token\n\n'
+  # 2) Authorization / Bearer token (REVEALED) — TWO separate copy boxes (key, then value)
+  printf '### 2. Authorization header\n\n'
   if [ "$TOKEN_IS_PLACEHOLDER" = "1" ]; then
-    printf '> WARNING: the hooks bearer token could not be read at generation time. The block below is a PLACEHOLDER — replace it with your real `hooks.token` (from `~/.openclaw/openclaw.json` or `/data/.openclaw/openclaw.json`) before using this sheet.\n\n'
+    printf '> WARNING: the hooks bearer token could not be read at generation time. The value box below is a PLACEHOLDER — replace it with your real `hooks.token` (from `~/.openclaw/openclaw.json` or `/data/.openclaw/openclaw.json`) before using this sheet.\n\n'
   fi
-  printf 'Add this as a header on the Custom Webhook (leave the AUTHORIZATION dropdown set to "None"). Copy it exactly — no leading/trailing spaces:\n\n'
+  printf 'Leave the AUTHORIZATION dropdown set to "None", then under **Headers** click **"Add item"** and copy these into the Key box and the Value box. Each is its own copy box — copy them separately, do not combine them:\n\n'
+  printf '**Header key** (paste into the Key box):\n\n'
   printf '```\n'
-  printf 'Authorization: Bearer %s\n' "$RESOLVED_HOOKS_TOKEN"
+  printf 'Authorization\n'
   printf '```\n\n'
-  printf 'And the content-type header:\n\n'
+  printf '**Header value** (paste into the Value box):\n\n'
   printf '```\n'
-  printf 'Content-Type: application/json\n'
+  printf 'Bearer %s\n' "$RESOLVED_HOOKS_TOKEN"
   printf '```\n\n'
 
-  # 3) Raw Body JSON (FLAT 23-key)
-  printf '## 3. Raw Body (JSON)\n\n'
+  # 3) Content-Type header — TWO separate copy boxes (key, then value)
+  printf '### 3. Content-Type header\n\n'
+  printf 'Click **"Add item"** again and copy these into the Key box and the Value box (again, two separate copy boxes — do not combine):\n\n'
+  printf '**Header key** (paste into the Key box):\n\n'
+  printf '```\n'
+  printf 'Content-Type\n'
+  printf '```\n\n'
+  printf '**Header value** (paste into the Value box):\n\n'
+  printf '```\n'
+  printf 'application/json\n'
+  printf '```\n\n'
+
+  # 4) Raw Body JSON (FLAT 23-key)
+  printf '### 4. Raw Body (JSON)\n\n'
   printf 'Paste this **RAW BODY** into the GHL Custom Webhook action. It is the canonical FLAT 23-key body — never paste a shorter one, never nest it, and keep `messageTemplate` placeholder-free so GHL does not mangle the JSON. Only `channel` + the `session_key` prefix change per channel (this is the SMS body):\n\n'
   printf '```json\n'
   printf '{\n'
@@ -433,27 +461,51 @@ LEAD="$STAGE_DIR/.reference-sheet.lead.md"
   printf '}\n'
   printf '```\n\n'
 
-  # 4) Manual Custom-Webhook fill steps — "Build with AI will not fill it, do it yourself"
-  printf '## 4. Manually fill the Custom Webhook action (Build with AI will NOT do this for you)\n\n'
-  printf 'GHL'\''s **Build with AI** only builds the workflow SHAPE — the trigger, the filters, and an **EMPTY Custom Webhook action**. It does **NOT** reliably populate the URL, the Authorization/Bearer header, the Content-Type header, or the Raw Body JSON. **Build with AI will not fill these for you.** After Build with AI runs, open the **Custom Webhook** action and **manually** enter every value, using the copy-paste blocks above:\n\n'
-  printf '1. Open the workflow → click the **Custom Webhook** action to edit it.\n'
-  printf '2. **Method:** `POST`.\n'
-  printf '3. **URL:** paste the Webhook URL from section 1 (no trailing slash; do not leave the sample-url placeholder).\n'
-  printf '4. **AUTHORIZATION dropdown:** leave on `None` (the token goes in Headers, not here).\n'
-  printf '5. **Headers** — click **"Add item"** and paste, by hand:\n'
-  printf '   - `Authorization` -> `Bearer <token>` (the Authorization line from section 2)\n'
-  printf '   - `Content-Type` -> `application/json`\n'
-  printf '6. **Content-Type dropdown:** `application/json`.\n'
-  printf '7. **Raw Body:** paste the JSON from section 3.\n'
-  printf '8. **Save** the action, then **Publish** the workflow.\n'
-  printf '9. **Verify every field above is non-empty before publishing** — an empty URL, header, or body means every inbound message silently goes nowhere.\n\n'
+  # 5) Tags — create FIRST, then use (and where to check them)
+  printf '### 5. Tags — create them FIRST (if your workflow uses any)\n\n'
+  printf 'If your workflow uses ANY tag — a trigger/If-Else filter like "tag is / contains / does not contain", or an **Add Tag** action — that tag MUST already exist BEFORE you build the workflow, or Build with AI will reference a blank/non-existent tag and the filter will silently never match.\n\n'
+  printf '1. In GHL, go to **Settings -> Tags**.\n'
+  printf '2. Confirm every tag your workflow needs is listed there. **What you should see:** each tag name spelled exactly as the workflow will reference it.\n'
+  printf '3. If a tag is missing, create it FIRST (your agent normally creates these for you via the GHL skill — ask if unsure). **Do not** build the workflow against a tag that does not yet appear under Settings -> Tags.\n\n'
 
-  # 5) Workflow-AI prompt pointer (the full prompt is rendered as Section 2 of this doc)
-  printf '## 5. Workflow-AI Prompt (paste into Build with AI)\n\n'
-  printf 'The full copy-paste **Workflow-AI prompt** for your first workflow (SMS Inquiry Responder) is in **Section 2 — Your First Workflow** of this document. Open your GHL/Convert and Flow account -> **Automations** -> new automation -> **Build with AI** (top-right), paste that prompt, then come back here and do section 4 (manually fill the Custom Webhook) before publishing.\n\n'
+  # 6) Manual Custom-Webhook fill steps — "Build with AI will not fill it, do it yourself"
+  printf '### 6. Manually fill the Custom Webhook action (Build with AI will NOT do this for you)\n\n'
+  printf 'GHL'\''s **Build with AI** only builds the workflow SHAPE — the trigger, the filters, and an **EMPTY Custom Webhook action**. It does **NOT** reliably populate the URL, the Authorization/Bearer header, the Content-Type header, or the Raw Body JSON. **Build with AI will not fill these for you.** After Build with AI runs, open the **Custom Webhook** action and **manually** enter every value, using the copy boxes above:\n\n'
+  printf '1. Open the workflow → click the **Custom Webhook** action to edit it.\n'
+  printf '2. **Method dropdown:** select `POST`.\n'
+  printf '3. **URL box:** paste the Webhook URL from section 1 (no trailing slash; do not leave the sample-url placeholder).\n'
+  printf '4. **AUTHORIZATION dropdown:** leave on `None` (the token goes in Headers, not here).\n'
+  printf '5. **Headers** — click **"Add item"**, then paste the **Authorization** key (section 2) into the **Key box** and `Bearer <token>` (section 2) into the **Value box**.\n'
+  printf '6. **Headers** — click **"Add item"** again, then paste **Content-Type** (section 3) into the **Key box** and `application/json` (section 3) into the **Value box**.\n'
+  printf '7. **Content-Type dropdown:** select `application/json`.\n'
+  printf '8. **RAW BODY box:** paste the JSON from section 4.\n'
+  printf '9. **Save** the action.\n'
+  printf '10. **Verify every field above is non-empty before publishing** — an empty URL, header, or body means every inbound message silently goes nowhere.\n\n'
+
+  # 7) Workflow-AI prompt pointer (the full prompt is rendered as Section 2 of this doc)
+  printf '### 7. Workflow-AI Prompt (paste into Build with AI)\n\n'
+  printf 'The full copy-paste **Workflow-AI prompt** for your first workflow (SMS Inquiry Responder) is in **Section 2 — Your First Workflow** of this document. Open your GHL/Convert and Flow account -> **Automations** -> new automation -> **Build with AI** (top-right), paste that prompt, then come back here and do section 6 (manually fill the Custom Webhook) before publishing.\n\n'
+
+  # 8) Post-build verification — the Teresa gotcha (blank tag in a "does not contain" filter)
+  printf '### 8. After Build with AI runs — VERIFY before you publish\n\n'
+  printf 'Build with AI gets the shape *roughly* right but leaves gaps. For EACH item below, the doc says WHERE to go, WHAT you should SEE, and WHAT to put if it is missing or wrong. Walk all three before publishing:\n\n'
+  printf '**TRIGGER**\n'
+  printf -- '- WHERE: open the workflow and click the **trigger** node.\n'
+  printf -- '- WHAT YOU SHOULD SEE: the correct trigger type (e.g. "Customer Replied"), and if there is a tag filter (e.g. "tag does not contain ..." / "tag contains ..."), a REAL tag name from Settings -> Tags.\n'
+  printf -- '- KNOWN BUG (this stranded a live client): Build with AI created a tag filter like **"does not contain <tag>"** but the referenced tag was **blank / never created**, so the trigger silently never matched.\n'
+  printf -- '- IF BLANK/WRONG: select (or create, per section 5) the correct existing tag, or remove the bad filter entirely.\n\n'
+  printf '**CUSTOM WEBHOOK**\n'
+  printf -- '- WHERE: open the **Custom Webhook** action.\n'
+  printf -- '- WHAT YOU SHOULD SEE: **Method = POST**, the **URL** filled, **both headers** present (Authorization + Content-Type), and the **Raw Body** filled with all 23 keys.\n'
+  printf -- '- NOTE: Build with AI does NOT fill these. If any are blank, that is expected — paste them yourself.\n'
+  printf -- '- IF BLANK: put the values from the Quick Start (sections 1-4 above).\n\n'
+  printf '**PUBLISH**\n'
+  printf -- '- WHERE: top-right of the workflow.\n'
+  printf -- '- WHAT YOU SHOULD SEE: the workflow is **Published**, not Draft.\n'
+  printf -- '- IF DRAFT: toggle it to **Published**.\n\n'
   printf -- '---\n\n'
   printf '## Reference & explanation\n\n'
-  printf 'Everything below is background/reference. The copy-paste values you need are in sections 1-5 above.\n\n'
+  printf 'Everything below is background/reference — how it works, what each piece is, and troubleshooting. The actionable copy-paste values you need are in the **🚀 Quick Start** sections 1-8 above.\n\n'
 } > "$LEAD"
 
 # Compose SEC1 = LEAD (copy-paste values, in order) + the template body (reference).

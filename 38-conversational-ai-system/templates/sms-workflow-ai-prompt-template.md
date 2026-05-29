@@ -134,10 +134,15 @@ often need **more than one action**. A Build-with-AI prompt can describe **trigg
 - **multiple sequential actions** — e.g. Custom Webhook → Add-Tag → if/else; each webhook in the chain
   gets the SAME full field-by-field spec as Action 1 above.
 
-**Create the tag FIRST.** If a workflow references a tag, the agent creates that tag via the GHL skill
-BEFORE building the workflow, then references the now-existing tag in the prompt. Never tell the
-operator to create tags by hand, and never reference a tag that doesn't exist yet. Full multi-action
-skeleton + standard: `references/workflow-ai-instructions-standard.md` §5.
+**Create the tag FIRST.** If a workflow references a tag — a trigger/If-Else filter (`tag is` /
+`tag contains` / `tag does not contain`) OR an Add-Tag action — the agent creates that tag via the GHL
+skill BEFORE building the workflow, then references the now-existing tag in the prompt. Never tell the
+operator to create tags by hand, and never reference a tag that doesn't exist yet. **Where tags live:**
+**Settings → Tags** — that's where to confirm a tag exists (you should see every tag the workflow
+references, spelled exactly). **Why this is mandatory:** Build-with-AI will build a filter against a tag
+that doesn't exist (leaving it blank), and a blank/non-existent tag in a `does not contain` filter
+silently never matches — so the workflow never fires. Full multi-action skeleton + standard:
+`references/workflow-ai-instructions-standard.md` §5.
 
 ## Common Build with AI mistakes to verify against the checklist
 
@@ -151,6 +156,11 @@ Build with AI is helpful but has known failure modes. The most common ones:
 - **Puts `{{…}}` placeholders inside the body's `messageTemplate` value** — the body's `messageTemplate`
   must stay PLACEHOLDER-FREE (a templated messageTemplate in the body makes GHL throw "Error while parsing
   the object to JSON" and the webhook is Skipped). Keep it the plain instruction string shown above.
+- **Builds a trigger/If-Else tag filter (`does not contain` / `contains`) that references a BLANK or
+  non-existent tag** — a known live bug (the Teresa gotcha). A blank tag in a `does not contain` filter
+  silently never matches, so the workflow never fires. Verify the filter shows a REAL tag name that exists
+  under **Settings → Tags**; if blank/wrong, select (or create first) the correct tag, or remove the bad
+  filter.
 - Saves the workflow as **Draft** instead of **Published**.
 - **Ships a stripped/short body (fewer than 23 keys)** — the body MUST contain ALL 23 keys. Build with AI
   most often drops `id`, `model`, `to`, `thinking`, `location_id`, or `session_key`. Re-paste the full
