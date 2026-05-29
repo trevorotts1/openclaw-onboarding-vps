@@ -1,5 +1,18 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.8] - 2026-05-29 - add Skill 23 cross-reference (role/SOP gate + comms hand-off) to v6.0 playbook
+
+### Added
+- **Skill 23 cross-reference in the v6.0 source playbook.** Appended a "🔗 How this connects to the AI
+  Workforce Blueprint (Skill 23)" section to `references/v6.0-source-playbook.md` (placed at the end, right
+  before the condensed changelog tail). Documents the two enforced connections between Skill 38 and Skill 23:
+  (1) the Role Library + SOP Library auto-pull gate (a workforce build is not complete until every role has its
+  role library pulled in and its multi-SOP DMAIC library authored — build-state field + verify/resume gate, not
+  prose), and (2) the comms-automation hand-off (a workforce with a Communications / Sales / Customer-Support
+  department hands off to Skill 38 at closeout to scaffold the matching conversational-AI automations, enforced
+  via a `commsAutomationStatus` state field + resume self-ping). Reiterates THE TRINITY (workflow + playbook +
+  workflow-AI prompt travel together). No system coverage changed — documentation cross-link only.
+
 ## [1.4.7] - 2026-05-29 - close the 2 QC gaps (trinity registry format + 23-key linter covers v6.0 playbook)
 
 Closed the two remaining QC gaps so both machine-enforced linters reconcile against what the install
