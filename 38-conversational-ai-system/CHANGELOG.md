@@ -1,5 +1,41 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.2] - 2026-05-29 - Corrected GHL inbound hook structure: FLAT body, no nesting, server-only messageTemplate
+
+GHL inbound-hook correction verified LIVE on Corey / Explore Growth (OpenClaw 2026.5.27). The GHL Custom
+Webhook RAW BODY is now documented as **FLAT** (no nested `contact:{}` / `customer_message:{}` objects — a
+nested body makes EVERY field resolve EMPTY at the hook) and **data-only** (it must NOT contain a
+`messageTemplate` — a templated messageTemplate in the body makes GHL throw "Error while parsing the object
+to JSON" and Skip the webhook). The `messageTemplate` lives ONLY on the server `hooks.mappings` entry,
+references the FLAT body key names, and MUST include the reply-via-GHL-API instruction (or the agent drafts
+a reply but never sends it). `deliver:false`; `agentId` is hardcoded per hook path (NOT templatable);
+`fallbacks` is not a valid mappings key (`.strict()` schema); `GHL_LOCATION_ID` env is the API credential,
+not the body `location_*` fields. `skill-version.txt` bumped to `1.4.2`.
+
+### Changed
+- `references/GHL-INBOUND-AND-PLAYBOOKS.md` — replaced the nested Build-with-AI Raw Body (§3.1) with the
+  canonical FLAT body; rewrote §5 (FLAT body rule, with a labeled ❌ NESTED counter-example); updated the
+  §4 verification checklist (FLAT body + no in-body messageTemplate); added a header warning pointing to the
+  new section; added **§14 "CORRECTED GHL HOOK STRUCTURE (2026-05-29)"** capturing the full SPEC (cardinal
+  rule, flat body, server-only messageTemplate with the GHL-API reply instruction, `deliver:false`, sessionKey
+  gating, agentId not templatable / `/hooks/agent`, `fallbacks` invalid, `GHL_LOCATION_ID` is the credential,
+  valid `.strict()` mappings keys).
+- `references/v5.14-source-playbook.md` — converted the canonical `hooks.mappings` messageTemplate/sessionKey
+  to FLAT body keys (added the reply-via-GHL-API instruction; `timeoutSeconds` 180→300), flattened the
+  localhost smoke-test body, the E2E test body, the D.2 Build-with-AI prompt body, and all six Part 3 channel
+  Raw Body JSONs; added a CORRECTED-structure call-out + updated the "Why these settings" prose.
+- `scripts/15-configure-hooks-mappings.sh` — `messageTemplate` now references FLAT body keys and explicitly
+  instructs the agent to actually send via the GHL API; `deliver` true→**false**; `timeoutSeconds` 180→300;
+  `sessionKey` now pulls the flat `{{session_key}}` body key; the Step 4 E2E test PAYLOAD is now a FLAT body.
+- `scripts/21-generate-client-reference-sheet.sh` — added `HOOK_NAME` and `AGENT_ID` to the template
+  placeholder substitution (so the flattened templates render with concrete values).
+- `templates/sms-workflow-ai-prompt-template.md` — flattened the Raw JSON body; added the FLAT/data-only
+  rule, the "nests the body" + "adds messageTemplate to body" failure modes, and `<AGENT_ID>` to placeholders.
+- `templates/client-reference-sheet-template.md` — flattened all six channel Raw Body JSONs (Part 3); updated
+  the Part 3 intro (FLAT, data-only, Custom Values picker) and the "adding other services" note.
+- `protocols/conversation-workflows-protocol.md` — flattened the Build-with-AI prompt Raw JSON body and
+  clarified the server-only messageTemplate rule.
+
 ## [1.4.1] - 2026-05-28 - Hostinger Docker env-discovery + conversation-playbook builder + CF/GoDaddy Notion-offer
 
 Patch release on top of the 1.4.0 GHL hardening: the Hostinger Docker env-discovery layer, the

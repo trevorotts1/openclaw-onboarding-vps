@@ -63,7 +63,7 @@ with open(path, 'r', encoding='utf-8') as fh:
     txt = fh.read()
 placeholders = [
     'CLIENT_BUSINESS_NAME', 'CLIENT_FIRST_NAME', 'PUBLIC_HOSTNAME',
-    'ROUTE_ID', 'HOOKS_TOKEN', 'WORKFLOW_ID', 'CHANNEL',
+    'ROUTE_ID', 'HOOK_NAME', 'AGENT_ID', 'HOOKS_TOKEN', 'WORKFLOW_ID', 'CHANNEL',
     'INDUSTRY_CONTEXT', 'DESIRED_OUTCOME', 'MASTER_FILES_DIR',
 ]
 for ph in placeholders:
@@ -275,6 +275,8 @@ substitute_template() {
   CLIENT_FIRST_NAME="$CLIENT_FIRST_NAME" \
   PUBLIC_HOSTNAME="$PUBLIC_HOSTNAME" \
   ROUTE_ID="$ROUTE_ID" \
+  HOOK_NAME="${HOOK_NAME:-$ROUTE_ID}" \
+  AGENT_ID="${AGENT_ID:-${ROUTING_AGENT_ID:-main}}" \
   HOOKS_TOKEN="$HOOKS_TOKEN" \
   WORKFLOW_ID="$WORKFLOW_ID" \
   CHANNEL="$CHANNEL" \

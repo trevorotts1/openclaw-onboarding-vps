@@ -161,37 +161,36 @@ ready-to-paste headers and URL for an external service.
 
 ## 🔌 Adding other services later
 
-To wire Stripe, n8n, Calendly, Zapier, or any other service into the same OpenClaw, add another entry to the `hooks.mappings` array in `~/.openclaw/openclaw.json` with its own `id`, `match.path`, and a `messageTemplate` shaped for that service's payload. Reuses the same `HOOKS_TOKEN`. URL becomes `https://<PUBLIC_HOSTNAME>/hooks/<new-id>`.
+To wire Stripe, n8n, Calendly, Zapier, or any other service into the same OpenClaw, add another entry to the `hooks.mappings` array in `~/.openclaw/openclaw.json` with its own `id`, `match.path`, and a `messageTemplate` (server-side, on the mapping — NEVER in the inbound body) shaped to reference that service's FLAT body keys. Keep the inbound webhook body flat and data-only. Reuses the same `HOOKS_TOKEN`. URL becomes `https://<PUBLIC_HOSTNAME>/hooks/<new-id>`.
 ```
 
 ---
 
 # Part 3 — Six channel-specific Raw Body JSONs
 
-These are the Raw Body blocks the operator pastes into GHL's Custom Webhook action. ONE block per channel, ONE workflow per channel. The `channel` field is hardcoded because GHL's `{{message.channel}}` merge field doesn't reliably populate — and since each workflow's trigger filter already constrains the channel, hardcoding is correct.
+These are the Raw Body blocks the operator pastes into GHL's Custom Webhook action. ONE block per channel, ONE workflow per channel. The `channel` field is hardcoded because GHL has NO merge tag for channel/message-type — and since each workflow's trigger filter already constrains the channel, hardcoding is correct.
 
-All six blocks have the same structure. Only the `channel` value changes. The operator copies the block matching the channel they're setting up.
+**Each body is FLAT (no nested objects) and DATA-ONLY (no `messageTemplate`).** A nested `contact:{}` / `customer_message:{}` body makes EVERY field arrive EMPTY at the hook; a `messageTemplate` in the body makes GHL throw "Error while parsing the object to JSON". The `messageTemplate` lives ONLY on the OpenClaw server mapping (see references/GHL-INBOUND-AND-PLAYBOOKS.md §14). Insert the VALUES via GHL's Custom Values picker (typed-as-text tokens send empty); the KEY names are what OpenClaw reads/maps.
+
+All six blocks have the same flat structure. Only the `channel` and `session_key` values change. The operator copies the block matching the channel they're setting up. Replace `<HOOK_NAME>` (the hooks.mappings `match.path`) and `<AGENT_ID>` (the target agent id, data only) with the run values.
 
 ### SMS workflow — Raw Body
 
 ```json
 {
   "channel": "sms",
-  "contact": {
-    "id": "{{contact.id}}",
-    "first_name": "{{contact.first_name}}",
-    "last_name": "{{contact.last_name}}",
-    "email": "{{contact.email}}",
-    "phone": "{{contact.phone}}"
-  },
-  "location": {
-    "id": "{{location.id}}",
-    "name": "{{location.name}}"
-  },
-  "customer_message": {
-    "body": "{{message.body}}",
-    "subject": "{{message.subject}}"
-  }
+  "contact_id": "{{contact.id}}",
+  "first_name": "{{contact.first_name}}",
+  "last_name": "{{contact.last_name}}",
+  "email": "{{contact.email}}",
+  "phone": "{{contact.phone}}",
+  "subject": "{{message.subject}}",
+  "message_body": "{{message.body}}",
+  "match": "<HOOK_NAME>",
+  "session_key": "hook:ghl:sms:{{contact.id}}",
+  "agent_id": "<AGENT_ID>",
+  "location_id": "{{location.id}}",
+  "location_name": "{{location.name}}"
 }
 ```
 
@@ -200,21 +199,18 @@ All six blocks have the same structure. Only the `channel` value changes. The op
 ```json
 {
   "channel": "email",
-  "contact": {
-    "id": "{{contact.id}}",
-    "first_name": "{{contact.first_name}}",
-    "last_name": "{{contact.last_name}}",
-    "email": "{{contact.email}}",
-    "phone": "{{contact.phone}}"
-  },
-  "location": {
-    "id": "{{location.id}}",
-    "name": "{{location.name}}"
-  },
-  "customer_message": {
-    "body": "{{message.body}}",
-    "subject": "{{message.subject}}"
-  }
+  "contact_id": "{{contact.id}}",
+  "first_name": "{{contact.first_name}}",
+  "last_name": "{{contact.last_name}}",
+  "email": "{{contact.email}}",
+  "phone": "{{contact.phone}}",
+  "subject": "{{message.subject}}",
+  "message_body": "{{message.body}}",
+  "match": "<HOOK_NAME>",
+  "session_key": "hook:ghl:email:{{contact.id}}",
+  "agent_id": "<AGENT_ID>",
+  "location_id": "{{location.id}}",
+  "location_name": "{{location.name}}"
 }
 ```
 
@@ -223,21 +219,18 @@ All six blocks have the same structure. Only the `channel` value changes. The op
 ```json
 {
   "channel": "facebook",
-  "contact": {
-    "id": "{{contact.id}}",
-    "first_name": "{{contact.first_name}}",
-    "last_name": "{{contact.last_name}}",
-    "email": "{{contact.email}}",
-    "phone": "{{contact.phone}}"
-  },
-  "location": {
-    "id": "{{location.id}}",
-    "name": "{{location.name}}"
-  },
-  "customer_message": {
-    "body": "{{message.body}}",
-    "subject": "{{message.subject}}"
-  }
+  "contact_id": "{{contact.id}}",
+  "first_name": "{{contact.first_name}}",
+  "last_name": "{{contact.last_name}}",
+  "email": "{{contact.email}}",
+  "phone": "{{contact.phone}}",
+  "subject": "{{message.subject}}",
+  "message_body": "{{message.body}}",
+  "match": "<HOOK_NAME>",
+  "session_key": "hook:ghl:facebook:{{contact.id}}",
+  "agent_id": "<AGENT_ID>",
+  "location_id": "{{location.id}}",
+  "location_name": "{{location.name}}"
 }
 ```
 
@@ -246,21 +239,18 @@ All six blocks have the same structure. Only the `channel` value changes. The op
 ```json
 {
   "channel": "instagram",
-  "contact": {
-    "id": "{{contact.id}}",
-    "first_name": "{{contact.first_name}}",
-    "last_name": "{{contact.last_name}}",
-    "email": "{{contact.email}}",
-    "phone": "{{contact.phone}}"
-  },
-  "location": {
-    "id": "{{location.id}}",
-    "name": "{{location.name}}"
-  },
-  "customer_message": {
-    "body": "{{message.body}}",
-    "subject": "{{message.subject}}"
-  }
+  "contact_id": "{{contact.id}}",
+  "first_name": "{{contact.first_name}}",
+  "last_name": "{{contact.last_name}}",
+  "email": "{{contact.email}}",
+  "phone": "{{contact.phone}}",
+  "subject": "{{message.subject}}",
+  "message_body": "{{message.body}}",
+  "match": "<HOOK_NAME>",
+  "session_key": "hook:ghl:instagram:{{contact.id}}",
+  "agent_id": "<AGENT_ID>",
+  "location_id": "{{location.id}}",
+  "location_name": "{{location.name}}"
 }
 ```
 
@@ -269,21 +259,18 @@ All six blocks have the same structure. Only the `channel` value changes. The op
 ```json
 {
   "channel": "livechat",
-  "contact": {
-    "id": "{{contact.id}}",
-    "first_name": "{{contact.first_name}}",
-    "last_name": "{{contact.last_name}}",
-    "email": "{{contact.email}}",
-    "phone": "{{contact.phone}}"
-  },
-  "location": {
-    "id": "{{location.id}}",
-    "name": "{{location.name}}"
-  },
-  "customer_message": {
-    "body": "{{message.body}}",
-    "subject": "{{message.subject}}"
-  }
+  "contact_id": "{{contact.id}}",
+  "first_name": "{{contact.first_name}}",
+  "last_name": "{{contact.last_name}}",
+  "email": "{{contact.email}}",
+  "phone": "{{contact.phone}}",
+  "subject": "{{message.subject}}",
+  "message_body": "{{message.body}}",
+  "match": "<HOOK_NAME>",
+  "session_key": "hook:ghl:livechat:{{contact.id}}",
+  "agent_id": "<AGENT_ID>",
+  "location_id": "{{location.id}}",
+  "location_name": "{{location.name}}"
 }
 ```
 
@@ -292,21 +279,18 @@ All six blocks have the same structure. Only the `channel` value changes. The op
 ```json
 {
   "channel": "allinone",
-  "contact": {
-    "id": "{{contact.id}}",
-    "first_name": "{{contact.first_name}}",
-    "last_name": "{{contact.last_name}}",
-    "email": "{{contact.email}}",
-    "phone": "{{contact.phone}}"
-  },
-  "location": {
-    "id": "{{location.id}}",
-    "name": "{{location.name}}"
-  },
-  "customer_message": {
-    "body": "{{message.body}}",
-    "subject": "{{message.subject}}"
-  }
+  "contact_id": "{{contact.id}}",
+  "first_name": "{{contact.first_name}}",
+  "last_name": "{{contact.last_name}}",
+  "email": "{{contact.email}}",
+  "phone": "{{contact.phone}}",
+  "subject": "{{message.subject}}",
+  "message_body": "{{message.body}}",
+  "match": "<HOOK_NAME>",
+  "session_key": "hook:ghl:allinone:{{contact.id}}",
+  "agent_id": "<AGENT_ID>",
+  "location_id": "{{location.id}}",
+  "location_name": "{{location.name}}"
 }
 ```
 
