@@ -47,14 +47,30 @@ https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>
 
 ### Headers (same for every channel)
 
-Leave the "AUTHORIZATION" dropdown set to "None". Add these as manual headers — watch for extra spaces, no leading/trailing whitespace, double-check spelling:
+Leave the "AUTHORIZATION" dropdown set to "None". Add these as manual headers — watch for extra spaces, no leading/trailing whitespace, double-check spelling. A GHL custom header has a **Key (name) field** and a **Value field**, so each header is TWO separate copy boxes — copy the key into the Key field and the value into the Value field. **Never combine them into one box.**
+
+**Header 1 — Authorization.** Paste this into the Header KEY (name) field:
 
 [code block, copy button]
-Authorization: Bearer <HOOKS_TOKEN>
+Authorization
 [/code block]
 
+Paste this into the Header VALUE field (the literal token — note there is NO "Authorization:" in front of it):
+
 [code block, copy button]
-Content-Type: application/json
+Bearer <HOOKS_TOKEN>
+[/code block]
+
+**Header 2 — Content-Type.** Paste this into the Header KEY (name) field:
+
+[code block, copy button]
+Content-Type
+[/code block]
+
+Paste this into the Header VALUE field:
+
+[code block, copy button]
+application/json
 [/code block]
 
 ### Content-Type dropdown (below Headers)
@@ -78,9 +94,9 @@ Set to: application/json
 9. Method: **POST**
 10. URL: paste the URL block from above
 11. AUTHORIZATION dropdown: leave as **None**
-12. Under HEADERS, click **Add another item** TWICE to create two rows:
-    - Row 1 — Key: `Authorization` | Value: paste the Authorization block (full string including `Bearer ` and the trailing `=`)
-    - Row 2 — Key: `Content-Type` | Value: `application/json`
+12. Under HEADERS, click **Add another item** TWICE to create two rows. Each row has a **Key field** and a **Value field** — they are separate copy boxes, so paste the key and the value separately (do NOT put `Authorization: Bearer …` all in one box):
+    - Row 1 — **Key field:** `Authorization` | **Value field:** `Bearer <HOOKS_TOKEN>` (the value box gets ONLY `Bearer ` + the token — no `Authorization:` prefix)
+    - Row 2 — **Key field:** `Content-Type` | **Value field:** `application/json`
 13. CONTENT-TYPE dropdown: set to `application/json`
 14. Scroll to **RAW BODY** field
 15. Paste the matching JSON from Part 3 (SMS body for SMS workflow, Email body for Email workflow, etc.)

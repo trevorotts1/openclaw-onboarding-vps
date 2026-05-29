@@ -61,10 +61,15 @@ field in the GHL Custom Webhook action editor:
   correct hostname + `/hooks/` path segment).
 - **AUTHORIZATION dropdown = `None`** — the token goes in HEADERS, not in this dropdown. (Common
   Build-with-AI mistake: setting this to "Bearer Token" — leave it None.)
-- **HEADERS** — click **"Add item"** and add, exactly:
-  - Key = `Authorization`, Value = `Bearer <HOOKS_TOKEN>`
-  - Key = `Content-Type`, Value = `application/json`
-  - (Add any other header the same way via "Add item".)
+- **HEADERS** — click **"Add item"** and add, exactly. A GHL custom header is **TWO separate fields, a
+  Key (name) field and a Value field**, so in the client doc each header is rendered as **two separate
+  copy boxes** (key box + value box) — never one combined box. The VALUE box gets ONLY the value, with
+  **no `Authorization:` prefix**:
+  - **Key field** = `Authorization` &nbsp;|&nbsp; **Value field** = `Bearer <HOOKS_TOKEN>` (value box is
+    ONLY `Bearer ` + the token — the word "Authorization" never appears in the value box)
+  - **Key field** = `Content-Type` &nbsp;|&nbsp; **Value field** = `application/json`
+  - (Add any other header the same way via "Add item" — always key into the Key field, value into the
+    Value field, split into two copy boxes.)
 - **CONTENT-TYPE = `application/json`** (the content-type dropdown).
 - **RAW BODY = the FULL 23-key flat JSON below**, inserted via GHL's **Custom Values picker** (typed-
   as-text tokens send EMPTY). FLAT (no nesting — nesting makes every field arrive empty). Keep
@@ -124,9 +129,11 @@ After Build-with-AI finishes, do this — every time, no exceptions:
 3. **URL** — paste the EXACT hook URL: `https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>` (no trailing
    slash; do NOT leave the sample-url placeholder).
 4. **AUTHORIZATION dropdown** — leave it on **`None`** (the token goes in HEADERS, not here).
-5. **Headers** — click **"Add item"** and add each header by hand:
-   - `Authorization` → `Bearer <HOOKS_TOKEN>`
-   - `Content-Type` → `application/json`
+5. **Headers** — click **"Add item"** and add each header by hand. Each header has a **Key field** and a
+   **Value field** (two separate boxes) — paste the key into the Key field and the value into the Value
+   field; the Value box gets ONLY the value, with **no `Authorization:` prefix**:
+   - Key field `Authorization` → Value field `Bearer <HOOKS_TOKEN>`
+   - Key field `Content-Type` → Value field `application/json`
 6. **Content-Type dropdown** — set to **`application/json`**.
 7. **Raw Body** — paste the FULL FLAT 23-key JSON from §3 (insert the data values via the Custom Values
    picker; keep `messageTemplate` placeholder-free).
@@ -169,8 +176,10 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
 - [ ] **URL is the REAL hook URL** (`https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>`) — NOT the sample-url
       placeholder, no trailing slash, correct path.
 - [ ] **AUTHORIZATION dropdown = None** (token is in Headers, not here).
-- [ ] **HEADERS contains `Authorization: Bearer <HOOKS_TOKEN>`** (added via "Add item") **and**
-      `Content-Type: application/json`.
+- [ ] **HEADERS** (added via "Add item"; each is a Key field + a Value field — two separate boxes):
+      Key `Authorization` / Value `Bearer <HOOKS_TOKEN>` (the value box holds ONLY `Bearer ` + the token —
+      **no `Authorization:` prefix in the value box**) **and** Key `Content-Type` / Value
+      `application/json`.
 - [ ] **CONTENT-TYPE = application/json.**
 - [ ] **RAW BODY = all 23 keys, FLAT** (no nesting), `messageTemplate` placeholder-free, no stripped/
       short body. Re-paste the full 23-key body if any key is missing.
@@ -261,9 +270,9 @@ ACTIONS (exact order):
     METHOD: POST
     URL: https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>   (the REAL url — not the sample placeholder)
     AUTHORIZATION dropdown: None
-    HEADERS (click "Add item" for each):
-      - Authorization: Bearer <HOOKS_TOKEN>
-      - Content-Type: application/json
+    HEADERS (click "Add item" for each; Key field + Value field = two separate copy boxes):
+      - Key: Authorization   | Value: Bearer <HOOKS_TOKEN>   (value box = ONLY "Bearer <token>", no "Authorization:" prefix)
+      - Key: Content-Type    | Value: application/json
     CONTENT-TYPE: application/json
     RAW BODY (Custom Values picker; FLAT; ALL 23 keys; messageTemplate placeholder-free):
       <the full 23-key body from §3>
@@ -286,11 +295,25 @@ prominently (callout / bold heading):
 
 - **WHERE they live** — the working copies in the client's OpenClaw master-files `conversation-workflows/`
   folder; the human-facing copies in the client's **Notion** (Notion → Google Docs → text).
-- In **BIG BOLD — "Want a NEW communications playbook? Start here:"** — just tell your AI
-  *"help me build a [purpose] playbook"* and it brainstorms with you and builds **all 3 parts** (THE
-  TRINITY): the **workflow-AI prompt** (this standard), the **conversation playbook**
-  (`communications-playbook-standard.md`), and the **GHL automation**. Tell the client what happens next
-  (working copies saved, a Notion copy created, exact paste-where steps).
+- A friendly, emoji-rich **"Want another communication playbook? Just ask me! 🚀"** call-to-action, with a
+  concrete example the client can copy verbatim — e.g. say to your AI *"Help me build a missed-call
+  follow-up playbook"* (and other examples: appointment-reminder 📅, lead-nurture 💬, review-request ✅).
+- A walkthrough of **what the AI will do when they ask**: (1) 💬 **brainstorm it WITH you** using what it
+  already knows about the business (a few smart questions — **NOT a 50-question interrogation/form**), (2)
+  🛠️ **create the communication playbook**, (3) 🗂️ **store it** — working copy saved to
+  `conversation-workflows/` and **mirrored to Notion**, (4) 📝 **build the matching Workflow AI prompt
+  wired to the client's Convert and Flow (GoHighLevel) account** with exact paste-where steps, and (5) 🤖
+  the AI **can take real actions in Convert and Flow on the client's behalf** — it can **create tags 🏷️,
+  update the calendar 📅, create/book appointments 🗓️**, and similar automations.
+- The explicit line: **"You have an AI that is connected to your Convert and Flow account and can do these
+  things for you — just ask."** This also covers building **all 3 parts** (THE TRINITY): the
+  **workflow-AI prompt** (this standard), the **conversation playbook**
+  (`communications-playbook-standard.md`), and the **GHL automation**.
 
 This is part of the standard so every client doc carries it. Machine-enforced by
-`scripts/qc-reference-sheet.sh` (wired into `scripts/11-run-qc-checklist.sh` + CI).
+`scripts/qc-reference-sheet.sh` (wired into `scripts/11-run-qc-checklist.sh` + CI): the gate FAILS if the
+generated sheet is missing the "Want another communication playbook? Just ask me!" CTA, the concrete
+copyable example, the `conversation-workflows/` + Notion (mirrored) location, the brainstorm /
+not-a-50-question note, the Workflow-AI-prompt-wired-to-Convert-and-Flow step, the Convert-and-Flow
+abilities (create tags / update calendar / book appointments), or the explicit "connected to your Convert
+and Flow account — just ask" statement.

@@ -1,5 +1,66 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.16] - 2026-05-29 - Authorization two-block fix + enriched "Your Communication Playbooks" (just-ask CTA + Convert-and-Flow abilities)
+
+### Root cause this prevents
+- **(A) The Authorization VALUE box still carried the "Authorization:" prefix.** The Reference &
+  explanation body of the client doc (from `templates/client-reference-sheet-template.md`) emitted the
+  Authorization header as a SINGLE combined code block `Authorization: Bearer <token>` (and a single
+  combined `Content-Type: application/json`). A GHL custom header has a **Key field** and a **Value
+  field** — two separate copy boxes. The Quick Start (in `21-generate-client-reference-sheet.sh`) already
+  split them, but the template body did not, so the doc still showed a combined block the client had to
+  hand-edit. (The combined-block QC check only fired on real ```` ``` ```` fences; the template used
+  pseudo-fence `[code block, copy button]` markers, so the bug slipped through.)
+- **(B) Clients did not know the AI builds new playbooks FOR them.** The "Your Communication Playbooks"
+  section said where playbooks live and "tell your AI to build one," but did not teach the client that
+  their AI is connected to Convert and Flow and can take real actions (tags, calendar, appointments), nor
+  walk them through what the AI does end-to-end.
+
+### Changed
+- **`templates/client-reference-sheet-template.md`** — the Authorization header is now **TWO separate copy
+  blocks**: block 1 = exactly `Authorization` (paste into the Header KEY field), block 2 = exactly
+  `Bearer <HOOKS_TOKEN>` (paste into the Header VALUE field — **the value box no longer carries the
+  `Authorization:` prefix**). Content-Type split the same way (block 1 `Content-Type`, block 2
+  `application/json`). The click-by-click step now tells the reader exactly which field each block goes
+  into (Key field vs Value field, never one combined box).
+- **`scripts/21-generate-client-reference-sheet.sh`** — ENRICHED the **💬 Your Communication Playbooks**
+  section (still AFTER the 🚀 Quick Start, BEFORE the Reference & explanation; FLAT 23-key body and
+  Quick-Start-first ordering unchanged). It now carries: a friendly emoji-rich **"Want another
+  communication playbook? Just ask me! 🚀"** CTA with a concrete copyable example (*"Help me build a
+  missed-call follow-up playbook"*, plus appointment-reminder/lead-nurture/review-request examples); a
+  walkthrough of what the AI does — (1) 💬 brainstorm WITH you (not a 50-question form), (2) 🛠️ create
+  the playbook, (3) 🗂️ store it in `conversation-workflows/` **mirrored to Notion**, (4) 📝 build the
+  matching **Workflow AI prompt wired to YOUR Convert and Flow account**, (5) 🤖 take real actions in
+  Convert and Flow on your behalf — **create tags 🏷️, update your calendar 📅, create/book appointments
+  🗓️**; and the explicit line **"You have an AI that is connected to your Convert and Flow account and
+  can do these things for you — just ask."**
+- **`scripts/qc-reference-sheet.sh`** — now ENFORCES: (a) the **Bearer-value block must NOT contain the
+  word "Authorization"** (a new check, in addition to the existing combined-`Authorization: Bearer` and
+  separate-key/value-block checks); (b) the enriched playbook section — the **"Want another communication
+  playbook? Just ask me!"** CTA, the concrete copyable example, the `conversation-workflows/` + Notion
+  (mirrored) location, the **brainstorm / not-a-50-question** note, the **Workflow AI prompt** wired to
+  **Convert and Flow**, the Convert-and-Flow abilities (**create tags / update calendar / book
+  appointments**), and the explicit **"connected to your Convert and Flow account — just ask"** statement.
+  Negative-tested (a doc missing any of these FAILs; a combined or prefixed Authorization value FAILs).
+- **`references/communications-playbook-standard.md`** + **`references/workflow-ai-instructions-standard.md`**
+  — mirrored both changes into the standards that define this content: the Authorization **two-block** rule
+  (block 1 `Authorization` → Key field; block 2 `Bearer <token>` → Value field, no `Authorization:`
+  prefix; Content-Type split the same way) and the enriched "Your Communication Playbooks" section (just-ask
+  CTA + concrete example + brainstorm-not-50-questions + store-and-mirror + Workflow-AI-prompt-wired-to-
+  Convert-and-Flow + the create-tags/calendar/appointments abilities + the explicit connected statement).
+
+### Version
+- `skill-version.txt` 1.4.15 → **1.4.16**; this CHANGELOG entry; `SKILL.md` SELF-COUNTS stamp →
+  v1.4.16 + the `qc-reference-sheet.sh` description updated. **No script/linter was added or removed**
+  (scripts/=37, protocols/=32, references/=15, journey templates=8 all unchanged), and **none of the 8
+  repo-tracked version locations changed**, so the repo version stays v10.16.9 and `bump-version.sh` is
+  intentionally NOT run (matching the v1.4.15 / v1.4.14 / v1.4.13 precedent).
+
+### Constraints honored
+- 23-key FLAT body unchanged (`qc-23-key-bodies.sh` still green); Quick-Start-first ordering and the FLAT
+  23-key body in the generated doc are intact; no nesting; no `\n` in JSON; QC stays BASH (no `.py` with
+  `claude-`/`anthropic`). All Skill 38 static gates green locally.
+
 ## [1.4.15] - 2026-05-29 - Mandatory Telegram doc-delivery + Communication Playbooks location section + readiness gates
 
 ### Root cause this prevents

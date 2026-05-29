@@ -223,10 +223,21 @@ the client in Notion or as markdown) is the doc the client opens to wire OpenCla
 always** contain BOTH of the following as real, copy-paste-ready fenced code blocks — never as prose,
 never omitted:
 
-- [ ] **Authorization Header / Bearer Token** — a literal `Authorization: Bearer <token>` block, with the
-      ACTUAL `hooks.token` (read from `HOOKS_TOKEN` / `OPENCLAW_HOOKS_TOKEN` / `hooks.token` in
-      `openclaw.json` at generation time) inside a fenced code block. If the token cannot be resolved, the
-      generator emits a clearly-marked PLACEHOLDER and warns — it never silently omits the section.
+- [ ] **Authorization Header / Bearer Token — TWO separate copy boxes.** A GHL custom header has a **Key
+      (name) field** and a **Value field**, so the doc renders the Authorization header as **two separate
+      copyable code blocks, never one combined block:**
+      - Block 1 = exactly `Authorization` → paste into the Header **KEY (name)** field.
+      - Block 2 = exactly `Bearer <token>` → paste into the Header **VALUE** field. The value block holds
+        **ONLY** `Bearer ` + the token — it must **NOT** contain the word `Authorization` (i.e. it is
+        `Bearer <token>`, never `Authorization: Bearer <token>`).
+
+      Do the same for any other split header (Content-Type → block 1 `Content-Type`, block 2
+      `application/json`). The token is the ACTUAL `hooks.token` (read from `HOOKS_TOKEN` /
+      `OPENCLAW_HOOKS_TOKEN` / `hooks.token` in `openclaw.json` at generation time). If it cannot be
+      resolved, the generator emits a clearly-marked PLACEHOLDER and warns — it never silently omits the
+      section. Each value is its own code block. (Machine-enforced by `scripts/qc-reference-sheet.sh`: the
+      Bearer-value block must NOT contain "Authorization", and a combined `Authorization: Bearer` block
+      FAILS the build.)
 - [ ] **GHL Custom Webhook — Raw Body** — the canonical FLAT 23-key body as a ` ```json ` fenced code block
       (copyable), plus the **Method (POST)**, the **hook URL** (`https://<host>/hooks/<id>`), and
       **Content-Type** (`application/json`), each as a copyable code block. The body stays placeholder-free
@@ -247,9 +258,11 @@ header, or the Raw Body JSON. So **every client doc** (the Client Reference Shee
 and the Workflow Verification Checklist) MUST tell the client, prominently:
 
 > **After Build-with-AI runs, you MUST open the Custom Webhook action and MANUALLY enter:** Method = POST;
-> the URL; Headers via **Add item →** `Authorization: Bearer <token>` and `Content-Type: application/json`;
-> the Raw Body JSON; then **Save + Publish**. **Build with AI will not fill these for you. Verify every
-> field is non-empty before publishing.**
+> the URL; Headers via **Add item →** Key `Authorization` / Value `Bearer <token>` (the value box gets ONLY
+> `Bearer ` + the token — no `Authorization:` prefix) and Key `Content-Type` / Value `application/json`
+> (each header is a Key field + a Value field, two separate copy boxes); the Raw Body JSON; then **Save +
+> Publish**. **Build with AI will not fill these for you. Verify every field is non-empty before
+> publishing.**
 
 This manual-fill instruction is **mandatory, not optional** — a doc that omits it strands the client with
 an empty webhook that silently drops every inbound message. The Client Reference Sheet leads with the
@@ -270,14 +283,26 @@ callout / bold heading, big enough to stand out. Required content:
 - **WHERE they live.** The working copies (what the AI runs) live in the client's OpenClaw master-files
   `conversation-workflows/` folder; the human-facing copies live in the client's **Notion** (and, where
   Notion is not set up, Google Docs → plain text — the §4 fallback chain). State both plainly.
-- **In BIG BOLD — "Want a NEW communications playbook? Start here:"** then the steps: just tell the AI
-  *"help me build a [purpose] playbook"* and it will **brainstorm with you** (it already knows the
-  business — a few smart questions, NOT a 50-question form) and **build all 3 parts** automatically: (1)
-  the workflow-AI prompt, (2) the conversation playbook, and (3) the GHL automation (THE TRINITY). Tell
-  the client what happens next: working copies saved to `conversation-workflows/`, a readable copy created
-  in Notion, and exact paste-where instructions.
+- **A friendly, emoji-rich "Want another communication playbook? Just ask me! 🚀" call-to-action** with a
+  concrete example the client can copy word-for-word — e.g. *"Help me build a missed-call follow-up
+  playbook"* (and more examples: appointment-reminder 📅, lead-nurture 💬, review-request ✅). The client
+  never has to build these by hand.
+- **A walkthrough of what the AI will do when they ask:** (1) 💬 **brainstorm it WITH the client** using
+  what it already knows about the business — a few smart questions, **NOT a 50-question interrogation/form**;
+  (2) 🛠️ **create the communication playbook**; (3) 🗂️ **store it** — working copy saved to
+  `conversation-workflows/` and **mirrored to Notion**; (4) 📝 **build the matching Workflow AI prompt
+  wired to the client's Convert and Flow (GoHighLevel) account**, with exact paste-where steps; (5) 🤖 the
+  AI **can take real actions in Convert and Flow on the client's behalf** — it can **create tags 🏷️,
+  update the calendar 📅, create/book appointments 🗓️**, and similar automations. Together this builds
+  **all 3 parts** (THE TRINITY): the workflow-AI prompt, the conversation playbook, and the GHL automation.
+- **The explicit statement:** *"You have an AI that is connected to your Convert and Flow account and can
+  do these things for you — just ask."*
 
 Machine-enforced by `scripts/qc-reference-sheet.sh` (wired into `scripts/11-run-qc-checklist.sh` + CI):
 the gate FAILS the build if the generated sheet is missing the **Communication Playbooks** section, the
-**"Want a NEW communications playbook"** call-to-action, the `conversation-workflows/` + Notion location,
-the *"help me build a … playbook"* instruction, or the all-3-parts (THE TRINITY) statement.
+**"Want another communication playbook? Just ask me!"** call-to-action, the concrete copyable example, the
+`conversation-workflows/` + Notion (mirrored) location, the *"help me build a … playbook"* instruction,
+the brainstorm / not-a-50-question note, the **all 3 parts** (THE TRINITY) statement, the Workflow-AI
+prompt wired to **Convert and Flow**, the Convert-and-Flow abilities (**create tags / update calendar /
+book appointments**), or the explicit **"connected to your Convert and Flow account — just ask"**
+statement.
