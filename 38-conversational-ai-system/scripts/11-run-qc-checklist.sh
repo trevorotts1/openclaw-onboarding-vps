@@ -261,6 +261,39 @@ else
   report_fail "qc-reference-sheet.sh not found (looked in scripts/)"
 fi
 
+# -------- MANDATORY Telegram doc-delivery (client always gets their link) --------
+section "MANDATORY Telegram doc-delivery (qc-notify-client-doc.sh)"
+QC_NOTIFY="$SCRIPT_DIR/qc-notify-client-doc.sh"
+[ -f "$QC_NOTIFY" ] || QC_NOTIFY="$SKILL38_ROOT/scripts/qc-notify-client-doc.sh"
+if [ -f "$QC_NOTIFY" ]; then
+  if bash "$QC_NOTIFY" >/dev/null 2>&1; then
+    report_pass "the client doc-delivery step (22-notify-client-doc.sh) exists, greps the transcripts for the chat id, is gated (clientDocDelivered + non-zero on miss), sends via the gateway, and is wired into the checklist + INSTRUCTIONS — every client gets their link via Telegram, no matter what"
+  else
+    report_fail "qc-notify-client-doc.sh: the mandatory Telegram doc-delivery step is missing or not wired — run it directly for detail"
+  fi
+else
+  report_fail "qc-notify-client-doc.sh not found (looked in scripts/)"
+fi
+
+# -------- Backend ready to RECEIVE (live completion gate) --------
+# Testing happens ONLY after BOTH the client doc exists (qc-reference-sheet.sh,
+# above) AND the backend is ready to receive: hooks.mappings live + deliver:false
+# + a working model + healthz 200. On a box with no install this exits 3 (SKIP).
+section "Backend ready to RECEIVE (qc-backend-ready.sh)"
+QC_BACKEND="$SCRIPT_DIR/qc-backend-ready.sh"
+[ -f "$QC_BACKEND" ] || QC_BACKEND="$SKILL38_ROOT/scripts/qc-backend-ready.sh"
+if [ -f "$QC_BACKEND" ]; then
+  BACKEND_RC=0
+  bash "$QC_BACKEND" >/dev/null 2>&1 || BACKEND_RC=$?
+  case "$BACKEND_RC" in
+    0) report_pass "backend ready to receive: hooks.mappings live + deliver:false + a working model + healthz 200 (testing may proceed once the client doc gate also passes)" ;;
+    3) echo "  [SKIP] no openclaw.json on this box — cannot verify backend readiness here" ;;
+    *) report_fail "qc-backend-ready.sh: backend NOT ready to receive (hooks.mappings / deliver:false / model / healthz) — do NOT test, do NOT hand off; run it directly for detail" ;;
+  esac
+else
+  report_fail "qc-backend-ready.sh not found (looked in scripts/)"
+fi
+
 # -------- Config schema-safety (machine-enforced) --------
 section "Config schema-safety — no config-invalidating install scripts (qc-config-schema-safety.sh)"
 QC_CFG="$SCRIPT_DIR/qc-config-schema-safety.sh"

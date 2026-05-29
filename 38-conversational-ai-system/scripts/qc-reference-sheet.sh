@@ -251,6 +251,25 @@ grep -Eiq 'PUBLISH' "$SHEET" || \
 grep -Eiq 'does not contain|blank|never created|non-existent tag' "$SHEET" || \
   MISSING+=('the post-build verification must call out the blank/non-existent tag-in-a-filter bug')
 
+# --- YOUR COMMUNICATION PLAYBOOKS section (after Quick Start, before deep how-it-works) ---
+# The first question every client asks on their first test: "where are my
+# workflows / communication playbooks?" — answered prominently, with WHERE they
+# live AND how to ask for a NEW one.
+grep -Eiq 'Communication Playbooks' "$SHEET" || \
+  MISSING+=('a "Your Communication Playbooks" section (where the client'"'"'s playbooks live)')
+grep -Eiq 'Want a NEW communications playbook' "$SHEET" || \
+  MISSING+=('the prominent "Want a NEW communications playbook? Start here:" call to action')
+# WHERE they live: master-files conversation-workflows/ + Notion (human-facing).
+grep -Eiq 'conversation-workflows' "$SHEET" || \
+  MISSING+=('the playbooks-location must name the master-files "conversation-workflows/" folder')
+grep -Eiq 'Notion' "$SHEET" || \
+  MISSING+=('the playbooks-location must name where the human-facing copies live (Notion)')
+# The "tell your AI ..." instruction + all 3 parts it builds.
+grep -Eiq 'help me build a' "$SHEET" || \
+  MISSING+=('the "just tell your AI: help me build a [purpose] playbook" instruction')
+grep -Eiq 'all 3 parts|all three parts|3 parts' "$SHEET" || \
+  MISSING+=('the section must say the AI builds all 3 parts (workflow-AI prompt + conversation playbook + GHL automation)')
+
 if [ "$JSON_MODE" = "1" ]; then
   miss_json="["
   first=1
