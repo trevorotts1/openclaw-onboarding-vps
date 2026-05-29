@@ -26,7 +26,10 @@ Key behaviors added:
 
 ## [ADD TO MEMORY.md] — appended by `scripts/06-append-memory-rules.sh`
 
-Rules 6-14 of the 14 v5.14 MEMORY.md design principles. (Rules 1-5 belong to skill 19/29.)
+Rules 6-14 (v5.14) + rules 15-18 (v1.4.0 — conversation-playbook builder) of the MEMORY.md design
+principles. (Rules 1-5 belong to skill 19/29.) The script writes the v5.14 block and the v1.4.0 block
+under separate markers, so an existing v5.14 install gets rules 15-18 on upgrade without re-appending
+6-14.
 
 6. **Conversation Log Rule** — log every inbound + outbound, real-time.
 7. **Quiet Hours Rule** — never proactively message outside operator-defined quiet hours.
@@ -37,6 +40,10 @@ Rules 6-14 of the 14 v5.14 MEMORY.md design principles. (Rules 1-5 belong to ski
 12. **Discount Code Rule** — only per per-product policy; never invent codes.
 13. **Intelligent Routing Rule** — Conversation Workflows override channel playbooks per context routing.
 14. **Tune-up Rule** — Sunday 2am weekly + Saturday 11pm proactive + 1st-of-month review crons are the heartbeat. Never disable without operator approval.
+15. **"Workflow" / "automation" terminology Rule** — when the operator says "workflow", "automation", or "Workflow AI" they mean a **GHL (Convert and Flow) Automations-section workflow** unless they explicitly say otherwise. Do not assume n8n, Zapier, or OpenClaw cron.
+16. **GHL Automations build path Rule** — GHL Automations have **NO API and NO MCP**. The ONLY programmatic way to build one is GHL's **"Build with AI" button** (top-right of the Automations area): click it and paste the Build-with-AI instructions. (Future: if Playwright/browser-control is installed, an agent can open the Automations area and paste automatically; right now it is a manual paste by the operator.) Never tell the operator there's an API for building GHL automations — there isn't.
+17. **3-Part Build Rule** — every "build me a conversation playbook / workflow / automation" request produces THREE artifacts, every time (per Step 9.20 / conversation-workflows-protocol.md): (1) the Build-with-AI prompt + manual-build fallback + verification checklist; (2) the Layer 2 conversation playbook saved to `conversation-workflows/<id>.md` and registered in `conversation-workflows/registry.md`; (3) a NEW Notion doc for that playbook. The hook path is what wires the GHL automation to the conversation playbook. Never stop after one artifact.
+18. **Communication-driven funnels Rule** — the system's USP is **communication-driven funnels / communication-driven automations**: the operator builds by **talking/brainstorming**, NOT click-and-drag (this is the edge over CloseBot). When the operator triggers the builder, run a **FRIENDLY brainstorm — do NOT dump 50 questions.** Use what you already know (Typed Knowledge Bases + USER.md + MEMORY.md) and ask ONLY the smart gaps, then regurgitate a concise "is this what you want?" summary as the final confirmation before building.
 
 ## [ADD TO TOOLS.md] — no automated update; operator manually documents
 

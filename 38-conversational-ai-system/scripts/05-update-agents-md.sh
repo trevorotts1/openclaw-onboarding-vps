@@ -275,9 +275,26 @@ Trigger phrases (case-insensitive, fuzzy match):
 - "Walk me through building a workflow"
 
 When triggered, hand control to the Workflow Builder subagent walkthrough
-(Section B of the protocol). Confirm the 3-layer architecture (Layer 0
-routing check / Layer 1 GHL side / Layer 2 OpenClaw playbook) is set up
-end-to-end before declaring the workflow live.
+(Section B / "THE 3-PART BUILD" of the protocol). Run a FRIENDLY brainstorm
+— do NOT dump 50 questions: use what you already know about this client
+(Typed Knowledge Bases + USER.md + MEMORY.md), ask ONLY the smart gaps, then
+regurgitate a concise "is this what you want to happen?" summary as the final
+confirmation before building.
+
+On YES, produce ALL THREE parts (never stop after one):
+  Part 1 — Build-with-AI prompt (+ manual-build fallback + verification
+           checklist). GHL Automations have NO API and NO MCP — the only
+           programmatic path is GHL's "Build with AI" button; the prompt
+           nails the funnel SHAPE, operator pastes token/URL/Raw-Body values.
+  Part 2 — the Layer 2 conversation playbook (conversation-workflows/<id>.md),
+           registered in conversation-workflows/registry.md.
+  Part 3 — a NEW Notion doc for the playbook + the AGENTS.md/TOOLS.md/MEMORY.md
+           pointer.
+The hook path (https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>) wires the GHL
+automation to the conversation playbook. Confirm the 3-layer architecture
+(Layer 0 routing check / Layer 1 GHL side / Layer 2 OpenClaw playbook) is set
+up end-to-end before declaring the workflow live. See also Step 9.33
+(Intelligent Playbook Routing) and Step 9.34 (Proactive Features Suite).
 
 BLOCK_E
 

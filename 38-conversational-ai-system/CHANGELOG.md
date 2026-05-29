@@ -1,5 +1,43 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.0] - 2026-05-28 (cont.) - Hostinger Docker env-discovery + conversation-playbook builder hardening
+
+Two additive layers on top of the 1.4.0 GHL hardening (same version; content-only additions, no version bump).
+
+### Added
+- `references/HOSTINGER-DOCKER-ENV.md` (NEW) — bulletproof Hostinger Docker VPS env-discovery. Documents where the
+  environment lives (host `/docker/<project>/.env` = canonical `env_file`; container mirror `/data/.openclaw/.env`
+  via the `volumes: ./data:/data` bind mount; live `docker exec <container> printenv`), the EXACT copy-paste
+  discovery sequence (`docker ps` → derive `<project>` → `cat /docker/<project>/.env` → `docker exec … printenv |
+  grep API_KEY`), THE HARD RULE (never report a key "missing" before running that sequence — if other keys like
+  `ANTHROPIC_API_KEY` are visible you're in the right place; add the missing key there, don't claim you can't find
+  it), the canonical add-a-key procedure (append host + mirror container + `docker compose up -d --force-recreate`;
+  plain `restart` does NOT reload `env_file`), and the `/hostinger/server.mjs` `hooks.token` rewrite gotcha.
+
+### Changed
+- `references/v5.14-source-playbook.md` Step O.5 — added a Hostinger Docker pointer (env is `/docker/<project>/.env`;
+  run the discovery sequence + HARD RULE in HOSTINGER-DOCKER-ENV.md before reporting any key missing).
+- `scripts/00-verify-prerequisites.sh` "CLOUDFLARE API KEY NOT FOUND" halt — added a prominent Hostinger Docker
+  block (the env is `/docker/<project>/.env`, run discovery before reporting missing) and made the
+  `cloudflare-godaddy-setup-guide.md` pointer clearly the path for getting a domain into Cloudflare + creating the
+  CF API token; the "save your key" step now shows the Hostinger host-`.env` + force-recreate path.
+- Step 9.20 (Conversation Workflow Builder) — now explicitly a **3-PART build** every time: Part 1 (Build-with-AI
+  prompt + manual-build fallback + verification checklist — nails the funnel SHAPE, operator pastes token/URL/Raw
+  values), Part 2 (the Layer 2 conversation playbook in `conversation-workflows/`, registered in `registry.md`; the
+  hook path wires the two halves), Part 3 (the brainstorm trigger — FRIENDLY proactive Q&A, NOT 50 questions; uses
+  Typed Knowledge Bases + USER.md + MEMORY.md, asks only smart gaps, regurgitates a concise "is this what you want?"
+  summary; on YES builds Part 1 → Part 2 → pointer → NEW Notion doc → register). USP framing added
+  (communication-driven funnels / automations, beats CloseBot). Cross-references to Step 9.33 (Intelligent Playbook
+  Routing) and Step 9.34 (Proactive Features Suite) added at all three steps so builder → router → proactive engine
+  are explicitly one loop. Mirrored into `protocols/conversation-workflows-protocol.md` and `scripts/05-update-agents-md.sh`
+  (Step 1.85). Removed ambiguous "Workflow AI" usage — renamed to "Build-with-AI" throughout (artifact files
+  `<id>--build-with-ai-prompt.md`); fixed the operator-instruction block that still said "Use Workflow AI".
+- `scripts/06-append-memory-rules.sh` + `CORE_UPDATES.md` — added MEMORY.md design rules 15-18 (GHL/automation
+  terminology = GHL Automations workflow; GHL Automations have NO API/NO MCP, only the "Build with AI" button; the
+  3-part build checklist; communication-driven-funnels + brainstorm-not-50-questions). Written under a separate
+  `v1.4.0` marker so existing v5.14 installs get rules 15-18 on upgrade without re-appending 6-14 (idempotent +
+  upgrade-safe, verified).
+
 ## [1.4.0] - 2026-05-28 - GHL inbound hardening: Build-with-AI prompt, 4-token model, verified APIs, calendar-sync
 
 ### Why

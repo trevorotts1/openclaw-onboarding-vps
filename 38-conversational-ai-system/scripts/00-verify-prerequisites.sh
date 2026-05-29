@@ -119,7 +119,36 @@ I checked these locations and found no Cloudflare API key:
   - ~/.zshrc, ~/.bashrc, ~/.bash_profile
   - Current shell environment
 
-To proceed, follow the walk-through guide shipped INSIDE this skill:
+>>> HOSTINGER DOCKER VPS? STOP — you may NOT have actually looked yet. <<<
+
+On a Hostinger VPS, OpenClaw runs inside Docker and the env file is
+NOT any of the paths above. It is the host-level docker-compose env_file:
+
+    /docker/<project>/.env      (canonical — read AND add keys here)
+    /data/.openclaw/.env        (container mirror, bind-mounted)
+
+BEFORE reporting CLOUDFLARE_API_TOKEN missing, run the discovery sequence
+and follow the HARD RULE in:
+
+  cat ~/.openclaw/skills/38-conversational-ai-system/references/HOSTINGER-DOCKER-ENV.md
+
+  # quick version:
+  docker ps --format "{{.Names}}"            # e.g. openclaw-hy5t-openclaw-1
+  ls -d /docker/*/                           # confirm the project dir
+  cat /docker/<project>/.env                 # the canonical env file
+  docker exec <container> printenv | grep -E "API_KEY|TOKEN"
+
+If you can see OTHER keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, ...) in
+/docker/<project>/.env, you are in the RIGHT place. A CLOUDFLARE_API_TOKEN
+that isn't there should be ADDED there (append + force-recreate per
+HOSTINGER-DOCKER-ENV.md §4), NOT reported as "I can't find it."
+
+-----------------------------------------------------
+
+DON'T HAVE A CLOUDFLARE API TOKEN YET (any platform)?
+Follow the walk-through guide shipped INSIDE this skill. It is the
+canonical path for getting your domain into Cloudflare AND creating the
+9-permission CF API token:
 
   cat ~/.openclaw/skills/38-conversational-ai-system/references/cloudflare-godaddy-setup-guide.md
 
@@ -133,6 +162,10 @@ Once you have your Cloudflare API key:
 
   1. Save it to your OpenClaw environment file at:
      ~/.openclaw/.env (or whichever env file you already use)
+     HOSTINGER DOCKER VPS: save it to /docker/<project>/.env
+     (canonical) AND mirror to /data/.openclaw/.env, then
+     `docker compose -f /docker/<project>/docker-compose.yml up -d
+     --force-recreate` — see HOSTINGER-DOCKER-ENV.md §4.
 
      Add the line:
        CLOUDFLARE_API_TOKEN=<your-token-here>
