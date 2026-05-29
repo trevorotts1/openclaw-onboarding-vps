@@ -238,3 +238,21 @@ Raw Body JSON — there was nothing to paste into GHL's Build-with-AI. This is n
 `.github/workflows/qc-static.yml`): the gate drives the generator in an offline sandbox and FAILS the
 build if the rendered sheet lacks the word `Bearer`, a ` ```json ` fenced code block, or the hook URL. It
 is no longer optional prose.
+
+### MANDATORY in every client doc — the manual Custom-Webhook fill step
+
+GHL's **"Build with AI"** only builds the workflow SHAPE (trigger + filters + an EMPTY Custom Webhook
+action). It does **NOT** reliably populate the URL, the Authorization/Bearer header, the Content-Type
+header, or the Raw Body JSON. So **every client doc** (the Client Reference Sheet, the SMS prompt template,
+and the Workflow Verification Checklist) MUST tell the client, prominently:
+
+> **After Build-with-AI runs, you MUST open the Custom Webhook action and MANUALLY enter:** Method = POST;
+> the URL; Headers via **Add item →** `Authorization: Bearer <token>` and `Content-Type: application/json`;
+> the Raw Body JSON; then **Save + Publish**. **Build with AI will not fill these for you. Verify every
+> field is non-empty before publishing.**
+
+This manual-fill instruction is **mandatory, not optional** — a doc that omits it strands the client with
+an empty webhook that silently drops every inbound message. The Client Reference Sheet leads with the
+copy-paste values (URL, bearer token, Raw Body JSON) followed by these manual-fill steps, then the
+Workflow-AI prompt; `scripts/qc-reference-sheet.sh` machine-enforces that the generated sheet carries the
+manual-fill instructions (greps for "Custom Webhook" + "manually"/"paste" + "Build with AI will not").

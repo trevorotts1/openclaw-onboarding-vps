@@ -31,7 +31,12 @@ else
   MASTER_FILES_DIR="${MASTER_FILES_DIR:-${HOME}/.openclaw/skill-38-master-files}"
 fi
 
-SKILL38_ROOT="${SKILL38_ROOT:-${HOME}/clawd/skills/38-openclaw-cloudflare-tunnel}"
+# Resolve the skill root DYNAMICALLY from this script's own location (scripts/ is
+# a child of the skill dir) rather than hardcoding a legacy path
+# (${HOME}/clawd/skills/38-openclaw-cloudflare-tunnel no longer exists — the skill
+# folder is 38-conversational-ai-system). SKILL38_ROOT can still be overridden via env.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL38_ROOT="${SKILL38_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 TEMPLATE_PATH="${TEMPLATE_PATH:-$SKILL38_ROOT/templates/channel-playbook-template.md}"
 CLIENT_BUSINESS_NAME="${CLIENT_BUSINESS_NAME:-<CLIENT_BUSINESS_NAME>}"
 ESCALATION_TARGET="${ESCALATION_TARGET:-<ESCALATION_TARGET>}"

@@ -26,6 +26,9 @@
 #   - the word "Bearer"
 #   - at least one ```json fenced code block (opening fence, line-anchored)
 #   - a hook URL of the form https://.../hooks/<id>
+#   - the manual Custom-Webhook fill instructions: "Custom Webhook" + (manually|paste)
+#     + "Build with AI will not" (Build-with-AI only builds the SHAPE; the client
+#     MUST manually fill the URL/headers/body — a sheet without this strands them)
 #
 # Exit codes: 0 = sheet carries all required markers;
 #             1 = one or more markers missing;
@@ -155,6 +158,19 @@ grep -Eq '^[[:space:]]*```json[[:space:]]*$' "$SHEET" || \
 # A hook URL of the form https://.../hooks/<id>
 grep -Eq 'https://[^[:space:]]+/hooks/[A-Za-z0-9._-]+' "$SHEET" || \
   MISSING+=('a hook URL (https://<host>/hooks/<id>)')
+
+# The MANUAL Custom-Webhook fill instructions — "Build with AI" only builds the
+# SHAPE; the client MUST manually fill the URL/headers/body. Require all three
+# signal phrases so the sheet can never ship without the "do it yourself" steps:
+#   - "Custom Webhook" (names the action to fill)
+#   - "manually" OR "paste" (the action the client must take)
+#   - "Build with AI will not" (the explicit "it won't fill it for you" warning)
+grep -q "Custom Webhook" "$SHEET" || \
+  MISSING+=('the manual-fill instructions must name the "Custom Webhook" action')
+grep -Eiq 'manually|paste' "$SHEET" || \
+  MISSING+=('the manual-fill instructions must tell the client to manually enter / paste the values')
+grep -Eiq 'Build with AI will not' "$SHEET" || \
+  MISSING+=('the manual-fill instructions must state "Build with AI will not" fill these for you')
 
 if [ "$JSON_MODE" = "1" ]; then
   miss_json="["

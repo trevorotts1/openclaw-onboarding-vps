@@ -292,21 +292,28 @@ SEC2="$STAGE_DIR/.sms-workflow-ai-prompt.rendered.md"
 SEC3="$STAGE_DIR/.generic-workflow-ai-prompt.rendered.md"
 SEC4="$STAGE_DIR/.verification-checklist.rendered.md"
 
-substitute_template "$REF_TEMPLATE"      > "$SEC1"
+# SEC1 = the reference sheet. We render the template body to a temp file and then
+# PREPEND the mandatory copy-paste lead block (see below) so the sheet LEADS with
+# the copy-paste values and the manual-fill steps, with the template's
+# explanation/reference following AFTER.
+SEC1_BODY="$STAGE_DIR/.reference-sheet.body.md"
+substitute_template "$REF_TEMPLATE"      > "$SEC1_BODY"
 substitute_template "$SMS_TEMPLATE"      > "$SEC2"
 substitute_template "$GENERIC_TEMPLATE"  > "$SEC3"
 substitute_template "$CHECKLIST_TEMPLATE" > "$SEC4"
 
 # ============================================================================
-# MANDATORY copy-paste artifacts — Bearer token + GHL Custom Webhook Raw Body.
-# These are APPENDED to the rendered reference sheet (SEC1) directly by this
-# script so they ALWAYS appear as real, copyable fenced code blocks regardless
-# of how the template wraps its prose. A live client (Teresa) opened a reference
-# sheet that had NO bearer token and NO copyable Raw Body JSON — there was no
-# `Authorization: Bearer <token>` to paste and no ```json body to drop into
-# GHL's Build-with-AI, which stranded the client. qc-reference-sheet.sh
-# machine-enforces that this output contains "Bearer", a ```json fence, and the
-# hook URL.
+# MANDATORY copy-paste artifacts — Webhook URL + Bearer token + GHL Custom
+# Webhook Raw Body + the manual Custom-Webhook fill steps. These are written by
+# this script (NOT left to the template) into a LEAD block that is PREPENDED to
+# the reference sheet (see below), so the sheet LEADS with the copy-paste values
+# in the required order and they ALWAYS appear as real, copyable fenced code
+# blocks regardless of how the template wraps its prose. A live client (Teresa)
+# opened a reference sheet that had NO bearer token and NO copyable Raw Body JSON
+# — there was no `Authorization: Bearer <token>` to paste and no ```json body to
+# drop into GHL's Build-with-AI, which stranded the client. qc-reference-sheet.sh
+# machine-enforces that this output contains "Bearer", a ```json fence, the hook
+# URL, AND the manual Custom-Webhook fill instructions.
 # ============================================================================
 
 # Resolve the actual hooks bearer token, in priority order:
@@ -356,13 +363,37 @@ REF_HOOK_NAME="${HOOK_NAME:-$ROUTE_ID}"
 REF_AGENT_ID="${AGENT_ID:-${ROUTING_AGENT_ID:-main}}"
 REF_ENDPOINT_URL="https://${PUBLIC_HOSTNAME}/hooks/${REF_HOOK_NAME}"
 
+# ============================================================================
+# LEAD block — the sheet must LEAD with the copy-paste values, in this EXACT
+# order, BEFORE any explanation/reference:
+#   1) Webhook URL
+#   2) Authorization / Bearer token (REVEALED real value)
+#   3) Raw Body JSON (fenced json, FLAT 23-key)
+#   4) Manual Custom-Webhook fill steps ("Build-with-AI won't fill it, do it yourself")
+#   5) Workflow-AI prompt pointer (the full prompt is Section 2 of this doc)
+# The template's explanation/reference body follows AFTER this lead block.
+# qc-reference-sheet.sh machine-enforces the presence of the bearer token, a
+# ```json fence, the hook URL, AND the manual-fill instructions.
+# ============================================================================
+LEAD="$STAGE_DIR/.reference-sheet.lead.md"
 {
-  printf '\n\n---\n\n'
-  printf '## Authorization Header / Bearer Token\n\n'
+  printf '# Setup Reference Sheet — %s\n\n' "$CLIENT_BUSINESS_NAME"
+  printf 'Everything you need to copy-paste is right here at the top, in order. Explanation and reference notes follow below — but the copy-paste values come first.\n\n'
+  printf -- '---\n\n'
+
+  # 1) Webhook URL
+  printf '## 1. Webhook URL\n\n'
+  printf 'Copy this into the GHL Custom Webhook **URL** field (no trailing slash):\n\n'
+  printf '```\n'
+  printf '%s\n' "$REF_ENDPOINT_URL"
+  printf '```\n\n'
+
+  # 2) Authorization / Bearer token (REVEALED)
+  printf '## 2. Authorization / Bearer Token\n\n'
   if [ "$TOKEN_IS_PLACEHOLDER" = "1" ]; then
     printf '> WARNING: the hooks bearer token could not be read at generation time. The block below is a PLACEHOLDER — replace it with your real `hooks.token` (from `~/.openclaw/openclaw.json` or `/data/.openclaw/openclaw.json`) before using this sheet.\n\n'
   fi
-  printf 'Add this as a manual header on every GHL Custom Webhook (leave the AUTHORIZATION dropdown set to "None"). Copy it exactly — no leading/trailing spaces:\n\n'
+  printf 'Add this as a header on the Custom Webhook (leave the AUTHORIZATION dropdown set to "None"). Copy it exactly — no leading/trailing spaces:\n\n'
   printf '```\n'
   printf 'Authorization: Bearer %s\n' "$RESOLVED_HOOKS_TOKEN"
   printf '```\n\n'
@@ -370,14 +401,10 @@ REF_ENDPOINT_URL="https://${PUBLIC_HOSTNAME}/hooks/${REF_HOOK_NAME}"
   printf '```\n'
   printf 'Content-Type: application/json\n'
   printf '```\n\n'
-  printf '## GHL Custom Webhook — Raw Body\n\n'
-  printf '**Method:** POST\n\n'
-  printf '**Hook URL** (copy into the Custom Webhook URL field):\n\n'
-  printf '```\n'
-  printf '%s\n' "$REF_ENDPOINT_URL"
-  printf '```\n\n'
-  printf '**Content-Type:** `application/json`\n\n'
-  printf 'Paste this **RAW BODY** into the GHL Custom Webhook action (and into Build-with-AI when it asks for the webhook body). It is the canonical FLAT 23-key body — never paste a shorter one, never nest it, and keep `messageTemplate` placeholder-free so GHL does not mangle the JSON. Only `channel` + the `session_key` prefix change per channel (this is the SMS body):\n\n'
+
+  # 3) Raw Body JSON (FLAT 23-key)
+  printf '## 3. Raw Body (JSON)\n\n'
+  printf 'Paste this **RAW BODY** into the GHL Custom Webhook action. It is the canonical FLAT 23-key body — never paste a shorter one, never nest it, and keep `messageTemplate` placeholder-free so GHL does not mangle the JSON. Only `channel` + the `session_key` prefix change per channel (this is the SMS body):\n\n'
   printf '```json\n'
   printf '{\n'
   printf '  "id": "%s",\n' "$REF_HOOK_NAME"
@@ -404,8 +431,33 @@ REF_ENDPOINT_URL="https://${PUBLIC_HOSTNAME}/hooks/${REF_HOOK_NAME}"
   printf '  "location_id": "{{location.id}}",\n'
   printf '  "location_name": "{{location.name}}"\n'
   printf '}\n'
-  printf '```\n'
-} >> "$SEC1"
+  printf '```\n\n'
+
+  # 4) Manual Custom-Webhook fill steps — "Build with AI will not fill it, do it yourself"
+  printf '## 4. Manually fill the Custom Webhook action (Build with AI will NOT do this for you)\n\n'
+  printf 'GHL'\''s **Build with AI** only builds the workflow SHAPE — the trigger, the filters, and an **EMPTY Custom Webhook action**. It does **NOT** reliably populate the URL, the Authorization/Bearer header, the Content-Type header, or the Raw Body JSON. **Build with AI will not fill these for you.** After Build with AI runs, open the **Custom Webhook** action and **manually** enter every value, using the copy-paste blocks above:\n\n'
+  printf '1. Open the workflow → click the **Custom Webhook** action to edit it.\n'
+  printf '2. **Method:** `POST`.\n'
+  printf '3. **URL:** paste the Webhook URL from section 1 (no trailing slash; do not leave the sample-url placeholder).\n'
+  printf '4. **AUTHORIZATION dropdown:** leave on `None` (the token goes in Headers, not here).\n'
+  printf '5. **Headers** — click **"Add item"** and paste, by hand:\n'
+  printf '   - `Authorization` -> `Bearer <token>` (the Authorization line from section 2)\n'
+  printf '   - `Content-Type` -> `application/json`\n'
+  printf '6. **Content-Type dropdown:** `application/json`.\n'
+  printf '7. **Raw Body:** paste the JSON from section 3.\n'
+  printf '8. **Save** the action, then **Publish** the workflow.\n'
+  printf '9. **Verify every field above is non-empty before publishing** — an empty URL, header, or body means every inbound message silently goes nowhere.\n\n'
+
+  # 5) Workflow-AI prompt pointer (the full prompt is rendered as Section 2 of this doc)
+  printf '## 5. Workflow-AI Prompt (paste into Build with AI)\n\n'
+  printf 'The full copy-paste **Workflow-AI prompt** for your first workflow (SMS Inquiry Responder) is in **Section 2 — Your First Workflow** of this document. Open your GHL/Convert and Flow account -> **Automations** -> new automation -> **Build with AI** (top-right), paste that prompt, then come back here and do section 4 (manually fill the Custom Webhook) before publishing.\n\n'
+  printf -- '---\n\n'
+  printf '## Reference & explanation\n\n'
+  printf 'Everything below is background/reference. The copy-paste values you need are in sections 1-5 above.\n\n'
+} > "$LEAD"
+
+# Compose SEC1 = LEAD (copy-paste values, in order) + the template body (reference).
+cat "$LEAD" "$SEC1_BODY" > "$SEC1"
 
 # ----- detect Notion availability -----
 LAYER="3"

@@ -97,6 +97,30 @@ After you paste the prompt above, **Build with AI** should produce a workflow wi
 
 If the workflow Build with AI produced doesn't match this shape, that's normal — Build with AI is a helper, not infallible. Use the verification checklist (Section 4) to fix the gaps.
 
+## MANDATORY — after Build with AI runs, MANUALLY fill the Custom Webhook action yourself
+
+**Build with AI only builds the SHAPE (the trigger, the filters, and an EMPTY Custom Webhook action). It
+does NOT reliably fill in the URL, the Authorization/Bearer header, the Content-Type header, or the Raw
+Body JSON. Build with AI will NOT fill these for you.** So after it finishes, you MUST open the Custom
+Webhook action and enter these values by hand:
+
+1. Open the workflow Build with AI made → click the **Custom Webhook** action to edit it.
+2. **Method:** `POST`.
+3. **URL:** paste this EXACTLY — `https://<PUBLIC_HOSTNAME>/hooks/<ROUTE_ID>` (no trailing slash; don't
+   leave the sample-url placeholder).
+4. **AUTHORIZATION dropdown:** leave on `None` (the token goes in Headers, not here).
+5. **Headers** — click **"Add item"** and add, by hand:
+   - `Authorization` → `Bearer <HOOKS_TOKEN>`
+   - `Content-Type` → `application/json`
+6. **Content-Type dropdown:** `application/json`.
+7. **Raw Body:** paste the FULL FLAT 23-key JSON from the prompt above (the block beginning `{ "id": ... }`).
+8. **Save** the action, then **Publish** the workflow.
+9. **Verify every field above is non-empty before you publish** — an empty URL, header, or body means
+   every text silently goes nowhere.
+
+There is no shortcut here: GHL Automations have no API and no MCP, and Build with AI won't paste these in.
+This is your step — paste the values into the Custom Webhook action yourself, then verify and publish.
+
 ## Multi-action note (when this workflow needs more than one action)
 
 This SMS template is the simplest case — one trigger, two filters, one Custom Webhook. Real workflows

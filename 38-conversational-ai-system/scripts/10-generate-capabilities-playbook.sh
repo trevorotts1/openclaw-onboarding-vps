@@ -9,8 +9,11 @@
 # Substitution map (extend as needed):
 #   <CLIENT_NAME>           ← $MASTER_FILES_DIR/company-config.json .name (else "this client")
 #   <MODEL_TIER_REAL_TIME>  ← openclaw.json .agents.list[id=main].model
-#   <MODEL_TIER_ASYNC>      ← openclaw.json .agents.async.model (else "(same as real-time)")
-#   <MODEL_TIER_BATCH>      ← openclaw.json .agents.batch.model (else "(same as real-time)")
+#   <MODEL_TIER_ASYNC>      ← $ASYNC_MODEL from secrets.env (else "(same as real-time)")
+#   <MODEL_TIER_BATCH>      ← $BATCH_MODEL from secrets.env (else "(same as real-time)")
+#       (async/batch are NOT config keys — agents.defaults.async/.batch fail
+#        `openclaw config validate` on 2026.5.27; they are persisted to the
+#        secrets/state env by 15-configure-hooks-mappings.sh)
 #   <CHANNELS_ENABLED>      ← derived from openclaw.json .hooks.mappings (comma-separated)
 #   <INSTALL_TIMESTAMP>     ← date -u +%Y-%m-%dT%H:%M:%SZ
 #
@@ -57,6 +60,11 @@ fi
 
 COMPANY_CONFIG="$MASTER_FILES_DIR/company-config.json"
 
+# Source the secrets/state env so the persisted ASYNC_MODEL/BATCH_MODEL tier
+# selections (written by 15-configure-hooks-mappings.sh) are available.
+SECRETS_ENV_FILE="${SECRETS_ENV_FILE:-$HOME/.openclaw/secrets.env}"
+[[ -f "$SECRETS_ENV_FILE" ]] && set -a && . "$SECRETS_ENV_FILE" && set +a || true
+
 # -----------------------------------------------------------------------------
 # Pull substitution values
 # -----------------------------------------------------------------------------
@@ -75,9 +83,14 @@ get_json() {
 }
 
 CLIENT_NAME="$(get_json "$COMPANY_CONFIG" '.name' 'this client')"
+# Real-time tier lives on the agent (agents.list[main].model — the only supported
+# per-agent model key on 2026.5.27). The async/batch TIERS are NOT config keys
+# (writing agents.defaults.async/.batch fails config validate), so 15-configure-
+# hooks-mappings.sh persists them to the secrets/state env as ASYNC_MODEL/BATCH_MODEL.
+# Read those env vars here, falling back to "(same as real-time)" if unset.
 MODEL_TIER_REAL_TIME="$(get_json "$OPENCLAW_JSON" '(.agents.list[]? | select(.id=="main") | .model)' 'unknown')"
-MODEL_TIER_ASYNC="$(get_json "$OPENCLAW_JSON" '.agents.async.model' '(same as real-time)')"
-MODEL_TIER_BATCH="$(get_json "$OPENCLAW_JSON" '.agents.batch.model' '(same as real-time)')"
+MODEL_TIER_ASYNC="${ASYNC_MODEL:-(same as real-time)}"
+MODEL_TIER_BATCH="${BATCH_MODEL:-(same as real-time)}"
 
 CHANNELS_ENABLED='unknown'
 if [[ -f "$OPENCLAW_JSON" ]] && command -v jq >/dev/null 2>&1; then
