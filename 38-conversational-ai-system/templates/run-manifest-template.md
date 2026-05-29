@@ -16,6 +16,21 @@
 
 (Populated as the run proceeds.)
 
+## Playbook docs (per-playbook human-facing deliverable — BINDING, machine-enforced)
+
+State field for the per-playbook human-facing doc deliverable. For EVERY conversation playbook created
+(starting with the appointment-booking starter), a human-facing copy MUST be created in the CLIENT's own
+account in the fallback order **Notion → Google Docs → plain text**, and its URL/path recorded here as one
+`playbookDocs[]` line per playbook. `scripts/09-install-conversation-workflows.sh` appends these
+automatically; `scripts/qc-playbook-doc.sh` (Step 11 QC + CI) FAILS the hand-off if a playbook has no
+recorded doc.
+
+Form (one per playbook):
+
+`playbookDocs[]: <slug> -> <notion-url | google-doc-url | plain-text-path>`
+
+(Populated as each playbook's human-facing doc is created.)
+
 ## Phase progress
 
 - [ ] Phase 0 — Orient

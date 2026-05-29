@@ -150,3 +150,20 @@ jobs:
           # that drops either step makes the agent forget mid-conversation.
           bash 38-conversational-ai-system/scripts/qc-conversation-memory.sh
           echo "✓ All Skill 38 GHL server-mapping messageTemplates READ-before and APPEND-after the conversation log"
+
+      - name: Skill 38 per-playbook human-facing DOC gate (fixtures)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Machine-enforce the per-playbook human-facing DOC deliverable: when a
+          # conversation playbook is created, a human-facing copy MUST be created in
+          # the CLIENT's account (Notion -> Google Docs -> plain text) and its
+          # URL/path RECORDED (registry row or run-manifest playbookDocs[]). On a
+          # recent client this step was SKIPPED -- the agent scaffolded the playbook
+          # locally and reported "clean" but never created the client's Notion doc.
+          # The live gate (qc-playbook-doc.sh) runs against a client's installed
+          # conversation-workflows/ folder, so CI proves it via the fixture suite
+          # (mirroring qc-trinity-registry-test.sh): a playbook with no recorded doc
+          # FAILS; an empty folder is NO_PLAYBOOKS (exit 2), never a blind pass.
+          bash 38-conversational-ai-system/scripts/qc-playbook-doc-test.sh
+          echo "✓ qc-playbook-doc enforces the per-playbook human-facing doc deliverable"

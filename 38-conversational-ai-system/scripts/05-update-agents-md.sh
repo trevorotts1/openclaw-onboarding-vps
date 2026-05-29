@@ -337,8 +337,14 @@ On YES, produce ALL THREE parts (never stop after one):
            nails the funnel SHAPE, operator pastes token/URL/Raw-Body values.
   Part 2 — the Layer 2 conversation playbook (conversation-workflows/<id>.md),
            registered in conversation-workflows/registry.md.
-  Part 3 — a NEW Notion doc for the playbook + the AGENTS.md/TOOLS.md/MEMORY.md
-           pointer.
+  Part 3 — the human-facing doc for the playbook in the CLIENT's account
+           (BINDING, machine-enforced) + the AGENTS.md/TOOLS.md/MEMORY.md
+           pointer. Create the doc in the fallback order Notion -> Google Docs
+           -> plain text and RECORD its URL/path on the registry row + the
+           run-manifest playbookDocs[]. A playbook scaffolded locally with NO
+           recorded human-facing doc is INCOMPLETE — qc-playbook-doc.sh
+           fail-closes the hand-off. Do not declare the workflow live until a
+           doc destination is recorded.
 The hook path (https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>) wires the GHL
 automation to the conversation playbook. Confirm the 3-layer architecture
 (Layer 0 routing check / Layer 1 GHL side / Layer 2 OpenClaw playbook) is set
