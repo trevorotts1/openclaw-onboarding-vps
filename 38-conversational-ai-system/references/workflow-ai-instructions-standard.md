@@ -146,8 +146,23 @@ Build-with-AI populates poorly, so run this every time — even when the prompt 
 per-workflow rendered version lives at `<slug>--verification-checklist.md`; the canonical pattern is in
 `templates/workflow-verification-checklist-template.md` and `references/GHL-INBOUND-AND-PLAYBOOKS.md` §4.)
 
+> **For EACH item below: WHERE to go, WHAT you should SEE, WHAT to put if it's missing/wrong.** Walk all
+> three for every item before publishing.
+
 - [ ] **Trigger type + filter** are correct (e.g. "Customer Replied", filtered to the intended channel
       — not all channels).
+      - **WHERE:** open the workflow → click the **trigger** node.
+      - **WHAT YOU SHOULD SEE:** the correct trigger type + (if there is a tag filter) a REAL tag name.
+      - **WHAT TO PUT IF WRONG:** fix the trigger type / channel filter.
+- [ ] **TAG FILTER references a REAL, existing tag** (the Teresa gotcha — known live bug). If the trigger
+      (or an If-Else) has a tag filter — `tag is` / `tag contains` / **`tag does not contain`** — confirm
+      the referenced tag ACTUALLY EXISTS and is the intended one.
+      - **WHERE:** the trigger/If-Else filter, cross-checked against **Settings → Tags**.
+      - **WHAT YOU SHOULD SEE:** a real tag name (matching Settings → Tags) in the filter — NOT a blank.
+      - **KNOWN BUG:** Build-with-AI created a `does not contain <tag>` filter where the referenced tag was
+        **blank / never created**, so the trigger silently never matched and every inbound went nowhere.
+      - **WHAT TO PUT IF BLANK/WRONG:** select (or create first, §5) the correct existing tag, or remove
+        the bad filter.
 - [ ] **Exactly the intended action(s)** exist — no extra actions, none missing (for multi-action
       workflows, every branch + Add-Tag + tag-check is present, §5).
 - [ ] **Custom Webhook METHOD = POST.**
@@ -174,7 +189,12 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
       they're absent). Note: these steps live ONLY on the SERVER mapping (object B) — the GHL RAW BODY
       (object A) `messageTemplate` stays placeholder-free and is NOT where they go.
 - [ ] **Any required tags created/applied** (created beforehand via the GHL skill).
+      - **WHERE:** **Settings → Tags** (this is where tags live and where to confirm they exist).
+      - **WHAT YOU SHOULD SEE:** every tag the workflow references, spelled exactly.
+      - **WHAT TO PUT IF MISSING:** create the tag FIRST (§5), THEN reference it in the workflow.
 - [ ] **Workflow Published** (not Draft).
+      - **WHERE:** top-right of the workflow. **WHAT YOU SHOULD SEE:** "Published". **IF DRAFT:** toggle
+        it to Published.
 
 > **Machine-enforced.** Every GHL RAW BODY example in this skill (references/ + templates/ + scripts/) is
 > scanned by `scripts/qc-23-key-bodies.sh`, which asserts exactly 23 flat keys, a placeholder-free
@@ -203,10 +223,18 @@ single Custom Webhook. Teach the operator (and write the prompt) for:
 - **multiple sequential actions** — e.g. Custom Webhook → wait → Add-Tag → if/else. Each action gets
   its full field spec, same rigor as §3 for any webhook in the chain.
 
-**CREATE-TAG-FIRST rule (binding).** If the workflow needs a tag, the agent CREATES the tag FIRST via
-the GHL skill (per conversation-workflows-protocol.md §D.1) BEFORE building the workflow, then
-references the now-existing tag in the Build-with-AI prompt. Do not tell the operator to create tags
-by hand, and do not reference a tag that does not exist yet.
+**CREATE-TAG-FIRST rule (binding).** If the workflow uses ANY tag — a trigger/If-Else filter (`tag is` /
+`tag contains` / `tag does not contain`) OR an Add-Tag action — the agent CREATES the tag FIRST via the
+GHL skill (per conversation-workflows-protocol.md §D.1) BEFORE building the workflow, then references the
+now-existing tag in the Build-with-AI prompt. **Why it matters:** Build-with-AI will happily build a
+filter that references a tag that does not exist (it leaves it blank), and a blank/non-existent tag in a
+`does not contain` filter silently never matches — so the workflow never fires (the Teresa gotcha). Do not
+tell the operator to create tags by hand, and do not reference a tag that does not exist yet.
+
+**WHERE tags live (tell the client).** Tags are managed in GHL under **Settings → Tags**. That is where
+to confirm a tag exists before building the workflow, and what the client should see there: every tag the
+workflow references, spelled exactly. The post-build verification (§4) re-checks that any tag in a filter
+matches a real tag under Settings → Tags.
 
 ### Multi-action prompt skeleton
 

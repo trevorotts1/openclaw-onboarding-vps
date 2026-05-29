@@ -17,9 +17,18 @@
 > checklist below confirms each of those fields was filled correctly.
 
 GHL's Build-with-AI populates the webhook poorly, so run this every time, even when the prompt
-"succeeded". Open the workflow and confirm EACH item before publishing:
+"succeeded". Open the workflow and confirm EACH item before publishing. **For each item: WHERE to go,
+WHAT you should SEE, WHAT to put if it's missing/wrong.**
 
 - [ ] **Trigger type + filter** correct (e.g. "Customer Replied", filtered to `<CHANNEL>` — not all channels).
+      (WHERE: open the workflow → click the trigger node. WHAT YOU SHOULD SEE: the correct trigger type +
+      channel. IF WRONG: fix the trigger type / channel filter.)
+- [ ] **TAG FILTER references a REAL, existing tag** (the Teresa gotcha). If the trigger or an If-Else has
+      a tag filter — `tag is` / `tag contains` / **`tag does not contain`** — confirm the referenced tag
+      ACTUALLY EXISTS and is the intended one. (WHERE: the filter, cross-checked against **Settings →
+      Tags**. WHAT YOU SHOULD SEE: a real tag name — NOT a blank. KNOWN BUG: Build-with-AI built a
+      `does not contain <tag>` filter where the tag was blank/never created, so it silently never matched.
+      IF BLANK/WRONG: select or create the correct existing tag, or remove the bad filter.)
 - [ ] **Exactly the intended action(s)** exist — none missing, none extra (for multi-action: every
       if/else branch + Add-Tag + tag-check present).
 - [ ] **Custom Webhook METHOD = POST.**
@@ -39,7 +48,10 @@ GHL's Build-with-AI populates the webhook poorly, so run this every time, even w
       the customer gets nothing. Verify in `~/.openclaw/openclaw.json`. Machine-check:
       `scripts/qc-send-directive.sh` must PASS.
 - [ ] **Any required tags created/applied** (created beforehand via the GHL skill).
+      (WHERE: **Settings → Tags**. WHAT YOU SHOULD SEE: every tag the workflow references, spelled exactly.
+      IF MISSING: create the tag FIRST, THEN reference it in the workflow.)
 - [ ] **Workflow Published** (not Draft).
+      (WHERE: top-right of the workflow. WHAT YOU SHOULD SEE: "Published". IF DRAFT: toggle to Published.)
 - [ ] **THE TRINITY complete** — this workflow has its communications playbook (`<slug>.md`) AND its
       Build-with-AI prompt (`<slug>--build-with-ai-prompt.md`) AND a row in `registry.md`. Machine-check:
       `scripts/qc-trinity-registry.sh` must PASS.

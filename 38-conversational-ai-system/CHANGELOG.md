@@ -1,5 +1,64 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.14] - 2026-05-29 - Bulletproof Quick-Start + workflow-AI (where-to-paste, tag-first, post-build verify)
+
+### Root cause this prevents
+Verified from live client pain on Teresa + Maria.
+- **(A) Clients copy each field individually (they are 50+).** A combined `Authorization: Bearer <token>`
+  line in one code block forces the client to hand-edit after pasting; the header KEY and the header VALUE
+  need their OWN copy boxes. Same for `Content-Type` / `application/json`.
+- **(B) Quick Start without explanation strands the client; explanation without Quick Start buries the
+  copy-paste.** The sheet must lead with an actionable **🚀 Quick Start** AND still carry a full
+  **Reference & explanation** section after it — both, in that order.
+- **(C) The Teresa gotcha — blank tag in a filter.** Build-with-AI created a trigger filter like
+  `does not contain <tag>` where the referenced tag was **blank / never created**, so the trigger silently
+  never matched and every inbound message went nowhere. Tags must be created FIRST (and the client must
+  know WHERE to check: **Settings → Tags**), and the post-build verification must re-check that any tag in
+  a filter is a real, existing one.
+
+### Changed
+- **`scripts/21-generate-client-reference-sheet.sh`** — the generated reference sheet now leads with a
+  literal **🚀 Quick Start** section and keeps a full **Reference & explanation** section AFTER it. Quick
+  Start order: (1) Webhook URL, (2) **Authorization header — TWO separate copy boxes**: the key
+  `Authorization` and the value `Bearer <token>` (never combined), (3) **Content-Type header — TWO separate
+  copy boxes**: `Content-Type` and `application/json`, (4) Raw Body JSON (fenced `json`, FLAT 23-key),
+  (5) **Tags — create FIRST** (where to check: **Settings → Tags**; what you should see), (6) manual
+  Custom-Webhook fill steps (now field-by-field: Method dropdown / URL box / Headers Add-item Key+Value /
+  Content-Type dropdown / RAW BODY box), (7) Workflow-AI prompt pointer, (8) **post-build verification** —
+  TRIGGER / CUSTOM WEBHOOK / PUBLISH, each with WHERE-to-go + WHAT-you-should-SEE + WHAT-to-put-if-missing,
+  including the blank/non-existent-tag-in-a-`does not contain`-filter known bug.
+- **`scripts/qc-reference-sheet.sh`** — extended the machine gate. It now FAILS the build if the generated
+  sheet is missing: the literal **🚀 Quick Start** section; a **Reference & explanation** section AFTER it
+  (order-enforced); a code block containing ONLY `Authorization` AND a code block containing ONLY the
+  `Bearer <token>` value (and FAILS if they are combined as `Authorization: Bearer …`); a code block
+  containing ONLY `Content-Type` AND one containing ONLY `application/json`; the manual-fill instructions;
+  the **create-tag-FIRST + Settings → Tags** instruction; and the **post-build verification** section
+  covering TRIGGER + PUBLISH + the blank-tag-in-a-filter bug. (Still BASH; no `openclaw` on PATH in the
+  sandbox → offline Layer-3 markdown.)
+- **`references/workflow-ai-instructions-standard.md`** — §4 verification now gives WHERE/WHAT/WHAT-to-put
+  per item and adds a dedicated **TAG FILTER references a REAL, existing tag** item (the Teresa gotcha);
+  §5 create-tag-first rule now covers filter tags (not just Add-Tag), states **WHERE tags live (Settings →
+  Tags)**, and explains why a blank tag in a `does not contain` filter silently never matches.
+- **`templates/sms-workflow-ai-prompt-template.md`** — create-tag-first note now covers filter tags + says
+  **Settings → Tags** is where to confirm a tag exists; the "Common Build with AI mistakes" list adds the
+  blank/non-existent tag-in-a-filter failure mode.
+- **`templates/workflow-verification-checklist-template.md`** — the concise checklist now annotates each
+  item with WHERE/WHAT-you-should-SEE/WHAT-to-put, and adds a dedicated **TAG FILTER references a REAL,
+  existing tag** item (the Teresa gotcha).
+- **`SKILL.md`** — SELF-COUNTS stamp → v1.4.14 (counts unchanged: protocols/=32, scripts/=34,
+  references/=15, journeys=8); the `qc-reference-sheet.sh` description updated to list the new enforcement.
+
+### Enforcement
+- The extended `qc-reference-sheet.sh` already runs in `scripts/11-run-qc-checklist.sh` and in
+  `.github/workflows/qc-static.yml` ("Skill 38 client reference sheet copy-paste artifacts"), so the new
+  Quick-Start / separate-blocks / tag-first / post-build-verification markers are checked on every push
+  and PR. Negative-tested: a sheet with a combined `Authorization: Bearer` block, no tag-first, or no
+  verification section FAILS (exit 1).
+
+### Version
+- Skill 38 `skill-version.txt`: 1.4.13 → 1.4.14. No repo-tracked version file changed, so the repo version
+  (v10.16.9) and the 8 bump-version.sh locations are unchanged.
+
 ## [1.4.13] - 2026-05-29 - v1.4.11 install-script bug fixes (config-validate / jq 1.7 / pointer-source / legacy-path) + MANDATORY manual Custom-Webhook fill instructions
 
 ### Root cause this prevents

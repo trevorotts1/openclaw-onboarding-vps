@@ -23,12 +23,26 @@
 #     artifacts, so a template/script regression that drops them fails the build.
 #
 # REQUIRED MARKERS (all must be present in the checked sheet):
+#   - a literal "🚀 Quick Start" section (the sheet LEADS with the copy-paste items)
+#   - a "Reference & explanation" section AFTER the Quick Start (Quick Start is NOT
+#     an excuse to drop the explanation — both are required, in that order)
 #   - the word "Bearer"
+#   - SEPARATE Authorization header code blocks: one fenced block containing exactly
+#     "Authorization" (the key) AND one fenced block whose content starts "Bearer "
+#     (the value). They must NEVER be combined into a single "Authorization: Bearer"
+#     block — 50+ clients copy each field individually, so each needs its own copy box.
+#   - SEPARATE Content-Type header code blocks: one fenced block containing exactly
+#     "Content-Type" AND one fenced block containing exactly "application/json".
 #   - at least one ```json fenced code block (opening fence, line-anchored)
 #   - a hook URL of the form https://.../hooks/<id>
 #   - the manual Custom-Webhook fill instructions: "Custom Webhook" + (manually|paste)
 #     + "Build with AI will not" (Build-with-AI only builds the SHAPE; the client
 #     MUST manually fill the URL/headers/body — a sheet without this strands them)
+#   - the create-tag-FIRST instruction pointing at "Settings -> Tags" (a tag used in
+#     a filter/Add-Tag action must EXIST before the workflow is built)
+#   - the POST-BUILD VERIFICATION section ("After Build with AI runs"/"VERIFY") that
+#     covers the TRIGGER, the CUSTOM WEBHOOK, and PUBLISH (the Teresa gotcha: a blank/
+#     non-existent tag in a "does not contain" filter)
 #
 # Exit codes: 0 = sheet carries all required markers;
 #             1 = one or more markers missing;
@@ -149,7 +163,51 @@ fi
 # ---------------------------------------------------------------------------
 MISSING=()
 
+# --- Quick Start FIRST, then a full explanation AFTER it (both required) ---
+# The sheet must LEAD with a literal "🚀 Quick Start" section and STILL carry a
+# "Reference & explanation" section after it (Quick Start does not replace the
+# explanation). Enforce both presence AND order.
+grep -q '🚀 Quick Start' "$SHEET" || \
+  MISSING+=('a literal "🚀 Quick Start" section leading the sheet')
+grep -Eiq '^#{1,3}[[:space:]]+Reference (&|and) explanation' "$SHEET" || \
+  MISSING+=('a "Reference & explanation" section (the full explanation, kept AFTER Quick Start)')
+# Order: the Quick Start heading must appear BEFORE the Reference & explanation heading.
+QS_LINE="$(grep -n '🚀 Quick Start' "$SHEET" | head -n1 | cut -d: -f1)"
+REF_LINE="$(grep -Ein '^#{1,3}[[:space:]]+Reference (&|and) explanation' "$SHEET" | head -n1 | cut -d: -f1)"
+if [ -n "$QS_LINE" ] && [ -n "$REF_LINE" ] && [ "$QS_LINE" -ge "$REF_LINE" ]; then
+  MISSING+=('the "🚀 Quick Start" section must come BEFORE "Reference & explanation"')
+fi
+
 grep -q "Bearer" "$SHEET" || MISSING+=('the word "Bearer" (Authorization: Bearer <token>)')
+
+# --- SEPARATE header code blocks (one copy box per copyable value) ---
+# Extract the trimmed content of every fenced code block and check that the
+# header KEY and VALUE each live in their OWN block, never combined. A single
+# block containing "Authorization: Bearer ..." fails this — clients copy each
+# field individually, so each needs its own copy button.
+#   awk emits one line per code block: the block body with internal newlines
+#   replaced by a single space, then leading/trailing space trimmed.
+CODEBLOCKS="$(awk '
+  /^[[:space:]]*```/ { infence = !infence; if (infence) { buf=""; first=1 } else { print buf } ; next }
+  infence { if (first) { buf=$0; first=0 } else { buf = buf " " $0 } }
+' "$SHEET")"
+
+# A block that is EXACTLY the header key "Authorization" (own copy box).
+printf '%s\n' "$CODEBLOCKS" | grep -Eq '^[[:space:]]*Authorization[[:space:]]*$' || \
+  MISSING+=('a code block containing ONLY "Authorization" (the header key in its own copy box)')
+# A block whose value STARTS with "Bearer " (the header value, own copy box) and
+# is NOT combined with the "Authorization:" key.
+printf '%s\n' "$CODEBLOCKS" | grep -Eq '^[[:space:]]*Bearer[[:space:]]+[^[:space:]]' || \
+  MISSING+=('a code block containing ONLY the "Bearer <token>" header value (own copy box)')
+# The key and value must NEVER be combined in one block.
+if printf '%s\n' "$CODEBLOCKS" | grep -Eq '^[[:space:]]*Authorization:[[:space:]]*Bearer'; then
+  MISSING+=('the Authorization key and "Bearer <token>" value must be in SEPARATE code blocks, never combined as "Authorization: Bearer ..."')
+fi
+# Content-Type key + value, each its own copy box.
+printf '%s\n' "$CODEBLOCKS" | grep -Eq '^[[:space:]]*Content-Type[[:space:]]*$' || \
+  MISSING+=('a code block containing ONLY "Content-Type" (the header key in its own copy box)')
+printf '%s\n' "$CODEBLOCKS" | grep -Eq '^[[:space:]]*application/json[[:space:]]*$' || \
+  MISSING+=('a code block containing ONLY "application/json" (the Content-Type value in its own copy box)')
 
 # A real opening ```json fence on its own line (optional leading whitespace).
 grep -Eq '^[[:space:]]*```json[[:space:]]*$' "$SHEET" || \
@@ -172,6 +230,27 @@ grep -Eiq 'manually|paste' "$SHEET" || \
 grep -Eiq 'Build with AI will not' "$SHEET" || \
   MISSING+=('the manual-fill instructions must state "Build with AI will not" fill these for you')
 
+# --- CREATE-TAG-FIRST + where to check (Settings -> Tags) ---
+# A tag used in a filter/Add-Tag action must EXIST before the workflow is built.
+# Require both the "create first" instruction AND the "Settings -> Tags" location.
+grep -Eiq 'create (it|the tag|them) first|tag(s)? .*(first|before you build)|create-tag-first' "$SHEET" || \
+  MISSING+=('the create-tag-FIRST instruction (a tag must exist before the workflow is built)')
+grep -Eiq 'Settings[[:space:]]*-+>[[:space:]]*Tags|Settings[[:space:]]*→[[:space:]]*Tags' "$SHEET" || \
+  MISSING+=('where to check tags: "Settings -> Tags"')
+
+# --- POST-BUILD VERIFICATION (the Teresa gotcha) ---
+# After Build-with-AI runs the client MUST verify TRIGGER + CUSTOM WEBHOOK +
+# PUBLISH. Require the verification section header and all three covered items,
+# plus the blank/non-existent-tag-in-a-filter known bug.
+grep -Eiq 'After Build with AI runs|VERIFY before you publish|post-build verif' "$SHEET" || \
+  MISSING+=('a post-build verification section ("After Build with AI runs — VERIFY before you publish")')
+grep -Eiq 'TRIGGER' "$SHEET" || \
+  MISSING+=('the post-build verification must cover the TRIGGER')
+grep -Eiq 'PUBLISH' "$SHEET" || \
+  MISSING+=('the post-build verification must cover PUBLISH (Published, not Draft)')
+grep -Eiq 'does not contain|blank|never created|non-existent tag' "$SHEET" || \
+  MISSING+=('the post-build verification must call out the blank/non-existent tag-in-a-filter bug')
+
 if [ "$JSON_MODE" = "1" ]; then
   miss_json="["
   first=1
@@ -192,11 +271,17 @@ else
   echo "sheet : $SHEET"
   echo ""
   if [ "${#MISSING[@]}" -eq 0 ]; then
+    echo "  [PASS] 🚀 Quick Start section leads the sheet, Reference & explanation follows"
     echo "  [PASS] Bearer token present"
+    echo "  [PASS] separate Authorization key + Bearer value code blocks (own copy boxes)"
+    echo "  [PASS] separate Content-Type key + application/json value code blocks"
     echo "  [PASS] copyable \`\`\`json Raw Body present"
     echo "  [PASS] hook URL present"
+    echo "  [PASS] manual Custom-Webhook fill instructions present"
+    echo "  [PASS] create-tag-FIRST + Settings -> Tags present"
+    echo "  [PASS] post-build verification (Trigger/Custom Webhook/Publish + blank-tag bug) present"
     echo ""
-    echo "RESULT: PASS — the reference sheet carries the bearer token, a copyable JSON Raw Body, and the hook URL."
+    echo "RESULT: PASS — the reference sheet leads with 🚀 Quick Start (separate copy boxes per field), carries the bearer token + copyable JSON Raw Body + hook URL + manual-fill steps + create-tag-first + post-build verification, and keeps the full explanation after."
   else
     grep -q "Bearer" "$SHEET" && echo "  [PASS] Bearer token present" || echo "  [FAIL] bearer token MISSING"
     grep -Eq '^[[:space:]]*```json[[:space:]]*$' "$SHEET" && echo "  [PASS] copyable \`\`\`json Raw Body present" || echo "  [FAIL] copyable \`\`\`json Raw Body MISSING"
