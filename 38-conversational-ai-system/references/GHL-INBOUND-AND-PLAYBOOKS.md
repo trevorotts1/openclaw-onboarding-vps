@@ -539,10 +539,12 @@ bound channel (e.g. an internal admin echo) — never for GHL API-reply hooks.
 
 ### CARDINAL RULE — TWO separate objects in TWO systems; never put one inside the other
 
-- **(A) GHL Custom Webhook RAW BODY** = DATA ONLY, **FLAT**, no nesting, and it must **NOT** contain a
-  `messageTemplate`.
-- **(B) OpenClaw `hooks.mappings` entry** (in `openclaw.json`) = config + the `messageTemplate`. The
-  `messageTemplate` is **SERVER-SIDE ONLY**.
+- **(A) GHL Custom Webhook RAW BODY** = **FLAT**, no nesting, all 23 keys. Its `messageTemplate` key is
+  kept **placeholder-free** (no `{{…}}`) so GHL never mangles the JSON — the body carries a literal,
+  placeholder-free `messageTemplate` string, NEVER a templated one.
+- **(B) OpenClaw `hooks.mappings` entry** (in `openclaw.json`) = config + the **templated** `messageTemplate`.
+  The templated `messageTemplate` (the one with `{{…}}` placeholders) is **SERVER-SIDE ONLY** and must
+  **never** appear in the GHL body.
 
 ### 14.1 — GHL RAW BODY MUST BE FLAT and contain ALL 23 KEYS (23 = MINIMUM)
 

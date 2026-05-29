@@ -5,7 +5,7 @@
 <!-- Patch source: skill-38-patch-1 agent — 2026-05-28 -->
 <!-- v1.4.x sync: "Workflow AI prompt" renamed to "Build-with-AI prompt" to match GHL's actual feature
      label (Automations → Build with AI); the 3-PART build framing + brainstorm-trigger rule added to
-     match v5.14-source-playbook.md Step 9.20. GHL Automations have NO API and NO MCP — the Build with
+     match v6.0-source-playbook.md Step 9.20. GHL Automations have NO API and NO MCP — the Build with
      AI button is the only programmatic path. -->
 
 ## DISTINCTION MAP — four terms operators confuse (read this first)
