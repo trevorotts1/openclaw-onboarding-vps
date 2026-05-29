@@ -1,3 +1,32 @@
+## [v10.16.7]  -  2026-05-28  -  Skill 38 → v1.4.0: GHL inbound hardening (Build-with-AI prompt, 4-token model, verified APIs, calendar-sync)
+
+### Why
+
+Debugging a live client (Corey, Hostinger Docker VPS) surfaced a cluster of repeatable failures that every future VPS client would otherwise hit. The four secrets in this system kept getting confused (Cloudflare API token vs tunnel connector token vs HOOKS_TOKEN vs GHL PIT). `deliver: true` on GHL API-reply hooks silently broke replies (the gateway tries to publish to Telegram, which has no chatId for a hook session). The `cron.jobs` JSON format stopped validating on openclaw 2026.5.27 (`cron: Invalid input`). The Hostinger wrapper `/hostinger/server.mjs` resets `hooks.token` on every boot. And there was no authoritative reference for the one-tunnel-many-hooks model, the GHL Build-with-AI prompt (GHL's only programmatic automation-build path), the verified channel→type send enum, or the verified Calendar API.
+
+### How
+
+New authoritative reference doc + surgical edits to the v5.14 source playbook + a calendar-sync script. Everything baked into Skill 38 so no future VPS client repeats these. Verified facts are from the live build and from probing the live GHL API.
+
+### Added
+
+- `38-conversational-ai-system/references/GHL-INBOUND-AND-PLAYBOOKS.md` (NEW) — authoritative reference: 4-token table (with VPS specifics: set HOOKS_TOKEN as `OPENCLAW_HOOKS_TOKEN` in host-level `/docker/<project>/.env`, then force-recreate); one-tunnel-many-hooks model (created once, reused; new automations = new hook paths; never recreate the tunnel); copy-paste **GHL Build-with-AI prompt** template + post-build **verification checklist** (incl. the "GHL Test button sends empty merge fields → verify with a real inbound" gotcha); **Reusable Tunnel Values** storage rule (AGENTS.md + TOOLS.md + client Notion, every time); **one-value-per-key** JSON rule; **verified channel→type enum** (SMS/Email/FB/IG/WhatsApp/Live_Chat valid; TikTok/Call/GMB + long-forms invalid); GHL Conversations reply recipe + verified Calendar recipe (free-slots is epoch-millis; book requires calendarId/locationId/contactId/startTime, endTime optional; returns appointment id = eventId); ready **appointment-booking first playbook** (Layer 2 template).
+- `38-conversational-ai-system/scripts/skill38-calendar-sync.sh` (NEW) — weekly GHL calendar refresh; maintains a `<!-- GHL_CALENDARS_START/END -->` marker block in TOOLS.md (adds new, removes deleted). Registered via `openclaw cron add` (Sunday 9am).
+
+### Updated
+
+- `38-conversational-ai-system/references/v5.14-source-playbook.md` — surgical edits: Step 3C/3.5G `deliver: true` → `false` (+ corrected rationale); Step 3A 4-token disambiguation + VPS `OPENCLAW_HOOKS_TOKEN` rule; ALL cron registrations converted from `cron.jobs` JSON / old positional form to the supported flag-based `openclaw cron add` CLI; Step 6 makes the Build-with-AI prompt the PRIMARY method (20-step hand-build demoted to FALLBACK), adds the Reusable Tunnel Values section + Notion-doc quality spec + first-playbook day-one wiring; Step 9.19 adds the verified Calendar recipe + calendar-sync install/cron; Step 9.20 D.2 renames "Workflow AI prompt" → "Build-with-AI prompt" (same generator, two call sites); Rules of Engagement Rule 7 (one value per key); standardized outbound cred var to `GHL_PRIVATE_INTEGRATION_TOKEN` + Version `2021-04-15`; added WhatsApp to the verified send-type table.
+- `38-conversational-ai-system/skill-version.txt` 1.3.0 → 1.4.0; `38-conversational-ai-system/CHANGELOG.md` v1.4.0 entry added.
+- Version bump to v10.16.7 across all 8 version-tracked files via `scripts/bump-version.sh`.
+
+### Migration for existing clients
+
+Re-pull Skill 38 via the standard update path. Existing GHL-inbound installs: (1) flip any GHL API-reply hook's `deliver` to `false`; (2) on VPS, set `OPENCLAW_HOOKS_TOKEN` in `/docker/<project>/.env` and `docker compose up -d --force-recreate`; (3) re-register any `cron.jobs`-JSON crons via `openclaw cron add`; (4) install `skill38-calendar-sync.sh` + its Sunday cron.
+
+### Risk + rollback
+
+Doc + script + version changes only — no schema mutations, no install.sh behavior change beyond the version string. Rollback via `git revert <merge>`.
+
 ## [v10.16.6]  -  2026-05-28  -  Skill 32: sync-md-content-to-db.py populates agents.*_md from disk; Phase 6d hook
 
 ### Why
