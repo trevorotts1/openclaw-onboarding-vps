@@ -13,7 +13,9 @@ GATEWAY_PORT="${GATEWAY_PORT:-18789}"
 
 : "${ROUTE_ID:?ROUTE_ID missing — set in env or in secrets.env}"
 : "${PUBLIC_HOSTNAME:?PUBLIC_HOSTNAME missing — run 13-create-cloudflare-tunnel.sh first}"
-SESSION_KEY="${SESSION_KEY:-hook:ghl:{{channel}}:{{contact.id}}}"
+# NOTE: the GHL Raw Body is FLAT and data-only (see references/GHL-INBOUND-AND-PLAYBOOKS.md §14).
+# The mapping below references the FLAT body key names ({{session_key}}, {{contact_id}}, {{message_body}}).
+SESSION_KEY="${SESSION_KEY:-{{session_key}}}"
 
 command -v jq >/dev/null 2>&1 || { echo "jq required" >&2; exit 3; }
 
@@ -74,8 +76,8 @@ else
     '{
       id:$id, match:{path:$path}, action:"agent", agentId:$agent,
       wakeMode:"now", name:"GHL Inbound", sessionKey:$sk,
-      messageTemplate:"INBOUND MESSAGE FROM GOHIGHLEVEL — {{channel}} channel From: {{contact.first_name}} {{contact.last_name}} Phone: {{contact.phone}} Email: {{contact.email}} Contact ID: {{contact.id}} Location ID: {{location.id}} Location name: {{location.name}} Customer message subject: {{customer_message.subject}} Customer message body: {{customer_message.body}} INSTRUCTION: Reply on the {{channel}} channel using your installed GHL skill (typically skill #50s). Use the Contact ID and Location ID above when calling the GHL Conversations API. Before drafting your reply, check the contact'\''s conversation log at <MASTER_FILES_DIR>/conversational-logs/{{contact.id}}__<name>.md for prior context (see AGENTS.md for full conversation-log protocol).",
-      deliver:true, timeoutSeconds:180
+      messageTemplate:"INBOUND MESSAGE FROM GOHIGHLEVEL — {{channel}} channel From: {{first_name}} {{last_name}} Phone: {{phone}} Email: {{email}} Contact ID: {{contact_id}} Location ID: {{location_id}} Location name: {{location_name}} Customer message subject: {{subject}} Customer message body: {{message_body}} INSTRUCTION: Reply on the {{channel}} channel to contact {{contact_id}} via the GHL Conversations API using your installed GHL skill (typically skill #50s) — you MUST actually send the reply through the GHL API, not just draft it. Use the Contact ID and Location ID above when calling the GHL Conversations API. Before drafting your reply, check the contact'\''s conversation log at <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md for prior context (see AGENTS.md for full conversation-log protocol).",
+      deliver:false, timeoutSeconds:300
     }')"
   UPDATED="$(jq \
     --arg tok "$HOOKS_TOKEN" \
@@ -232,7 +234,8 @@ fi
 # STEP 4 — End-to-end test through the public tunnel
 # =============================================================================
 echo "==> Step 4: end-to-end test" >&2
-PAYLOAD='{"channel":"sms","contact":{"id":"e2e-test-001","first_name":"E2E","last_name":"Test","email":"e2e@example.com","phone":"+15555550100"},"location":{"id":"e2e-loc-001","name":"E2E Test Location"},"customer_message":{"body":"End-to-end setup verification.","subject":""}}'
+# FLAT body (data-only, no nesting, no messageTemplate) — see references/GHL-INBOUND-AND-PLAYBOOKS.md §14.
+PAYLOAD="{\"channel\":\"sms\",\"contact_id\":\"e2e-test-001\",\"first_name\":\"E2E\",\"last_name\":\"Test\",\"email\":\"e2e@example.com\",\"phone\":\"+15555550100\",\"subject\":\"\",\"message_body\":\"End-to-end setup verification.\",\"match\":\"${ROUTE_ID}\",\"session_key\":\"hook:ghl:sms:e2e-test-001\",\"agent_id\":\"${ROUTING_AGENT_ID:-main}\",\"location_id\":\"e2e-loc-001\",\"location_name\":\"E2E Test Location\"}"
 
 HTTP_CODE="$(curl -sS -o /tmp/.hooks-e2e-body.$$ -w '%{http_code}' \
   --max-time 30 \

@@ -232,32 +232,29 @@ ACTIONS (in this exact order):
   - Headers:
     - Authorization: Bearer <HOOKS_TOKEN>
     - Content-Type: application/json
-  - Body (Raw JSON):
+  - Body (Raw JSON) — MUST be FLAT (no nested objects) and data-only (NO messageTemplate). Insert
+    VALUES via GHL's Custom Values picker; the KEY names are what OpenClaw reads/maps. See
+    references/GHL-INBOUND-AND-PLAYBOOKS.md §14:
     {
       "channel": "<channel name>",
-      "contact": {
-        "id": "{{contact.id}}",
-        "first_name": "{{contact.first_name}}",
-        "last_name": "{{contact.last_name}}",
-        "email": "{{contact.email}}",
-        "phone": "{{contact.phone}}",
-        "tags": "{{contact.tags}}"
-      },
-      "location": {
-        "id": "{{location.id}}",
-        "name": "{{location.name}}"
-      },
-      "customer_message": {
-        "body": "{{message.body}}",
-        "subject": "{{message.subject}}"
-      },
-      "workflow_id": "<workflow-id>"
+      "contact_id": "{{contact.id}}",
+      "first_name": "{{contact.first_name}}",
+      "last_name": "{{contact.last_name}}",
+      "email": "{{contact.email}}",
+      "phone": "{{contact.phone}}",
+      "subject": "{{message.subject}}",
+      "message_body": "{{message.body}}",
+      "match": "<HOOK_NAME>",
+      "session_key": "hook:ghl:<channel name>:{{contact.id}}",
+      "agent_id": "<AGENT_ID>",
+      "location_id": "{{location.id}}",
+      "location_name": "{{location.name}}"
     }
 
 PUBLISH: Yes, publish the workflow when done — don't leave it as draft.
 ```
 
-Each field is filled in with the EXACT values from the operator's setup (`PUBLIC_HOSTNAME`, `HOOK_NAME`, `HOOKS_TOKEN`, channel name, tag names from D.1).
+Each field is filled in with the EXACT values from the operator's setup (`PUBLIC_HOSTNAME`, `HOOK_NAME`, `HOOKS_TOKEN`, channel name, `AGENT_ID`). The body stays FLAT and data-only — the `messageTemplate` lives ONLY on the OpenClaw server `hooks.mappings` entry and MUST include the reply-via-GHL-API instruction (see GHL-INBOUND-AND-PLAYBOOKS.md §14).
 
 The agent then tells the operator:
 
