@@ -119,20 +119,58 @@ I checked these locations and found no Cloudflare API key:
   - ~/.zshrc, ~/.bashrc, ~/.bash_profile
   - Current shell environment
 
-To proceed, follow the walk-through guide shipped INSIDE this skill:
+>>> HOSTINGER DOCKER VPS? STOP — you may NOT have actually looked yet. <<<
 
-  cat ~/.openclaw/skills/38-conversational-ai-system/references/cloudflare-godaddy-setup-guide.md
+On a Hostinger VPS, OpenClaw runs inside Docker and the env file is
+NOT any of the paths above. It is the host-level docker-compose env_file:
 
-(That guide is the verbatim School of AI step-by-step: 4 parts, ~30 minutes,
-walks you through the Cloudflare account, GoDaddy nameservers, and the
-9-permission API token creation. The Google Doc version
+    /docker/<project>/.env      (canonical — read AND add keys here)
+    /data/.openclaw/.env        (container mirror, bind-mounted)
+
+BEFORE reporting CLOUDFLARE_API_TOKEN missing, run the discovery sequence
+and follow the HARD RULE in:
+
+  cat ~/.openclaw/skills/38-conversational-ai-system/references/HOSTINGER-DOCKER-ENV.md
+
+  # quick version:
+  docker ps --format "{{.Names}}"            # e.g. openclaw-hy5t-openclaw-1
+  ls -d /docker/*/                           # confirm the project dir
+  cat /docker/<project>/.env                 # the canonical env file
+  docker exec <container> printenv | grep -E "API_KEY|TOKEN"
+
+If you can see OTHER keys (ANTHROPIC_API_KEY, OPENAI_API_KEY, ...) in
+/docker/<project>/.env, you are in the RIGHT place. A CLOUDFLARE_API_TOKEN
+that isn't there should be ADDED there (append + force-recreate per
+HOSTINGER-DOCKER-ENV.md §4), NOT reported as "I can't find it."
+
+-----------------------------------------------------
+
+DON'T HAVE A CLOUDFLARE API TOKEN YET (any platform)?
+The content the client needs is the walk-through guide shipped INSIDE this
+skill (references/cloudflare-godaddy-setup-guide.md) — the canonical path for
+getting their domain into Cloudflare AND creating the 9-permission CF API
+token (4 parts, ~30 minutes: Cloudflare account, GoDaddy nameservers, token).
+
+AGENT — DO NOT just emit a `cat` command for the operator to read on the box.
+Proactively OFFER the client one of two paths:
+  (a) Create a Notion doc IN THE CLIENT'S OWN Notion workspace (never another
+      client's workspace, never a generic operator workspace) containing the
+      content of references/cloudflare-godaddy-setup-guide.md, and send the
+      client the link so they can follow it themselves; OR
+  (b) Walk the client through it manually, step by step.
+Use the guide file as the source content for whichever path the client picks.
+The Google Doc version
 https://docs.google.com/document/d/1A_U-H-MMLh2mQ_zhzLxK_tKmFyPNb7i0FNvxjJ4SVpo/edit?usp=sharing
-is the canonical source if you prefer to view it in Google Docs.)
+is the canonical source.
 
 Once you have your Cloudflare API key:
 
   1. Save it to your OpenClaw environment file at:
      ~/.openclaw/.env (or whichever env file you already use)
+     HOSTINGER DOCKER VPS: save it to /docker/<project>/.env
+     (canonical) AND mirror to /data/.openclaw/.env, then
+     `docker compose -f /docker/<project>/docker-compose.yml up -d
+     --force-recreate` — see HOSTINGER-DOCKER-ENV.md §4.
 
      Add the line:
        CLOUDFLARE_API_TOKEN=<your-token-here>

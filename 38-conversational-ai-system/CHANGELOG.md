@@ -1,5 +1,102 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.1] - 2026-05-28 - Hostinger Docker env-discovery + conversation-playbook builder + CF/GoDaddy Notion-offer
+
+Patch release on top of the 1.4.0 GHL hardening: the Hostinger Docker env-discovery layer, the
+conversation-playbook builder hardening, and the CF/GoDaddy prereq-halt Notion-offer (when a client has
+no Cloudflare API token, the agent OFFERS a Notion doc in the client's OWN workspace from
+`references/cloudflare-godaddy-setup-guide.md` + link, or a manual step-by-step walkthrough — never a
+bare `cat` for the operator to read on the box). `skill-version.txt` is bumped to `1.4.1`.
+
+### Added
+- `references/HOSTINGER-DOCKER-ENV.md` (NEW) — bulletproof Hostinger Docker VPS env-discovery. Documents where the
+  environment lives (host `/docker/<project>/.env` = canonical `env_file`; container mirror `/data/.openclaw/.env`
+  via the `volumes: ./data:/data` bind mount; live `docker exec <container> printenv`), the EXACT copy-paste
+  discovery sequence (`docker ps` → derive `<project>` → `cat /docker/<project>/.env` → `docker exec … printenv |
+  grep API_KEY`), THE HARD RULE (never report a key "missing" before running that sequence — if other keys like
+  `ANTHROPIC_API_KEY` are visible you're in the right place; add the missing key there, don't claim you can't find
+  it), the canonical add-a-key procedure (append host + mirror container + `docker compose up -d --force-recreate`;
+  plain `restart` does NOT reload `env_file`), and the `/hostinger/server.mjs` `hooks.token` rewrite gotcha.
+
+### Changed
+- `references/v5.14-source-playbook.md` Step O.5 — added a Hostinger Docker pointer (env is `/docker/<project>/.env`;
+  run the discovery sequence + HARD RULE in HOSTINGER-DOCKER-ENV.md before reporting any key missing).
+- `scripts/00-verify-prerequisites.sh` "CLOUDFLARE API KEY NOT FOUND" halt — added a prominent Hostinger Docker
+  block (the env is `/docker/<project>/.env`, run discovery before reporting missing) and made the
+  `cloudflare-godaddy-setup-guide.md` pointer clearly the path for getting a domain into Cloudflare + creating the
+  CF API token; the "save your key" step now shows the Hostinger host-`.env` + force-recreate path.
+- Step 9.20 (Conversation Workflow Builder) — now explicitly a **3-PART build** every time: Part 1 (Build-with-AI
+  prompt + manual-build fallback + verification checklist — nails the funnel SHAPE, operator pastes token/URL/Raw
+  values), Part 2 (the Layer 2 conversation playbook in `conversation-workflows/`, registered in `registry.md`; the
+  hook path wires the two halves), Part 3 (the brainstorm trigger — FRIENDLY proactive Q&A, NOT 50 questions; uses
+  Typed Knowledge Bases + USER.md + MEMORY.md, asks only smart gaps, regurgitates a concise "is this what you want?"
+  summary; on YES builds Part 1 → Part 2 → pointer → NEW Notion doc → register). USP framing added
+  (communication-driven funnels / automations, beats CloseBot). Cross-references to Step 9.33 (Intelligent Playbook
+  Routing) and Step 9.34 (Proactive Features Suite) added at all three steps so builder → router → proactive engine
+  are explicitly one loop. Mirrored into `protocols/conversation-workflows-protocol.md` and `scripts/05-update-agents-md.sh`
+  (Step 1.85). Removed ambiguous "Workflow AI" usage — renamed to "Build-with-AI" throughout (artifact files
+  `<id>--build-with-ai-prompt.md`); fixed the operator-instruction block that still said "Use Workflow AI".
+- `scripts/06-append-memory-rules.sh` + `CORE_UPDATES.md` — added MEMORY.md design rules 15-18 (GHL/automation
+  terminology = GHL Automations workflow; GHL Automations have NO API/NO MCP, only the "Build with AI" button; the
+  3-part build checklist; communication-driven-funnels + brainstorm-not-50-questions). Written under a separate
+  `v1.4.0` marker so existing v5.14 installs get rules 15-18 on upgrade without re-appending 6-14 (idempotent +
+  upgrade-safe, verified).
+
+## [1.4.0] - 2026-05-28 - GHL inbound hardening: Build-with-AI prompt, 4-token model, verified APIs, calendar-sync
+
+### Why
+Debugging a live client (Corey, Hostinger Docker VPS) surfaced a cluster of repeatable failures that
+every future VPS client would otherwise hit: the four secrets in this system kept getting confused;
+`deliver: true` on GHL API-reply hooks silently broke replies; the `cron.jobs` JSON format stopped
+validating on current openclaw; the VPS wrapper resets `hooks.token` on every boot; and there was no
+authoritative reference for the one-tunnel-many-hooks model, the Build-with-AI prompt (GHL's only
+programmatic automation-build path), the verified channel→type enum, or the verified Calendar API.
+
+### Added
+- `references/GHL-INBOUND-AND-PLAYBOOKS.md` (NEW) — the authoritative reference. Contains: the 4-token
+  table (CF API token vs tunnel connector token vs HOOKS_TOKEN vs GHL PIT, with VPS specifics); the
+  one-tunnel-many-hooks model (created once, reused; new automations = new hook paths, never recreate
+  the tunnel); the copy-paste **Build-with-AI prompt** template (the only programmatic way to build a
+  GHL automation) with placeholders; the post-build **verification checklist** (incl. the "GHL Test
+  button sends empty merge fields → verify with a real inbound" gotcha); the **Reusable Tunnel Values**
+  storage rule (AGENTS.md + TOOLS.md + client Notion, every time); the **one-value-per-key** JSON rule;
+  the **verified channel→type enum** (SMS/Email/FB/IG/WhatsApp/Live_Chat valid; TikTok/Call/GMB and
+  long-forms invalid); the GHL Conversations reply recipe + the verified Calendar recipe (free-slots is
+  epoch-millis; book requires calendarId/locationId/contactId/startTime, endTime optional); and the
+  ready **first conversation playbook = appointment booking** Layer 2 template.
+- `scripts/skill38-calendar-sync.sh` (NEW) — weekly GHL calendar refresh. Maintains a
+  `<!-- GHL_CALENDARS_START/END -->` marker block in TOOLS.md (adds new calendars, removes deleted).
+  Generic across clients; reads PIT + GHL_LOCATION_ID from the client env file. Registered via
+  `openclaw cron add` (Sunday 9am).
+
+### Changed (surgical edits to `references/v5.14-source-playbook.md`)
+- **Step 3C / Step 3.5G:** `deliver: true` → `deliver: false` on the GHL inbound hooks mapping, with
+  the corrected rationale (deliver:false for any hook that replies via an external API; deliver:true
+  only to echo the agent's final text to its own bound channel).
+- **Step 3A:** added the 4-token disambiguation (pointer to the new ref doc) and the VPS rule — set
+  `OPENCLAW_HOOKS_TOKEN` in host-level `/docker/<project>/.env` (the `/hostinger/server.mjs` wrapper
+  rewrites `hooks.token` every boot), then `docker compose up -d --force-recreate`.
+- **All cron registrations** (conversation-log-summarizer, system-health-heartbeat, weekly-tune-up,
+  proactive-suggestions-scan, monthly-comprehensive-review, plus the new calendar-sync): replaced the
+  `cron.jobs` JSON and the old positional `cron add` form with the supported flag-based CLI
+  (`openclaw cron add --name … --cron … --agent … --message … --light-context --best-effort-deliver`),
+  noting the JSON format no longer validates.
+- **Step 6:** the Build-with-AI prompt is now the PRIMARY workflow-build method; the 20-step
+  hand-build is demoted to a clearly-labeled FALLBACK. The verification checklist is required even on
+  success. Added the Reusable Tunnel Values section + the Notion-doc quality spec (Reusable Tunnel
+  Values → Build-with-AI prompt per channel → verification checklist). The base SMS install also
+  creates the first appointment-booking playbook and wires the hook path to it (day-one round-trip).
+- **Step 9.19:** added the verified GHL Calendar API recipe + the calendar-sync install + Sunday cron.
+- **Step 9.20 D.2:** renamed "Workflow AI prompt" → "Build-with-AI prompt" and noted it is the SAME
+  generator used for the base onboarding automation in Step 6 (one generator, two call sites).
+- **Rules of Engagement:** added Rule 7 — one value per key (proper JSON structure).
+- Standardized the outbound cred var to `GHL_PRIVATE_INTEGRATION_TOKEN` and Version `2021-04-15`;
+  added WhatsApp to the verified send-type table and the invalid-types list.
+
+### Source of truth
+- `references/GHL-INBOUND-AND-PLAYBOOKS.md` — authoritative for GHL inbound + playbooks (this release).
+- `references/v5.14-source-playbook.md` — the canonical playbook (surgically updated, pointers added).
+
 ## [1.0.0] - 2026-05-28 - Initial release (packages v5.14 playbook)
 
 ### Why
