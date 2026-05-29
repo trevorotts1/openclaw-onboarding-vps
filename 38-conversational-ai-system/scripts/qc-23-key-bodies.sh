@@ -13,16 +13,20 @@
 #      throws "Error while parsing the object to JSON" and Skips the webhook.
 #   5. No literal "\n" sequence inside the JSON (single-line JSON values only).
 #
-# WHAT COUNTS AS AN OBJECT-A BODY: a fenced ```json / ```text block whose JSON
-# object contains the snake_case key "agent_id". The OpenClaw server
-# `hooks.mappings` entry (object B) uses camelCase "agentId" + a NESTED
-# "match": { "path": ... } + a TEMPLATED messageTemplate, and is intentionally
-# NOT a 23-key flat body — those are skipped by the agent_id discriminator.
+# WHAT COUNTS AS AN OBJECT-A BODY: a JSON object inside ANY fenced code block
+# (```json / ```text / ```bash / ``` / etc.) whose object contains the
+# snake_case key "agent_id". Fences are walked in document order (open→close
+# pairing) so a mixed-language doc — e.g. ```bash curl examples interleaved with
+# ```json bodies — does NOT desync the scan and silently skip real bodies. The
+# OpenClaw server `hooks.mappings` entry (object B) uses camelCase "agentId" + a
+# NESTED "match": { "path": ... } + a TEMPLATED messageTemplate, and is
+# intentionally NOT a 23-key flat body — those are skipped by the agent_id
+# discriminator (snake_case "agent_id" is the canonical-body fingerprint).
 #
-# DELIBERATE EXCLUSION: references/v6.0-source-playbook.md is the VERBATIM
-# historical source extract ("Do not summarize"); §14 of GHL-INBOUND explicitly
-# SUPERSEDES its older nested/stripped bodies. Linting it would flag history
-# that is preserved on purpose, so it is excluded by name (logged, not silent).
+# COVERAGE: references/v6.0-source-playbook.md (~9,400 lines, the largest set of
+# GHL RAW BODY examples) IS scanned. Its per-channel 23-key bodies are canonical
+# and must pass; §14 of GHL-INBOUND is the authority and the playbook agrees with
+# it. No file is excluded by name — a body that is wrong is fixed, not hidden.
 #
 # Exit codes: 0 = all bodies pass; 1 = one or more violations; 2 = no bodies
 # found (treated as failure — the scan target moved and the linter went blind).
@@ -62,8 +66,12 @@ JSON_MODE = os.environ.get("JSON_MODE", "0") == "1"
 # Directories to scan (relative to the skill root).
 SCAN_DIRS = ["references", "templates", "scripts"]
 
-# Files excluded by name — verbatim historical archives superseded by §14.
-EXCLUDE_NAMES = {"v6.0-source-playbook.md"}
+# No file is excluded by name. Earlier revisions excluded
+# references/v6.0-source-playbook.md as "verbatim history"; that hid the largest
+# set of GHL RAW BODY examples from the linter. The playbook's per-channel bodies
+# are canonical (they agree with §14 of GHL-INBOUND), so they are scanned and
+# must pass — a wrong body gets fixed, not excluded.
+EXCLUDE_NAMES = set()
 
 EXPECTED_KEYS = [
     "id", "match", "action", "agent_id", "model", "wakeMode", "name",
@@ -73,10 +81,34 @@ EXPECTED_KEYS = [
 ]
 EXPECTED_SET = set(EXPECTED_KEYS)
 
-FENCE_RE = re.compile(r"```(?:json|text)?[ \t]*\n(.*?)```", re.DOTALL)
+# A fence line is any line whose first non-space content is a ``` fence marker,
+# regardless of the info string (json / text / bash / none). We pair opens and
+# closes in document order so mixed-language docs don't desync the scan.
+FENCE_LINE_RE = re.compile(r"^[ \t]*```")
 # GHL merge token like {{contact.id}} or template marker like <HOOK_NAME>.
 MERGE_RE = re.compile(r"\{\{[^}]*\}\}")
 PLACEHOLDER_RE = re.compile(r"<[A-Za-z0-9_./:-]+>")
+
+
+def iter_fence_bodies(text):
+    """Yield the inner text of EVERY fenced code block, pairing ``` opens and
+    closes in document order. Language-agnostic: a ```bash curl example and a
+    ```json body are both surfaced, and an interleaved ```bash block can no
+    longer steal the closing fence of a ```json block (the desync bug that made
+    the old non-greedy `(.*?)` regex silently skip real bodies)."""
+    lines = text.splitlines(keepends=True)
+    i, n = 0, len(lines)
+    while i < n:
+        if FENCE_LINE_RE.match(lines[i]):
+            j = i + 1
+            buf = []
+            while j < n and not FENCE_LINE_RE.match(lines[j]):
+                buf.append(lines[j])
+                j += 1
+            yield "".join(buf)
+            i = j + 1  # skip the closing fence line (or EOF)
+        else:
+            i += 1
 
 
 def _extract_balanced_object(body, anchor):
@@ -127,15 +159,21 @@ def _extract_balanced_object(body, anchor):
 def find_object_a_blocks(text):
     """Yield the JSON object text for fenced blocks that look like object-A GHL
     bodies (contain the snake_case key "agent_id"). Object-B server mappings use
-    camelCase "agentId" and are skipped by the discriminator."""
-    for m in FENCE_RE.finditer(text):
-        body = m.group(1)
-        idx = body.find('"agent_id"')
-        if idx == -1:
-            continue
-        obj = _extract_balanced_object(body, idx)
-        if obj:
-            yield obj
+    camelCase "agentId" and are skipped by the discriminator. A single fence may
+    hold more than one body, so we scan each fence for every "agent_id" anchor."""
+    for body in iter_fence_bodies(text):
+        search_from = 0
+        while True:
+            idx = body.find('"agent_id"', search_from)
+            if idx == -1:
+                break
+            # Each canonical body has exactly one "agent_id"; the next anchor
+            # belongs to the next object, so advancing past this anchor is enough
+            # to avoid re-finding the same one.
+            search_from = idx + len('"agent_id"')
+            obj = _extract_balanced_object(body, idx)
+            if obj:
+                yield obj
 
 
 def neutralize(raw):
