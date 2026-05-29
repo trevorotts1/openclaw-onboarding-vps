@@ -1,8 +1,12 @@
 # Skill 38 — Conversational AI System: Changelog
 
-## [1.4.0] - 2026-05-28 (cont.) - Hostinger Docker env-discovery + conversation-playbook builder hardening
+## [1.4.1] - 2026-05-28 - Hostinger Docker env-discovery + conversation-playbook builder + CF/GoDaddy Notion-offer
 
-Two additive layers on top of the 1.4.0 GHL hardening (same version; content-only additions, no version bump).
+Patch release on top of the 1.4.0 GHL hardening: the Hostinger Docker env-discovery layer, the
+conversation-playbook builder hardening, and the CF/GoDaddy prereq-halt Notion-offer (when a client has
+no Cloudflare API token, the agent OFFERS a Notion doc in the client's OWN workspace from
+`references/cloudflare-godaddy-setup-guide.md` + link, or a manual step-by-step walkthrough — never a
+bare `cat` for the operator to read on the box). `skill-version.txt` is bumped to `1.4.1`.
 
 ### Added
 - `references/HOSTINGER-DOCKER-ENV.md` (NEW) — bulletproof Hostinger Docker VPS env-discovery. Documents where the

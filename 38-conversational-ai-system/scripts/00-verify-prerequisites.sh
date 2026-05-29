@@ -146,17 +146,22 @@ HOSTINGER-DOCKER-ENV.md §4), NOT reported as "I can't find it."
 -----------------------------------------------------
 
 DON'T HAVE A CLOUDFLARE API TOKEN YET (any platform)?
-Follow the walk-through guide shipped INSIDE this skill. It is the
-canonical path for getting your domain into Cloudflare AND creating the
-9-permission CF API token:
+The content the client needs is the walk-through guide shipped INSIDE this
+skill (references/cloudflare-godaddy-setup-guide.md) — the canonical path for
+getting their domain into Cloudflare AND creating the 9-permission CF API
+token (4 parts, ~30 minutes: Cloudflare account, GoDaddy nameservers, token).
 
-  cat ~/.openclaw/skills/38-conversational-ai-system/references/cloudflare-godaddy-setup-guide.md
-
-(That guide is the verbatim School of AI step-by-step: 4 parts, ~30 minutes,
-walks you through the Cloudflare account, GoDaddy nameservers, and the
-9-permission API token creation. The Google Doc version
+AGENT — DO NOT just emit a `cat` command for the operator to read on the box.
+Proactively OFFER the client one of two paths:
+  (a) Create a Notion doc IN THE CLIENT'S OWN Notion workspace (never another
+      client's workspace, never a generic operator workspace) containing the
+      content of references/cloudflare-godaddy-setup-guide.md, and send the
+      client the link so they can follow it themselves; OR
+  (b) Walk the client through it manually, step by step.
+Use the guide file as the source content for whichever path the client picks.
+The Google Doc version
 https://docs.google.com/document/d/1A_U-H-MMLh2mQ_zhzLxK_tKmFyPNb7i0FNvxjJ4SVpo/edit?usp=sharing
-is the canonical source if you prefer to view it in Google Docs.)
+is the canonical source.
 
 Once you have your Cloudflare API key:
 
