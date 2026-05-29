@@ -306,3 +306,39 @@ the brainstorm / not-a-50-question note, the **all 3 parts** (THE TRINITY) state
 prompt wired to **Convert and Flow**, the Convert-and-Flow abilities (**create tags / update calendar /
 book appointments**), or the explicit **"connected to your Convert and Flow account — just ask"**
 statement.
+
+---
+
+## 8. HOW A NEW PLAYBOOK GETS CREATED — agent behavior (trigger word + "I Do / You Do" + brainstorm)
+
+The creation FLOW (what the agent does when a client asks to build a playbook or hits the brainstorm
+trigger) is defined in full in `conversation-workflows-protocol.md` (Section A.0 / A.1 / A.2 + Part 3).
+This section is the standard's pointer to those three agent behaviors so they ship with every playbook
+build. Do NOT duplicate the flow — author to the protocol.
+
+- **Personal trigger word (A.0 — FIRST build only).** On the client's FIRST playbook build, the agent
+  OFFERS a personal trigger word, explained like a voice assistant — *"like 'Alexa' or 'Hey Siri'"* — a
+  word/phrase the client picks (e.g. *"Playbook time!"*) that instantly tells the AI they want to build a
+  playbook. The agent offers it, confirms it, and **REMEMBERS it**: store it in the client's **USER.md**
+  (`Playbook trigger word: "<word>"`) AND in the `conversation-workflows/registry.md` header
+  (`Trigger word: "<word>"`), and add it to the AGENTS.md Step 1.85 / 1.75 trigger set so later builds
+  recognize it. On later builds, recognizing the stored word (or any Section A phrase) starts the flow —
+  the agent does not re-offer.
+- **"I Do / You Do" overview (A.1 — every build start).** When a build starts, the agent presents a short
+  8-step "I Do / You Do" map so the client knows the responsibilities + that a good playbook takes about
+  **15-30 minutes**: (1) YOU trigger it; (2) I ask a few brainstorm questions (not 50); (3) YOU answer
+  (goal, audience, channel, offer, tone); (4) I draft the playbook + flow; (5) YOU review + tweak; (6) I
+  finalize + store (`conversation-workflows/` mirrored to Notion) + build the Workflow AI prompt wired to
+  your Convert and Flow account; (7) I wire the actions (tags, calendar, appointments); (8) YOU approve and
+  we go live.
+- **Brainstorm prep (A.2 — the agent's job + "things to think about").** The agent's job is to BRAINSTORM
+  WITH the client to land the perfect playbook (collaborator, not a form). It tells the client the things
+  to think about — the goal (book a call / recover a sale / get a review / FAQ), who it's for, the
+  channel(s), the offer/hook, the tone/brand voice, timing & follow-up cadence, and the "win" action
+  (booked / replied / tagged / purchased) — and reassures: *"if you're unsure, that's what I'm here to
+  brainstorm."* THEN it asks only the smart-gap questions (Part 3 / Section B), using known business
+  context — never a 50-question interrogation.
+
+The CLIENT-FACING explanation of all three (so the client knows the trigger word exists, the I-Do/You-Do
+split, and the ~15-30 min) lives in the generated client doc — see §7 above and
+`scripts/21-generate-client-reference-sheet.sh` (machine-enforced by `scripts/qc-reference-sheet.sh`).

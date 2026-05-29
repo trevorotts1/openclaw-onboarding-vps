@@ -317,3 +317,29 @@ copyable example, the `conversation-workflows/` + Notion (mirrored) location, th
 not-a-50-question note, the Workflow-AI-prompt-wired-to-Convert-and-Flow step, the Convert-and-Flow
 abilities (create tags / update calendar / book appointments), or the explicit "connected to your Convert
 and Flow account — just ask" statement.
+
+---
+
+## 7. NEW-PLAYBOOK CREATION FLOW — agent behavior (trigger word + "I Do / You Do" + brainstorm)
+
+A workflow-AI prompt is one third of THE TRINITY, so it is built during the same playbook-CREATION flow.
+That flow's agent behavior is defined in full in `conversation-workflows-protocol.md` (Section A.0 / A.1 /
+A.2 + Part 3) and mirrored in `communications-playbook-standard.md` §8. Do NOT duplicate the flow here —
+this is the pointer so the prompt builder honors it:
+
+- **A.0 — personal TRIGGER WORD (FIRST build only).** Before the brainstorm, the agent OFFERS the client a
+  voice-assistant-style trigger word (*"like 'Alexa' or 'Hey Siri'"*; e.g. *"Playbook time!"*), confirms
+  it, and REMEMBERS it (USER.md + `conversation-workflows/registry.md` header + AGENTS.md trigger set) so
+  later builds recognize it without re-offering.
+- **A.1 — "I Do / You Do" overview (every build start).** The agent presents the 8-step who-does-what map
+  (YOU trigger → I brainstorm → YOU answer → I draft → YOU review → I finalize+store+build THIS Workflow AI
+  prompt wired to Convert and Flow → I wire the tag/calendar/appointment actions → YOU approve, go live)
+  and sets the **~15-30 minute** expectation up front.
+- **A.2 — brainstorm prep.** The agent's job is to BRAINSTORM the perfect playbook WITH the client, telling
+  them the things to think about (goal, audience, channel, offer/hook, tone, timing/cadence, win action)
+  and reassuring *"if you're unsure, that's what I'm here to brainstorm"* — then asking only smart-gap
+  questions, never a 50-question form.
+
+The CLIENT-FACING explanation (trigger word + I-Do/You-Do + ~15-30 min) is in the generated client doc —
+see §6 above + `scripts/21-generate-client-reference-sheet.sh`, machine-enforced by
+`scripts/qc-reference-sheet.sh`.
