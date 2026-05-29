@@ -31,6 +31,8 @@
 #     "Authorization" (the key) AND one fenced block whose content starts "Bearer "
 #     (the value). They must NEVER be combined into a single "Authorization: Bearer"
 #     block — 50+ clients copy each field individually, so each needs its own copy box.
+#     The header-VALUE block must contain ONLY "Bearer <token>" — it must NOT contain
+#     the word "Authorization" (the value box is for the VALUE, not "Authorization:").
 #   - SEPARATE Content-Type header code blocks: one fenced block containing exactly
 #     "Content-Type" AND one fenced block containing exactly "application/json".
 #   - at least one ```json fenced code block (opening fence, line-anchored)
@@ -199,6 +201,13 @@ printf '%s\n' "$CODEBLOCKS" | grep -Eq '^[[:space:]]*Authorization[[:space:]]*$'
 # is NOT combined with the "Authorization:" key.
 printf '%s\n' "$CODEBLOCKS" | grep -Eq '^[[:space:]]*Bearer[[:space:]]+[^[:space:]]' || \
   MISSING+=('a code block containing ONLY the "Bearer <token>" header value (own copy box)')
+# The header-VALUE block (the "Bearer <token>" one) must contain ONLY the value —
+# it must NOT contain the word "Authorization" (the bug this gate kills: the second
+# block emitted as "Authorization: Bearer <token>" instead of just "Bearer <token>").
+# Inspect every Bearer-starting block; if ANY of them also contain "Authorization", FAIL.
+if printf '%s\n' "$CODEBLOCKS" | grep -E '^[[:space:]]*Bearer[[:space:]]+[^[:space:]]' | grep -qi 'Authorization'; then
+  MISSING+=('the "Bearer <token>" header VALUE block must NOT contain the word "Authorization" — the value box gets ONLY "Bearer <token>"')
+fi
 # The key and value must NEVER be combined in one block.
 if printf '%s\n' "$CODEBLOCKS" | grep -Eq '^[[:space:]]*Authorization:[[:space:]]*Bearer'; then
   MISSING+=('the Authorization key and "Bearer <token>" value must be in SEPARATE code blocks, never combined as "Authorization: Bearer ..."')
@@ -254,11 +263,16 @@ grep -Eiq 'does not contain|blank|never created|non-existent tag' "$SHEET" || \
 # --- YOUR COMMUNICATION PLAYBOOKS section (after Quick Start, before deep how-it-works) ---
 # The first question every client asks on their first test: "where are my
 # workflows / communication playbooks?" — answered prominently, with WHERE they
-# live AND how to ask for a NEW one.
+# live, how to ask for a NEW one, AND what the AI will do (brainstorm → build →
+# store → wire the Workflow-AI prompt → take real Convert-and-Flow actions).
 grep -Eiq 'Communication Playbooks' "$SHEET" || \
   MISSING+=('a "Your Communication Playbooks" section (where the client'"'"'s playbooks live)')
-grep -Eiq 'Want a NEW communications playbook' "$SHEET" || \
-  MISSING+=('the prominent "Want a NEW communications playbook? Start here:" call to action')
+# The "just ask me" call-to-action (the client never builds these by hand).
+grep -Eiq 'Want another communication playbook|just ask me' "$SHEET" || \
+  MISSING+=('the prominent "Want another communication playbook? Just ask me!" call to action')
+# A concrete copyable example the client can say verbatim, e.g. a missed-call follow-up.
+grep -Eiq 'Help me build a .*(missed-call|playbook)' "$SHEET" || \
+  MISSING+=('a concrete copyable example the client can say, e.g. "Help me build a missed-call follow-up playbook"')
 # WHERE they live: master-files conversation-workflows/ + Notion (human-facing).
 grep -Eiq 'conversation-workflows' "$SHEET" || \
   MISSING+=('the playbooks-location must name the master-files "conversation-workflows/" folder')
@@ -269,6 +283,31 @@ grep -Eiq 'help me build a' "$SHEET" || \
   MISSING+=('the "just tell your AI: help me build a [purpose] playbook" instruction')
 grep -Eiq 'all 3 parts|all three parts|3 parts' "$SHEET" || \
   MISSING+=('the section must say the AI builds all 3 parts (workflow-AI prompt + conversation playbook + GHL automation)')
+# --- The enriched build walkthrough (brainstorm → store → wire → real actions) ---
+# (1) brainstorm with known business context, NOT a 50-question interrogation.
+grep -Eiq 'brainstorm' "$SHEET" || \
+  MISSING+=('the walkthrough must say the AI will BRAINSTORM the playbook with the client')
+grep -Eiq '50[ -]?question' "$SHEET" || \
+  MISSING+=('the walkthrough must say it is NOT a 50-question interrogation/form (uses known business context)')
+# (3) WHERE it is stored: conversation-workflows/ mirrored to Notion (covered by the
+#     conversation-workflows + Notion checks above; require the mirror wording too).
+grep -Eiq 'mirror(ed)? to .*Notion|Notion.*(copy|mirror)|readable copy.*Notion|mirrored to your Notion' "$SHEET" || \
+  MISSING+=('the walkthrough must say the playbook is stored in conversation-workflows/ AND mirrored to Notion')
+# (4) the matching Workflow AI prompt wired to the client'"'"'s Convert and Flow account.
+grep -Eiq 'Workflow AI prompt|workflow-AI prompt' "$SHEET" || \
+  MISSING+=('the walkthrough must say the AI builds the matching Workflow AI prompt')
+grep -Eiq 'Convert and Flow' "$SHEET" || \
+  MISSING+=('the walkthrough must name the client'"'"'s Convert and Flow (GoHighLevel) account')
+# (5) the AI can take real actions in Convert and Flow: tags, calendar, appointments.
+grep -Eiq 'create tags|create a tag' "$SHEET" || \
+  MISSING+=('the Convert-and-Flow abilities must include creating tags')
+grep -Eiq 'update your calendar|calendar' "$SHEET" || \
+  MISSING+=('the Convert-and-Flow abilities must include updating the calendar')
+grep -Eiq 'book appointments|create and book appointments|appointment' "$SHEET" || \
+  MISSING+=('the Convert-and-Flow abilities must include creating/booking appointments')
+# The explicit "you have an AI connected to your Convert and Flow account — just ask" line.
+grep -Eiq 'connected to your Convert and Flow account' "$SHEET" || \
+  MISSING+=('the explicit "you have an AI that is connected to your Convert and Flow account and can do these things for you — just ask" statement')
 
 if [ "$JSON_MODE" = "1" ]; then
   miss_json="["
