@@ -134,6 +134,15 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
       API (POST conversations/messages) and to NOT end its turn until a messageId/conversationId is
       returned. Drafting is NOT sending — without this clause the agent drafts a reply and the customer
       gets nothing. Machine-check: `scripts/qc-send-directive.sh` must PASS.
+- [ ] **Conversation-MEMORY steps on the OpenClaw server mapping** — the same SERVER-mapping
+      `messageTemplate` (object B) ALSO orders the agent to **READ** the contact's conversation log at
+      `<MASTER_FILES_DIR>/conversational-logs/<contact_id>__<name>.md` BEFORE replying (continue any
+      in-progress topic/booking; if missing, treat as new) and to **APPEND** the inbound + sent reply to
+      that log AFTER sending. GHL inbound hook sessions are SINGLE-TURN / stateless, so the log IS the
+      agent's only cross-message memory — dropping these steps is how the agent "forgets" mid-conversation.
+      Machine-check: `scripts/qc-conversation-memory.sh` must PASS (and the installer is fail-closed if
+      they're absent). Note: these steps live ONLY on the SERVER mapping (object B) — the GHL RAW BODY
+      (object A) `messageTemplate` stays placeholder-free and is NOT where they go.
 - [ ] **Any required tags created/applied** (created beforehand via the GHL skill).
 - [ ] **Workflow Published** (not Draft).
 
@@ -143,9 +152,11 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
 > runs in CI). The MANDATORY GHL **send-directive** on every inbound SERVER-mapping `messageTemplate`
 > (SEND via the GHL Conversations API / drafting-is-NOT-sending / do-not-end-turn-until-messageId) is
 > enforced by `scripts/qc-send-directive.sh` (also runs in CI) — drafting is not sending, so an inbound
-> hook without it silently drops the reply. THE TRINITY (this prompt ⇄ its communications playbook ⇄ its
-> registry row) is enforced by `scripts/qc-trinity-registry.sh`. These are checks, not just human
-> checklist items.
+> hook without it silently drops the reply. The MANDATORY **conversation-memory** read-before/append-after
+> on every inbound SERVER-mapping `messageTemplate` is enforced by `scripts/qc-conversation-memory.sh`
+> (also runs in CI) — hook sessions are single-turn, so a template without it makes the agent forget.
+> THE TRINITY (this prompt ⇄ its communications playbook ⇄ its registry row) is enforced by
+> `scripts/qc-trinity-registry.sh`. These are checks, not just human checklist items.
 
 ---
 

@@ -172,6 +172,41 @@ call. Do NOT end your turn until the send returns a messageId/conversationId
 BLOCK_A
 
 # -----------------------------------------------------------------------------
+# (a2) CONVERSATION_MEMORY_PROTOCOL — base rule making the per-contact
+#      conversation log un-droppable. GHL inbound hook sessions are SINGLE-TURN
+#      (every hook run = a fresh stateless session, user-turns=1); the agent's
+#      ONLY memory across messages is the per-contact log file. Pointer-style,
+#      no bloat — the full rules live in conversation-log-protocol.md.
+# -----------------------------------------------------------------------------
+append_block "CONVERSATION_MEMORY_PROTOCOL" <<'BLOCK_A2'
+
+## Conversation Memory Protocol (binding base rule)
+
+> GHL inbound hook sessions are SINGLE-TURN / stateless — every inbound is a
+> fresh session with no chat history. Your ONLY memory of a contact across
+> messages is the per-contact conversation log. There is nothing else to fall
+> back on, so treat the log as mandatory, not optional.
+
+On EVERY GHL inbound, in this order:
+
+1. **READ BEFORE replying.** Read this contact's log at
+   `<MASTER_FILES_DIR>/conversational-logs/<contact_id>__<name>.md`. It holds the
+   full prior conversation plus any in-progress booking/topic. If the file is
+   missing, treat this as a new contact.
+2. **CONTINUE, don't restart.** Reply continuing whatever the log shows is
+   in-progress — don't re-ask what the log already answers (e.g. a booking
+   half-finished must be resumed, not started over).
+3. **APPEND AFTER sending.** After the GHL send returns a messageId/conversationId,
+   append BOTH the inbound message and your sent reply to the same log file
+   (create it if missing) per `conversation-log-protocol.md`.
+
+A reply that ignores the log, or that fails to update it after sending, is a
+FAILURE — it is how the agent "forgets" mid-conversation. Full retention/format
+rules: `<MASTER_FILES_DIR>/conversation-log-protocol.md`.
+
+BLOCK_A2
+
+# -----------------------------------------------------------------------------
 # (b) SKILL38_RUNTIME_ROUTING — preserves the existing 53-line script's content
 #     (Steps 1.7 / 1.75 / 1.8 / 1.9 / 2.8) inside a single marker block
 # -----------------------------------------------------------------------------

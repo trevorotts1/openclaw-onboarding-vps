@@ -77,9 +77,26 @@ else
     '{
       id:$id, match:{path:$path}, action:"agent", agentId:$agent,
       wakeMode:"now", name:"GHL Inbound", sessionKey:$sk,
-      messageTemplate:"INBOUND MESSAGE FROM GOHIGHLEVEL — {{channel}} channel From: {{first_name}} {{last_name}} Phone: {{phone}} Email: {{email}} Contact ID: {{contact_id}} Location ID: {{location_id}} Location name: {{location_name}} Customer message subject: {{subject}} Customer message body: {{message_body}} MANDATORY — SEND, do not just draft: You MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for contact {{contact_id}} on the {{channel}} channel, per TOOLS.md (use your installed GHL skill, typically skill #50s). Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId. Before drafting your reply, check the contact'\''s conversation log at <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md for prior context (see AGENTS.md for full conversation-log protocol).",
+      messageTemplate:"INBOUND MESSAGE FROM GOHIGHLEVEL — {{channel}} channel From: {{first_name}} {{last_name}} Phone: {{phone}} Email: {{email}} Contact ID: {{contact_id}} Location ID: {{location_id}} Location name: {{location_name}} Customer message subject: {{subject}} Customer message body: {{message_body}} MEMORY — READ FIRST (this is a SINGLE-TURN hook session; your only memory of this contact is the conversation log file): BEFORE drafting anything, read this contact'\''s conversation log at <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md for the full prior conversation and any in-progress booking/topic; if the file is missing, treat this as a new contact. CONTINUE: reply continuing any in-progress topic/booking found in the log — do not restart or re-ask what the log already answered. MANDATORY — SEND, do not just draft: You MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for contact {{contact_id}} on the {{channel}} channel, per TOOLS.md (use your installed GHL skill, typically skill #50s). Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId. APPEND — LOG AFTER SENDING: append this inbound message AND your sent reply to <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md (create the file if missing) per the conversation-log protocol — a reply that fails to update the log is a failure (see AGENTS.md for the full conversation-memory protocol).",
       deliver:false, timeoutSeconds:300
     }')"
+
+  # Fail-closed guard: refuse to write a hook config whose messageTemplate lacks
+  # the conversation-memory READ-before and APPEND-after steps. GHL inbound hook
+  # sessions are SINGLE-TURN — without these two steps the agent has zero memory
+  # across messages (root cause of the Corey "didn't remember anything" incident).
+  # Needles are case-insensitive: "conversational-logs", "read", "append".
+  GUARD_TMPL="$(jq -r '.messageTemplate' <<<"$NEW_MAPPING")"
+  GUARD_LC="$(printf '%s' "$GUARD_TMPL" | tr '[:upper:]' '[:lower:]')"
+  GUARD_MISSING=""
+  case "$GUARD_LC" in *conversational-logs*) : ;; *) GUARD_MISSING="$GUARD_MISSING conversational-logs" ;; esac
+  case "$GUARD_LC" in *read*) : ;; *) GUARD_MISSING="$GUARD_MISSING read" ;; esac
+  case "$GUARD_LC" in *append*) : ;; *) GUARD_MISSING="$GUARD_MISSING append" ;; esac
+  if [[ -n "$GUARD_MISSING" ]]; then
+    echo "REFUSED: GHL inbound messageTemplate is missing conversation-memory element(s):${GUARD_MISSING}." >&2
+    echo "GHL hook sessions are single-turn; the template MUST tell the agent to READ conversational-logs/<contact_id> before replying and APPEND after. Not writing config." >&2
+    exit 8
+  fi
   UPDATED="$(jq \
     --arg tok "$HOOKS_TOKEN" \
     --arg agent "$ROUTING_AGENT_ID" \

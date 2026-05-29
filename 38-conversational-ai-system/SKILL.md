@@ -47,11 +47,11 @@ upstream is Skill 23: read its `INSTRUCTIONS.md → "Moment 3.8"`, then build th
 ## What This Skill Ships
 
 <!-- SELF-COUNTS: re-verify on EVERY version bump — see scripts/bump-version.sh "Skill 38 self-count
-     re-verification" note. Counts as of v1.4.9: protocols/=32 (*.md), scripts/=29 (*.sh), references/=15
+     re-verification" note. Counts as of v1.4.10: protocols/=32 (*.md), scripts/=30 (*.sh), references/=15
      (*.md), journey templates=8 dirs. Run: ls -1 protocols/*.md scripts/*.sh references/*.md | per-dir wc -l. -->
 - 32 protocol files under `protocols/` (humanizer is intentionally NOT here — skill 19 owns it)
 - **8 customer journey templates** under `templates/journey-templates/` (coach + all 7 verticals fully detailed: consulting, course-creator, e-commerce, real-estate, saas, service-provider, wellness)
-- **29 scripts** under `scripts/` (idempotent, OS-aware: Darwin + Linux) — the numbered install scripts `00`–`23` plus `skill38-calendar-sync.sh`, the three QC linters `qc-23-key-bodies.sh` (machine-enforces the 23-key GHL body rule) + `qc-trinity-registry.sh` (machine-enforces THE TRINITY) + `qc-send-directive.sh` (machine-enforces the MANDATORY GHL send-directive — SEND, not just draft), and the `qc-trinity-registry-test.sh` fixture suite (proves bullet + table registry reconciliation)
+- **30 scripts** under `scripts/` (idempotent, OS-aware: Darwin + Linux) — the numbered install scripts `00`–`23` plus `skill38-calendar-sync.sh`, the four QC linters `qc-23-key-bodies.sh` (machine-enforces the 23-key GHL body rule) + `qc-trinity-registry.sh` (machine-enforces THE TRINITY) + `qc-send-directive.sh` (machine-enforces the MANDATORY GHL send-directive — SEND, not just draft) + `qc-conversation-memory.sh` (machine-enforces the conversation-MEMORY read-before/append-after — hook sessions are single-turn, the per-contact log IS the memory), and the `qc-trinity-registry-test.sh` fixture suite (proves bullet + table registry reconciliation)
 - 15 reference documents under `references/` (deep-dives + the full v5.14 source playbook + the communications-playbook & workflow-AI/Build-with-AI standards + the **Cloudflare & GoDaddy Setup Guide** from School of AI — the client-facing walk-through for the missing-CF-token halt path)
 - **AGENTS.md updates:** Steps 1.7, 1.8, 1.9, 2.8 inserted; Step 1.75 upgraded
 - **MEMORY.md design rules 6-14** appended

@@ -613,10 +613,24 @@ via the GHL Conversations API per TOOLS.md"`) and GHL passes it through untouche
 
 With none, the hook returns `{"ok":false,"error":"hook mapping requires message"}`.
 
-### 14.4 — The server `messageTemplate` MUST include the reply-via-GHL-API instruction
+### 14.4 — The server `messageTemplate` MUST include the SEND-directive AND the conversation-memory read/append steps
 
-Otherwise the agent drafts a reply but never sends it (zero GHL API calls → the customer gets nothing).
-Canonical correct mapping (an `openclaw.json` `hooks.mappings` entry):
+The server-mapping `messageTemplate` (object B) is the ONLY instruction that actually reaches the agent
+on a GHL inbound. It MUST carry BOTH:
+
+1. **The SEND-directive** — order the agent to SEND via the GHL Conversations API; otherwise it drafts a
+   reply and never sends it (zero GHL API calls → the customer gets nothing).
+2. **The conversation-MEMORY steps** — GHL inbound hook sessions are **SINGLE-TURN / stateless** (every
+   hook run is a fresh session with `user-turns=1`, no chat history). The agent's ONLY memory of a contact
+   across messages is the per-contact conversation log under `conversational-logs/`. So the template MUST
+   tell the agent to **READ** that log BEFORE replying (and continue any in-progress topic/booking it
+   finds) and to **APPEND** the inbound + its reply AFTER sending. A simplified template that drops these
+   steps makes the agent forget mid-conversation (the Corey incident — the canonical template was
+   simplified during testing, the log read/append was lost, and the agent "didn't remember anything"
+   mid-booking).
+
+Canonical correct mapping (an `openclaw.json` `hooks.mappings` entry — the SAME enriched template the
+installer writes in `scripts/15-configure-hooks-mappings.sh` and the v6.0 playbook §Step-3):
 
 ```json
 {
@@ -628,7 +642,7 @@ Canonical correct mapping (an `openclaw.json` `hooks.mappings` entry):
   "wakeMode": "now",
   "name": "GHL Sales Inbound",
   "sessionKey": "{{session_key}}",
-  "messageTemplate": "Contact {{contact_id}}: {{message_body}} -- You are the Sales agent. Reply to contact {{contact_id}} via the GHL Conversations API per TOOLS.md (check conversation-workflows for the matching playbook).",
+  "messageTemplate": "INBOUND MESSAGE FROM GOHIGHLEVEL — {{channel}} channel From: {{first_name}} {{last_name}} Contact ID: {{contact_id}} Customer message body: {{message_body}} MEMORY — READ FIRST (this is a SINGLE-TURN hook session; your only memory of this contact is the conversation log file): BEFORE drafting anything, read this contact's conversation log at <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md for the full prior conversation and any in-progress booking/topic, and check the matching playbook in conversation-workflows; if the log file is missing, treat this as a new contact. CONTINUE: reply continuing any in-progress topic/booking found in the log — do not restart or re-ask what the log already answers. MANDATORY — SEND, do not just draft: you MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for contact {{contact_id}} on this channel, per TOOLS.md. Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId. APPEND — LOG AFTER SENDING: append this inbound message AND your sent reply to <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md (create the file if missing) per the conversation-log protocol — a reply that fails to update the log is a failure.",
   "deliver": false,
   "timeoutSeconds": 300
 }
@@ -636,6 +650,11 @@ Canonical correct mapping (an `openclaw.json` `hooks.mappings` entry):
 
 Note the **server mapping's** `messageTemplate` references the **FLAT body key names** (`{{contact_id}}`,
 `{{message_body}}`), and `sessionKey: "{{session_key}}"` pulls the flat `session_key` the body sends.
+
+Both invariants are machine-enforced (and run in CI): the SEND-directive by `scripts/qc-send-directive.sh`
+and the conversation-memory read-before/append-after by `scripts/qc-conversation-memory.sh`. The installer
+(`scripts/15-configure-hooks-mappings.sh`) is additionally **fail-closed** — it refuses to write the hook
+config if the messageTemplate lacks the `conversational-logs` read/append steps.
 
 > **Two different `messageTemplate` values, in two different objects — do not confuse them.** (A) The
 > **GHL Custom Webhook body** (object A, §14.1) carries a **placeholder-free** `messageTemplate` as one of
