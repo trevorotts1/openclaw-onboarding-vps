@@ -191,6 +191,63 @@ jobs:
           bash 38-conversational-ai-system/scripts/qc-reference-sheet.sh
           echo "✓ Skill 38 client reference sheet: 🚀 Quick Start + after-it explanation + separate Authorization/Content-Type key+value blocks + bearer token + copyable Raw Body JSON + hook URL + manual-fill + create-tag-first + post-build verification"
 
+      - name: Skill 38 MANDATORY Telegram doc-delivery (gated, transcript-grep)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce the un-skippable Telegram doc-delivery step. The
+          # install is NOT complete until the client has been SENT their
+          # Quick-Start / Notion doc LINK via Telegram. qc-notify-client-doc.sh
+          # asserts scripts/22-notify-client-doc.sh exists, GREPS THE TRANSCRIPTS
+          # (agents/*/sessions/*.jsonl, not sessions.json keys only — the Teresa
+          # lesson), is GATED (records clientDocDelivered + exits non-zero on
+          # miss/failure — never a silent skip), sends via the OpenClaw gateway
+          # (never api.telegram.org direct), and is wired into the QC checklist +
+          # INSTRUCTIONS. Also smoke-test the delivery script itself: a fixture
+          # transcript must resolve the most-frequent non-operator chat id, and a
+          # transcript with only the operator id must FAIL (exit 1) and record
+          # clientDocDelivered=false. BASH only (respects the .py claude-/anthropic ban).
+          bash 38-conversational-ai-system/scripts/qc-notify-client-doc.sh
+          # --- fixture smoke test (success path: client id wins) ---
+          tdir="$(mktemp -d)"
+          mkdir -p "$tdir/home/.openclaw/agents/main/sessions" "$tdir/master"
+          jl="$tdir/home/.openclaw/agents/main/sessions/s1.jsonl"
+          printf '%s\n' '{"meta":{"chat":{"id":5252140759}},"text":"operator"}' >  "$jl"
+          printf '%s\n' '{"meta":{"chat":{"id":7029068588}},"text":"client"}'   >> "$jl"
+          printf '%s\n' '{"key":"agent:main:telegram:direct:7029068588"}'        >> "$jl"
+          printf '%s\n' '{"from":{"id":7029068588},"chatId":7029068588}'         >> "$jl"
+          echo "https://notion.so/demo-abc" > "$tdir/master/.notion-reference-page-url"
+          printf '# Run Manifest\n' > "$tdir/master/run-manifest-20260529-000000.md"
+          out="$(HOME="$tdir/home" MASTER_FILES_DIR="$tdir/master" OPENCLAW_HOME="$tdir/home/.openclaw" \
+            bash 38-conversational-ai-system/scripts/22-notify-client-doc.sh --dry-run --json)"
+          echo "$out" | grep -q '"chat":"7029068588"' || { echo "✗ transcript-grep did not pick the client id"; exit 1; }
+          echo "$out" | grep -q '"clientDocDelivered":true' || { echo "✗ dry-run did not record delivered=true"; exit 1; }
+          # --- fixture smoke test (failure path: only operator id => exit 1, false) ---
+          tdir2="$(mktemp -d)"
+          mkdir -p "$tdir2/home/.openclaw/agents/main/sessions" "$tdir2/master"
+          printf '{"meta":{"chat":{"id":5252140759}}}\n' > "$tdir2/home/.openclaw/agents/main/sessions/s1.jsonl"
+          echo "https://notion.so/demo-xyz" > "$tdir2/master/.notion-reference-page-url"
+          printf '# Run Manifest\n' > "$tdir2/master/run-manifest-20260529-000000.md"
+          rc=0
+          HOME="$tdir2/home" MASTER_FILES_DIR="$tdir2/master" OPENCLAW_HOME="$tdir2/home/.openclaw" \
+            bash 38-conversational-ai-system/scripts/22-notify-client-doc.sh >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ no-client-chat path should exit 1, got $rc"; exit 1; }
+          grep -q 'clientDocDelivered=false' "$tdir2/master/run-manifest-20260529-000000.md" || { echo "✗ no-chat path did not record clientDocDelivered=false"; exit 1; }
+          rm -rf "$tdir" "$tdir2"
+          echo "✓ Skill 38 Telegram doc-delivery is mandatory, transcript-grep-based, gated, and wired"
+
+      - name: Skill 38 backend-ready gate (no-config => SKIP, not fail)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # The backend-ready gate (hooks.mappings live + deliver:false + a working
+          # model + healthz 200) is a LIVE check. In CI there is no install, so it
+          # must exit 3 (NO_CONFIG) — a SKIP, never a false failure. Assert that.
+          rc=0
+          bash 38-conversational-ai-system/scripts/qc-backend-ready.sh --config /nonexistent/openclaw.json >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 3 ] || { echo "✗ backend-ready with no config should exit 3 (SKIP), got $rc"; exit 1; }
+          echo "✓ Skill 38 backend-ready gate exits 3 (SKIP) when no install is present"
+
       - name: Skill 38 config schema-safety (no config-invalidating install scripts)
         shell: bash
         run: |

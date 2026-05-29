@@ -1,5 +1,65 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.15] - 2026-05-29 - Mandatory Telegram doc-delivery + Communication Playbooks location section + readiness gates
+
+### Root cause this prevents
+- **(A) The client doc kept not getting sent.** The operator has said it repeatedly — "every client gets
+  their link via Telegram, no matter what" — yet the install kept finishing without the client ever being
+  SENT their Quick-Start / Notion doc LINK over Telegram. It was prose, not an enforced gate, so it got
+  skipped. (And finding the chat from `sessions.json` keys alone misses paired chats — the Teresa lesson.)
+- **(B) Clients ask "where are my workflows?" on their first test.** The generated doc had no prominent
+  answer to where their communication playbooks live, or how to get a new one.
+- **(C) "Complete" was declared before the backend could receive.** No single gate asserted hooks.mappings
+  live + deliver:false + a working model + healthz 200 before testing/hand-off.
+
+### Added
+- **`scripts/22-notify-client-doc.sh`** (NEW) — MANDATORY, GATED Telegram doc-delivery. Finds the client's
+  Telegram chat id by **grepping the transcripts** `agents/*/sessions/*.jsonl` for every id form
+  (`"chat":{"id"`, `telegram:direct:`, `"chatId"`, `"from":{"id"`), drops the operator id, takes the
+  **most-frequent** remaining id (NOT sessions.json keys only). Sends the doc LINK via
+  `openclaw message send --channel telegram` (gateway only, never `api.telegram.org`). Records
+  `clientDocDelivered=true` in the run manifest on success; on no-chat / send-failure it **FLAGS LOUDLY**
+  (stderr) + records `clientDocDelivered=false` and **exits non-zero** — the install is INCOMPLETE, never a
+  silent skip.
+- **`scripts/qc-notify-client-doc.sh`** (NEW) — machine-enforces the above is present, transcript-grep-based,
+  gated, gateway-sending, and WIRED into `scripts/11-run-qc-checklist.sh` + INSTRUCTIONS.md. Wired into CI
+  (with fixture smoke tests: a client id must win the transcript scan; an operator-only transcript must
+  exit 1 and record `clientDocDelivered=false`).
+- **`scripts/qc-backend-ready.sh`** (NEW) — concise "backend ready to RECEIVE" completion gate:
+  hooks.mappings live + `deliver:false` + a working `model` + gateway `healthz` 200. Live check; exits 3
+  (SKIP) when no install is present (so CI treats it as a skip, not a failure). Wired into Step 11 QC + CI.
+
+### Changed
+- **`scripts/21-generate-client-reference-sheet.sh`** — the generated client doc now carries a prominent
+  **💬 Your Communication Playbooks** section, placed AFTER the 🚀 Quick Start and BEFORE the
+  Reference & explanation. It says WHERE the playbooks live (the client's master-files
+  `conversation-workflows/` folder + the human-facing copies in Notion → Google Docs → text) and, in BIG
+  BOLD, **"Want a NEW communications playbook? Start here:"** — just tell your AI *"help me build a [purpose]
+  playbook"* and it brainstorms with you and builds all 3 parts (THE TRINITY: workflow-AI prompt +
+  conversation playbook + GHL automation), with what-happens-next.
+- **`scripts/qc-reference-sheet.sh`** — extended to FAIL the build if the generated sheet is missing the
+  **Your Communication Playbooks** section, the **"Want a NEW communications playbook"** call-to-action, the
+  `conversation-workflows/` + Notion location, the *"help me build a … playbook"* instruction, or the
+  all-3-parts (Trinity) statement. (Still BASH; offline Layer-3 sandbox.)
+- **`scripts/11-run-qc-checklist.sh`** — runs the two new gates (`qc-notify-client-doc.sh` +
+  `qc-backend-ready.sh`, the latter SKIPs on exit 3).
+- **`INSTRUCTIONS.md`** — added Step 6.5 (mandatory gated Telegram doc-delivery) + three binding Hard rules
+  (Telegram delivery; doc-exists-AND-backend-ready completion gates before testing; the Your Communication
+  Playbooks section). Checkpoint D now requires `clientDocDelivered=true`.
+- **`references/v6.0-source-playbook.md`** — new Step 6.5 (the transcript-grep Telegram delivery gate);
+  Checkpoint D + Phase 7 deliverables now require the Telegram delivery, the Your Communication Playbooks
+  section, and the backend-ready gate.
+- **`references/communications-playbook-standard.md`** + **`references/workflow-ai-instructions-standard.md`**
+  — added the "Your Communication Playbooks" section to the standard so every client doc carries it.
+- **`.github/workflows/qc-static.yml`** — two new CI steps (Telegram doc-delivery gate + fixtures; backend-
+  ready no-config SKIP assertion). All new gates are BASH (no `.py`), respecting the claude-/anthropic ban.
+- **`SKILL.md` / `INSTALL.md`** — self-counts re-verified: scripts/ 34 → **37** (added the delivery step +
+  two QC gates); protocols/=32, references/=15, journey templates=8 unchanged.
+
+### Constraints honored
+- 23-key FLAT body (the generator's canonical body is unchanged; `qc-23-key-bodies.sh` still green), no
+  nesting, no `\n` in JSON. All new gates are BASH (no `.py` with `claude-`/`anthropic`). CI green.
+
 ## [1.4.14] - 2026-05-29 - Bulletproof Quick-Start + workflow-AI (where-to-paste, tag-first, post-build verify)
 
 ### Root cause this prevents

@@ -504,6 +504,29 @@ LEAD="$STAGE_DIR/.reference-sheet.lead.md"
   printf -- '- WHAT YOU SHOULD SEE: the workflow is **Published**, not Draft.\n'
   printf -- '- IF DRAFT: toggle it to **Published**.\n\n'
   printf -- '---\n\n'
+
+  # ── YOUR COMMUNICATION PLAYBOOKS — AFTER Quick Start, BEFORE the deep how-it-works.
+  # This answers the first question every client asks on their first test:
+  # "where are my workflows / communication playbooks?" — and how to get a NEW one.
+  # qc-reference-sheet.sh machine-enforces this section is present.
+  printf '## 💬 Your Communication Playbooks\n\n'
+  printf '> **This is where your "workflows" live.** A *communication playbook* is the script your AI follows for one kind of conversation (booking an appointment, answering a pricing question, handling support, and so on). You already have your first one set up.\n\n'
+  printf '### Where your playbooks live\n\n'
+  printf -- '- **The working copies** (what your AI actually runs) live in your OpenClaw master-files folder, under `conversation-workflows/`. You do not edit these by hand — your AI manages them.\n'
+  printf -- '- **The human-readable copies** (for you to read and share) live in your **Notion** (and, where Notion is not set up, as a Google Doc → then plain text). That is the readable version of each playbook.\n\n'
+  printf '### **Want a NEW communications playbook? Start here:**\n\n'
+  printf '**Just tell your AI, in plain English:**\n\n'
+  printf '```\n'
+  printf 'help me build a [purpose] playbook\n'
+  printf '```\n\n'
+  printf 'For example: *"help me build a missed-call follow-up playbook"* or *"help me build a pricing-question playbook."*\n\n'
+  printf '**What happens next:** your AI will **brainstorm it with you** (it already knows your business, so it asks a few smart questions — not a 50-question form), then it **builds all 3 parts** for you automatically:\n\n'
+  printf -- '1. the **workflow-AI prompt** (the thing you paste into GHL'\''s "Build with AI"),\n'
+  printf -- '2. the **conversation playbook** (the script your AI follows), and\n'
+  printf -- '3. the **GHL automation** (the workflow that triggers it).\n\n'
+  printf 'It saves the working copies to `conversation-workflows/`, creates a readable copy in your Notion, and tells you exactly what to paste where. That is the whole loop — you describe what you want, your AI builds the trinity.\n\n'
+  printf -- '---\n\n'
+
   printf '## Reference & explanation\n\n'
   printf 'Everything below is background/reference — how it works, what each piece is, and troubleshooting. The actionable copy-paste values you need are in the **🚀 Quick Start** sections 1-8 above.\n\n'
 } > "$LEAD"

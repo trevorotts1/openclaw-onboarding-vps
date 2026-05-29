@@ -273,3 +273,24 @@ ACTIONS (exact order):
 PUBLISH: Yes — publish when done. Do NOT leave it as a draft.
 RUN SCHEDULE: <e.g. All Day>
 ```
+
+---
+
+## 6. "YOUR COMMUNICATION PLAYBOOKS" section in the client doc (MANDATORY, machine-enforced)
+
+The generated client doc (`scripts/21-generate-client-reference-sheet.sh`) MUST carry a prominent
+**Your Communication Playbooks** section, placed **AFTER the Quick Start** and **BEFORE the deep
+how-it-works**. It answers the first question every client asks on their first test —
+*"where are my workflows / communication playbooks?"* — and tells them how to get a NEW one. It must say,
+prominently (callout / bold heading):
+
+- **WHERE they live** — the working copies in the client's OpenClaw master-files `conversation-workflows/`
+  folder; the human-facing copies in the client's **Notion** (Notion → Google Docs → text).
+- In **BIG BOLD — "Want a NEW communications playbook? Start here:"** — just tell your AI
+  *"help me build a [purpose] playbook"* and it brainstorms with you and builds **all 3 parts** (THE
+  TRINITY): the **workflow-AI prompt** (this standard), the **conversation playbook**
+  (`communications-playbook-standard.md`), and the **GHL automation**. Tell the client what happens next
+  (working copies saved, a Notion copy created, exact paste-where steps).
+
+This is part of the standard so every client doc carries it. Machine-enforced by
+`scripts/qc-reference-sheet.sh` (wired into `scripts/11-run-qc-checklist.sh` + CI).

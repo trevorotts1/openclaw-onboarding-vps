@@ -256,3 +256,28 @@ an empty webhook that silently drops every inbound message. The Client Reference
 copy-paste values (URL, bearer token, Raw Body JSON) followed by these manual-fill steps, then the
 Workflow-AI prompt; `scripts/qc-reference-sheet.sh` machine-enforces that the generated sheet carries the
 manual-fill instructions (greps for "Custom Webhook" + "manually"/"paste" + "Build with AI will not").
+
+---
+
+## 7. "YOUR COMMUNICATION PLAYBOOKS" SECTION in the client doc (MANDATORY, machine-enforced)
+
+Every generated client doc (`scripts/21-generate-client-reference-sheet.sh`) MUST carry a prominent
+**Your Communication Playbooks** section, placed **AFTER the Quick Start** and **BEFORE the deep
+how-it-works (Reference & explanation)**. It answers the question every client asks on their first test —
+*"where are my workflows / communication playbooks?"* — and tells them how to get a NEW one. It is a
+callout / bold heading, big enough to stand out. Required content:
+
+- **WHERE they live.** The working copies (what the AI runs) live in the client's OpenClaw master-files
+  `conversation-workflows/` folder; the human-facing copies live in the client's **Notion** (and, where
+  Notion is not set up, Google Docs → plain text — the §4 fallback chain). State both plainly.
+- **In BIG BOLD — "Want a NEW communications playbook? Start here:"** then the steps: just tell the AI
+  *"help me build a [purpose] playbook"* and it will **brainstorm with you** (it already knows the
+  business — a few smart questions, NOT a 50-question form) and **build all 3 parts** automatically: (1)
+  the workflow-AI prompt, (2) the conversation playbook, and (3) the GHL automation (THE TRINITY). Tell
+  the client what happens next: working copies saved to `conversation-workflows/`, a readable copy created
+  in Notion, and exact paste-where instructions.
+
+Machine-enforced by `scripts/qc-reference-sheet.sh` (wired into `scripts/11-run-qc-checklist.sh` + CI):
+the gate FAILS the build if the generated sheet is missing the **Communication Playbooks** section, the
+**"Want a NEW communications playbook"** call-to-action, the `conversation-workflows/` + Notion location,
+the *"help me build a … playbook"* instruction, or the all-3-parts (THE TRINITY) statement.
