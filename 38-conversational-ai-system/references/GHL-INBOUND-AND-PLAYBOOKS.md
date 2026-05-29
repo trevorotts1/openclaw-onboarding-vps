@@ -14,9 +14,10 @@
 > against the live GHL API. Where a value was probed, it is marked **VERIFIED**.
 >
 > **⚠️ READ §14 FIRST — "CORRECTED GHL HOOK STRUCTURE (2026-05-29)".** The GHL Custom Webhook Raw Body
-> is **FLAT** (no nested objects) and **data-only** (NO `messageTemplate`); the `messageTemplate` lives
-> **only** on the server `hooks.mappings` entry and **must** include the reply-via-GHL-API instruction.
-> §14 supersedes any older nested-body or in-body-messageTemplate example anywhere in this skill.
+> is **FLAT** (no nested objects) and **MUST contain all 23 keys (23 = minimum, no stripped/short
+> bodies)**. The body's `messageTemplate` value is **placeholder-free** (no `{{…}}`) so GHL never mangles
+> the JSON. §14 supersedes any older nested-body, stripped-body, or templated-messageTemplate example
+> anywhere in this skill.
 
 ---
 
@@ -124,11 +125,25 @@ ACTION (exactly one action):
       Authorization: Bearer {{HOOKS_TOKEN}}
       Content-Type: application/json
   - Body type: Raw / JSON
-  - Raw Body (use this EXACT JSON — it MUST be FLAT, NO nested objects. The KEY names are what
-    OpenClaw reads/maps; the VALUES are GHL merge tokens inserted via GHL's Custom Values picker —
-    do not invent extra fields, do not drop any, do NOT add a messageTemplate here):
+  - Raw Body (use this EXACT JSON — it MUST be FLAT, NO nested objects, and it MUST contain ALL 23
+    keys. 23 is the MINIMUM — do NOT drop any, do NOT ship a stripped/short body. The KEY names are
+    what OpenClaw reads/maps; the data VALUES are GHL merge tokens inserted via GHL's Custom Values
+    picker. Keep `messageTemplate` placeholder-free (no `{{…}}`) so GHL never mangles it):
     {
+      "id": "{{HOOK_PATH}}",
+      "match": "{{HOOK_PATH}}",
+      "action": "agent",
+      "agent_id": "{{AGENT_ID}}",
+      "model": "ollama/deepseek-v4-flash:cloud",
+      "wakeMode": "now",
+      "name": "GHL Sales Inbound",
+      "session_key": "hook:ghl:{{CHANNEL}}:{{contact.id}}",
+      "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+      "deliver": false,
+      "timeoutSeconds": 300,
       "channel": "{{CHANNEL}}",
+      "to": "{{contact.phone}}",
+      "thinking": "medium",
       "contact_id": "{{contact.id}}",
       "first_name": "{{contact.first_name}}",
       "last_name": "{{contact.last_name}}",
@@ -136,9 +151,6 @@ ACTION (exactly one action):
       "phone": "{{contact.phone}}",
       "subject": "{{message.subject}}",
       "message_body": "{{message.body}}",
-      "match": "{{HOOK_PATH}}",
-      "session_key": "hook:ghl:{{CHANNEL}}:{{contact.id}}",
-      "agent_id": "{{AGENT_ID}}",
       "location_id": "{{location.id}}",
       "location_name": "{{location.name}}"
     }
@@ -149,8 +161,9 @@ PUBLISH:
 
 ### 3.2 Notes for whoever fills the template
 
-- **The Raw Body is FLAT and data-only — it must NOT contain a `messageTemplate`.** See §14 for the
-  cardinal rule and the full corrected structure (verified LIVE 2026-05-29).
+- **The Raw Body is FLAT and MUST contain all 23 keys (23 = minimum, no stripped/short bodies).** The
+  `messageTemplate` in the body is kept **placeholder-free** (no `{{…}}`) so GHL never mangles it. See
+  §14 for the cardinal rule, the 23-key list, and the full corrected structure (verified LIVE 2026-05-29).
 - One automation = one channel. Build a separate automation (and a separate hook path) per channel the
   client actually uses (there is no GHL merge tag for channel — hardcode it, see §14.6).
 - Insert the Raw Body VALUES via GHL's **Custom Values picker** — typed-as-text tokens send empty (§14.7).
@@ -177,15 +190,17 @@ action.
       spaces, no quotes around the value).
 - [ ] **Content-Type header** is present and equals `application/json`.
 - [ ] **Raw Body** is **FLAT** (NO nested `contact:{}` / `customer_message:{}` objects — nesting makes
-      every field resolve EMPTY at the hook) and matches the template JSON **field-for-field**:
-      `channel`, `contact_id`, `first_name`, `last_name`, `email`, `phone`, `subject`, `message_body`,
-      `match`, `session_key`, `agent_id`, `location_id`, `location_name` — and the merge VALUES were
-      inserted via GHL's **Custom Values picker** so they actually resolve (not literal `{{message.body}}`,
-      not typed-as-text tokens which send empty).
-- [ ] **Raw Body contains NO `messageTemplate`** — the messageTemplate lives ONLY on the server mapping
-      (a templated `messageTemplate` in the GHL body makes GHL try to expand `{{contact_id}}`/`{{message_body}}`
-      as its own merge fields, mangle them to `##{}##`, drop the closing quote, and throw
-      "Error while parsing the object to JSON" → the webhook is Skipped).
+      every field resolve EMPTY at the hook) and contains **ALL 23 keys** (23 is the MINIMUM — no
+      stripped/short bodies), matching the template JSON **field-for-field**:
+      `id`, `match`, `action`, `agent_id`, `model`, `wakeMode`, `name`, `session_key`, `messageTemplate`,
+      `deliver`, `timeoutSeconds`, `channel`, `to`, `thinking`, `contact_id`, `first_name`, `last_name`,
+      `email`, `phone`, `subject`, `message_body`, `location_id`, `location_name` — and the data merge
+      VALUES were inserted via GHL's **Custom Values picker** so they actually resolve (not literal
+      `{{message.body}}`, not typed-as-text tokens which send empty).
+- [ ] **Raw Body's `messageTemplate` value is PLACEHOLDER-FREE** (no `{{…}}` inside it) — a templated
+      `messageTemplate` in the GHL body makes GHL try to expand `{{contact_id}}`/`{{message_body}}` as its
+      own merge fields, mangle them to `##{}##`, drop the closing quote, and throw "Error while parsing the
+      object to JSON" → the webhook is Skipped. Keep the `messageTemplate` value a plain instruction string.
 - [ ] Workflow status is **Published**, not Draft.
 
 **Then send a REAL inbound and confirm end-to-end:**
@@ -202,21 +217,36 @@ action.
 
 ---
 
-## 5. The JSON structure rule (BINDING)
+## 5. The JSON structure rule (BINDING — 23-KEY MINIMUM)
 
-**One value per key, and the GHL Raw Body MUST be FLAT (no nested objects).** Each field gets its own
-top-level key, so the payload stays clean, parseable, and — critically — actually resolves at the hook.
+**The GHL Custom Webhook body MUST contain all 23 keys — 23 is the minimum, no stripped/short bodies.**
+One value per key, the body MUST be FLAT (no nested objects), and you must NEVER ship an 8-key, 11-key,
+or 13-key body anywhere in this skill. Each field gets its own top-level key, so the payload stays clean,
+parseable, and — critically — actually resolves at the hook.
 
-- ✅ FLAT: `{"channel": "sms", "contact_id": "...", "first_name": "...", "phone": "...", "message_body": "..."}`
+**The 23 keys (exact, in this order):**
+`id`, `match`, `action`, `agent_id`, `model`, `wakeMode`, `name`, `session_key`, `messageTemplate`,
+`deliver`, `timeoutSeconds`, `channel`, `to`, `thinking`, `contact_id`, `first_name`, `last_name`,
+`email`, `phone`, `subject`, `message_body`, `location_id`, `location_name`.
+
+What each key is for:
+- **Routing/config keys** (`id`, `match`, `action`, `agent_id`, `model`, `wakeMode`, `name`,
+  `session_key`, `messageTemplate`, `deliver`, `timeoutSeconds`, `channel`, `to`, `thinking`) tell
+  OpenClaw how to route, which agent/model to run, how to thread the session, and what instruction to
+  hand the agent.
+- **Contact/message data keys** (`contact_id`, `first_name`, `last_name`, `email`, `phone`, `subject`,
+  `message_body`, `location_id`, `location_name`) carry the inbound message and contact details; their
+  VALUES are GHL merge tokens inserted via the Custom Values picker.
+
+- ✅ FLAT, all 23 keys present (see the canonical body in §14.1 and §3.1).
 - ❌ NESTED: `{"contact": {"id": "...", "first_name": "..."}, "customer_message": {"body": "..."}}` — a
   nested body makes EVERY field resolve **EMPTY** at the hook (proven LIVE 2026-05-29: even a hardcoded
   `"channel":"sms"` arrived blank when wrapped in nesting). See §14.
-- ❌ Stuffing a long tutorial, multiple IDs, or a free-text blob into one `messageTemplate` /
-  `message` / `body` string.
+- ❌ STRIPPED: any body with fewer than 23 keys. Where you find a short body, REPLACE it with the full
+  23-key body (channel variants only change `channel` + the `session_key` prefix — §14.1).
 
-This applies to the hook Raw Body (FLAT, data-only, NO messageTemplate) and any reusable-values record
-you store. The `hooks.mappings[].messageTemplate` lives ONLY on the server mapping — never in the GHL
-body. If you find yourself concatenating distinct facts into one string, split them into keys.
+The body's `messageTemplate` value MUST stay **placeholder-free** (no `{{…}}`), or GHL mangles the JSON.
+This applies to the hook Raw Body and any reusable-values record you store.
 
 ---
 
@@ -483,7 +513,8 @@ bound channel (e.g. an internal admin echo) — never for GHL API-reply hooks.
    hook paths (§2).
 3. **Build-with-AI prompt is the primary** method; hand-build is the fallback (§3); always run the
    **verification checklist** even on success (§4).
-4. **GHL Raw Body is FLAT, data-only, no nesting, NO messageTemplate** — one value per key (§5, §14).
+4. **GHL Raw Body is FLAT and MUST contain all 23 keys** (23 = minimum, no stripped/short bodies); its
+   `messageTemplate` value is placeholder-free — one value per key (§5, §14).
 5. **Store Reusable Tunnel Values** in AGENTS.md + TOOLS.md + the client's Notion doc, every time,
    kept updated (§6).
 6. Use only the **verified channel→type enum** (§7).
@@ -493,16 +524,18 @@ bound channel (e.g. an internal admin echo) — never for GHL API-reply hooks.
    path to it (§10).
 9. Register crons via the **CLI**, not `cron.jobs` JSON (§11).
 10. API-reply hooks use **`deliver: false`** (§12).
-11. **READ §14 FIRST** — the corrected GHL hook structure (flat body, server-only messageTemplate)
-    supersedes any older nested-body or in-body-messageTemplate example anywhere in this skill (§14).
+11. **READ §14 FIRST** — the corrected GHL hook structure (flat body, all 23 keys, placeholder-free
+    body `messageTemplate`) supersedes any older nested-body or stripped/short-body example anywhere in
+    this skill (§14).
 
 ---
 
 ## 14. CORRECTED GHL HOOK STRUCTURE (2026-05-29) — SUPERSEDES ALL OLDER EXAMPLES
 
 > **Verified LIVE on Corey / Explore Growth, 2026-05-29, OpenClaw 2026.5.27.** This section supersedes
-> ANY older nested-body example or in-body `messageTemplate` anywhere in Skill 38. If another file in
-> this skill still shows a nested `contact:{…}` / `customer_message:{…}` body, THIS section wins.
+> ANY older nested-body or stripped/short-body example anywhere in Skill 38. The GHL Custom Webhook body
+> MUST contain all **23 keys** (23 = minimum). If another file in this skill still shows a nested
+> `contact:{…}` / `customer_message:{…}` body or a sub-23-key body, THIS section wins.
 
 ### CARDINAL RULE — TWO separate objects in TWO systems; never put one inside the other
 
@@ -511,14 +544,31 @@ bound channel (e.g. an internal admin echo) — never for GHL API-reply hooks.
 - **(B) OpenClaw `hooks.mappings` entry** (in `openclaw.json`) = config + the `messageTemplate`. The
   `messageTemplate` is **SERVER-SIDE ONLY**.
 
-### 14.1 — GHL RAW BODY MUST BE FLAT (no nested objects)
+### 14.1 — GHL RAW BODY MUST BE FLAT and contain ALL 23 KEYS (23 = MINIMUM)
 
 A nested `contact:{…}` / `customer_message:{…}` body makes **EVERY** field resolve **EMPTY** at the hook
-(proven: even a hardcoded `"channel":"sms"` arrived blank when nested). Canonical correct FLAT body:
+(proven: even a hardcoded `"channel":"sms"` arrived blank when nested). The body MUST be FLAT and MUST
+contain **all 23 keys** — 23 is the MINIMUM, no stripped/short (8/11/13-key) bodies are allowed. The
+`messageTemplate` value is kept **placeholder-free** (no `{{…}}`) so GHL never mangles the JSON.
+
+**THE CANONICAL 23-KEY GHL BODY (SMS):**
 
 ```json
 {
+  "id": "ghl-sales",
+  "match": "ghl-sales",
+  "action": "agent",
+  "agent_id": "sales",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:sms:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
   "channel": "sms",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
   "contact_id": "{{contact.id}}",
   "first_name": "{{contact.first_name}}",
   "last_name": "{{contact.last_name}}",
@@ -526,20 +576,36 @@ A nested `contact:{…}` / `customer_message:{…}` body makes **EVERY** field r
   "phone": "{{contact.phone}}",
   "subject": "{{message.subject}}",
   "message_body": "{{message.body}}",
-  "match": "ghl-sales",
-  "session_key": "hook:ghl:sms:{{contact.id}}",
-  "agent_id": "sales",
   "location_id": "{{location.id}}",
   "location_name": "{{location.name}}"
 }
 ```
 
-### 14.2 — NEVER put a `messageTemplate` in the GHL body
+**The 23 keys (exact):** `id`, `match`, `action`, `agent_id`, `model`, `wakeMode`, `name`, `session_key`,
+`messageTemplate`, `deliver`, `timeoutSeconds`, `channel`, `to`, `thinking`, `contact_id`, `first_name`,
+`last_name`, `email`, `phone`, `subject`, `message_body`, `location_id`, `location_name`.
 
-GHL would try to expand the `{{contact_id}}` / `{{message_body}}` placeholders inside it as ITS OWN merge
-fields, fail (they are not valid GHL field names), mangle them to `##{}##` and drop the closing quote →
-GHL error **"Error while parsing the object to JSON"** → the webhook is **Skipped**. The `messageTemplate`
-lives **ONLY** on the server mapping.
+**PER-CHANNEL VARIANTS — keep ALL 23 keys; change only `channel` + the `session_key` prefix:**
+
+| Channel | `channel` value | `session_key` |
+|---|---|---|
+| SMS | `sms` | `hook:ghl:sms:{{contact.id}}` |
+| Facebook Messenger | `fb` | `hook:ghl:fb:{{contact.id}}` |
+| Instagram | `instagram` | `hook:ghl:instagram:{{contact.id}}` |
+| WhatsApp | `whatsapp` | `hook:ghl:whatsapp:{{contact.id}}` |
+| Live Chat | `live_chat` | `hook:ghl:live_chat:{{contact.id}}` |
+| Email | `email` | `hook:ghl:email:{{contact.id}}` |
+
+Every channel variant still has all 23 keys.
+
+### 14.2 — The body's `messageTemplate` MUST stay PLACEHOLDER-FREE (no `{{…}}`)
+
+The 23-key body includes a `messageTemplate`, but its VALUE must be a plain instruction string with **no
+`{{…}}` placeholders**. If you put `{{contact_id}}` / `{{message_body}}` placeholders inside it, GHL tries
+to expand them as ITS OWN merge fields, fails (they are not valid GHL field names), mangles them to
+`##{}##`, drops the closing quote → GHL error **"Error while parsing the object to JSON"** → the webhook is
+**Skipped**. Keep the value placeholder-free (e.g. `"Respond as the Sales agent and reply to this contact
+via the GHL Conversations API per TOOLS.md"`) and GHL passes it through untouched.
 
 ### 14.3 — The server mapping REQUIRES a `messageTemplate`
 
@@ -566,8 +632,15 @@ Canonical correct mapping (an `openclaw.json` `hooks.mappings` entry):
 }
 ```
 
-Note the `messageTemplate` references the **FLAT body key names** (`{{contact_id}}`, `{{message_body}}`),
-and `sessionKey: "{{session_key}}"` pulls the flat `session_key` the body sends.
+Note the **server mapping's** `messageTemplate` references the **FLAT body key names** (`{{contact_id}}`,
+`{{message_body}}`), and `sessionKey: "{{session_key}}"` pulls the flat `session_key` the body sends.
+
+> **Two different `messageTemplate` values, in two different objects — do not confuse them.** (A) The
+> **GHL Custom Webhook body** (object A, §14.1) carries a **placeholder-free** `messageTemplate` as one of
+> its 23 keys (no `{{…}}`, or GHL mangles the JSON — §14.2). (B) The **OpenClaw `hooks.mappings`** entry
+> (object B, above) carries a **templated** `messageTemplate` that references the flat body key names. The
+> server mapping's `messageTemplate` is what actually drives the agent's run; the body's placeholder-free
+> `messageTemplate` is part of the mandated 23-key payload shape.
 
 ### 14.5 — `deliver` MUST be `false`
 

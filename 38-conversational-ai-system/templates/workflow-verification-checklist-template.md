@@ -67,18 +67,24 @@ If any item is wrong, the fix is listed right there.
 - [ ] Content-Type dropdown is "application/json"
   - FIX IF WRONG: Change dropdown
 
-- [ ] Raw Body matches the JSON below EXACTLY (whitespace doesn't
-       matter, but every field, every quote, every brace must match):
+- [ ] Raw Body matches the full 23-key JSON from the D.2 prompt EXACTLY
+       (whitespace doesn't matter, but every field, every quote, every
+       brace must match — the body MUST contain ALL 23 keys, no
+       stripped/short body):
 
 ```json
 {
-  "channel": "<channel>",
-  ... [full body from D.2 prompt] ...
+  "id": "<HOOK_NAME>",
+  ... [the full 23-key body from the D.2 prompt; 23 = minimum] ...
+  "location_name": "{{location.name}}"
 }
 ```
-  - Common Workflow AI mistake: skips fields, uses wrong variable
-    syntax (e.g., `{contact.id}` instead of `{{contact.id}}`)
-  - FIX IF WRONG: Click Raw Body → replace entirely with the JSON above
+  - Common Workflow AI mistake: ships a stripped/short body (fewer than 23
+    keys — most often drops `id`, `model`, `to`, `thinking`, or
+    `session_key`), or uses wrong variable syntax (e.g., `{contact.id}`
+    instead of `{{contact.id}}`)
+  - FIX IF WRONG: Click Raw Body → replace entirely with the full 23-key
+    JSON above
 
 ## Publish
 

@@ -232,11 +232,24 @@ ACTIONS (in this exact order):
   - Headers:
     - Authorization: Bearer <HOOKS_TOKEN>
     - Content-Type: application/json
-  - Body (Raw JSON) — MUST be FLAT (no nested objects) and data-only (NO messageTemplate). Insert
-    VALUES via GHL's Custom Values picker; the KEY names are what OpenClaw reads/maps. See
-    references/GHL-INBOUND-AND-PLAYBOOKS.md §14:
+  - Body (Raw JSON) — MUST be FLAT (no nested objects) and MUST contain ALL 23 keys (23 = minimum, no
+    stripped/short bodies). Insert the data VALUES via GHL's Custom Values picker; the KEY names are what
+    OpenClaw reads/maps. Keep `messageTemplate` placeholder-free. See references/GHL-INBOUND-AND-PLAYBOOKS.md §14:
     {
+      "id": "<HOOK_NAME>",
+      "match": "<HOOK_NAME>",
+      "action": "agent",
+      "agent_id": "<AGENT_ID>",
+      "model": "ollama/deepseek-v4-flash:cloud",
+      "wakeMode": "now",
+      "name": "GHL Sales Inbound",
+      "session_key": "hook:ghl:<channel name>:{{contact.id}}",
+      "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+      "deliver": false,
+      "timeoutSeconds": 300,
       "channel": "<channel name>",
+      "to": "{{contact.phone}}",
+      "thinking": "medium",
       "contact_id": "{{contact.id}}",
       "first_name": "{{contact.first_name}}",
       "last_name": "{{contact.last_name}}",
@@ -244,9 +257,6 @@ ACTIONS (in this exact order):
       "phone": "{{contact.phone}}",
       "subject": "{{message.subject}}",
       "message_body": "{{message.body}}",
-      "match": "<HOOK_NAME>",
-      "session_key": "hook:ghl:<channel name>:{{contact.id}}",
-      "agent_id": "<AGENT_ID>",
       "location_id": "{{location.id}}",
       "location_name": "{{location.name}}"
     }
@@ -254,7 +264,7 @@ ACTIONS (in this exact order):
 PUBLISH: Yes, publish the workflow when done — don't leave it as draft.
 ```
 
-Each field is filled in with the EXACT values from the operator's setup (`PUBLIC_HOSTNAME`, `HOOK_NAME`, `HOOKS_TOKEN`, channel name, `AGENT_ID`). The body stays FLAT and data-only — the `messageTemplate` lives ONLY on the OpenClaw server `hooks.mappings` entry and MUST include the reply-via-GHL-API instruction (see GHL-INBOUND-AND-PLAYBOOKS.md §14).
+Each field is filled in with the EXACT values from the operator's setup (`PUBLIC_HOSTNAME`, `HOOK_NAME`, `HOOKS_TOKEN`, channel name, `AGENT_ID`). The body stays FLAT and contains all 23 keys — the body's `messageTemplate` value stays placeholder-free (no `{{…}}`), while the OpenClaw server `hooks.mappings` entry carries its own templated `messageTemplate` that MUST include the reply-via-GHL-API instruction (see GHL-INBOUND-AND-PLAYBOOKS.md §14).
 
 The agent then tells the operator:
 
@@ -324,18 +334,24 @@ If any item is wrong, the fix is listed right there.
 - [ ] Content-Type dropdown is "application/json"
   - FIX IF WRONG: Change dropdown
 
-- [ ] Raw Body matches the JSON below EXACTLY (whitespace doesn't
-       matter, but every field, every quote, every brace must match):
+- [ ] Raw Body matches the full 23-key JSON from the D.2 prompt EXACTLY
+       (whitespace doesn't matter, but every field, every quote, every
+       brace must match — the body MUST contain ALL 23 keys, no
+       stripped/short body):
 
 ```json
 {
-  "channel": "<channel>",
-  ... [full body from D.2 prompt] ...
+  "id": "<HOOK_NAME>",
+  ... [the full 23-key body from the D.2 prompt; 23 = minimum] ...
+  "location_name": "{{location.name}}"
 }
 ```
-  - Common Build-with-AI mistake: skips fields, uses wrong variable
-    syntax (e.g., `{contact.id}` instead of `{{contact.id}}`)
-  - FIX IF WRONG: Click Raw Body → replace entirely with the JSON above
+  - Common Build-with-AI mistake: ships a stripped/short body (fewer than
+    23 keys — most often drops `id`, `model`, `to`, `thinking`, or
+    `session_key`), or uses wrong variable syntax (e.g., `{contact.id}`
+    instead of `{{contact.id}}`)
+  - FIX IF WRONG: Click Raw Body → replace entirely with the full 23-key
+    JSON above
 
 ## Publish
 
