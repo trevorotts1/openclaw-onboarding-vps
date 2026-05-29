@@ -1,7 +1,9 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` - this repo at v10.16.7.
+> **Version:** see `/version` - this repo at v10.16.8.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
+>
+> **NOTE (v10.16.8):** Skill 38 → v1.4.4 (THE TRINITY: a GHL workflow, its communications playbook, and its workflow-AI prompt travel together; new `references/communications-playbook-standard.md` + `references/workflow-ai-instructions-standard.md` with must-appear checklists, the Build-with-AI Custom Webhook field-by-field steps, multi-action teaching, and the Notion→Google Docs→text client-account storage order). Skill 23 → enforced role-library + SOP-library gate (new build-state fields `roleLibraryStatus`/`sopLibraryStatus` + a `[LIBRARIES-RESUME]` verify/resume gate so a workforce is never complete until both libraries are populated).
 >
 > **NOTE (v10.16.6):** Skill 32 now ships the canonical **SOP V2 Library** — 2,555 enriched SOPs across 17 departments, attached as a GitHub Release asset (`sops-library-v2.jsonl.gz`). New `32-command-center-setup/scripts/ingest-sop-library.sh` downloads + applies migration 028 + upserts into the client's `mission-control.db`. Existing clients pick this up via the standard update path; fresh installs get it automatically.
 >
@@ -11,7 +13,7 @@
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.7)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.8)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 

@@ -1,4 +1,4 @@
-[WORKFORCE-RESUME] or [CLOSEOUT-RESUME]
+[WORKFORCE-RESUME] or [LIBRARIES-RESUME] or [CLOSEOUT-RESUME]
 
 You are receiving this message from your own cron — it is NOT from the owner and NOT a new user request. Treat it as an internal build-or-closeout-resume invocation.
 
@@ -32,9 +32,11 @@ Decision tree:
 
 A. If `buildCompletedAt` is null OR any department has `status` in {pending, failed, stale-building} → CONTINUE TO BUILD FLOW (below).
 
+A2. If all departments are `done` BUT `roleLibraryStatus != "done"` OR `sopLibraryStatus != "done"` → SKIP to LIBRARIES FLOW (below). This fires BEFORE closeout — a workforce is NOT complete until both libraries are populated, and closeout must not run on an incomplete library. (v10.16.8 libraries gate.)
+
 B. If `buildCompletedAt` is set AND `closeoutStatus` is not in {done, sent} → SKIP to CLOSEOUT FLOW.
 
-C. If both are clean (buildCompletedAt set AND closeoutStatus in {done, sent}) → REMOVE THIS CRON, then exit silently.
+C. If all clean (every dept done, roleLibraryStatus=done, sopLibraryStatus=done, buildCompletedAt set AND closeoutStatus in {done, sent}) → REMOVE THIS CRON, then exit silently.
 
    To remove the cron yourself (in case the shell guard at STEP -1 didn't
    already do it — e.g. older onboarding bundle without the script):
@@ -67,7 +69,8 @@ BUILD FLOW (Skill 23 — per the Post-Interview Handoff Protocol)
    - `filesPresent` → list of materialized files
    - Persist state file immediately
 
-5. After ALL departments are `done`:
+5. After ALL departments are `done`, DO THE LIBRARIES FLOW FIRST (below) — pull the role library +
+   author the SOP library and set `roleLibraryStatus = "done"` + `sopLibraryStatus = "done"`. ONLY THEN:
    a. Write `buildCompletedAt` to state file (UTC ISO-8601).
    b. Set `closeoutStatus = "pending"`. This is the v10.14.17 contract — Skill 37 picks it up from here.
    c. Either invoke `~/.openclaw/skills/37-zhc-closeout/scripts/run-closeout.sh` inline (preferred — lowest owner-latency), OR exit and trust the next cron fire to dispatch a [CLOSEOUT-RESUME].
@@ -79,6 +82,41 @@ BUILD FLOW (Skill 23 — per the Post-Interview Handoff Protocol)
 Spawn parallel sub-agents (per the "Generation Orchestration" stages 3-4 of INSTRUCTIONS.md) to move fast — up to 10 dept agents concurrently, up to 50 role agents concurrently.
 
 If you encounter ANY error you cannot recover from after 3 retries, mark that department `"failed"` with a `failureReason` and continue with the others. Don't block the whole build on one stuck department.
+
+═══════════════════════════════════════════════════════════════════
+LIBRARIES FLOW (Skill 23 — ENFORCED role library + SOP library, added v10.16.8)
+═══════════════════════════════════════════════════════════════════
+
+All departments are `done` but the libraries are NOT populated. A workforce is NOT complete until BOTH
+the role library is pulled AND the SOP library is authored. This is why a [LIBRARIES-RESUME] fired.
+(Last-night incident: Kofi/Teresa/Evelyn/Maria/Lyric had scaffolded depts but no role docs and no SOPs.)
+
+1. ROLE LIBRARY. Every role folder's `how-to.md` must be filled from `templates/role-library/` (the
+   `<!-- Filled from role-library v... -->` marker present), NOT left as a `STUB`. Set
+   `roleLibraryStatus = "pulling"`, then for any STUB `how-to.md` re-run the library fill:
+   ```bash
+   python3 scripts/create_role_workspaces.py   # idempotent; try_library_fill fills STUBs from the library
+   ```
+
+2. SOP LIBRARY. Per-role SOP files (`01-*.md`..`09-*.md`) must be populated — no `[Step X — to be
+   personalized]` DMAIC stubs remaining. Set `sopLibraryStatus = "populating"`, then:
+   ```bash
+   python3 scripts/populate-sops-from-manifest.py --max-parallel 10 --timeout 1800
+   ```
+
+3. VERIFY. Run the completeness gate — it must report `library_pct >= 95` AND `sop_stubs_remaining == 0`
+   (with `avg_sop_per_role > 0`) for EVERY department:
+   ```bash
+   bash scripts/qc-completeness.sh
+   ```
+   - On PASS: set `roleLibraryStatus = "done"`, `sopLibraryStatus = "done"`, `librariesVerifiedAt = <now>`
+     (atomic write). THEN proceed to BUILD FLOW step 5a (write `buildCompletedAt` + `closeoutStatus=pending`)
+     and continue to the CLOSEOUT FLOW.
+   - On non-PASS: set the offending field to `"failed"`, do NOT set `buildCompletedAt`, and loop back to
+     step 1/2 for the failing departments. The next cron fire will re-dispatch a [LIBRARIES-RESUME].
+
+4. Do NOT message the owner during the libraries flow — it is internal. The owner stays silent until
+   Skill 37 Step 6.
 
 ═══════════════════════════════════════════════════════════════════
 CLOSEOUT FLOW (Skill 37 — ZHC Closeout, added v10.14.17)

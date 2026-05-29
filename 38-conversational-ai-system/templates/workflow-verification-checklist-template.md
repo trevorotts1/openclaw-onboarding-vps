@@ -3,6 +3,30 @@
 <!-- The pattern: every checklist item names the failure mode + the click-by-click fix. -->
 <!-- Substitution placeholders: <PUBLIC_HOSTNAME>, <ROUTE_ID>, <CHANNEL>, <HOOKS_TOKEN>. -->
 <!-- Rendered per-workflow by scripts/21-generate-client-reference-sheet.sh. -->
+<!-- Standard: references/workflow-ai-instructions-standard.md §4. -->
+
+## BUILD-WITH-AI VERIFICATION CHECKLIST (run AFTER Build-with-AI finishes — concise)
+
+GHL's Build-with-AI populates the webhook poorly, so run this every time, even when the prompt
+"succeeded". Open the workflow and confirm EACH item before publishing:
+
+- [ ] **Trigger type + filter** correct (e.g. "Customer Replied", filtered to `<CHANNEL>` — not all channels).
+- [ ] **Exactly the intended action(s)** exist — none missing, none extra (for multi-action: every
+      if/else branch + Add-Tag + tag-check present).
+- [ ] **Custom Webhook METHOD = POST.**
+- [ ] **URL is the REAL hook URL** `https://<PUBLIC_HOSTNAME>/hooks/<ROUTE_ID>` — NOT the sample-url
+      placeholder, no trailing slash, correct path.
+- [ ] **AUTHORIZATION dropdown = None** (token lives in Headers).
+- [ ] **HEADERS contain** `Authorization: Bearer <HOOKS_TOKEN>` (added via "Add item") **and**
+      `Content-Type: application/json`.
+- [ ] **CONTENT-TYPE = application/json.**
+- [ ] **RAW BODY = all 23 keys, FLAT** (no nesting), `messageTemplate` placeholder-free, no stripped body.
+- [ ] **Any required tags created/applied** (created beforehand via the GHL skill).
+- [ ] **Workflow Published** (not Draft).
+
+The detailed, click-by-click failure-mode version follows below (verbatim from the playbook).
+
+---
 
 > "✓ Workflow AI prompt ready. Two things to do:
 >

@@ -186,9 +186,13 @@ the baseline for every reply on this channel.
 ### Step 1.8 — Apply the active Conversation Workflow (if any)
 
 If the inbound matches a trigger in `<MASTER_FILES_DIR>/conversation-workflows/registry.md`,
-follow that workflow's `<workflow-id>.md` for phase-specific behavior. The
+follow that workflow's `<workflow-id>.md` (a communications playbook — format/standard:
+references/communications-playbook-standard.md) for phase-specific behavior. The
 workflow's instructions override the channel playbook for the duration of
 that scenario. Always honor the channel playbook's baseline tone/signature.
+Reply via the GHL Conversations API per TOOLS.md. These playbooks belong to
+THE TRINITY (workflow + communications playbook + workflow-AI prompt) —
+protocols/conversation-workflows-protocol.md.
 
 ### Step 1.9 — Log the turn after sending
 
@@ -295,6 +299,16 @@ automation to the conversation playbook. Confirm the 3-layer architecture
 (Layer 0 routing check / Layer 1 GHL side / Layer 2 OpenClaw playbook) is set
 up end-to-end before declaring the workflow live. See also Step 9.33
 (Intelligent Playbook Routing) and Step 9.34 (Proactive Features Suite).
+
+THE TRINITY (binding): a GHL workflow, a communications playbook, and a
+workflow-AI prompt always travel together — one implies the other two; never
+ship one alone. Full rule + the 3-PART build: protocols/conversation-workflows-protocol.md
+("THE TRINITY"). Communications-playbook format + must-appear checklist +
+storage/registry + the Notion→Google Docs→text client-account fallback order:
+references/communications-playbook-standard.md. Workflow-AI (Build-with-AI)
+prompt standard — WHERE it goes (GHL Automations "Build with AI" button), the
+Custom Webhook field-by-field steps, the full 23-key body, multi-action +
+create-tag-first: references/workflow-ai-instructions-standard.md.
 
 BLOCK_E
 
