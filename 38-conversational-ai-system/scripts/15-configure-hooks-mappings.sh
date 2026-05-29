@@ -13,8 +13,9 @@ GATEWAY_PORT="${GATEWAY_PORT:-18789}"
 
 : "${ROUTE_ID:?ROUTE_ID missing — set in env or in secrets.env}"
 : "${PUBLIC_HOSTNAME:?PUBLIC_HOSTNAME missing — run 13-create-cloudflare-tunnel.sh first}"
-# NOTE: the GHL Raw Body is FLAT and data-only (see references/GHL-INBOUND-AND-PLAYBOOKS.md §14).
-# The mapping below references the FLAT body key names ({{session_key}}, {{contact_id}}, {{message_body}}).
+# NOTE: the GHL Raw Body is FLAT and MUST contain all 23 keys (23 = minimum, no stripped/short bodies;
+# its messageTemplate value is placeholder-free) — see references/GHL-INBOUND-AND-PLAYBOOKS.md §14.
+# The SERVER mapping below references the FLAT body key names ({{session_key}}, {{contact_id}}, {{message_body}}).
 SESSION_KEY="${SESSION_KEY:-{{session_key}}}"
 
 command -v jq >/dev/null 2>&1 || { echo "jq required" >&2; exit 3; }
@@ -234,8 +235,9 @@ fi
 # STEP 4 — End-to-end test through the public tunnel
 # =============================================================================
 echo "==> Step 4: end-to-end test" >&2
-# FLAT body (data-only, no nesting, no messageTemplate) — see references/GHL-INBOUND-AND-PLAYBOOKS.md §14.
-PAYLOAD="{\"channel\":\"sms\",\"contact_id\":\"e2e-test-001\",\"first_name\":\"E2E\",\"last_name\":\"Test\",\"email\":\"e2e@example.com\",\"phone\":\"+15555550100\",\"subject\":\"\",\"message_body\":\"End-to-end setup verification.\",\"match\":\"${ROUTE_ID}\",\"session_key\":\"hook:ghl:sms:e2e-test-001\",\"agent_id\":\"${ROUTING_AGENT_ID:-main}\",\"location_id\":\"e2e-loc-001\",\"location_name\":\"E2E Test Location\"}"
+# FLAT body — MUST contain ALL 23 keys (23 = minimum, no stripped/short bodies); the body's
+# messageTemplate is placeholder-free — see references/GHL-INBOUND-AND-PLAYBOOKS.md §14.
+PAYLOAD="{\"id\":\"${ROUTE_ID}\",\"match\":\"${ROUTE_ID}\",\"action\":\"agent\",\"agent_id\":\"${ROUTING_AGENT_ID:-main}\",\"model\":\"ollama/deepseek-v4-flash:cloud\",\"wakeMode\":\"now\",\"name\":\"GHL Sales Inbound\",\"session_key\":\"hook:ghl:sms:e2e-test-001\",\"messageTemplate\":\"Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md\",\"deliver\":false,\"timeoutSeconds\":300,\"channel\":\"sms\",\"to\":\"+15555550100\",\"thinking\":\"medium\",\"contact_id\":\"e2e-test-001\",\"first_name\":\"E2E\",\"last_name\":\"Test\",\"email\":\"e2e@example.com\",\"phone\":\"+15555550100\",\"subject\":\"\",\"message_body\":\"End-to-end setup verification.\",\"location_id\":\"e2e-loc-001\",\"location_name\":\"E2E Test Location\"}"
 
 HTTP_CODE="$(curl -sS -o /tmp/.hooks-e2e-body.$$ -w '%{http_code}' \
   --max-time 30 \

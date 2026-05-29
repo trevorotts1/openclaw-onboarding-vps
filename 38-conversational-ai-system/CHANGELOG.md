@@ -1,5 +1,41 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.3] - 2026-05-29 - Enforce 23-key GHL body everywhere
+
+Owner directive (non-negotiable): EVERY GHL Custom Webhook RAW BODY example in Skill 38 must contain
+**all 23 keys** — 23 is the MINIMUM, no stripped/short (8/11/13-key) bodies are allowed anywhere in the
+repo. Every previously-shorter (13-key) body was REPLACED with the full 23-key canonical body. The body
+stays FLAT (no nesting), the body's `messageTemplate` value is kept **placeholder-free** (no `{{…}}`, or
+GHL throws "Error while parsing the object to JSON"), and no `\n` appears inside any JSON example. The
+23 keys (exact): `id`, `match`, `action`, `agent_id`, `model`, `wakeMode`, `name`, `session_key`,
+`messageTemplate`, `deliver`, `timeoutSeconds`, `channel`, `to`, `thinking`, `contact_id`, `first_name`,
+`last_name`, `email`, `phone`, `subject`, `message_body`, `location_id`, `location_name`. Per-channel
+variants change only `channel` + the `session_key` prefix (sms / fb / instagram / whatsapp / live_chat /
+email). The OpenClaw server `hooks.mappings` entry (object B) is unchanged — it keeps its own templated
+`messageTemplate`; only the GHL Custom Webhook body (object A) is the 23-key payload.
+
+### Changed
+- `references/GHL-INBOUND-AND-PLAYBOOKS.md` — replaced the §3.1 Build-with-AI Raw Body and the §14.1
+  canonical body with the full 23-key body; added the per-channel variants table (§14.1); stated the
+  23-key rule plainly in §5 with the full key list and per-key explanation; updated the §4 verification
+  checklist field list to all 23 keys and reframed the messageTemplate item to "placeholder-free" (instead
+  of "no messageTemplate"); reconciled §14.2 (body messageTemplate must stay placeholder-free) and added a
+  two-objects note after §14.4; updated the header warning, §13 quick-index items 4 & 11, and the §14 intro.
+- `references/v5.14-source-playbook.md` — upgraded the localhost smoke-test body, the E2E test body, the
+  Part 1 D.2 Build-with-AI body, the D.3 verification-checklist body reference, and all Part 3 channel Raw
+  Body blocks to the full 23-key body (added a WhatsApp block; aligned facebook→fb, livechat→live_chat to
+  the §7 verified send-type enum); updated the §3C corrected-structure callout to the 23-key standard.
+- `scripts/15-configure-hooks-mappings.sh` — the Step 4 E2E test PAYLOAD is now the full 23-key body
+  (validated as 23-key JSON); header comment updated to the 23-key rule. Server mapping unchanged.
+- `templates/client-reference-sheet-template.md` — all channel Raw Body blocks upgraded to 23 keys (added
+  WhatsApp); count references updated.
+- `templates/sms-workflow-ai-prompt-template.md` — the SMS Raw Body upgraded to 23 keys; the Workflow-AI
+  "common mistakes" list now flags placeholder-in-body-messageTemplate and sub-23-key (stripped) bodies.
+- `templates/workflow-verification-checklist-template.md` — Raw Body checklist item now mandates all 23 keys.
+- `protocols/conversation-workflows-protocol.md` — the D.2 Build-with-AI body and the verification-checklist
+  Raw Body item upgraded to the 23-key standard.
+- `skill-version.txt` bumped to `1.4.3`.
+
 ## [1.4.2] - 2026-05-29 - Corrected GHL inbound hook structure: FLAT body, no nesting, server-only messageTemplate
 
 GHL inbound-hook correction verified LIVE on Corey / Explore Growth (OpenClaw 2026.5.27). The GHL Custom

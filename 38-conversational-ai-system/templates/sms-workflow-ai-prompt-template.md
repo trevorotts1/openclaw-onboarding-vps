@@ -46,10 +46,24 @@ ACTIONS (in this exact order):
     - Content-Type: application/json
   - Content-Type dropdown: application/json
   - Body type: Raw JSON
-  - Body (Raw JSON) — MUST be FLAT (no nested objects) and data-only (NO messageTemplate). The KEY
-    names are what OpenClaw reads; insert the VALUES via GHL's Custom Values picker:
+  - Body (Raw JSON) — MUST be FLAT (no nested objects) and MUST contain ALL 23 keys (23 = minimum, no
+    stripped/short bodies). The KEY names are what OpenClaw reads; insert the data VALUES via GHL's
+    Custom Values picker. Keep `messageTemplate` placeholder-free (no `{{…}}`) so GHL never mangles it:
     {
+      "id": "<ROUTE_ID>",
+      "match": "<ROUTE_ID>",
+      "action": "agent",
+      "agent_id": "<AGENT_ID>",
+      "model": "ollama/deepseek-v4-flash:cloud",
+      "wakeMode": "now",
+      "name": "GHL Sales Inbound",
+      "session_key": "hook:ghl:sms:{{contact.id}}",
+      "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+      "deliver": false,
+      "timeoutSeconds": 300,
       "channel": "sms",
+      "to": "{{contact.phone}}",
+      "thinking": "medium",
       "contact_id": "{{contact.id}}",
       "first_name": "{{contact.first_name}}",
       "last_name": "{{contact.last_name}}",
@@ -57,9 +71,6 @@ ACTIONS (in this exact order):
       "phone": "{{contact.phone}}",
       "subject": "{{message.subject}}",
       "message_body": "{{message.body}}",
-      "match": "<ROUTE_ID>",
-      "session_key": "hook:ghl:sms:{{contact.id}}",
-      "agent_id": "<AGENT_ID>",
       "location_id": "{{location.id}}",
       "location_name": "{{location.name}}"
     }
@@ -90,11 +101,13 @@ Workflow AI is helpful but has known failure modes. The most common ones:
 - Uses single curly-brace variables (`{contact.id}`) instead of GHL double-brace syntax (`{{contact.id}}`).
 - **NESTS the body** (`contact: {…}`, `customer_message: {…}`) instead of keeping it FLAT — a nested
   body makes EVERY field arrive EMPTY at the hook. The body must be flat, top-level keys only.
-- **Adds a `messageTemplate` into the body** — it must NOT be there (it lives only on the OpenClaw
-  server mapping). A templated messageTemplate in the body makes GHL throw "Error while parsing the
-  object to JSON" and the webhook is Skipped.
+- **Puts `{{…}}` placeholders inside the body's `messageTemplate` value** — the body's `messageTemplate`
+  must stay PLACEHOLDER-FREE (a templated messageTemplate in the body makes GHL throw "Error while parsing
+  the object to JSON" and the webhook is Skipped). Keep it the plain instruction string shown above.
 - Saves the workflow as **Draft** instead of **Published**.
-- Skips one of the JSON body fields (most often `location_id` or `session_key`).
+- **Ships a stripped/short body (fewer than 23 keys)** — the body MUST contain ALL 23 keys. Workflow AI
+  most often drops `id`, `model`, `to`, `thinking`, `location_id`, or `session_key`. Re-paste the full
+  23-key body if any key is missing.
 - Sets the wrong run schedule (e.g., business hours only when you wanted 24/7).
 
 Each of these failure modes is covered in **Section 4 — Workflow Verification Checklist** with the exact click-by-click fix. Run the checklist top-to-bottom after Workflow AI finishes. Don't publish until every item is checked.

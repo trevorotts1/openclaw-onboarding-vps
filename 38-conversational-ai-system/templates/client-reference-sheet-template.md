@@ -3,7 +3,7 @@
   Rendering paths:
     1. Notion-first  → scripts/21-generate-client-reference-sheet.sh (agent #5) writes this to a fresh page in the client's Notion workspace, substituting <PLACEHOLDER> tokens with captured run values.
     2. Markdown fallback → if Notion is unavailable, the same script saves the rendered file to $MASTER_FILES_DIR/openclaw-ghl-webhook-setup-<timestamp>.md.
-  The six channel-specific Raw Body JSONs (SMS, Email, Facebook, Instagram, Live Chat, All-in-One) live below in Part 3 — copy the one matching each GHL workflow's "Custom Webhook" body.
+  The channel-specific Raw Body JSONs (SMS, Email, Facebook, Instagram, WhatsApp, Live Chat, All-in-One) live below in Part 3 — copy the one matching each GHL workflow's "Custom Webhook" body. Each is the full 23-key body.
 -->
 
 # Part 2 — The Client Reference Sheet (what gets written to Notion or the markdown file)
@@ -97,7 +97,7 @@ Set to: application/json
 
 ---
 
-(See Part 3 for the six Raw Body blocks)
+(See Part 3 for the channel-specific Raw Body blocks — each is the full 23-key body)
 
 ---
 
@@ -166,19 +166,32 @@ To wire Stripe, n8n, Calendly, Zapier, or any other service into the same OpenCl
 
 ---
 
-# Part 3 — Six channel-specific Raw Body JSONs
+# Part 3 — Channel-specific Raw Body JSONs (each is the FULL 23-key body)
 
 These are the Raw Body blocks the operator pastes into GHL's Custom Webhook action. ONE block per channel, ONE workflow per channel. The `channel` field is hardcoded because GHL has NO merge tag for channel/message-type — and since each workflow's trigger filter already constrains the channel, hardcoding is correct.
 
-**Each body is FLAT (no nested objects) and DATA-ONLY (no `messageTemplate`).** A nested `contact:{}` / `customer_message:{}` body makes EVERY field arrive EMPTY at the hook; a `messageTemplate` in the body makes GHL throw "Error while parsing the object to JSON". The `messageTemplate` lives ONLY on the OpenClaw server mapping (see references/GHL-INBOUND-AND-PLAYBOOKS.md §14). Insert the VALUES via GHL's Custom Values picker (typed-as-text tokens send empty); the KEY names are what OpenClaw reads/maps.
+**Each body is FLAT (no nested objects) and MUST contain ALL 23 keys (23 = MINIMUM, no stripped/short bodies).** A nested `contact:{}` / `customer_message:{}` body makes EVERY field arrive EMPTY at the hook. The body's `messageTemplate` value is kept **placeholder-free** (no `{{…}}`) so GHL never mangles the JSON (see references/GHL-INBOUND-AND-PLAYBOOKS.md §14). Insert the data VALUES via GHL's Custom Values picker (typed-as-text tokens send empty); the KEY names are what OpenClaw reads/maps.
 
-All six blocks have the same flat structure. Only the `channel` and `session_key` values change. The operator copies the block matching the channel they're setting up. Replace `<HOOK_NAME>` (the hooks.mappings `match.path`) and `<AGENT_ID>` (the target agent id, data only) with the run values.
+Every block has the same 23-key flat structure. Only the `channel` value and the `session_key` prefix change between channels. The operator copies the block matching the channel they're setting up. Replace `<HOOK_NAME>` (the hooks.mappings `match.path`) and `<AGENT_ID>` (the target agent id) with the run values.
 
 ### SMS workflow — Raw Body
 
 ```json
 {
+  "id": "<HOOK_NAME>",
+  "match": "<HOOK_NAME>",
+  "action": "agent",
+  "agent_id": "<AGENT_ID>",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:sms:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
   "channel": "sms",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
   "contact_id": "{{contact.id}}",
   "first_name": "{{contact.first_name}}",
   "last_name": "{{contact.last_name}}",
@@ -186,9 +199,6 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
   "phone": "{{contact.phone}}",
   "subject": "{{message.subject}}",
   "message_body": "{{message.body}}",
-  "match": "<HOOK_NAME>",
-  "session_key": "hook:ghl:sms:{{contact.id}}",
-  "agent_id": "<AGENT_ID>",
   "location_id": "{{location.id}}",
   "location_name": "{{location.name}}"
 }
@@ -198,7 +208,20 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
 
 ```json
 {
+  "id": "<HOOK_NAME>",
+  "match": "<HOOK_NAME>",
+  "action": "agent",
+  "agent_id": "<AGENT_ID>",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:email:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
   "channel": "email",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
   "contact_id": "{{contact.id}}",
   "first_name": "{{contact.first_name}}",
   "last_name": "{{contact.last_name}}",
@@ -206,9 +229,6 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
   "phone": "{{contact.phone}}",
   "subject": "{{message.subject}}",
   "message_body": "{{message.body}}",
-  "match": "<HOOK_NAME>",
-  "session_key": "hook:ghl:email:{{contact.id}}",
-  "agent_id": "<AGENT_ID>",
   "location_id": "{{location.id}}",
   "location_name": "{{location.name}}"
 }
@@ -218,7 +238,20 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
 
 ```json
 {
-  "channel": "facebook",
+  "id": "<HOOK_NAME>",
+  "match": "<HOOK_NAME>",
+  "action": "agent",
+  "agent_id": "<AGENT_ID>",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:fb:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
+  "channel": "fb",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
   "contact_id": "{{contact.id}}",
   "first_name": "{{contact.first_name}}",
   "last_name": "{{contact.last_name}}",
@@ -226,9 +259,6 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
   "phone": "{{contact.phone}}",
   "subject": "{{message.subject}}",
   "message_body": "{{message.body}}",
-  "match": "<HOOK_NAME>",
-  "session_key": "hook:ghl:facebook:{{contact.id}}",
-  "agent_id": "<AGENT_ID>",
   "location_id": "{{location.id}}",
   "location_name": "{{location.name}}"
 }
@@ -238,7 +268,20 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
 
 ```json
 {
+  "id": "<HOOK_NAME>",
+  "match": "<HOOK_NAME>",
+  "action": "agent",
+  "agent_id": "<AGENT_ID>",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:instagram:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
   "channel": "instagram",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
   "contact_id": "{{contact.id}}",
   "first_name": "{{contact.first_name}}",
   "last_name": "{{contact.last_name}}",
@@ -246,9 +289,36 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
   "phone": "{{contact.phone}}",
   "subject": "{{message.subject}}",
   "message_body": "{{message.body}}",
+  "location_id": "{{location.id}}",
+  "location_name": "{{location.name}}"
+}
+```
+
+### WhatsApp workflow — Raw Body
+
+```json
+{
+  "id": "<HOOK_NAME>",
   "match": "<HOOK_NAME>",
-  "session_key": "hook:ghl:instagram:{{contact.id}}",
+  "action": "agent",
   "agent_id": "<AGENT_ID>",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:whatsapp:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
+  "channel": "whatsapp",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
+  "contact_id": "{{contact.id}}",
+  "first_name": "{{contact.first_name}}",
+  "last_name": "{{contact.last_name}}",
+  "email": "{{contact.email}}",
+  "phone": "{{contact.phone}}",
+  "subject": "{{message.subject}}",
+  "message_body": "{{message.body}}",
   "location_id": "{{location.id}}",
   "location_name": "{{location.name}}"
 }
@@ -258,7 +328,20 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
 
 ```json
 {
-  "channel": "livechat",
+  "id": "<HOOK_NAME>",
+  "match": "<HOOK_NAME>",
+  "action": "agent",
+  "agent_id": "<AGENT_ID>",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:live_chat:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
+  "channel": "live_chat",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
   "contact_id": "{{contact.id}}",
   "first_name": "{{contact.first_name}}",
   "last_name": "{{contact.last_name}}",
@@ -266,9 +349,6 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
   "phone": "{{contact.phone}}",
   "subject": "{{message.subject}}",
   "message_body": "{{message.body}}",
-  "match": "<HOOK_NAME>",
-  "session_key": "hook:ghl:livechat:{{contact.id}}",
-  "agent_id": "<AGENT_ID>",
   "location_id": "{{location.id}}",
   "location_name": "{{location.name}}"
 }
@@ -278,7 +358,20 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
 
 ```json
 {
+  "id": "<HOOK_NAME>",
+  "match": "<HOOK_NAME>",
+  "action": "agent",
+  "agent_id": "<AGENT_ID>",
+  "model": "ollama/deepseek-v4-flash:cloud",
+  "wakeMode": "now",
+  "name": "GHL Sales Inbound",
+  "session_key": "hook:ghl:allinone:{{contact.id}}",
+  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "deliver": false,
+  "timeoutSeconds": 300,
   "channel": "allinone",
+  "to": "{{contact.phone}}",
+  "thinking": "medium",
   "contact_id": "{{contact.id}}",
   "first_name": "{{contact.first_name}}",
   "last_name": "{{contact.last_name}}",
@@ -286,9 +379,6 @@ All six blocks have the same flat structure. Only the `channel` and `session_key
   "phone": "{{contact.phone}}",
   "subject": "{{message.subject}}",
   "message_body": "{{message.body}}",
-  "match": "<HOOK_NAME>",
-  "session_key": "hook:ghl:allinone:{{contact.id}}",
-  "agent_id": "<AGENT_ID>",
   "location_id": "{{location.id}}",
   "location_name": "{{location.name}}"
 }
