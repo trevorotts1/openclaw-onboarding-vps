@@ -44,6 +44,17 @@ Build-with-AI verification checklist and QC pass both check for these.
       OpenClaw `hooks.mappings` SERVER-mapping `messageTemplate` carries this send-directive (machine-
       enforced by `scripts/qc-send-directive.sh`). See `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14 for
       the reply path.
+- [ ] **conversation MEMORY (READ-before + APPEND-after)** — GHL inbound hook sessions are
+      **SINGLE-TURN / stateless** (every inbound = a fresh session, no chat history). The agent's only
+      memory of a contact across messages is the per-contact conversation log under
+      `<MASTER_FILES_DIR>/conversational-logs/<contact_id>__<name>.md`. The playbook MUST state that on
+      every inbound the agent (1) **READS** that log BEFORE replying and continues any in-progress
+      topic/booking it finds (don't restart), and (2) **APPENDS** the inbound + its sent reply to the log
+      AFTER sending. A reply that ignores or fails to update the log is a failure. The SERVER-mapping
+      `messageTemplate` carries these steps (machine-enforced by `scripts/qc-conversation-memory.sh`, and
+      the installer is fail-closed if they're absent). See `references/v6.0-source-playbook.md` Step 9
+      (conversation log system), `protocols/conversation-log-protocol.md`, and
+      `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14.4.
 - [ ] **cross-playbook transition rules** — when this playbook should hand off to another playbook
       mid-conversation, and which one (max 3 switches, soft transitions — see Step 9.33 Intelligent
       Playbook Routing). If none, say "none".

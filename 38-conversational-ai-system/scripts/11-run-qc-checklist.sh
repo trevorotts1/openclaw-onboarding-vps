@@ -216,6 +216,20 @@ else
   report_fail "qc-send-directive.sh not found (looked in scripts/)"
 fi
 
+# -------- MANDATORY conversation-memory (read-before + append-after) --------
+section "MANDATORY conversation-memory (qc-conversation-memory.sh)"
+QC_MEM="$SCRIPT_DIR/qc-conversation-memory.sh"
+[ -f "$QC_MEM" ] || QC_MEM="$SKILL38_ROOT/scripts/qc-conversation-memory.sh"
+if [ -f "$QC_MEM" ]; then
+  if bash "$QC_MEM" >/dev/null 2>&1; then
+    report_pass "every GHL inbound server-mapping messageTemplate READS the conversation log before replying and APPENDS after (single-turn sessions => log IS the memory)"
+  else
+    report_fail "qc-conversation-memory.sh found a server template missing the read-before/append-after steps — run it directly for detail"
+  fi
+else
+  report_fail "qc-conversation-memory.sh not found (looked in scripts/)"
+fi
+
 # -------- Final summary --------
 section "QC SUMMARY"
 echo "  PASS: $PASS"

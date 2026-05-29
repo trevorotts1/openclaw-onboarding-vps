@@ -137,3 +137,16 @@ jobs:
           # is not sending — a hook without this clause silently drops the reply.
           bash 38-conversational-ai-system/scripts/qc-send-directive.sh
           echo "✓ All Skill 38 GHL server-mapping messageTemplates carry the SEND-directive"
+
+      - name: Skill 38 MANDATORY conversation-memory (read-before + append-after)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce that EVERY GHL inbound server-mapping messageTemplate
+          # (installer canonical + playbook/reference examples) READS the contact's
+          # conversation log BEFORE replying and APPENDS the inbound+reply AFTER
+          # sending. GHL inbound hook sessions are SINGLE-TURN / stateless — the
+          # per-contact log IS the agent's only cross-message memory; a template
+          # that drops either step makes the agent forget mid-conversation.
+          bash 38-conversational-ai-system/scripts/qc-conversation-memory.sh
+          echo "✓ All Skill 38 GHL server-mapping messageTemplates READ-before and APPEND-after the conversation log"

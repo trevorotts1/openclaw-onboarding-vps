@@ -1,5 +1,53 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.10] - 2026-05-29 - enforce conversation-memory (read-before + append-after) so hook agents never lose context
+
+### Root cause this prevents
+GHL inbound hook sessions are **SINGLE-TURN / stateless** — every hook run is a fresh session
+(`user-turns=1`) with no chat history. The agent's only memory of a contact across messages is the
+per-contact conversation log file under `conversational-logs/` — it must READ that log BEFORE replying
+and APPEND to it AFTER replying. On a live client (Corey) this broke: the canonical server-mapping
+`messageTemplate` was simplified during testing and lost the conversation-log read/append steps, the
+`conversational-logs/` directory was never created (and on creation was root-owned so the agent couldn't
+write), and AGENTS.md had no memory protocol — so the agent had zero memory and "didn't remember
+anything" mid-booking. `qc-send-directive.sh` did NOT catch this because it only checks the SEND clause.
+This release makes the conversation-memory logic un-droppable, enforced exactly like the send-directive.
+
+### Added
+- **`scripts/qc-conversation-memory.sh`** (pure BASH) — new machine-enforced QC gate. Scans every GHL
+  inbound SERVER-mapping `messageTemplate` (the installer canonical + reference examples, detected by the
+  `INBOUND MESSAGE FROM GOHIGHLEVEL` signature, mirroring `qc-send-directive.sh`) and FAILS (exit non-zero)
+  if it lacks the conversation-log READ-before or APPEND-after steps. The installer template is a hard
+  requirement (exit 1 if missing/incomplete); no server templates found = exit 2 (linter went blind).
+  Wired into `scripts/11-run-qc-checklist.sh` AND `.github/workflows/qc-static.yml` (runs in CI on every
+  push/PR). Now scans 3 server templates (installer + v6.0 playbook + GHL-INBOUND §14.4) — all PASS.
+- **AGENTS.md "Conversation Memory Protocol" base rule** (`scripts/05-update-agents-md.sh`, new idempotent
+  marker block `CONVERSATION_MEMORY_PROTOCOL`) — concise pointer-style rule: hook sessions are single-turn,
+  memory = per-contact logs, READ `conversational-logs/<contact_id>__<name>.md` before replying, CONTINUE
+  in-progress topics, APPEND after sending; a reply that ignores or fails to update the log is a failure.
+
+### Changed
+- **Installer template now carries read-before + append-after + a fail-closed guard**
+  (`scripts/15-configure-hooks-mappings.sh`). The written server-mapping `messageTemplate` now contains the
+  MEMORY/READ step, a CONTINUE step, the SEND directive, and an APPEND/LOG step. Added a fail-closed guard:
+  the installer refuses to write the hook config (exit 8) if the messageTemplate lacks the conversation-log
+  read/append elements (needles `conversational-logs` / `read` / `append`).
+- **Installer creates the `conversational-logs/` directory + chowns it to the runtime user**
+  (`scripts/09-install-conversation-workflows.sh` — the Step-9 conversation-system installer). Now
+  `mkdir -p <MASTER_FILES_DIR>/conversational-logs` and, when running as root, `chown -R` it to the gateway
+  runtime user (`node` on VPS/Docker; override via `OPENCLAW_RUNTIME_USER`) so the agent can write logs
+  (Corey's dir was root-owned and unwritable). Non-root runs warn to chown if the gateway runs as a
+  different user.
+- **Documented canonical server template updated** so the conversation-memory steps are part of the
+  documented canonical template (replacing simplified templates that lacked them):
+  `references/v6.0-source-playbook.md` (Step-3 server `messageTemplate`),
+  `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14.4 (replaced the simplified one-line server template with the
+  full enriched canonical template + send-directive + memory steps),
+  `references/communications-playbook-standard.md` (new conversation-MEMORY checklist item),
+  `references/workflow-ai-instructions-standard.md` (new conversation-MEMORY checklist item + machine-
+  enforcement note). Respects the 23-key rule, FLAT bodies, no nesting, no literal `\n` in JSON — the
+  memory steps live ONLY on the SERVER mapping (object B), never in the placeholder-free GHL body (object A).
+
 ## [1.4.8] - 2026-05-29 - add Skill 23 cross-reference (role/SOP gate + comms hand-off) to v6.0 playbook
 
 ### Added

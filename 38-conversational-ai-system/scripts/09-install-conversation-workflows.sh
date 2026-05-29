@@ -39,6 +39,38 @@ REGISTRY="$WORKFLOWS_DIR/registry.md"
 
 mkdir -p "$WORKFLOWS_DIR"
 
+# -----------------------------------------------------------------------------
+# Conversation-memory: the per-contact conversation-log directory.
+#
+# GHL inbound hook sessions are SINGLE-TURN — the agent's only memory of a
+# contact across messages is the per-contact log file under conversational-logs/.
+# The directory MUST exist AND be writable by the gateway RUNTIME user, or the
+# agent silently fails to persist context (root cause of the Corey incident,
+# where the dir was root-owned and the agent could not write until chowned to
+# the node runtime user).
+# -----------------------------------------------------------------------------
+LOGS_DIR="$MASTER_FILES_DIR/conversational-logs"
+mkdir -p "$LOGS_DIR"
+echo "[09-install-conversation-workflows] conversational-logs dir ensured → $LOGS_DIR"
+
+# Ensure the runtime user (the user the OpenClaw gateway runs as) owns the dir
+# so the agent can write per-contact logs. On VPS/Docker the gateway runs as
+# `node`; on a Mac Homebrew install it runs as the login user. Only chown when
+# running as root (otherwise leave ownership as-is — the current user already
+# owns what it just created).
+RUNTIME_USER="${OPENCLAW_RUNTIME_USER:-node}"
+if [[ "$(id -u)" -eq 0 ]]; then
+  if id "$RUNTIME_USER" >/dev/null 2>&1; then
+    chown -R "$RUNTIME_USER" "$LOGS_DIR" \
+      && echo "[09-install-conversation-workflows] chowned conversational-logs → $RUNTIME_USER (gateway runtime user)" \
+      || echo "[09-install-conversation-workflows] WARN: chown to $RUNTIME_USER failed — the agent may not be able to write logs; chown it manually." >&2
+  else
+    echo "[09-install-conversation-workflows] WARN: runtime user '$RUNTIME_USER' not found; set OPENCLAW_RUNTIME_USER and chown $LOGS_DIR to the gateway user so the agent can write logs." >&2
+  fi
+else
+  echo "[09-install-conversation-workflows] running as non-root ($(id -un)); conversational-logs owned by current user. If the gateway runs as a DIFFERENT user (e.g. node), chown $LOGS_DIR to that user."
+fi
+
 if [[ -f "$REGISTRY" ]]; then
   echo "[09-install-conversation-workflows] registry already present — leaving as-is: $REGISTRY"
   exit 0
