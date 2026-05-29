@@ -125,3 +125,15 @@ jobs:
           # registered-but-missing-files and file-present-but-unregistered rows.
           bash 38-conversational-ai-system/scripts/qc-trinity-registry-test.sh
           echo "✓ qc-trinity-registry reconciles bullet and table registries"
+
+      - name: Skill 38 MANDATORY GHL send-directive
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce that EVERY GHL inbound server-mapping messageTemplate
+          # (the installer's canonical template + the playbook/reference examples)
+          # carries the mandatory send-directive: SEND via the GHL Conversations
+          # API, drafting-is-NOT-sending, do-not-end-turn-until-messageId. Drafting
+          # is not sending — a hook without this clause silently drops the reply.
+          bash 38-conversational-ai-system/scripts/qc-send-directive.sh
+          echo "✓ All Skill 38 GHL server-mapping messageTemplates carry the SEND-directive"

@@ -83,7 +83,7 @@ field in the GHL Custom Webhook action editor:
   "wakeMode": "now",
   "name": "GHL Sales Inbound",
   "session_key": "hook:ghl:sms:{{contact.id}}",
-  "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+  "messageTemplate": "Respond as the Sales agent. MANDATORY — SEND, do not just draft: you MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for this contact on this channel, per TOOLS.md. Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId.",
   "deliver": false,
   "timeoutSeconds": 300,
   "channel": "sms",
@@ -129,14 +129,23 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
 - [ ] **CONTENT-TYPE = application/json.**
 - [ ] **RAW BODY = all 23 keys, FLAT** (no nesting), `messageTemplate` placeholder-free, no stripped/
       short body. Re-paste the full 23-key body if any key is missing.
+- [ ] **SEND-directive on the OpenClaw server mapping** — the `hooks.mappings` server-mapping
+      `messageTemplate` (object B — NOT the GHL body) ORDERS the agent to SEND via the GHL Conversations
+      API (POST conversations/messages) and to NOT end its turn until a messageId/conversationId is
+      returned. Drafting is NOT sending — without this clause the agent drafts a reply and the customer
+      gets nothing. Machine-check: `scripts/qc-send-directive.sh` must PASS.
 - [ ] **Any required tags created/applied** (created beforehand via the GHL skill).
 - [ ] **Workflow Published** (not Draft).
 
 > **Machine-enforced.** Every GHL RAW BODY example in this skill (references/ + templates/ + scripts/) is
 > scanned by `scripts/qc-23-key-bodies.sh`, which asserts exactly 23 flat keys, a placeholder-free
 > `messageTemplate`, no nested objects, and no literal `\n` — and exits non-zero on any violation (it also
-> runs in CI). THE TRINITY (this prompt ⇄ its communications playbook ⇄ its registry row) is enforced by
-> `scripts/qc-trinity-registry.sh`. The 23-key rule is a check, not just a human checklist item.
+> runs in CI). The MANDATORY GHL **send-directive** on every inbound SERVER-mapping `messageTemplate`
+> (SEND via the GHL Conversations API / drafting-is-NOT-sending / do-not-end-turn-until-messageId) is
+> enforced by `scripts/qc-send-directive.sh` (also runs in CI) — drafting is not sending, so an inbound
+> hook without it silently drops the reply. THE TRINITY (this prompt ⇄ its communications playbook ⇄ its
+> registry row) is enforced by `scripts/qc-trinity-registry.sh`. These are checks, not just human
+> checklist items.
 
 ---
 

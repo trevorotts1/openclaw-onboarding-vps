@@ -68,6 +68,13 @@ append_block "INBOUND_WEBHOOK_CLASSIFICATION" <<'BLOCK_A'
 
 ## Inbound Webhook Message Classification (added by OpenClaw GHL Webhook Playbook v5.4)
 
+> **MANDATORY SEND RULE (binding base rule).** For ANY GHL inbound hook,
+> SENDING the reply via the GHL Conversations API (POST conversations/messages,
+> per TOOLS.md) is MANDATORY — a drafted-but-unsent reply is a failure, the
+> customer receives nothing. Always make the send call and confirm a
+> messageId/conversationId before ending the turn. Composing or drafting is NOT
+> sending.
+
 When you receive an isolated agent turn from `/hooks/ghl-inbound` (or any
 `hook:ghl:*` session key), the message body in your prompt is the rendered
 output of a server-side template containing the customer's actual message,
@@ -141,11 +148,14 @@ corresponding communication playbook in `<MASTER_FILES_DIR>/communication-playbo
 Read the matching playbook before drafting your reply. It contains the
 tone, signature, escalation triggers, and brand voice for that channel.
 
-### Step 3 — Send the reply via the GHL skill
+### Step 3 — Send the reply via the GHL skill (drafting is NOT sending)
 
-Use the installed GHL skill (`openclaw skills | grep ghl`) to send the
-reply back on the same channel. Do NOT post directly to the GHL API
-yourself — the skill handles auth, rate limits, and retries.
+Use the installed GHL skill (`openclaw skills | grep ghl`) to SEND the
+reply back on the same channel via the GHL Conversations API. Do NOT post
+directly to the GHL API yourself — the skill handles auth, rate limits, and
+retries. Drafting/composing a reply is NOT sending — you MUST make the send
+call. Do NOT end your turn until the send returns a messageId/conversationId
+(per the MANDATORY SEND RULE above).
 
 ### Pointers (always-read references)
 
