@@ -471,6 +471,16 @@ book, schedule, or ask about availability for an appointment.
 > `/hooks/ghl-inbound`; that hook path's `hooks.mappings` entry routes to the agent running this
 > appointment-booking playbook. Verify the round-trip (§4) before declaring the base install done.
 
+> **MANDATORY + GATED — human-facing doc for this first playbook (not optional prose).** Creating the
+> appointment-booking playbook on disk is NOT enough. The base install must ALSO create a **human-facing
+> copy of this playbook in the CLIENT's own account**, in the fallback order **(a) the client's Notion →
+> (b) Google Docs → (c) a plain-text doc the client can access**, and **record its URL/path** (on the
+> registry row + the run-manifest `playbookDocs[]`). `scripts/09-install-conversation-workflows.sh` does
+> this create+record automatically; `scripts/qc-playbook-doc.sh` (Step 11 QC + CI) **fail-closes** the
+> hand-off if it was skipped. On a recent client this step was skipped — the playbook was scaffolded
+> locally and the install reported "clean," but the client's Notion doc was never created, leaving the
+> customer with no human-facing reference. The install is NOT done until `qc-playbook-doc.sh` exits 0.
+
 ---
 
 ## 11. Cron registration on current OpenClaw — use the CLI, not JSON
@@ -520,8 +530,9 @@ bound channel (e.g. an internal admin echo) — never for GHL API-reply hooks.
 6. Use only the **verified channel→type enum** (§7).
 7. Outbound replies use **`GHL_PRIVATE_INTEGRATION_TOKEN`** + Version **`2021-04-15`** (§8); calendar
    dates are **epoch milliseconds** (§9).
-8. The base SMS install also creates the **first playbook (appointment booking)** and wires the hook
-   path to it (§10).
+8. The base SMS install also creates the **first playbook (appointment booking)**, wires the hook
+   path to it, AND creates+records its **human-facing doc in the client's account** (Notion → Google
+   Docs → text) — machine-enforced by `scripts/qc-playbook-doc.sh`; a skipped doc fail-closes hand-off (§10).
 9. Register crons via the **CLI**, not `cron.jobs` JSON (§11).
 10. API-reply hooks use **`deliver: false`** (§12).
 11. **READ §14 FIRST** — the corrected GHL hook structure (flat body, all 23 keys, placeholder-free

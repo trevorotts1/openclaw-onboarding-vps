@@ -1,5 +1,66 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.11] - 2026-05-29 - enforce the per-playbook human-facing DOC deliverable (Notion → Google Docs → text) so a created playbook can never ship without a client-facing reference
+
+### Root cause this prevents
+When a communications/conversation playbook is created (the base install creates the FIRST one —
+appointment booking), the agent is supposed to ALSO create a human-facing copy of that playbook in the
+**CLIENT's own account**, in the fallback order **(1) the client's Notion → (2) Google Docs → (3) a
+plain-text doc the client can access**. On a recent client this step was SKIPPED: the agent scaffolded
+the playbook files locally and reported the install "clean," but never created the client's Notion doc,
+leaving the customer stranded with no human-facing reference of what was set up. Root cause: the
+Notion-doc deliverable was **PROSE** in the playbook, not an **ENFORCED gate**, so the agent skipped it.
+This release makes the deliverable un-droppable, enforced exactly like the send-directive and
+conversation-memory gates ("AUTOMATIC NEXT STEP prose is not enforcement — needs a state field + a
+verify/resume gate + a QC check").
+
+### Added
+- **`scripts/qc-playbook-doc.sh`** (pure BASH, bash 3.2-safe) — new machine-enforced QC gate. Runs against
+  a client's installed `conversation-workflows/` folder + the run manifest: for EVERY conversation playbook
+  (each `<slug>.md` / registry row) it FAILS (exit 1) if there is NO recorded human-facing doc — no Notion
+  URL / Google Doc URL / plain-text path on the registry row OR in a `playbookDocs[]` manifest entry. Exit 2
+  when NO playbooks exist yet (never silently pass blind); exit 3 when no `conversation-workflows/` folder is
+  found. Mirrors `qc-trinity-registry.sh` / `qc-conversation-memory.sh`. Wired into
+  `scripts/11-run-qc-checklist.sh`.
+- **`scripts/qc-playbook-doc-test.sh`** — CI fixture suite (10 cases) proving the gate: doc-on-registry-row,
+  doc-in-manifest (Notion / Google Docs / plain-text), no-doc => FAIL, manifest-entry-without-destination =>
+  FAIL, registered-but-no-doc => FAIL, mixed, empty-folder => NO_PLAYBOOKS (exit 2), missing-folder =>
+  NO_FOLDER (exit 3). Wired into `.github/workflows/qc-static.yml` (runs in CI on every push/PR), mirroring
+  `qc-trinity-registry-test.sh` (the live gate needs a runtime folder, so CI proves it via fixtures).
+
+### Changed
+- **Installer now creates + records the per-playbook human-facing doc**
+  (`scripts/09-install-conversation-workflows.sh`). After the registry exists, an idempotent doc pass runs
+  over every playbook on disk (the appointment-booking starter + any later ones): it tries **Notion**
+  (create a NEW subpage under a parent page the integration can access via `NOTION_API_KEY`; if the key is
+  missing or no accessible parent page exists, fall through), then **Google Docs** (only if a wired helper
+  `SKILL38_GDOCS_HELPER` exists — no silent no-op), then a **plain-text** `.md` under
+  `conversation-workflows/client-docs/` as the always-available last resort. The resulting URL/path is
+  RECORDED on the playbook's registry row AND as a `playbookDocs[]` line in the run manifest, and an
+  operator-facing line states WHERE the doc was created (or which fallback was used). Idempotent: skips a
+  playbook that already has a recorded doc.
+- **`templates/run-manifest-template.md`** — added a `Playbook docs` section documenting the
+  `playbookDocs[]: <slug> -> <url-or-path>` state field (the home for the recorded-doc state the gate checks).
+- **BINDING install step + verify/resume self-check** added to `INSTRUCTIONS.md` (Step 9.20 row + a
+  NON-NEGOTIABLE hard rule): the install is NOT complete until `qc-playbook-doc.sh` exits 0; if it exits
+  non-zero, re-run `09-install-conversation-workflows.sh` to create+record the missing doc, then re-check —
+  do not hand off.
+- **AGENTS.md Step 1.85 builder block** (`scripts/05-update-agents-md.sh`, `BLOCK_E` Part 3) now makes the
+  human-facing doc BINDING + machine-enforced (Notion → Google Docs → text, URL recorded) instead of
+  "a NEW Notion doc" prose.
+- **Standards updated to mandatory + gated (not optional prose):**
+  `references/communications-playbook-standard.md` (new MUST-APPEAR checklist item + §4 now flagged
+  MANDATORY/machine-enforced + record-the-destination requirement); `references/v6.0-source-playbook.md`
+  (MUST-APPEAR checklist item + §4 flagged mandatory/gated); `references/GHL-INBOUND-AND-PLAYBOOKS.md`
+  (§10 day-one wiring requirement now includes the mandatory gated doc; §13 binding-rules index updated);
+  `protocols/conversation-workflows-protocol.md` (3-PART build Part 3 now BINDING + gated).
+- **`SKILL.md`** self-counts updated (scripts 30 → 32) and the QC-linter list now names the five gates.
+
+### Notes
+- The QC gate + its fixture suite are **BASH** (not `.py`), per the qc-static rule that bans
+  `claude-`/`anthropic` strings in `.py` files under Skill 22/23 scans.
+- No 23-key bodies were touched; FLAT bodies / no nesting / no backslash-n-in-JSON constraints respected.
+
 ## [1.4.10] - 2026-05-29 - enforce conversation-memory (read-before + append-after) so hook agents never lose context
 
 ### Root cause this prevents

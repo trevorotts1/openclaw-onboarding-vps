@@ -230,6 +230,23 @@ else
   report_fail "qc-conversation-memory.sh not found (looked in scripts/)"
 fi
 
+# -------- MANDATORY per-playbook human-facing DOC (Notion → Docs → text) --------
+section "MANDATORY per-playbook human-facing DOC (qc-playbook-doc.sh)"
+QC_DOC="$SCRIPT_DIR/qc-playbook-doc.sh"
+[ -f "$QC_DOC" ] || QC_DOC="$SKILL38_ROOT/scripts/qc-playbook-doc.sh"
+if [ -f "$QC_DOC" ]; then
+  DOC_RC=0
+  bash "$QC_DOC" >/dev/null 2>&1 || DOC_RC=$?
+  case "$DOC_RC" in
+    0) report_pass "every conversation playbook has a recorded human-facing doc in the client's account (Notion → Google Docs → text)" ;;
+    2) report_fail "qc-playbook-doc.sh: NO conversation playbooks exist yet — the base install must create the first playbook (appointment booking) AND its human-facing doc before hand-off" ;;
+    3) echo "  [SKIP] no conversation-workflows folder yet (run after 01-locate-master-files-folder.sh / 09-install-conversation-workflows.sh)" ;;
+    *) report_fail "qc-playbook-doc.sh found a playbook with NO recorded human-facing doc (the doc deliverable was skipped) — run it directly for detail" ;;
+  esac
+else
+  report_fail "qc-playbook-doc.sh not found (looked in scripts/)"
+fi
+
 # -------- Final summary --------
 section "QC SUMMARY"
 echo "  PASS: $PASS"

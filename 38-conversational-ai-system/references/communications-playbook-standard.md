@@ -70,6 +70,17 @@ Build-with-AI verification checklist and QC pass both check for these.
       it does not know, it says so and escalates or researches — it does NOT guess. This is binding.
 - [ ] **linked GHL routing (Trinity back-reference)** — names the matching workflow-AI prompt file and
       verification checklist file (or "uses existing inbound routing — no Layer 1").
+- [ ] **human-facing doc created in the client's account (Notion → Google Docs → text), URL recorded**
+      (MANDATORY DELIVERABLE) — in ADDITION to the master-files copy (§3), a human-readable copy of this
+      playbook MUST be created in the CLIENT's OWN account so they have a shareable/editable reference of
+      what was set up. Use the fallback chain in §4, ALWAYS in order: **(a) the client's Notion → (b) if
+      no Notion, the client's Google Docs → (c) if neither, a plain-text doc the client can access.** The
+      resulting **URL/path MUST be recorded** (on this playbook's registry row AND as a `playbookDocs[]`
+      entry in the run manifest). A playbook scaffolded locally but with NO human-facing doc in the
+      client's account is INCOMPLETE — the customer is left with no reference. This is **machine-enforced
+      by `scripts/qc-playbook-doc.sh`** (wired into `scripts/11-run-qc-checklist.sh` + CI); the installer
+      `scripts/09-install-conversation-workflows.sh` performs the create+record automatically and is
+      fail-closed at QC if it was skipped.
 
 ---
 
@@ -161,7 +172,14 @@ the bootstrap layer.
 
 ---
 
-## 4. STORAGE ORDER in the CLIENT's account (fallback chain)
+## 4. STORAGE ORDER in the CLIENT's account (fallback chain) — MANDATORY, machine-enforced
+
+> **This is a MANDATORY deliverable for EVERY playbook, not optional prose.** It is gated by
+> `scripts/qc-playbook-doc.sh` (wired into `scripts/11-run-qc-checklist.sh` + `.github/workflows/qc-static.yml`):
+> a conversation playbook with NO recorded human-facing doc (no Notion URL / Google Doc / text-doc path on
+> its registry row or in the run-manifest `playbookDocs[]`) FAILS QC and blocks hand-off. The installer
+> `scripts/09-install-conversation-workflows.sh` creates+records it automatically following the chain below;
+> if it was skipped, the QC gate fail-closes (exit non-zero) and the install is NOT done.
 
 Separate from the master-files copy (§3, always required), a human-readable copy of each new
 communications playbook is delivered into the CLIENT's own account so they can read/edit it later.
@@ -176,7 +194,10 @@ Use this fallback chain, ALWAYS in this order:
    file in a client-accessible location.
 
 Always (a) → (b) → (c). Never skip to (c) if (a) is available. The master-files copy in §3 is
-required REGARDLESS of which client-account destination is used.
+required REGARDLESS of which client-account destination is used. **RECORD the chosen destination's
+URL/path** on the playbook's registry row AND as a `playbookDocs[]: <slug> -> <url-or-path>` line in the
+run manifest — that recorded state is exactly what `scripts/qc-playbook-doc.sh` checks; an unrecorded
+doc is treated as a skipped doc and FAILS QC.
 
 ---
 

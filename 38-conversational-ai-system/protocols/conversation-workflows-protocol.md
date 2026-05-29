@@ -128,7 +128,17 @@ already know about this client (business, products, services, calendars, who the
 from the **Typed Knowledge Bases (Step 9.22) + USER.md + MEMORY.md** and ask **ONLY the smart gaps**.
 Then **regurgitate a CONCISE summary** — *"Is this what you want to happen?"* — as the final
 confirmation. On **YES**: build Part 1 → build Part 2 → write the pointer into AGENTS.md / TOOLS.md /
-MEMORY.md (wherever it belongs) → create a **NEW Notion doc** for that playbook → register it.
+MEMORY.md (wherever it belongs) → **create the human-facing doc for that playbook in the CLIENT's account
+and RECORD it (BINDING, machine-enforced)** → register it.
+
+> **BINDING — per-playbook human-facing doc (not optional prose).** Creating the playbook on disk is not
+> enough: a human-facing copy MUST be created in the **CLIENT's own account** in the fallback order
+> **(a) the client's Notion → (b) Google Docs → (c) a plain-text doc the client can access**, and its
+> **URL/path RECORDED** on the registry row + the run-manifest `playbookDocs[]`. The installer
+> `scripts/09-install-conversation-workflows.sh` does this create+record automatically, and
+> `scripts/qc-playbook-doc.sh` (Step 11 QC + CI) **fail-closes the hand-off** if any playbook has no
+> recorded doc. A recent client was left with no human-facing reference because this step was skipped —
+> do not declare the workflow live until a doc destination is recorded.
 
 > **Where this connects:** **Step 9.33 (Intelligent Playbook Routing)** transitions a customer between
 > playbooks mid-conversation (max 3 switches, soft transitions). **Step 9.34 (Proactive Features
