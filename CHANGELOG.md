@@ -1,3 +1,52 @@
+## [Skill 38 v1.4.9]  -  2026-05-29  -  Enforce the MANDATORY GHL send-directive (drafting != sending)
+
+### Why
+
+Root cause being fixed: if a GHL inbound hook's SERVER-mapping `messageTemplate` does not EXPLICITLY
+order the agent to SEND its reply via the GHL Conversations API, the model drafts a reply and stops —
+drafting is NOT sending, and the customer receives nothing. This made "the agent actually replies"
+depend on soft wording ("reply via the GHL Conversations API per TOOLS.md"), which is not enforcement.
+This release makes the SEND behavior bulletproof for every client across three enforcement layers + the
+v6.0 playbook. Skill 38 bumps its own `skill-version.txt` → `1.4.9`; the repo (8-file) version is
+unchanged because none of the eight version-tracked files changed (only Skill 38 files).
+
+### Added
+
+- **(Layer 3 — QC gate) `38-conversational-ai-system/scripts/qc-send-directive.sh`** — scans every GHL
+  inbound SERVER-mapping `messageTemplate` (the load-bearing object-B template that actually builds the
+  agent prompt — the installer's canonical template in `15-configure-hooks-mappings.sh` + the playbook /
+  reference examples, detected by the `INBOUND MESSAGE FROM GOHIGHLEVEL` signature) and FAILS
+  (exit non-zero) if any is missing a send-directive element: the word **SEND**, the **GHL Conversations
+  API** (`conversations/messages`), the **drafting-is-NOT-sending** clause, or **do-not-end-turn-until-
+  messageId/conversationId**. The installer template is REQUIRED and gated — it is not possible to install
+  a hook whose server `messageTemplate` lacks the directive. Wired into `scripts/11-run-qc-checklist.sh`
+  AND a new CI step in `.github/workflows/qc-static.yml`. BASH wrapper + embedded Python (no `.py` file,
+  no Anthropic/claude model strings — respects qc-static's bans).
+
+### Changed
+
+- **(Layer 1 — installer canonical template)** `scripts/15-configure-hooks-mappings.sh` — the
+  `NEW_MAPPING` server `messageTemplate` it writes now carries the full mandatory send-directive
+  (SEND via the GHL Conversations API for `{{contact_id}}` on `{{channel}}`; drafting is NOT sending;
+  do not end the turn until a messageId/conversationId is returned). The Step-4 e2e in-body payload's
+  placeholder-free `messageTemplate` was strengthened to the placeholder-free mandatory version (still
+  23-key / flat / placeholder-free).
+- **(Layer 2 — AGENTS.md standing rule)** `scripts/05-update-agents-md.sh` — the
+  `INBOUND_WEBHOOK_CLASSIFICATION` block now opens with a binding base rule: for ANY GHL inbound hook,
+  SENDING the reply via the GHL Conversations API is MANDATORY — a drafted-but-unsent reply is a
+  failure; always make the send call and confirm a messageId/conversationId before ending the turn.
+  "Step 3 — Send the reply" was tightened to match (drafting is NOT sending).
+- **v6.0 source playbook (`references/v6.0-source-playbook.md`)** — the canonical SERVER-mapping
+  `messageTemplate` (the `INBOUND MESSAGE FROM GOHIGHLEVEL …` block) now shows the strengthened send-
+  directive (replaces the softer "Reply … via the GHL Conversations API per TOOLS.md" INSTRUCTION). All
+  in-body (object-A, placeholder-free) `messageTemplate` examples in the playbook + `references/GHL-INBOUND-
+  AND-PLAYBOOKS.md` + `references/workflow-ai-instructions-standard.md` + `templates/` + `protocols/` were
+  upgraded to the placeholder-free mandatory version (still pass `qc-23-key-bodies.sh`). The send-directive
+  is now documented + machine-checked in the Build-with-AI / workflow-verification checklist, the
+  communications-playbook standard, and the workflow-AI-instructions standard.
+- **Skill 38 `SKILL.md` self-counts** — `scripts/`=29 (was 28; +`qc-send-directive.sh`); SELF-COUNTS
+  comment re-verified for v1.4.9.
+
 ## [v10.16.9]  -  2026-05-29  -  Skill 38 + 23: the 8 rated improvements (push to 10)
 
 ### Why

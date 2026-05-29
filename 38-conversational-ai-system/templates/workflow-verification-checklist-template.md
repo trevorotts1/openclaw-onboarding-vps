@@ -23,6 +23,12 @@ GHL's Build-with-AI populates the webhook poorly, so run this every time, even w
 - [ ] **RAW BODY = all 23 keys, FLAT** (no nesting), `messageTemplate` placeholder-free, no stripped body.
       (The skill's body EXAMPLES are machine-checked by `scripts/qc-23-key-bodies.sh` — run it if you
       edit any embedded body.)
+- [ ] **SEND-directive present on the OpenClaw server mapping** — the `hooks.mappings` server-mapping
+      `messageTemplate` (NOT the GHL body) ORDERS the agent to SEND via the GHL Conversations API
+      (POST conversations/messages) and to NOT end the turn until a messageId/conversationId is
+      returned. Drafting is NOT sending — without this clause the agent composes a reply and stops and
+      the customer gets nothing. Verify in `~/.openclaw/openclaw.json`. Machine-check:
+      `scripts/qc-send-directive.sh` must PASS.
 - [ ] **Any required tags created/applied** (created beforehand via the GHL skill).
 - [ ] **Workflow Published** (not Draft).
 - [ ] **THE TRINITY complete** — this workflow has its communications playbook (`<slug>.md`) AND its

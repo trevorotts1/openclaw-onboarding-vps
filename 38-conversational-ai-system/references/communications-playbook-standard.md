@@ -37,10 +37,13 @@ Build-with-AI verification checklist and QC pass both check for these.
 - [ ] **goal** — one sentence: what success looks like (booking / sale / info delivered / escalation).
 - [ ] **step-by-step flow** — the phases the agent walks through (acknowledge → qualify → gather →
       deliver value → close). Each phase says what to say, what to ask, what to listen for.
-- [ ] **GHL reply mechanism** — the playbook reply is sent **via the GHL Conversations API per
-      TOOLS.md** (NOT direct to a carrier, NOT a raw curl). State this explicitly. See
-      `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14 for the reply path; the webhook body's
-      `messageTemplate` says "reply to this contact via the GHL Conversations API per TOOLS.md".
+- [ ] **GHL reply mechanism (MANDATORY SEND)** — the playbook reply is SENT **via the GHL Conversations
+      API per TOOLS.md** (NOT direct to a carrier, NOT a raw curl). Drafting/composing is NOT sending —
+      the agent MUST make the send call (POST conversations/messages) and MUST NOT end the turn until a
+      messageId/conversationId is returned, or the customer gets nothing. State this explicitly. The
+      OpenClaw `hooks.mappings` SERVER-mapping `messageTemplate` carries this send-directive (machine-
+      enforced by `scripts/qc-send-directive.sh`). See `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14 for
+      the reply path.
 - [ ] **cross-playbook transition rules** — when this playbook should hand off to another playbook
       mid-conversation, and which one (max 3 switches, soft transitions — see Step 9.33 Intelligent
       Playbook Routing). If none, say "none".

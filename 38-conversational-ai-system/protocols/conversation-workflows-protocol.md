@@ -309,7 +309,7 @@ ACTIONS (in this exact order):
       "wakeMode": "now",
       "name": "GHL Sales Inbound",
       "session_key": "hook:ghl:<channel name>:{{contact.id}}",
-      "messageTemplate": "Respond as the Sales agent and reply to this contact via the GHL Conversations API per TOOLS.md",
+      "messageTemplate": "Respond as the Sales agent. MANDATORY — SEND, do not just draft: you MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for this contact on this channel, per TOOLS.md. Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId.",
       "deliver": false,
       "timeoutSeconds": 300,
       "channel": "<channel name>",

@@ -202,6 +202,20 @@ else
   report_fail "qc-trinity-registry.sh not found (looked in scripts/)"
 fi
 
+# -------- MANDATORY GHL send-directive (machine-enforced) --------
+section "MANDATORY GHL send-directive (qc-send-directive.sh)"
+QC_SEND="$SCRIPT_DIR/qc-send-directive.sh"
+[ -f "$QC_SEND" ] || QC_SEND="$SKILL38_ROOT/scripts/qc-send-directive.sh"
+if [ -f "$QC_SEND" ]; then
+  if bash "$QC_SEND" >/dev/null 2>&1; then
+    report_pass "every GHL inbound server-mapping messageTemplate carries the SEND-directive (drafting != sending)"
+  else
+    report_fail "qc-send-directive.sh found a server template missing the SEND-directive — run it directly for detail"
+  fi
+else
+  report_fail "qc-send-directive.sh not found (looked in scripts/)"
+fi
+
 # -------- Final summary --------
 section "QC SUMMARY"
 echo "  PASS: $PASS"
