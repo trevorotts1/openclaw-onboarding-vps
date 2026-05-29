@@ -7,6 +7,15 @@
 
 ## BUILD-WITH-AI VERIFICATION CHECKLIST (run AFTER Build-with-AI finishes — concise)
 
+> **FIRST — MANUALLY FILL THE CUSTOM WEBHOOK ACTION.** Build-with-AI only builds the SHAPE (trigger +
+> filters + an EMPTY Custom Webhook action). It does NOT reliably fill the URL, the Authorization/Bearer
+> header, the Content-Type header, or the Raw Body JSON — Build with AI will NOT fill these for you. After
+> Build-with-AI runs, open the **Custom Webhook** action and MANUALLY enter:
+> **Method = POST**; the **URL** (`https://<PUBLIC_HOSTNAME>/hooks/<ROUTE_ID>`); Headers via **Add item →**
+> `Authorization: Bearer <HOOKS_TOKEN>` and `Content-Type: application/json`; the **Raw Body JSON** (full
+> flat 23-key). Then **Save + Publish**. **Verify every field is non-empty before publishing.** The
+> checklist below confirms each of those fields was filled correctly.
+
 GHL's Build-with-AI populates the webhook poorly, so run this every time, even when the prompt
 "succeeded". Open the workflow and confirm EACH item before publishing:
 

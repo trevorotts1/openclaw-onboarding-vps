@@ -4,7 +4,14 @@
 # Bases: business, products, sales, conversations. Idempotent (does NOT overwrite existing).
 
 set -euo pipefail
-[ -f "$HOME/.openclaw/.skill-38-master-files-dir" ] && . "$HOME/.openclaw/.skill-38-master-files-dir"
+# NOTE: 01-locate-master-files-folder.sh writes the SELECTED PATH (a bare
+# directory string) into this pointer file — it is NOT a sourceable env script.
+# `source`-ing it tries to execute the path as a command and errors with
+# "<path>: is a directory" (and never sets MASTER_FILES_DIR). READ it instead.
+MASTER_FILES_POINTER="$HOME/.openclaw/.skill-38-master-files-dir"
+if [ -f "$MASTER_FILES_POINTER" ]; then
+  MASTER_FILES_DIR="$(cat "$MASTER_FILES_POINTER")"
+fi
 : "${MASTER_FILES_DIR:?MASTER_FILES_DIR not set — run 01-locate-master-files-folder.sh first}"
 
 KB_ROOT="$MASTER_FILES_DIR/KnowledgeBases"

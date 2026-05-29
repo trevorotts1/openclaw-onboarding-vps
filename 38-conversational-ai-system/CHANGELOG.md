@@ -1,5 +1,81 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.13] - 2026-05-29 - v1.4.11 install-script bug fixes (config-validate / jq 1.7 / pointer-source / legacy-path) + MANDATORY manual Custom-Webhook fill instructions
+
+### Root cause this prevents
+Two distinct problems, both verified on a live 2026.5.27 box.
+
+**(A) Install-script bugs that broke/degraded fresh installs.**
+- `scripts/15-configure-hooks-mappings.sh`: the Model Wizard wrote `agents.defaults.async` /
+  `agents.defaults.batch` model keys that are NOT in the 2026.5.27 schema — `openclaw config validate`
+  fails ("Invalid input"). It also used a jq merge beginning `.hooks //= {};` which **jq 1.7 REJECTS**
+  (the top-level `;` separator is a compile error), so the hooks merge never ran.
+- `scripts/04-register-crons.sh` (and the inline cron in `15`): wrote the legacy `.cron.jobs` config
+  block, which does NOT validate on 2026.5.27 — crons must be registered via the gateway cron store
+  (`openclaw cron add`).
+- `scripts/02-create-knowledgebases.sh` + `scripts/03-create-journey-templates.sh`: tried to **`source`**
+  the master-files **pointer file**, whose content is a bare directory PATH (not an env script) — the
+  shell tries to execute the path and errors ("<path>: is a directory"), leaving `MASTER_FILES_DIR` UNSET.
+- `scripts/12-scaffold-channel-playbooks.sh`: hardcoded a legacy skill path
+  (`~/clawd/skills/38-openclaw-cloudflare-tunnel`) that no longer exists, so the channel-playbook
+  template could not be found.
+
+**(B) Client-facing gap.** GHL's "Build with AI" only builds the workflow SHAPE (trigger + an EMPTY
+Custom Webhook action); it does NOT reliably populate the URL, the Authorization/Bearer header, the
+Content-Type header, or the Raw Body JSON. Clients did not know they had to open the Custom Webhook action
+and paste those values in by hand — so the webhook shipped empty and silently dropped every message.
+
+### Fixed (PART A — install-script bugs)
+- **`scripts/15-configure-hooks-mappings.sh`** — (1) Model Wizard no longer writes
+  `agents.defaults.async/.batch`; it writes ONLY the supported real-time model
+  (`agents.list[main].model`) and PERSISTS the async/batch TIER selections to the secrets/state env
+  (`REALTIME_MODEL`/`ASYNC_MODEL`/`BATCH_MODEL`) for downstream consumers. (2) the hooks jq merge now uses
+  `.hooks = (.hooks // {}) |` instead of `.hooks //= {};` (valid jq 1.7, same semantics) — the corrected
+  SERVER `messageTemplate` (read-before + append-after + mandatory SEND) is unchanged and still validates
+  clean. (3) the inline system-health-heartbeat cron is now registered via `openclaw cron add`, not a
+  `.cron.jobs` write.
+- **`scripts/04-register-crons.sh`** — rewritten to register all 5 crons via the gateway cron store
+  (`openclaw cron add --name … --cron … --agent main --message … --light-context --best-effort-deliver`),
+  idempotent against `openclaw cron list`; no more `.cron.jobs` config writes. Reads `BATCH_MODEL` from the
+  persisted secrets/state env for the batch crons.
+- **`scripts/02-create-knowledgebases.sh`** + **`scripts/03-create-journey-templates.sh`** — read the
+  master-files pointer with `cat` (it is a path-pointer file, not a sourceable env script) instead of
+  `source`-ing it, matching scripts 11/12.
+- **`scripts/12-scaffold-channel-playbooks.sh`** — resolves `SKILL38_ROOT` (and the template path)
+  DYNAMICALLY from the script's own location instead of the dead hardcoded legacy path.
+- **`scripts/10-generate-capabilities-playbook.sh`** — reads the async/batch tier models from
+  `$ASYNC_MODEL`/`$BATCH_MODEL` (sourced from secrets/state env) instead of the now-absent
+  `agents.async.model`/`agents.batch.model` config keys.
+
+### Fixed (PART B — mandatory manual Custom-Webhook fill)
+- **`scripts/21-generate-client-reference-sheet.sh`** — the generated client reference sheet now LEADS
+  with the copy-paste values in this exact order: **1) Webhook URL, 2) Authorization/Bearer token (real
+  revealed value), 3) Raw Body JSON (fenced `json`, FLAT 23-key), 4) the manual Custom-Webhook fill steps
+  ("Build with AI will NOT fill it — do it yourself"), 5) the Workflow-AI prompt pointer** — with all
+  explanation/reference following AFTER.
+- **`references/workflow-ai-instructions-standard.md`**, **`templates/sms-workflow-ai-prompt-template.md`**,
+  **`templates/workflow-verification-checklist-template.md`** — each gains a prominent, MANDATORY section:
+  after Build-with-AI runs you MUST open the Custom Webhook action and manually enter Method=POST, the URL,
+  Headers via Add item (`Authorization: Bearer <token>` + `Content-Type: application/json`), and the Raw
+  Body JSON, then Save + Publish, and verify every field is non-empty before publishing — Build-with-AI
+  will NOT fill these for you.
+- **`references/communications-playbook-standard.md`** — documents that the manual Custom-Webhook fill step
+  is mandatory in every client doc.
+
+### Added
+- **`scripts/qc-config-schema-safety.sh`** (pure BASH) — new machine-enforced QC gate that statically scans
+  the numbered install scripts and FAILs if any reintroduces a config-invalidating pattern: a `.cron.jobs`
+  write, an `agents.defaults.async/.batch` write, or a jq `//= …;` statement. Prose that merely names a
+  banned key (comments, `echo`/`printf`/`report_*` strings) is not flagged. Wired into
+  `scripts/11-run-qc-checklist.sh` AND `.github/workflows/qc-static.yml` (runs in CI on every push/PR).
+
+### Changed
+- **`scripts/qc-reference-sheet.sh`** — extended to ALSO require the manual-fill instructions in the
+  generated sheet (greps for "Custom Webhook" + "manually"/"paste" + "Build with AI will not"), on top of
+  the existing Bearer/`json`-fence/hook-URL markers.
+- **`scripts/11-run-qc-checklist.sh`** — wires `qc-config-schema-safety.sh` in as a mechanical gate.
+- **`SKILL.md`** — self-counts updated (scripts 33 → 34); the new QC linter documented.
+
 ## [1.4.12] - 2026-05-29 - client reference sheet MUST include the bearer token + a copyable GHL Raw Body JSON (machine-enforced)
 
 ### Root cause this prevents

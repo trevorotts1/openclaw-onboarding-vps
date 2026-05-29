@@ -185,3 +185,17 @@ jobs:
           # inline grep core), so it respects the .py claude-/anthropic ban.
           bash 38-conversational-ai-system/scripts/qc-reference-sheet.sh
           echo "✓ Skill 38 client reference sheet carries the bearer token + copyable GHL Raw Body JSON + hook URL"
+
+      - name: Skill 38 config schema-safety (no config-invalidating install scripts)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce that NO Skill 38 install script writes a config shape
+          # that fails `openclaw config validate` on 2026.5.27, and that none uses
+          # jq syntax jq 1.7 rejects. Catches the three v1.4.11 install-script bugs
+          # found on a live box: (1) a legacy `.cron.jobs` write (crons must go
+          # through `openclaw cron add`), (2) unsupported `agents.defaults.async/
+          # .batch` model keys, (3) a `.hooks //= {};` jq statement (jq 1.7 rejects
+          # the top-level `;`). A regression that reintroduces any of them fails CI.
+          bash 38-conversational-ai-system/scripts/qc-config-schema-safety.sh
+          echo "✓ Skill 38 install scripts are config-schema-safe (no .cron.jobs / agents.defaults.async-batch / jq '//= …;')"

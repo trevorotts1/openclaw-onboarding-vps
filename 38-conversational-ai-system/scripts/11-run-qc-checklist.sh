@@ -261,6 +261,20 @@ else
   report_fail "qc-reference-sheet.sh not found (looked in scripts/)"
 fi
 
+# -------- Config schema-safety (machine-enforced) --------
+section "Config schema-safety — no config-invalidating install scripts (qc-config-schema-safety.sh)"
+QC_CFG="$SCRIPT_DIR/qc-config-schema-safety.sh"
+[ -f "$QC_CFG" ] || QC_CFG="$SKILL38_ROOT/scripts/qc-config-schema-safety.sh"
+if [ -f "$QC_CFG" ]; then
+  if bash "$QC_CFG" >/dev/null 2>&1; then
+    report_pass "no install script writes .cron.jobs / agents.defaults.async-batch and no script uses jq '//= …;' (all would break openclaw config validate / jq 1.7)"
+  else
+    report_fail "qc-config-schema-safety.sh found a config-invalidating script (.cron.jobs write, agents.defaults.async/.batch write, or jq '//= …;') — run it directly for detail"
+  fi
+else
+  report_fail "qc-config-schema-safety.sh not found (looked in scripts/)"
+fi
+
 # -------- Final summary --------
 section "QC SUMMARY"
 echo "  PASS: $PASS"

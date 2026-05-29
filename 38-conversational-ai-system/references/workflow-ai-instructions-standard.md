@@ -110,6 +110,36 @@ entry = object B, which keeps its OWN templated `messageTemplate`).
 
 ---
 
+## 3.5 MANDATORY — AFTER Build-with-AI runs, MANUALLY fill the Custom Webhook action yourself
+
+> **GHL's "Build with AI" only builds the workflow SHAPE — the trigger, the filters, and an EMPTY
+> Custom Webhook action. It does NOT reliably populate the URL, the Authorization/Bearer header, the
+> Content-Type header, or the Raw Body JSON.** Build-with-AI will NOT fill these for you. You MUST open
+> the Custom Webhook action and enter every value by hand, then Save + Publish.
+
+After Build-with-AI finishes, do this — every time, no exceptions:
+
+1. Open the workflow Build-with-AI created and click the **Custom Webhook** action to edit it.
+2. **Method** — set to **`POST`** (Build-with-AI often leaves it blank or on GET).
+3. **URL** — paste the EXACT hook URL: `https://<PUBLIC_HOSTNAME>/hooks/<HOOK_NAME>` (no trailing
+   slash; do NOT leave the sample-url placeholder).
+4. **AUTHORIZATION dropdown** — leave it on **`None`** (the token goes in HEADERS, not here).
+5. **Headers** — click **"Add item"** and add each header by hand:
+   - `Authorization` → `Bearer <HOOKS_TOKEN>`
+   - `Content-Type` → `application/json`
+6. **Content-Type dropdown** — set to **`application/json`**.
+7. **Raw Body** — paste the FULL FLAT 23-key JSON from §3 (insert the data values via the Custom Values
+   picker; keep `messageTemplate` placeholder-free).
+8. **Save** the action, then **Publish** the workflow (not Draft).
+9. **Verify every field above is non-empty before publishing** — an empty URL/header/body silently drops
+   every inbound message.
+
+This is a manual step the client OWNS — there is no API, no MCP, and Build-with-AI will not do it. Every
+client doc (the reference sheet, the SMS prompt template, the verification checklist) repeats this so the
+client always knows: **paste these values into the Custom Webhook action yourself.**
+
+---
+
 ## 4. BUILD-WITH-AI VERIFICATION CHECKLIST (run AFTER Build-with-AI finishes)
 
 Build-with-AI populates poorly, so run this every time — even when the prompt "succeeded". (The

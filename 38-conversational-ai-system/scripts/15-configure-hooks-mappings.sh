@@ -97,11 +97,14 @@ else
     echo "GHL hook sessions are single-turn; the template MUST tell the agent to READ conversational-logs/<contact_id> before replying and APPEND after. Not writing config." >&2
     exit 8
   fi
+  # NOTE: jq 1.7 REJECTS a leading `.hooks //= {};` statement (the `;` top-level
+  # separator is a syntax error). Use `.hooks = (.hooks // {})` piped with `|`
+  # instead — same "default-then-merge" semantics, valid jq 1.7.
   UPDATED="$(jq \
     --arg tok "$HOOKS_TOKEN" \
     --arg agent "$ROUTING_AGENT_ID" \
     --argjson mapping "$NEW_MAPPING" \
-    '.hooks //= {};
+    '.hooks = (.hooks // {}) |
      .hooks.enabled = true |
      .hooks.token = $tok |
      .hooks.path = (.hooks.path // "/hooks") |
@@ -125,10 +128,17 @@ fi
 # =============================================================================
 echo "==> Step 3.5: Model Selection Wizard" >&2
 
-# Skip if all three tiers already set
+# Skip if all three tiers already set.
+# IMPORTANT — schema note (verified on openclaw 2026.5.27): there is NO
+# `agents.defaults.async` / `agents.defaults.batch` key in the config schema —
+# writing them makes `openclaw config validate` FAIL ("Invalid input"). The
+# real-time model lives on the agent (agents.list[main].model, supported). The
+# async/batch TIER selections are NOT config keys; they are downstream-consumer
+# values (cron BATCH_MODEL, the capabilities playbook), so we persist them to
+# the secrets/state env file (ASYNC_MODEL / BATCH_MODEL) instead of the config.
 RT_SET="$(jq -r '(.agents.list // []) | map(select(.id=="main")) | .[0].model // empty' "$CONFIG_FILE")"
-ASYNC_SET="$(jq -r '.agents.defaults.async.model // empty' "$CONFIG_FILE")"
-BATCH_SET="$(jq -r '.agents.defaults.batch.model // empty' "$CONFIG_FILE")"
+ASYNC_SET="${ASYNC_MODEL:-}"
+BATCH_SET="${BATCH_MODEL:-}"
 
 if [[ -n "$RT_SET" && -n "$ASYNC_SET" && -n "$BATCH_SET" ]]; then
   echo "all three tiers already configured — skipping wizard (rt=$RT_SET async=$ASYNC_SET batch=$BATCH_SET)" >&2
@@ -213,39 +223,45 @@ else
   done
 
   backup_config
+  # Write ONLY the supported key: the real-time model on agents.list[main].model.
+  # (jq 1.7-safe: use `.agents = (.agents // {})` not `.agents //= {}`.) We do NOT
+  # write agents.defaults.async/.batch — those keys are not in the 2026.5.27 schema
+  # and would fail `openclaw config validate`.
   UPDATED="$(jq \
-    --arg rt "$RT_SET" --arg as "$ASYNC_SET" --arg bt "$BATCH_SET" \
-    '.agents //= {} |
-     .agents.list //= [] |
+    --arg rt "$RT_SET" \
+    '.agents = (.agents // {}) |
+     .agents.list = (.agents.list // []) |
      (if (.agents.list | map(.id == "main") | any) then
         .agents.list |= map(if .id == "main" then .model = $rt else . end)
       else
         .agents.list += [{id:"main", model:$rt}]
-      end) |
-     .agents.defaults //= {} |
-     .agents.defaults.async //= {} | .agents.defaults.async.model = $as |
-     .agents.defaults.batch //= {} | .agents.defaults.batch.model = $bt' "$CONFIG_FILE")"
+      end)' "$CONFIG_FILE")"
   write_config "$UPDATED"
-  echo "models saved: realtime=$RT_SET  async=$ASYNC_SET  batch=$BATCH_SET" >&2
+  # Persist the async/batch TIER selections to the secrets/state env file so the
+  # downstream consumers (04-register-crons.sh BATCH_MODEL, the capabilities
+  # playbook) can read them — without polluting the config with invalid keys.
+  append_secret "REALTIME_MODEL" "$RT_SET"
+  append_secret "ASYNC_MODEL" "$ASYNC_SET"
+  append_secret "BATCH_MODEL" "$BATCH_SET"
+  echo "models saved: realtime=$RT_SET (config) async=$ASYNC_SET batch=$BATCH_SET (persisted to $SECRETS_ENV_FILE)" >&2
 fi
 
 # System Health Heartbeat cron (idempotent)
-HAS_CRON="$(jq --arg id "system-health-heartbeat" '(.cron.jobs // []) | map(.id == $id) | any' "$CONFIG_FILE")"
-if [[ "$HAS_CRON" != "true" ]]; then
-  backup_config
-  UPDATED="$(jq \
-    '.cron //= {jobs: []} |
-     .cron.jobs //= [] |
-     .cron.jobs += [{
-       id:"system-health-heartbeat",
-       schedule:"0 9 1 * *",
-       agentId:"main",
-       message:"Run the Monthly Comprehensive Review per protocols/monthly-comprehensive-review-protocol.md — 30-day audit across playbooks, GHL workflows, knowledge bases, model configs, tune-ups, bug log."
-     }]' "$CONFIG_FILE")"
-  write_config "$UPDATED"
-  echo "registered cron: system-health-heartbeat (0 9 1 * *)" >&2
+# Crons MUST be registered via the gateway cron store (`openclaw cron add`) — the
+# legacy `.cron.jobs` config block does NOT validate on openclaw 2026.5.27
+# (`openclaw config validate` rejects it). See references/GHL-INBOUND-AND-PLAYBOOKS.md §11.
+SHH_MSG="Run the Monthly Comprehensive Review per protocols/monthly-comprehensive-review-protocol.md — 30-day audit across playbooks, GHL workflows, knowledge bases, model configs, tune-ups, bug log."
+if command -v openclaw >/dev/null 2>&1; then
+  if openclaw cron list 2>/dev/null | grep -q "system-health-heartbeat"; then
+    echo "cron system-health-heartbeat already registered — skipping" >&2
+  else
+    openclaw cron add --name system-health-heartbeat --cron "0 9 1 * *" --agent main \
+      --message "$SHH_MSG" --light-context --best-effort-deliver \
+      && echo "registered cron: system-health-heartbeat (0 9 1 * *)" >&2 \
+      || echo "WARN: failed to register cron system-health-heartbeat via CLI" >&2
+  fi
 else
-  echo "cron system-health-heartbeat already registered — skipping" >&2
+  echo "WARN: openclaw CLI not on PATH — skipping system-health-heartbeat cron registration" >&2
 fi
 
 # =============================================================================
