@@ -126,7 +126,13 @@ operator through the 3-Layer setup end-to-end.
 
 ## Active workflows
 
-(Append one bullet per installed workflow — `<workflow-id>: <one-line description>`.)
+(Append one bullet per installed workflow — `<workflow-id>: <one-line description>`.
+This bullet form is what `scripts/qc-trinity-registry.sh` reconciles against on
+every QC run — each `<workflow-id>` must have its `<workflow-id>.md` playbook AND
+its `<workflow-id>--build-with-ai-prompt.md` on disk, unless the description says
+"uses existing inbound routing" (then Layer 1 is skipped and the prompt is
+legitimately absent). The richer markdown TABLE form from the protocol is also
+accepted by the validator.)
 
 <!-- workflows: none yet -->
 REG_EOF

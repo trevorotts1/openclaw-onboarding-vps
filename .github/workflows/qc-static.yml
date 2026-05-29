@@ -111,6 +111,17 @@ jobs:
         run: |
           set -uo pipefail
           # Machine-enforce the 23-key flat placeholder-free GHL body rule across
-          # every object-A example in references/ + templates/ + scripts/.
+          # every object-A example in references/ + templates/ + scripts/
+          # (including references/v6.0-source-playbook.md).
           bash 38-conversational-ai-system/scripts/qc-23-key-bodies.sh
           echo "✓ All Skill 38 GHL RAW BODY examples satisfy the 23-key rule"
+
+      - name: Skill 38 trinity-registry reconciliation (bullet + table fixtures)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Prove qc-trinity-registry.sh reconciles the BULLET registry the
+          # installer actually writes (not just the documented table) — catches
+          # registered-but-missing-files and file-present-but-unregistered rows.
+          bash 38-conversational-ai-system/scripts/qc-trinity-registry-test.sh
+          echo "✓ qc-trinity-registry reconciles bullet and table registries"

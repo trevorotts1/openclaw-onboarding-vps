@@ -548,7 +548,25 @@ contains:
 
 ### F. Registry and AGENTS.md insertion
 
-The agent maintains a registry at `<MASTER_FILES_DIR>/conversation-workflows/registry.md`:
+The agent maintains a registry at `<MASTER_FILES_DIR>/conversation-workflows/registry.md`.
+`scripts/qc-trinity-registry.sh` reconciles **either** of two interchangeable forms
+against the files on disk:
+
+**Bullet form** (what `scripts/09-install-conversation-workflows.sh` writes under
+`## Active workflows` — the default the agent appends to):
+
+```markdown
+## Active workflows
+
+- pricing-inquiry: New lead asks about pricing (uses existing inbound routing)
+- webinar-followup: Lead from Tuesday webinar (new tag `webinar-attendee`)
+```
+
+A bullet carries no Layer-1 column, so the validator treats Layer 1 as **needed**
+(and requires the Build-with-AI prompt) UNLESS the description says it isn't —
+e.g. `(uses existing inbound routing)` / `Layer 1: No`.
+
+**Table form** (richer; also accepted):
 
 ```markdown
 # Conversation Workflows Registry

@@ -99,25 +99,84 @@ def has_prompt(slug):
     return False
 
 
-# Parse the registry table to learn each row's Layer-1 disposition.
-# Columns (from 09-install-conversation-workflows.sh / SKILL.md §F):
-#   | ID | Name | Trigger summary | Layer 1? | OpenClaw playbook | GHL prompt | ... |
+# Parse the registry to learn each row's Layer-1 disposition. The registry can
+# be written in EITHER of two interchangeable forms, and this validator must
+# reconcile against whichever the installer/agent actually wrote:
+#
+#   (a) TABLE form (protocol §F):
+#       | ID | Name | Trigger summary | Layer 1? | OpenClaw playbook | GHL prompt | ... |
+#       Layer-1 disposition comes from the "Layer 1?" column.
+#
+#   (b) BULLET form (what 09-install-conversation-workflows.sh writes under the
+#       "## Active workflows" heading — one bullet per installed workflow):
+#       - <workflow-id>: <one-line description>
+#       The bullet has no Layer-1 column, so disposition is UNKNOWN (None) unless
+#       the description carries an explicit hint ("uses existing inbound" /
+#       "layer 1: no" => prompt legitimately absent). Unknown keeps the
+#       missing-prompt check ACTIVE (only an explicit "Layer 1 = No" suppresses
+#       it), so a bullet-registered playbook with no Build-with-AI prompt is
+#       still flagged — exactly the reconciliation the installer's bullets need.
+#
+# Both forms populate registry_rows so the on-disk reconciliation runs either way.
+
+# kebab-case workflow id: lowercase alnum + hyphens, must start with a letter/digit.
+SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+# A bullet row: optional "-"/"*" marker, then `<slug>: <description>`.
+BULLET_RE = re.compile(r"^[-*]?\s*(?:`)?([a-z0-9][a-z0-9-]*)(?:`)?\s*:\s+(.*\S)\s*$")
+
+
+def _bullet_layer1(desc):
+    """Infer Layer-1 disposition from an inline hint in a bullet description.
+    Returns False if the description explicitly says Layer 1 is not needed,
+    else None (unknown — keeps the missing-prompt check active)."""
+    d = desc.lower()
+    if ("uses existing inbound" in d or "layer 1: no" in d or "layer1: no" in d
+            or "layer 1 = no" in d or "no layer 1" in d or "(skip layer 1)" in d):
+        return False
+    return None
+
+
 registry_rows = {}
 reg = WF_DIR / "registry.md"
 if reg.is_file():
-    for line in reg.read_text(errors="ignore").splitlines():
-        if not line.strip().startswith("|"):
+    in_active = False
+    for raw_line in reg.read_text(errors="ignore").splitlines():
+        line = raw_line.strip()
+
+        # Track the "Active workflows" section for the bullet form.
+        if line.startswith("#"):
+            in_active = "active workflow" in line.lower()
+
+        # --- TABLE form ---
+        if line.startswith("|"):
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) < 4:
+                continue
+            rid = cells[0]
+            if not rid or rid.lower() in ("id", ":---", "---") or set(rid) <= set("-: "):
+                continue
+            layer1 = cells[3].lower() if len(cells) > 3 else ""
+            # "No (uses existing inbound)" => prompt legitimately absent.
+            layer1_needed = True if layer1.startswith("yes") else (
+                False if layer1.startswith("no") else None)
+            registry_rows[rid] = {"layer1_needed": layer1_needed, "raw": cells}
             continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) < 4:
-            continue
-        rid = cells[0]
-        if not rid or rid.lower() in ("id", ":---", "---") or set(rid) <= set("-: "):
-            continue
-        layer1 = cells[3].lower() if len(cells) > 3 else ""
-        # "No (uses existing inbound)" => prompt legitimately absent.
-        layer1_needed = layer1.startswith("yes")
-        registry_rows[rid] = {"layer1_needed": layer1_needed, "raw": cells}
+
+        # --- BULLET form (under "## Active workflows") ---
+        if in_active:
+            m = BULLET_RE.match(line)
+            if not m:
+                continue
+            rid = m.group(1)
+            if not SLUG_RE.match(rid):
+                continue
+            # Don't let a bullet downgrade a richer table row already captured.
+            if rid in registry_rows and registry_rows[rid].get("raw"):
+                continue
+            registry_rows[rid] = {
+                "layer1_needed": _bullet_layer1(m.group(2)),
+                "raw": None,
+            }
 
 # Discover on-disk slugs from playbook files AND from orphan prompt files.
 playbook_slugs = set()

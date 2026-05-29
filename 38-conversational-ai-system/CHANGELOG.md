@@ -1,5 +1,36 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.7] - 2026-05-29 - close the 2 QC gaps (trinity registry format + 23-key linter covers v6.0 playbook)
+
+Closed the two remaining QC gaps so both machine-enforced linters reconcile against what the install
+scripts actually produce — no silent no-ops, no unchecked corpora.
+
+### Fixed
+- **GAP 1 — trinity registry format mismatch.** `scripts/qc-trinity-registry.sh` parsed the
+  conversation-workflows registry ONLY as a markdown TABLE, but
+  `scripts/09-install-conversation-workflows.sh` writes the active-workflow list as BULLETS
+  (`<workflow-id>: <one-line description>` under `## Active workflows`). On a real installed registry the
+  reconciliation silently no-op'd. The validator now parses the **bullet form** as well as the table: each
+  bullet's `<workflow-id>` is reconciled against `<id>.md` + `<id>--build-with-ai-prompt.md` on disk; a bullet
+  with no Layer-1 column defaults to "Layer 1 needed" (prompt required) unless the description says
+  `(uses existing inbound routing)` / `Layer 1: No`. Installer template and
+  `protocols/conversation-workflows-protocol.md` §F updated so installer, validator, and docs agree end to end.
+- **GAP 2 — 23-key linter blind to the v6.0 playbook (and to ```bash bodies elsewhere).**
+  `scripts/qc-23-key-bodies.sh` explicitly excluded `references/v6.0-source-playbook.md` (~9,430 lines, the
+  largest set of GHL RAW BODY examples) and its non-greedy fence regex desynced on mixed-language docs — it
+  silently skipped real bodies inside ```bash fences (e.g. BOTH canonical bodies in
+  `references/GHL-INBOUND-AND-PLAYBOOKS.md`). Removed the name exclusion and replaced fence pairing with a
+  language-agnostic fence walker (opens/closes paired in document order). Scan now covers **22** object-A
+  bodies across 5 files (was 9 across 3) — all PASS (23-key, flat, placeholder-free). The v6.0 playbook's 11
+  per-channel bodies are scanned and pass; no body needed correcting and the fingerprint did not mis-flag any
+  non-body block, so nothing was re-excluded.
+
+### Added
+- `scripts/qc-trinity-registry-test.sh` — fixture suite (7 cases) proving the reconciliation catches a
+  **registered-but-missing-files** row and a **file-present-but-unregistered** slug on the real **bullet**
+  format, plus table-form regressions. Wired into CI (`.github/workflows/qc-static.yml`) next to the 23-key
+  linter so both run on every push/PR.
+
 ## [1.4.6] - 2026-05-29 - v6.0 clean comprehensive playbook; de-staled
 
 Synced the CLEAN, conflict-free v6.0 comprehensive playbook into the skill so the repo carries NO stale or
