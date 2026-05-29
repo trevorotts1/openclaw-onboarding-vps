@@ -19,7 +19,7 @@
 # "match": { "path": ... } + a TEMPLATED messageTemplate, and is intentionally
 # NOT a 23-key flat body — those are skipped by the agent_id discriminator.
 #
-# DELIBERATE EXCLUSION: references/v5.14-source-playbook.md is the VERBATIM
+# DELIBERATE EXCLUSION: references/v6.0-source-playbook.md is the VERBATIM
 # historical source extract ("Do not summarize"); §14 of GHL-INBOUND explicitly
 # SUPERSEDES its older nested/stripped bodies. Linting it would flag history
 # that is preserved on purpose, so it is excluded by name (logged, not silent).
@@ -63,7 +63,7 @@ JSON_MODE = os.environ.get("JSON_MODE", "0") == "1"
 SCAN_DIRS = ["references", "templates", "scripts"]
 
 # Files excluded by name — verbatim historical archives superseded by §14.
-EXCLUDE_NAMES = {"v5.14-source-playbook.md"}
+EXCLUDE_NAMES = {"v6.0-source-playbook.md"}
 
 EXPECTED_KEYS = [
     "id", "match", "action", "agent_id", "model", "wakeMode", "name",

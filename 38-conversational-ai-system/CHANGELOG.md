@@ -1,5 +1,33 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.6] - 2026-05-29 - v6.0 clean comprehensive playbook; de-staled
+
+Synced the CLEAN, conflict-free v6.0 comprehensive playbook into the skill so the repo carries NO stale or
+self-contradicting playbook content.
+
+### Changed
+- **Renamed `references/v5.14-source-playbook.md` → `references/v6.0-source-playbook.md`** (git mv) and replaced
+  its content with the clean v6.0 source playbook. Every GHL hook passage in v6.0 is reconciled to the single
+  **23-key FLAT body** standard: no nested bodies, no `deliver:true`, no mapping-level `fallbacks`, in-body
+  `messageTemplate` kept placeholder-free, server-mapping `sessionKey` is `"{{session_key}}"`.
+- Updated every reference/link that pointed to the old `v5.14-source-playbook.md` filename to the new
+  `v6.0-source-playbook.md` name across `INSTALL.md`, `INSTRUCTIONS.md`, `protocols/conversation-workflows-protocol.md`,
+  six `references/*.md` pointer docs (stripe-coupons, stripe-webhooks, shopify-graphql, sales-frameworks,
+  ghl-coupons, cloudflare-tunnel-troubleshooting, cloudflare-godaddy-setup-guide), and the load-bearing scripts
+  `scripts/01-locate-master-files-folder.sh` (`PLAYBOOK_SRC`/`DEST_PLAYBOOK`) and `scripts/qc-23-key-bodies.sh`
+  (`EXCLUDE_NAMES`).
+
+### Fixed (surgical conflict sweep — contradictions with the corrected 23-key structure)
+- `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14 CARDINAL RULE — corrected the stale "GHL Custom Webhook RAW BODY
+  … must **NOT** contain a `messageTemplate`" line, which contradicted §14.1's canonical 23-key body (the body
+  DOES carry a `messageTemplate` key, kept placeholder-free; only the *templated* `messageTemplate` is server-side-only).
+- `protocols/pre-handoff-qc-protocol.md` — corrected a QC checklist item that told the agent to verify a
+  `fallbacks` chain "configured" on the `hooks.mappings` entry; `fallbacks` is NOT a valid `.strict()` mapping
+  key. Now states fallback chains belong only on the model-routing config.
+
+Standards (communications-playbook-standard, workflow-ai-instructions-standard) remain their own reference docs;
+the playbook references them rather than duplicating them.
+
 ## [1.4.5] - 2026-05-29 - 8 rated improvements (push to 10): machine-enforced 23-key + TRINITY, Build-with-AI label fix, real self-counts, fleshed journeys, Skill 23 chain
 
 Part of repo `v10.16.9`. Six of the eight rated improvements land in this skill; the other two
@@ -11,7 +39,7 @@ placeholder-free).
 - `scripts/qc-23-key-bodies.sh` — machine-enforces the 23-key GHL RAW BODY rule across references/ +
   templates/ + scripts/ (exactly 23 flat keys, placeholder-free `messageTemplate`, no nesting, no `\n`).
   Wired into `scripts/11-run-qc-checklist.sh` and into CI (`.github/workflows/qc-static.yml`). Excludes the
-  verbatim `v5.14-source-playbook.md` (superseded by GHL-INBOUND §14); skips object-B server mappings.
+  verbatim `v6.0-source-playbook.md` (narrative source, superseded by GHL-INBOUND §14); skips object-B server mappings.
 - `scripts/qc-trinity-registry.sh` — machine-enforces THE TRINITY: a registry row with a communications
   playbook but no Build-with-AI prompt (or an orphan prompt) is flagged INCOMPLETE; honors the
   Layer-1-not-needed exemption. Wired into `11-run-qc-checklist.sh`; referenced from the verification

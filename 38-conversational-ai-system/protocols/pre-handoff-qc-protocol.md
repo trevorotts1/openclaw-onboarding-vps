@@ -86,7 +86,7 @@ All of the following exist in `MASTER_FILES_DIR`:
 
 - [ ] Model selection wizard (Step 3.5) completed: `REALTIME_MODEL_PRIMARY`, `ASYNC_MODEL_PRIMARY`, `BATCH_MODEL` all captured
 - [ ] Chosen models exist in OpenClaw's `agents.defaults.models` catalog
-- [ ] `model` field present in hooks.mappings entry; `fallbacks` chain configured
+- [ ] `model` field present in hooks.mappings entry (NO `fallbacks` key on the mapping — the `.strict()` schema rejects it; fallback chains belong only on the model-routing config)
 - [ ] Batch model present in cron job entry for `conversation-log-summarizer`
 - [ ] Cron job `conversation-log-summarizer` registered and visible in `openclaw cron list`
 - [ ] `system-health-heartbeat` cron registered (schedule: `0 9 1 * *`) and visible in `openclaw cron list`
