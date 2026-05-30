@@ -71,4 +71,4 @@ Operator replies YES to update. Agent:
 4. If test passes → notifies "Updated successfully."
 5. If test fails → ROLLS BACK and notifies with the failure reason. Never silently switches.
 
-Per the v5.14 rule: never auto-update primary models. ALWAYS ask. ALWAYS test. ALWAYS rollback on failure.
+Per the model-version-freshness rule (v6.0 playbook Step 9.36): never auto-update primary models. ALWAYS ask. ALWAYS test. ALWAYS rollback on failure.

@@ -2,7 +2,7 @@
 
 > Deep-dive reference for `protocols/discount-code-protocol.md`. The protocol file is the
 > behavioral contract; this file is the API surface the agent calls into when generating
-> GHL coupons in a sales conversation. All content here is consolidated from the v5.14
+> GHL coupons in a sales conversation. All content here is consolidated from the v6.0
 > playbook (see `references/v6.0-source-playbook.md` Step 9.26 for the canonical block).
 
 ## Endpoint

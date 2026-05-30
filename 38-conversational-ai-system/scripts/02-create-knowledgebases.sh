@@ -24,7 +24,7 @@ for kb in business products sales conversations; do
     cat > "$KB_DIR/registry.md" <<MD
 # $kb Knowledge Base — Registry
 
-Per v5.14 playbook Step 9.22 (Typed Knowledge Bases, v5.6). This base
+Per v6.0 playbook Step 9.22 (Typed Knowledge Bases, shipped v5.6). This base
 holds $kb-typed documents the agent retrieves from when answering. See
 \`protocols/typed-knowledge-bases-protocol.md\` for the typing rules.
 

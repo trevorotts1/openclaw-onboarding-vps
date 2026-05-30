@@ -1,15 +1,15 @@
 # Skill 38 — Conversational AI System: Operator Instructions
 
-These instructions walk an operator through the v5.14 conversational AI setup on a fresh OpenClaw install. The full source playbook lives at `references/v6.0-source-playbook.md` (8,797 lines, verbatim from Christy's v5.14 work). Treat that file as the canonical source of truth. This INSTRUCTIONS.md is the navigational guide — it tells you which Phase to do when and which file owns the detail.
+These instructions walk an operator through the v6.0 conversational AI setup on a fresh OpenClaw install. The full source playbook lives at `references/v6.0-source-playbook.md` (9,483 lines, the consolidated v6.0 of Christy's conversational-AI work — v6.0 supersedes the v5.x line). Treat that file as the canonical source of truth. This INSTRUCTIONS.md is the navigational guide — it tells you which Phase to do when and which file owns the detail.
 
 > **Read first:**
 > 1. `SKILL.md` (you read it)
 > 2. `INSTALL.md` (prerequisites + scripts run order)
 > 3. `references/conversational-ai-strategic-roadmap.md` (✅ shipped vs 📋 pending)
-> 4. `references/v6.0-source-playbook.md` — the entire thing, in order. Pay special attention to Phase 0 Self-orientation (Steps O.1-O.7), Phase 5 (Steps 9.5-9.36 — the bulk of v5.14), and the Phase 7 Checkpoint F final verification.
+> 4. `references/v6.0-source-playbook.md` — the entire thing, in order. Pay special attention to Phase 0 Self-orientation (Steps O.1-O.7), Phase 5 (Steps 9.5-9.36 — the bulk of the playbook), and the Phase 7 Checkpoint F final verification.
 > 5. `CORE_UPDATES.md` (what gets appended to workspace AGENTS.md + MEMORY.md)
 >
-> Per N3, read before act. Per N4, follow steps in declared order. **Do NOT skip a step because "skill X already does something similar."** Christy has reviewed the existing skills and made the call: v5.14's versions ship in full (see SKILL.md for the only intentional exception — humanizer-protocol.md is NOT shipped; skill 19 owns it).
+> Per N3, read before act. Per N4, follow steps in declared order. **Do NOT skip a step because "skill X already does something similar."** Christy has reviewed the existing skills and made the call: the v6.0 playbook's versions ship in full (see SKILL.md for the only intentional exception — humanizer-protocol.md is NOT shipped; skill 19 owns it).
 
 ---
 
@@ -47,8 +47,8 @@ Source: `references/v6.0-source-playbook.md` Steps 3, 3.5, 4.
 
 Source: `references/v6.0-source-playbook.md` Steps 5-6.
 
-- Step 5 — Save secrets to the env file (per the v5.14 playbook block).
-- Step 6 — Generate the Client Reference Sheet (Notion-first; fall back to markdown if no Notion) via `scripts/21-generate-client-reference-sheet.sh`. The generated doc LEADS with the **🚀 Quick Start** copy-paste block and now ALSO carries the **Your Communication Playbooks** section (where the client's workflows live + how to ask for a NEW one — see Hard rules).
+- Step 5 — Save secrets to the env file (per the v6.0 playbook block).
+- Step 6 — Generate the Client Reference Sheet (Notion-first; fall back to markdown if no Notion) via `scripts/21-generate-client-reference-sheet.sh`. The generated doc LEADS with the **🚀 Quick Start** copy-paste block and ALSO carries the **Your Communication Playbooks** section (where the client's workflows live + how to ask for a NEW one) AND the **⚙️ Things to consider when installing: VPS (Hostinger Docker) vs Mac mini** section (mirrored from `references/VPS-VS-MAC-INSTALL.md`) — both AFTER the Quick Start, BEFORE the deep Reference & explanation (see Hard rules).
 - Step 6.5 — **MANDATORY Telegram doc-delivery (GATED, un-skippable).** Run `scripts/22-notify-client-doc.sh`. It finds the client's Telegram chat id by GREPPING THE TRANSCRIPTS (`agents/*/sessions/*.jsonl`, NOT just `sessions.json` keys — the Teresa lesson), sends the client their doc LINK via `openclaw message send --channel telegram`, and records `clientDocDelivered=true` in the run manifest. If NO chat is found or the send fails, it FLAGS LOUDLY (stderr) + records `clientDocDelivered=false` and exits non-zero — the install is INCOMPLETE; NEVER silently skip. **The install is not complete until the client has been sent their doc link via Telegram.** Machine-enforced by `scripts/qc-notify-client-doc.sh` (wired into Step 11 QC + CI).
 - Checkpoint D — operator has copy-paste materials AND the client has been sent their doc link via Telegram (`clientDocDelivered=true`).
 
@@ -60,9 +60,9 @@ Source: `references/v6.0-source-playbook.md` Steps 7, 8, 9.
 - Step 8 — Scaffold the eight channel communication playbooks in Notion (SMS, Email, FB DM, FB Comments, Instagram DM, LinkedIn, Live Chat, All-in-One Chat).
 - Step 9 — Set up the conversation log system. Owned by `protocols/conversation-log-protocol.md` (verbatim from playbook).
 
-## Phase 5 — Install Advanced Features (Steps 9.5 through 9.36) — THE BULK OF v5.14
+## Phase 5 — Install Advanced Features (Steps 9.5 through 9.36) — THE BULK OF THE PLAYBOOK
 
-This is where the 27 protocols ship. The mapping table:
+This is where the bulk of the 32 protocols ship. The mapping table:
 
 | Step | Protocol file in `protocols/` |
 |---|---|
@@ -132,6 +132,7 @@ Sunday 2am is intentional: it runs BEFORE Dreaming's 3am nightly pass, so the tu
 - **MANDATORY Telegram doc-delivery (BINDING — state-gated, un-skippable).** The install is **NOT complete** until the client has been **sent their Quick-Start / Notion doc LINK via Telegram** (`openclaw message send --channel telegram -t <chat>`). Prose is not enforcement: this is gated by the `clientDocDelivered` state field in the run manifest + the `scripts/22-notify-client-doc.sh` step + the `scripts/qc-notify-client-doc.sh` QC gate (wired into `scripts/11-run-qc-checklist.sh` + CI). The delivery script finds the client's chat id by **grepping the transcripts** (`agents/*/sessions/*.jsonl`, scoring the most-frequent non-operator id — NOT just `sessions.json` keys, which miss paired chats; the Teresa lesson). If NO chat is found or the send fails, it FLAGS LOUDLY and records `clientDocDelivered=false` and the install is marked incomplete — **NEVER silently skip.** **Every client gets their link via Telegram, no matter what.**
 - **Completion gates — doc exists AND backend ready, BEFORE testing (BINDING).** The install is not "complete" until BOTH: (1) the client doc exists with the **FLAT 23-key** body + **Quick-Start** structure (machine-enforced by `scripts/qc-reference-sheet.sh` — the generator emits the canonical 23-key flat body and `scripts/qc-23-key-bodies.sh` asserts exactly 23 flat placeholder-free keys), AND (2) the backend is **ready to RECEIVE** — `hooks.mappings` live + `deliver:false` + a working `model` + gateway `healthz` 200 (machine-enforced by `scripts/qc-backend-ready.sh`, wired into Step 11 QC). **Testing only happens after both pass.**
 - **"Your Communication Playbooks" section in the client doc (BINDING).** The generated client doc (`scripts/21-generate-client-reference-sheet.sh`) MUST include a prominent **Your Communication Playbooks** section placed AFTER the Quick Start and BEFORE the deep how-it-works. It tells the client (a) WHERE their playbooks live — their OpenClaw master-files `conversation-workflows/` folder + the human-facing copies in Notion (Notion → Google Docs → text), and (b) in BIG BOLD, **"Want a NEW communications playbook? Start here:"** — just tell your AI "help me build a [purpose] playbook" and it brainstorms with you and builds all 3 parts (the workflow-AI prompt, the conversation playbook, the GHL automation). It ALSO explains (c) the personal **trigger word** (🔑 voice-assistant style — "like Alexa/Hey Siri", e.g. *"Playbook time!"*), (d) the **"I Do / You Do" process** (🤝 who does what) and that a good playbook takes **~15-30 minutes** (⏱️), and (e) the **brainstorm "things to think about"** (🧠 goal / audience / channel / offer / tone / timing / win action — "if you're unsure, that's what I'm here to brainstorm"). Same standard appears in `references/workflow-ai-instructions-standard.md` + `references/communications-playbook-standard.md`. The matching AGENT BEHAVIOR (offer+confirm+remember the trigger word, present I-Do/You-Do, run the brainstorm) is in `protocols/conversation-workflows-protocol.md` Section A.0/A.1/A.2 + Part 3. Machine-enforced by `scripts/qc-reference-sheet.sh`.
+- **"⚙️ VPS-vs-Mac install considerations" section in the client doc (BINDING).** The generated client doc (`scripts/21-generate-client-reference-sheet.sh`) MUST include a **⚙️ Things to consider when installing: VPS (Hostinger Docker) vs Mac mini** section, placed AFTER the Quick Start and BEFORE the deep Reference & explanation. It carries (a) the VPS points — host `/docker/<project>/.env` + `docker compose up -d --force-recreate` (plain restart ignores `env_file`), GHL/provider creds ALSO in the container `/data/.openclaw/secrets/.env`, the `/hostinger/server.mjs` wrapper rewriting `hooks.token` each boot UNLESS `OPENCLAW_HOOKS_TOKEN` is set in the host `.env`, the gateway port often NOT being 18789, cloudflared-via-PM2 / Traefik, and `apt` being a brew shim — and (b) the Mac points — provider keys in the `openclaw.json` top-level `env` block (the launchd service-env / `~/.openclaw/.env` alone are insufficient), GHL creds in `~/.openclaw/secrets/.env`, restart via `launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway`, Cloudflare-tunnel + Access-token remote access, and `sudo cloudflared service install <token>` — plus the COMMON-to-both invariants (23-key FLAT body, node-owned `conversational-logs/`, GHL creds in `secrets/.env`, `deliver:false`, Ollama Cloud `:cloud` `maxTokens` capped at 65536). The single source is `references/VPS-VS-MAC-INSTALL.md` (edit both in lockstep). Machine-enforced by `scripts/qc-reference-sheet.sh` (also via the `--require-manual-fill` flag) — it FAILs the generated doc if the section is missing OR if either the VPS (force-recreate / container `secrets/.env` / `OPENCLAW_HOOKS_TOKEN`) or Mac (`openclaw.json` env block / `launchctl kickstart`) points are absent.
 - **Honesty floor** (per `sales-best-practices-protocol.md` + `customer-service-support-protocol.md`): never fabricate, never deceive, never false urgency, never promise refunds/exceptions without operator approval.
 - **Cost caps** (per `web-scraper-protocol.md`): scrapes estimated over $5 require double-confirmation; over $25 are refused.
 - **Operator approval requirements** (per `model-version-freshness-protocol.md`): never auto-update primary models. Always surface, always ask, always wait for YES/NO/DEFER.
@@ -139,11 +140,11 @@ Sunday 2am is intentional: it runs BEFORE Dreaming's 3am nightly pass, so the tu
 
 ## Room for future features (per the strategic roadmap)
 
-The roadmap shows 6 features pending after v5.14 (F14 Voice, F15 Proactive Outreach Campaigns, F16 A/B Testing, F17 Segmentation, F18 Webhook Chaining, F21 Multi-Tenant Isolation). The skill's structure is designed to absorb them without restructuring:
+The roadmap shows 6 features pending after the v6.0 playbook (F14 Voice, F15 Proactive Outreach Campaigns, F16 A/B Testing, F17 Segmentation, F18 Webhook Chaining, F21 Multi-Tenant Isolation). The skill's structure is designed to absorb them without restructuring:
 
-- `scripts/` folder is numbered 00-08 with room to grow (09 voice-setup, 10 outreach-campaigns, etc.).
+- `scripts/` folder is numbered 00-23 with room to grow (a new numbered script slots in at the next free index; the QC linters live alongside them as `qc-*.sh`).
 - `protocols/` folder lists by name, not number — new protocols slot in alphabetically without reflow.
 - `references/` accommodates new deep-dives without disturbing existing ones.
-- `CORE_UPDATES.md` is semver-tagged at v1.0 so future v1.1/v1.2 land naturally.
+- `CORE_UPDATES.md` is semver-tagged so future versions land naturally.
 
-Do NOT try to implement any of the pending features inside skill 38. They are explicitly out of scope for v5.14.
+Do NOT try to implement any of the pending features inside skill 38. They are explicitly out of scope for the v6.0 playbook.

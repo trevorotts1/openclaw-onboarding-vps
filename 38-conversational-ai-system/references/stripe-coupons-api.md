@@ -1,7 +1,7 @@
 # Stripe Coupons + Promotion Codes API — Reference
 
 > Deep-dive reference for `protocols/discount-code-protocol.md` AND
-> `protocols/stripe-integration-protocol.md`. Consolidated from v5.14 playbook
+> `protocols/stripe-integration-protocol.md`. Consolidated from the v6.0 playbook
 > (see `references/v6.0-source-playbook.md` Steps 9.26 + 9.27 for canonical blocks).
 
 ## Two related Stripe concepts

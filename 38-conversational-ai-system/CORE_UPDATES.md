@@ -1,4 +1,4 @@
-# Core File Updates — Skill 38 (Conversational AI System v5.14)
+# Core File Updates — Skill 38 (Conversational AI System, packages playbook v6.0)
 
 These lines are appended to the workspace's AGENTS.md, MEMORY.md, and (optionally) other
 core files at install time. They tell the master orchestrator and any sub-agent how skill 38
@@ -12,10 +12,11 @@ in INSTRUCTIONS.md).
 
 ## [ADD TO AGENTS.md] — appended by `scripts/05-update-agents-md.sh`
 
-The script appends a fenced block between `<!-- BEGIN skill-38 conversational-ai v5.14 -->`
-and `<!-- END skill-38 conversational-ai v5.14 -->` containing Steps 1.7, 1.8, 1.9, 2.8 and
-the upgraded Step 1.75. See the script for the exact content; the v5.14 source playbook
-(Steps 7 and 9.21-9.30) is the canonical wording.
+The script appends named fenced blocks wrapped in `<!-- BEGIN SKILL38: <NAME> -->` /
+`<!-- END SKILL38: <NAME> -->` markers (e.g. `SKILL38_RUNTIME_ROUTING`) containing the
+MANDATORY SEND rule, Steps 1.7, 1.8, 1.9, 2.8 and the upgraded Step 1.75. See the script for
+the exact marker names and content; the v6.0 source playbook (Steps 7 and 9.21-9.30) is the
+canonical wording.
 
 Key behaviors added:
 - **Step 1.7** — Query the appropriate typed Knowledge Base for context.
@@ -26,10 +27,13 @@ Key behaviors added:
 
 ## [ADD TO MEMORY.md] — appended by `scripts/06-append-memory-rules.sh`
 
-Rules 6-14 (v5.14) + rules 15-18 (v1.4.0 — conversation-playbook builder) of the MEMORY.md design
-principles. (Rules 1-5 belong to skill 19/29.) The script writes the v5.14 block and the v1.4.0 block
-under separate markers, so an existing v5.14 install gets rules 15-18 on upgrade without re-appending
-6-14.
+Rules 6-14 + rules 15-18 (the conversation-playbook builder) of the MEMORY.md design principles.
+(Rules 1-5 belong to skill 19/29.) The script writes them under two separate, STABLE marker names —
+`<!-- BEGIN skill-38 memory-rules v5.14 -->` (rules 6-14) and `<!-- BEGIN skill-38 memory-rules v1.4.0 -->`
+(rules 15-18). Those marker labels are fixed identifiers tied to when each rule-set first shipped (the
+v5.14 playbook era and the v1.4.0 skill release respectively) — do NOT rename them, or already-installed
+boxes will re-append the rules. The two-marker split is what lets an existing install pick up rules 15-18
+on upgrade without re-appending 6-14.
 
 6. **Conversation Log Rule** — log every inbound + outbound, real-time.
 7. **Quiet Hours Rule** — never proactively message outside operator-defined quiet hours.

@@ -49,6 +49,12 @@
 #     concept explained voice-assistant style ("like Alexa / Hey Siri"); the "I Do / You
 #     Do" process + the ~15-30 minute expectation; and the brainstorm "things to think
 #     about" list + the "if you're unsure, that's what I'm here to brainstorm" reassurance
+#   - the VPS-vs-Mac install section ("⚙️ Things to consider when installing: VPS
+#     (Hostinger Docker) vs Mac mini") carrying BOTH the VPS points (force-recreate /
+#     container secrets/.env / OPENCLAW_HOOKS_TOKEN persistence against the
+#     /hostinger/server.mjs wrapper) AND the Mac points (provider keys in the
+#     openclaw.json top-level env block / launchctl kickstart restart). This is the
+#     section the --require-manual-fill flag asserts; it is checked by default too.
 #
 # Exit codes: 0 = sheet carries all required markers;
 #             1 = one or more markers missing;
@@ -57,10 +63,14 @@
 #                 never a blind PASS).
 #
 # Usage:
-#   bash scripts/qc-reference-sheet.sh                 # generate + check (CI)
-#   bash scripts/qc-reference-sheet.sh --json          # machine output
-#   bash scripts/qc-reference-sheet.sh --sheet FILE    # check an existing sheet
-#   bash scripts/qc-reference-sheet.sh --skill-dir DIR # point at a skill root
+#   bash scripts/qc-reference-sheet.sh                       # generate + check (CI)
+#   bash scripts/qc-reference-sheet.sh --json                # machine output
+#   bash scripts/qc-reference-sheet.sh --sheet FILE          # check an existing sheet
+#   bash scripts/qc-reference-sheet.sh --skill-dir DIR       # point at a skill root
+#   bash scripts/qc-reference-sheet.sh --require-manual-fill # explicitly assert the
+#                                                            # VPS-vs-Mac install section
+#                                                            # (it is checked by default
+#                                                            # regardless of this flag)
 
 set -uo pipefail
 
@@ -68,13 +78,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 JSON_MODE=0
 SHEET=""
+REQUIRE_MANUAL_FILL=0   # explicit assertion of the VPS-vs-Mac section (checked by default too)
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --skill-dir) SKILL_DIR="$2"; shift 2 ;;
-    --sheet)     SHEET="$2"; shift 2 ;;
-    --json)      JSON_MODE=1; shift ;;
-    -h|--help)   sed -n '1,52p' "$0"; exit 0 ;;
+    --skill-dir)          SKILL_DIR="$2"; shift 2 ;;
+    --sheet)              SHEET="$2"; shift 2 ;;
+    --json)               JSON_MODE=1; shift ;;
+    --require-manual-fill) REQUIRE_MANUAL_FILL=1; shift ;;
+    -h|--help)            sed -n '1,68p' "$0"; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -337,6 +349,33 @@ grep -Eiq 'things to think about|think about before' "$SHEET" || \
 grep -Eiq 'if you (are|'"'"'re) unsure|that is (exactly )?what (I am|I'"'"'m) here to brainstorm|here to brainstorm' "$SHEET" || \
   MISSING+=('the reassurance: "if you'"'"'re unsure, that is what I am here to brainstorm"')
 
+# --- ⚙️ VPS-vs-Mac install section (installer/operator-facing) ---
+# The generated doc MUST carry the "Things to consider when installing: VPS
+# (Hostinger Docker) vs Mac mini" section with BOTH the VPS install points AND the
+# Mac install points, so whoever installs the brain (on either box type) does not
+# wire the hook against the wrong env path / restart / port and silently break
+# inbound delivery. Mirrors references/VPS-VS-MAC-INSTALL.md. This is what
+# --require-manual-fill asserts; it is enforced by default too.
+grep -Eiq 'Things to consider when installing.*VPS.*(vs|versus).*Mac|VPS \(Hostinger Docker\) vs Mac' "$SHEET" || \
+  MISSING+=('the "⚙️ Things to consider when installing: VPS (Hostinger Docker) vs Mac mini" section')
+# VPS point 1 — apply env changes with force-recreate (restart does NOT reload env_file).
+grep -Eiq 'force-recreate' "$SHEET" || \
+  MISSING+=('the VPS point: apply env changes with `docker compose up -d --force-recreate` (plain restart ignores env_file)')
+# VPS point 2 — GHL/provider creds ALSO in the container secrets/.env.
+grep -Eiq '/data/\.openclaw/secrets/\.env|container .*secrets/\.env|secrets/\.env' "$SHEET" || \
+  MISSING+=('the VPS point: GHL/provider creds also live in the container `/data/.openclaw/secrets/.env`')
+# VPS point 3 — the /hostinger/server.mjs wrapper rewrites hooks.token unless OPENCLAW_HOOKS_TOKEN is set.
+grep -Eiq 'OPENCLAW_HOOKS_TOKEN' "$SHEET" || \
+  MISSING+=('the VPS point: set `OPENCLAW_HOOKS_TOKEN` in the host .env so the /hostinger/server.mjs wrapper does not rewrite hooks.token each boot')
+grep -Eiq 'server\.mjs|hooks\.token|hooks_\$\{?OPENCLAW_GATEWAY_TOKEN' "$SHEET" || \
+  MISSING+=('the VPS point: the /hostinger/server.mjs wrapper rewrites hooks.token to hooks_${OPENCLAW_GATEWAY_TOKEN} each boot')
+# Mac point 1 — provider keys in the openclaw.json top-level env block.
+grep -Eiq 'openclaw\.json.*(top-level )?`?env`? block|top-level `?env`? block|env block.*openclaw\.json' "$SHEET" || \
+  MISSING+=('the Mac point: provider keys (e.g. OLLAMA_API_KEY) must go in the openclaw.json top-level env block')
+# Mac point 2 — restart via launchctl kickstart.
+grep -Eiq 'launchctl kickstart' "$SHEET" || \
+  MISSING+=('the Mac point: restart the gateway with `launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway`')
+
 if [ "$JSON_MODE" = "1" ]; then
   miss_json="["
   first=1
@@ -366,8 +405,9 @@ else
     echo "  [PASS] manual Custom-Webhook fill instructions present"
     echo "  [PASS] create-tag-FIRST + Settings -> Tags present"
     echo "  [PASS] post-build verification (Trigger/Custom Webhook/Publish + blank-tag bug) present"
+    echo "  [PASS] ⚙️ VPS-vs-Mac install section present (VPS force-recreate/secrets.env/OPENCLAW_HOOKS_TOKEN + Mac openclaw.json env block/launchctl kickstart)$([ "$REQUIRE_MANUAL_FILL" = "1" ] && echo ' [--require-manual-fill asserted]')"
     echo ""
-    echo "RESULT: PASS — the reference sheet leads with 🚀 Quick Start (separate copy boxes per field), carries the bearer token + copyable JSON Raw Body + hook URL + manual-fill steps + create-tag-first + post-build verification, and keeps the full explanation after."
+    echo "RESULT: PASS — the reference sheet leads with 🚀 Quick Start (separate copy boxes per field), carries the bearer token + copyable JSON Raw Body + hook URL + manual-fill steps + create-tag-first + post-build verification + the VPS-vs-Mac install section, and keeps the full explanation after."
   else
     grep -q "Bearer" "$SHEET" && echo "  [PASS] Bearer token present" || echo "  [FAIL] bearer token MISSING"
     grep -Eq '^[[:space:]]*```json[[:space:]]*$' "$SHEET" && echo "  [PASS] copyable \`\`\`json Raw Body present" || echo "  [FAIL] copyable \`\`\`json Raw Body MISSING"

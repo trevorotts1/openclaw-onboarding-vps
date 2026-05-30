@@ -5,11 +5,11 @@ This document tracks the features built into the Convert and Flow conversational
 **Audience:** Christy (system owner) and her AI agents reading this for context on what's done, what's coming, and why.
 
 **Status legend:**
-- ✅ **Implemented** — feature is live in v5.4
+- ✅ **Implemented** — feature is live and shipped (the per-feature "shipped in vX.Y" tags below record the playbook version each feature first landed in; all ✅ features are consolidated into the current v6.0 playbook)
 - 📋 **Documented** — design is finalized, ready to build
 - 💡 **Under consideration** — concept is sound, design pending
 
-**Last updated:** May 28, 2026 (aligned with v5.4 of the main playbook)
+**Last updated:** May 29, 2026 (aligned with v6.0 of the main playbook — the consolidated, conflict-free release that supersedes the v5.x line)
 
 ---
 
@@ -147,7 +147,7 @@ Sixteen features remain unimplemented. Build order reflects revenue impact and s
 
 ---
 
-# Remaining Round 2 Features (lower priority — DEFERRED, NOT in v5.14)
+# Remaining Round 2 Features (lower priority — DEFERRED, NOT in the v6.0 playbook)
 
 ## 📋 Feature 14 — Voice/Phone Integration
 ## 📋 Feature 15 — Proactive Outreach Campaigns
@@ -156,7 +156,7 @@ Sixteen features remain unimplemented. Build order reflects revenue impact and s
 ## 📋 Feature 18 — Webhook Chaining (downstream triggers)
 ## 📋 Feature 21 — Multi-Tenant Agent Isolation
 
-These six are explicitly NOT implemented in v5.14 and NOT in skill 38. The skill's structure
+These six are explicitly NOT implemented in the v6.0 playbook and NOT in skill 38. The skill's structure
 (numbered scripts, protocols/ folder, references/) leaves room for them to be added later
 without restructuring.
 
@@ -173,7 +173,7 @@ without restructuring.
 
 # Implementation status (skill 38)
 
-**Shipped in skill 38 (v5.14):** All ✅ features above. Skill 38 packages 27 protocol files (humanizer-protocol.md intentionally NOT shipped — skill 19 owns it).
+**Shipped in skill 38 (packages playbook v6.0):** All ✅ features above. Skill 38 packages 32 protocol files (humanizer-protocol.md intentionally NOT shipped — skill 19 owns it).
 
 **Pending (NOT in skill 38):** F14, F15, F16, F17, F18, F21.
 
