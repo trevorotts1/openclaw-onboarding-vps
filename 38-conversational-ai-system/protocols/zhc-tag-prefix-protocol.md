@@ -1,4 +1,4 @@
-# ZHC Tag-Prefix Protocol
+# ZHC Tag-Prefix Protocol — Step 9.42
 
 Every tag the agent creates **programmatically** (via the GHL skill `create_tag`
 method, or a direct `POST /locations/{locationId}/tags`) MUST be prefixed
@@ -84,7 +84,7 @@ account:
 ## Cross-references
 
 - AGENTS.md tag-creation behavioral note: inserted by
-  `scripts/05-update-agents-md.sh` (marker `STEP_TAG_PREFIX`).
+  `scripts/05-update-agents-md.sh` (marker `SKILL38_ZHC_TAG_PREFIX`).
 - MEMORY.md Rule 20: appended by `scripts/06-append-memory-rules.sh`.
 - Machine-enforced (programmatic tag EXAMPLES use the `ZHC-` prefix) by
   `scripts/qc-zhc-tag-prefix.sh`, wired into `scripts/11-run-qc-checklist.sh` + CI.

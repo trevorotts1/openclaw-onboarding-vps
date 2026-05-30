@@ -1,4 +1,4 @@
-# Aggression Detection Protocol (F50 — extends the Safeguard family)
+# Aggression Detection Protocol (F50) — Step 9.37
 
 This protocol **extends** the bot/abuse safeguard family in
 `protocols/conversational-safeguards.md`. It does NOT rebuild bot detection —
@@ -10,7 +10,7 @@ spend, so a hostile inbound is caught and handled cheaply at the front door.
 ## Where it runs in the turn
 
 AGENTS.md **Step 1.35** (inserted by `scripts/05-update-agents-md.sh`, marker
-`STEP_1_35_AGGRESSION`) — AFTER the Step 0.7 compliance hard-gate and the Step
+`STEP_1_35_AGGRESSION_PRE_ROUTING`) — AFTER the Step 0.7 compliance hard-gate and the Step
 1.4 safeguard check, but BEFORE Step 1.75 workflow match / routing and BEFORE the
 agent spends a reply-drafting LLM call. The classifier itself is a cheap
 keyword/pattern pass over the raw inbound text — it does not require a model call.
@@ -78,6 +78,12 @@ signal is **not** aggression — many people shout in caps when excited, on mobi
 with caps-lock on, or out of habit. ALLCAPS only contributes when combined with
 profanity + direct-address (a Tier-2 signal) or counts toward the 3+-signals
 rule. On its own it fires neither tier.
+
+## Severity is per-message, but tension can accumulate
+
+The classifier reads the conversation log so a sustained 3+-message frustration streak
+escalates Tier-1 even when no single message is loud. A single Tier-2 signal always wins
+over Tier-1.
 
 ## Reuse — bot detection is NOT rebuilt here
 
@@ -159,5 +165,13 @@ to remove the `ZHC-aggression-detected` line, or tell the agent "resume contact
 - Extends: `protocols/conversational-safeguards.md` (Safeguard family, Step 9.5).
 - Routing detour mechanism: `protocols/smart-playbook-switching-protocol.md` (F44).
 - Tag namespace: `protocols/zhc-tag-prefix-protocol.md`.
-- AGENTS.md Step 1.35: `scripts/05-update-agents-md.sh` (marker `STEP_1_35_AGGRESSION`).
+- AGENTS.md Step 1.35: `scripts/05-update-agents-md.sh` (marker `STEP_1_35_AGGRESSION_PRE_ROUTING`).
 - INSTRUCTIONS.md Step 9.37.
+
+## MEMORY.md (Rule 21)
+
+A hostile message is screened BEFORE routing and BEFORE the model. Tension (irritation,
+not abuse) heightens care without rerouting; aggression (profanity-at-agent, threats,
+shouting-with-profanity) routes to the de-escalation handler and notifies the operator.
+ALL CAPS alone is never aggression. See
+`<MASTER_FILES_DIR>/aggression-detection-protocol.md`.

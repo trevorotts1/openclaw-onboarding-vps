@@ -1,4 +1,4 @@
-# Smart Playbook Switching / Always-Listening Interrupts Protocol (F44 — DETOUR-AND-RETURN)
+# Smart Playbook Switching — Always-Listening Interrupts Protocol (F44) — Step 9.38
 
 > **This is NOT F33 (Intelligent Playbook Routing).** F33
 > (`intelligent-routing-protocol.md`, Step 9.33) is **route-and-stay**: the
@@ -30,7 +30,8 @@ A detour fires when the inbound matches any of:
 
 1. **Operator urgent keywords** — operator-configured words that mean "stop and
    handle this" (e.g. "urgent", "emergency", "cancel my order now", or custom
-   per-client words from the operator's config).
+   per-client words from the operator's config). Operator-defined in
+   `<MASTER_FILES_DIR>/interrupt-triggers.md`.
 2. **FAQ types** — a question that the FAQ layer (F47,
    `smart-faq-tool-protocol.md`) can answer in one sentence. NOTE: F47 is the
    *lightweight sibling* — a SENTENCE, not a sub-flow — and is the preferred,
@@ -127,6 +128,33 @@ F44 for sub-flows.
 If a customer permanently moves on, that is F33. If they need a quick aside and
 then want to finish what they started, that is F44.
 
+## openclaw.json toggles
+
+```json
+{
+  "skill38": {
+    "smart_playbook_switching": {
+      "enabled": true,
+      "max_interrupt_depth": 2
+    }
+  }
+}
+```
+
+- `smart_playbook_switching.enabled` — default **true** (always-listening interrupts on).
+- `smart_playbook_switching.max_interrupt_depth` — default **2**; beyond it, escalate to
+  the operator rather than nest further.
+
+## MEMORY.md (Rule 22)
+
+The agent always listens for interrupts in parallel with the active workflow. On an
+interrupt (operator-urgent keyword, FAQ type, compliance redirect, F50 aggression, F49
+pixel-priority) it SAVES the workflow state, EXECUTES the sub-flow, then RETURNS to the
+saved step with a soft "coming back to where we were" transition. This is
+DETOUR-AND-RETURN, distinct from Step 9.33's route-and-stay. Max 2 levels deep, then
+escalate. Multiple triggers: highest priority first, queue the rest. See
+`<MASTER_FILES_DIR>/smart-playbook-switching-protocol.md`.
+
 ## Logging (the data contract — F52)
 
 Every interrupt is recorded as JSONL, one line appended to
@@ -162,5 +190,5 @@ JSONL schema (one object per line):
 - Lightweight sibling: `protocols/smart-faq-tool-protocol.md` (F47, Step 9.41).
 - Feeds aggression detours: `protocols/aggression-detection-protocol.md` (F50, Step 9.37).
 - Tag namespace: `protocols/zhc-tag-prefix-protocol.md`.
-- AGENTS.md Step 2.0: `scripts/05-update-agents-md.sh` (marker `STEP_2_0_INTERRUPTS`).
+- AGENTS.md Step 1.42: `scripts/05-update-agents-md.sh` (marker `STEP_1_42_INTERRUPTS_AND_FAQ`).
 - INSTRUCTIONS.md Step 9.38.

@@ -1,4 +1,6 @@
-# Smart FAQ Tool Protocol (F47 — lightweight sibling of F44: a SENTENCE, not a sub-flow)
+# Smart FAQ Tool Protocol (F47) — Step 9.41
+
+> F47 is the lightweight sibling of F44 — a SENTENCE, not a sub-flow.
 
 F47 is the **lightweight sibling** of F44 (smart-playbook-switching-protocol.md).
 Where F44 runs a heavy interrupt SUB-FLOW (save state → run sub-flow → return),
@@ -132,6 +134,28 @@ JSONL schema (one object per line):
 | `returned_to_step` | string | the workflow step the conversation continued on (unchanged) |
 | `tag_applied` | string | `ZHC-faq-answered` |
 
+## openclaw.json toggles
+
+```json
+{
+  "skill38": {
+    "smart_faq": {
+      "enabled": true
+    }
+  }
+}
+```
+
+- `smart_faq.enabled` — default **true** (inline FAQ answering on).
+
+## MEMORY.md (Rule 25)
+
+The agent answers quick known FAQs INLINE — a SENTENCE, not a sub-flow — then returns to
+the current step in the same reply ("By the way, [answer]. Coming back to [topic]…").
+Matches `KnowledgeBases/business/faqs.md`, scoped per workflow via `faq-scope.md`. Bigger
+FAQ questions hand off to F44 as a detour. Tag `ZHC-faq-answered`. See
+`<MASTER_FILES_DIR>/smart-faq-tool-protocol.md`.
+
 ## Cross-references
 
 - Heavier sibling: `protocols/smart-playbook-switching-protocol.md` (F44, Step 9.38).
@@ -139,5 +163,5 @@ JSONL schema (one object per line):
 - FAQ knowledge base: `<MASTER_FILES_DIR>/KnowledgeBases/business/faqs.md`.
 - Per-workflow scope: `conversation-workflows/<workflow-id>/faq-scope.md`.
 - Tag namespace: `protocols/zhc-tag-prefix-protocol.md`.
-- AGENTS.md Step 2.0 (always-listening layer covers both F44 + F47): `scripts/05-update-agents-md.sh` (marker `STEP_2_0_INTERRUPTS`).
+- AGENTS.md Step 1.42 (always-listening layer covers both F44 + F47): `scripts/05-update-agents-md.sh` (marker `STEP_1_42_INTERRUPTS_AND_FAQ`).
 - INSTRUCTIONS.md Step 9.41.

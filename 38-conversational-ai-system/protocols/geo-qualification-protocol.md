@@ -1,4 +1,4 @@
-# Geo-Qualification Protocol (F45)
+# Geo-Qualification Protocol (F45) — Step 9.39
 
 Detects whether a customer is in the business's service area and qualifies (or
 gently disqualifies) them accordingly — **always confirming with the customer
@@ -10,13 +10,15 @@ shipping) and geo-qualification would only get in the way.
 
 ```jsonc
 {
-  "geo_qualification": {
-    "enabled": false                 // default OFF — opt-in per client
+  "skill38": {
+    "geo_qualification": {
+      "enabled": false               // default OFF — opt-in per client
+    }
   }
 }
 ```
 
-- **`enabled`** (default `false`) — when `false`, this protocol is a no-op and no
+- **`skill38.geo_qualification.enabled`** (default `false`) — when `false`, this protocol is a no-op and no
   location detection or qualification happens. The operator turns it ON only for
   location-bound businesses (local services, regional providers, in-person
   appointments).
@@ -35,6 +37,9 @@ the highest-confidence one available:
 4. **Explicit ask** — if none of the above yields a usable hint, ASK the customer
    directly ("Whereabouts are you located? I want to make sure we serve your
    area.").
+
+The agent uses the highest-priority available hint to PRE-FILL its confirmation question
+("Looks like you might be near [city] — is that right?"), then waits for the answer.
 
 ## CRITICAL — signals are HINTS; ALWAYS ASK before disqualifying
 
@@ -143,10 +148,19 @@ JSONL schema (one object per line):
 > tag MUST have `confirmed_with_customer:true` — the agent never disqualifies on
 > a hint alone.
 
+## MEMORY.md (Rule 23)
+
+When geo-qualification is ON, location signals (pixel/IP → area code → form address →
+explicit ask) are HINTS only. The agent ALWAYS ASKS to confirm before any
+disqualification or out-of-area handling — never disqualify on a guess. Out-of-area
+handling is operator-configured (decline+referral / limited-remote / waitlist / full
+decline). Service areas live in `KnowledgeBases/sales/service-areas.md` per product. See
+`<MASTER_FILES_DIR>/geo-qualification-protocol.md`.
+
 ## Cross-references
 
 - Knowledge base: `<MASTER_FILES_DIR>/KnowledgeBases/sales/service-areas.md`.
 - Optional hint source: F49 pixel-priority.
 - Tag namespace: `protocols/zhc-tag-prefix-protocol.md`.
-- AGENTS.md Step 2.5: `scripts/05-update-agents-md.sh` (marker `STEP_2_5_GEO`).
+- AGENTS.md Step 2.0: `scripts/05-update-agents-md.sh` (marker `STEP_2_0_GEO_QUALIFICATION`).
 - INSTRUCTIONS.md Step 9.39.

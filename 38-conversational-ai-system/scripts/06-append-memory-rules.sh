@@ -90,59 +90,68 @@ BLOCK14
 
 echo "[skill 38] MEMORY.md updated (rules 15-18 appended; backup at $MEM_MD.bak-skill38-v140-*)"
 
-# --- v1.5.0 top-up: Round-3 Queue-A rules 20-24 (own marker = upgrade-safe) ---
+# --- v1.5.0 top-up: Round-3 Queue-A CORE feature rules 20-25 (own marker = upgrade-safe) ---
 # Does NOT renumber the existing rules 6-18 — appends in a fresh marker block.
+# One feature per rule (canonical scheme): 20 tag-prefix / 21 F50 / 22 F44 / 23 F45 /
+# 24 F46 / 25 F47. The F52 JSONL data-contract is documented centrally in INSTRUCTIONS.md
+# (Phase-5 data-contract table) — it is NOT its own MEMORY rule.
 MARKER_BEGIN_150="<!-- BEGIN skill-38 memory-rules v1.5.0 -->"
 if grep -qF "$MARKER_BEGIN_150" "$MEM_MD"; then
-  echo "[skill 38] MEMORY.md already contains skill 38 rules 20-24 — preserved"
+  echo "[skill 38] MEMORY.md already contains skill 38 rules 20-25 — preserved"
   exit 0
 fi
 cp "$MEM_MD" "$MEM_MD.bak-skill38-v150-$(date +%Y%m%dT%H%M%SZ)"
 cat >> "$MEM_MD" <<'BLOCK150'
 
 <!-- BEGIN skill-38 memory-rules v1.5.0 -->
-## Skill 38 — Round-3 Queue-A design rules 20-24 (v1.5.0)
+## Skill 38 — Round-3 Queue-A CORE: design rules 20-25 (v1.5.0)
 
-20. ZHC Tag-Prefix Rule — every tag you CREATE programmatically (via the GHL skill
-    create_tag method or POST /locations/{locationId}/tags) MUST be prefixed `ZHC-`
-    (e.g. `ZHC-pricing-interest`, `ZHC-aggression-detected`). This is NOT retroactive
-    and NEVER renames a tag the operator/human/another tool created — apply those
-    verbatim. The test is "did I create this tag?" -> if yes, `ZHC-`. CRM custom
-    FIELDS you create use the parallel `ZHC_` (underscore) prefix. See
-    protocols/zhc-tag-prefix-protocol.md.
-21. Aggression Rule (F50) — PRE-routing (Step 1.35), before workflow match and before
-    any reply-drafting LLM spend, run a two-tier aggression classifier (extends the
-    bot/abuse Safeguard family; bot detection is NOT rebuilt). Tier 1 (tension) tags
-    `ZHC-tension-detected` and continues with heightened attention; Tier 2 (aggression)
-    tags `ZHC-aggression-detected`, routes to the aggression-handler sub-flow, and
-    notifies the operator. ALL CAPS ALONE never fires. Toggle: openclaw.json
-    aggression_detection.{enabled,sensitivity}. See protocols/aggression-detection-protocol.md.
-22. Detour-and-Return Rule (F44) — while a workflow is active, an always-listening layer
-    watches for interrupts (operator-urgent, FAQ, compliance, F50 aggression, F49
-    pixel-priority). On a trigger: SAVE state -> EXECUTE sub-flow -> RETURN to the saved
-    step with a soft transition ("Coming back to where we were..."). Max 2 levels deep
-    then escalate; multiple triggers = highest priority first, queue the rest. This is
-    DISTINCT from F33 route-and-stay (Rule 13 / Step 9.33). See
-    protocols/smart-playbook-switching-protocol.md.
-23. Geo-Qualification + CRM-Field Rules — (F45) when geo_qualification.enabled is true,
-    location signals are HINTS only (pixel/IP -> area code -> form address -> ask);
-    ALWAYS confirm with the customer before ANY disqualification, then apply the
-    operator-configured out-of-area mode. (F46) you may write ANY GHL contact custom
-    field mid-conversation (type-aware, validate first); if none exists, create it as
-    `ZHC_<snake_purpose>`, notify the operator, record the mapping. Field writes/creates
-    are OPERATOR-APPROVED allow-list actions, NEVER customer-invoked. See
-    protocols/geo-qualification-protocol.md + protocols/crm-field-write-protocol.md.
-24. Smart-FAQ + Logging Rules — (F47) the lightweight sibling of F44: a SENTENCE not a
-    sub-flow. For a simple factual question answerable from
-    KnowledgeBases/business/faqs.md (and in the workflow's faq-scope), answer inline in
-    one line and continue the SAME step ("By the way, [answer]. Coming back to
-    [topic]..."); tag `ZHC-faq-answered`. (F52 data contract) every new behavioral
-    feature emits a JSONL log (timestamp + event_type + event data) at its documented
-    <MASTER_FILES_DIR> path — aggression-detection-log.jsonl, interrupt-log.jsonl,
-    geo-qualification-log.jsonl, crm-field-writes-log.jsonl, faq-detour-log.jsonl. See
-    protocols/smart-faq-tool-protocol.md.
+20. ZHC Tag-Prefix Rule — every tag the agent creates PROGRAMMATICALLY (via the GHL
+    skill's create_tag, or the fallback POST /locations/{id}/tags) carries the `ZHC-`
+    prefix, so agent-created tags are instantly distinguishable from operator-created ones.
+    This is NOT retroactive: never rename existing or operator-owned tags; only prefix the
+    names the agent creates going forward. Companion: programmatically created CRM custom
+    FIELDS use the `ZHC_` prefix (Rule 24). The bot tag is `ZHC-bot-suspected` going
+    forward; existing `bot-detected` tags are honored as-is. Reuse the existing D.1 /
+    Section-6 tag-creation mechanism — only the NAME changes. See
+    `<MASTER_FILES_DIR>/zhc-tag-prefix-protocol.md`.
+21. Aggression Rule (F50) — screen every inbound for hostility BEFORE routing and BEFORE
+    the model (Step 1.35). Tier 1 TENSION (multiple irritation words / 3+ message streak /
+    !!!|???) → tag `ZHC-tension-detected`, heighten care, NO reroute. Tier 2 AGGRESSION
+    (profanity-AT-agent / threats legal-physical-public / ALLCAPS+profanity+direct-address
+    / 3+ signals in one message) → tag `ZHC-aggression-detected`, route to aggression-
+    handler, notify operator. ALL CAPS ALONE never fires. Sensitivity lenient|standard|
+    strict in openclaw.json. Extends bot-detection, does not replace it. See
+    `<MASTER_FILES_DIR>/aggression-detection-protocol.md`.
+22. Interrupt Rule (F44, detour-and-return) — always-listening layer parallel to the active
+    workflow. On an interrupt (operator-urgent keyword, FAQ type, compliance redirect, F50
+    aggression, F49 pixel-priority): SAVE state (step + gathered data + context) → EXECUTE
+    sub-flow → RETURN to the saved step with a soft "coming back to where we were"
+    transition. DISTINCT from Step 9.33's route-and-stay. Max 2 levels deep, then escalate.
+    Multiple triggers: highest priority first, queue the rest. Tags `ZHC-interrupt-handled`
+    / `ZHC-faq-detoured` / `ZHC-aggression-handled-and-resumed`. See
+    `<MASTER_FILES_DIR>/smart-playbook-switching-protocol.md`.
+23. Geo-Qualification Rule (F45, OFF by default) — when ON, location signals (pixel/IP →
+    phone area code → form address → explicit ask) are HINTS only. ALWAYS ASK to confirm
+    before ANY disqualification or out-of-area handling — never disqualify on a guess.
+    Out-of-area handling is operator-configured (decline+referral / limited-remote /
+    waitlist / full decline). Service areas per product in
+    `KnowledgeBases/sales/service-areas.md`. Tags `ZHC-out-of-service-area` /
+    `ZHC-service-area-confirmed` / `ZHC-service-area-flexible`. See
+    `<MASTER_FILES_DIR>/geo-qualification-protocol.md`.
+24. CRM Field-Write Rule (F46) — the agent writes ANY GHL contact custom field mid-convo,
+    type-aware (text/number/date/dropdown), discovering via GET /locations/{id}/customFields
+    and validating before write. CREATE-IF-MISSING: if no matching field exists, create one
+    with the `ZHC_` prefix (operator-approved allow-list action, NEVER customer-invoked),
+    notify the operator, record the mapping in `crm-field-mappings.md`. The weekly tune-up
+    reviews field usage. See `<MASTER_FILES_DIR>/crm-field-write-protocol.md`.
+25. Smart-FAQ Rule (F47) — answer quick known FAQs INLINE, a SENTENCE not a sub-flow, then
+    return to the current step in the SAME reply ("By the way, [answer]. Coming back to
+    [topic]…"). Matches `KnowledgeBases/business/faqs.md`, scoped per workflow via
+    `faq-scope.md`. Bigger FAQ questions hand off to F44 as a detour. Tag
+    `ZHC-faq-answered`. See `<MASTER_FILES_DIR>/smart-faq-tool-protocol.md`.
 
 <!-- END skill-38 memory-rules v1.5.0 -->
 BLOCK150
 
-echo "[skill 38] MEMORY.md updated (rules 20-24 appended; backup at $MEM_MD.bak-skill38-v150-*)"
+echo "[skill 38] MEMORY.md updated (rules 20-25 appended; backup at $MEM_MD.bak-skill38-v150-*)"
