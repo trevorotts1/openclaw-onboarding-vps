@@ -2,74 +2,80 @@
 
 ## What this installs
 
-A tiered public-records lookup engine that resolves a county+state from an
-address/ZIP and routes through four tiers (curated → adapter → operator-config →
-honest gap) to a lawful, attributed PUBLIC-records source. Pairs with Skill 39
-(Real Estate Playbook).
+A TIERED, compliance-first public-records intelligence layer:
 
-- 6 scripts (`00`–`04` + `qc-no-personal-data.sh`) + 2 Tier 2 example adapters —
-  idempotent, OS-aware (Darwin + Linux).
-- 3 protocols (adapter-authoring, pre-foreclosure sourcing, record-type routing).
-- 4 references (compliance-and-tiers, the 20-county Tier 1 registry .md + .tsv,
-  the F52 `public-records-queries.jsonl` event contract).
-- One ADDITIVE, marker-fenced AGENTS.md block.
+- **Tier 1** — curated scraper configs for 18 major counties (routing metadata + record-type map + selector contract; live retrieval gated on operator ToS/robots acceptance + the validator).
+- **Tier 2** — a platform-adapter FRAMEWORK (one adapter per records-platform vendor) + two example adapters (Tyler Technologies, GovOS/Landmark).
+- **Tier 3** — an operator-buildable scraper CONFIG schema + an interactive builder that VALIDATES the config (robots + selectors dry-probe) before any live run.
+- **Tier 4** — HONEST GAP behavior: when nothing can serve a query, tell the operator; never fabricate.
+- **Auto-detect routing**, a **30-day cache**, **cost cap + per-day + per-target rate limits** (with up-front bulk cost estimate + operator confirm), and an enforced **compliance posture** (robots respected, ToS referenced per target, source + timestamp attribution).
+- A `public-records-queries.jsonl` append-only event log per the F52 master-files contract.
 
 ## Prerequisites
-Checked by `scripts/00-verify-prerequisites.sh` (never auto-installs):
-- **HARD: `curl`** — any live fetch.
-- SOFT: a browser fetch path (Skill 03 / playwright) — JS-heavy portals.
-- SOFT: Skill 39 — Real Estate Playbook (pre-foreclosure pairing).
+
+This skill REFUSES to proceed until the mandatory prerequisites pass (`00-verify-prerequisites.sh`).
+
+1. **`MASTER_FILES_DIR`** — resolvable (Skill 38/39 persist it). The cache + event log live there.
+2. **`jq`** on PATH — config + event JSON parsing.
+3. **`curl`** on PATH — robots.txt check + target fetches.
+
+Recommended / optional:
+- **Skill 39 (Real Estate Playbook)** — consumes Skill 40 output for pre-foreclosure outreach.
+- **Headless browser (Playwright/Chromium)** — for JS-rendered portals; static fetch handles the rest.
+
+## What this does NOT do
+
+- Does NOT fabricate records — no source → Tier 4 honest gap.
+- Does NOT run outreach (that's Skill 39).
+- Does NOT bypass robots.txt or a target's ToS — a disallowed target is an honest gap.
+- Does NOT run bulk ops without an operator-confirmed cost estimate.
+- Does NOT give legal advice on permissible use; the operator owns lawful use (FCRA/DPPA/state limits).
 
 ## Install order (run in this order; each is idempotent)
 
 ```bash
-cd ~/.openclaw/skills/40-zhc-public-records-scraper/scripts   # macOS
-# (VPS: cd /data/.openclaw/skills/40-zhc-public-records-scraper/scripts)
+cd ~/.openclaw/skills/40-zhc-public-records-scraper/scripts
 
-./00-verify-prerequisites.sh         # curl HARD; browser + Skill 39 SOFT
-./01-locate-master-files-folder.sh   # resolve <MASTER_FILES_DIR> (reuses 38/39)
-./04-update-agents-md.sh             # ADDITIVE marker-fenced AGENTS.md block
+./00-verify-prerequisites.sh      # MASTER_FILES_DIR, jq, curl; Skill 39 + browser report
+./01-locate-master-files-folder.sh# reuse Skill 38/39 MASTER_FILES_DIR selection (or resolve it)
+./02-init-cache.sh                # 30-day cache dir + public-records-queries.jsonl + schema sidecar
+./03-load-tier1-counties.sh       # validate + index the shipped Tier-1 county configs
+./04-configure-caps.sh            # record cost/rate/cache caps (env-overridable); honest summary
+# Per-target, before any live run:
+./05-validate-target.sh <slug>    # dry-probe a Tier-1/Tier-3 target (robots + selectors) BEFORE live
+./06-build-tier3-config.sh        # (optional) build + validate an operator Tier-3 scraper config
+./07-update-core-files.sh         # AGENTS.md / MEMORY.md / TOOLS.md pointers (idempotent markers)
 ```
 
-`02-detect-and-route.sh` (the router) and `03-build-scraper-config.sh` (Tier 3
-builder) are RUNTIME tools, not install steps:
+## Cost / rate / cache caps (env-overridable)
 
-```bash
-./02-detect-and-route.sh --address "123 Main St, Phoenix, AZ 85003" --record-type recorder
-./03-build-scraper-config.sh --county "Travis" --state TX     # scaffold a Tier 3 draft
-```
-
-## QC
-
-```bash
-./qc-no-personal-data.sh   # universal guard + Tier-1-registry + tier-vocabulary invariants
-```
-
-Governed by `../QC-PROTOCOL.md` (10-category rubric, 8.5 threshold) before any PR.
-
-## Compliance (binding — read before first use)
-- robots.txt respected; Tier 3 validation refuses a config whose path is Disallowed.
-- Each target's ToS referenced; operator attests `ROBOTS_OK=1` for Tier 3.
-- Source + retrieval timestamp attributed on every record.
-- Per-day + per-target rate limits; daily cost cap; cost estimate before bulk ops.
-- 30-day cache; `--force-refresh` to bypass.
-- NEVER fabricate a record. No source / blocked / not-online → Tier 4 honest gap.
-
-Operator-overridable env knobs: `SKILL40_MAX_QUERIES_PER_DAY` (200),
-`SKILL40_MAX_QUERIES_PER_TARGET_PER_DAY` (50), `SKILL40_DAILY_COST_CAP_USD` (5.00),
-`SKILL40_COST_PER_QUERY_USD` (0.00), `SKILL40_CACHE_TTL_DAYS` (30).
+| Env var | Default | Meaning |
+|---|---|---|
+| `PR_DAILY_CAP` | 200 | Global queries per day |
+| `PR_PER_TARGET_MIN_INTERVAL_S` | 5 | Minimum seconds between requests to the same target |
+| `PR_BULK_CONFIRM_THRESHOLD` | 25 | Batch size above which a cost estimate + operator confirm is required |
+| `PR_COST_PER_QUERY` | 0.00 | Estimated cost per query for paid targets |
+| `PR_CACHE_TTL_DAYS` | 30 | Cache time-to-live |
 
 ## OS support
-`darwin` (Mac) and `linux` (VPS). Scripts detect OS via `uname -s`. Master files
-+ cache + query log live under `<MASTER_FILES_DIR>` (resolved by `01-`).
 
-## What this does NOT do
-- Does NOT fabricate records.
-- Does NOT bundle licensed/paid data, scraped dumps, a ZIP→county DB, or client data.
-- Does NOT bypass robots.txt / ToS.
-- Does NOT modify other skills (appends only its own AGENTS.md block).
+`darwin` (Mac mini operators) and `linux` (VPS operators). Scripts detect OS via `uname -s`:
+- **Darwin:** `$HOME/.openclaw/skills`
+- **Linux:** `/data/.openclaw/skills`
+
+## QC gates shipped with this skill
+
+```bash
+bash scripts/qc-no-personal-data.sh   # UNIVERSAL: zero client/personal identifiers
+bash scripts/qc-no-fabrication.sh     # router returns Tier-4 honest gap (never invented records) on a miss
+bash scripts/qc-compliance.sh         # robots respected, ToS referenced per target, attribution required
+```
+
+All three must PASS before the skill is considered installed cleanly (per `../QC-PROTOCOL.md` Rule 5).
 
 ## Where to read next
-- `INSTRUCTIONS.md` — the operator + runtime walkthrough.
-- `references/compliance-and-tiers.md` — the four tiers + compliance rules.
-- `references/tier1-county-registry.md` — the curated counties + how to add more.
+
+- `INSTRUCTIONS.md` — runtime routing, caching, caps, compliance + the JSONL schema
+- `references/tier-model.md` — the 4-tier architecture in depth
+- `references/county-platform-map.md` — county → platform → tier mapping
+- `references/real-estate-use-cases.md` — prioritized RE use cases
