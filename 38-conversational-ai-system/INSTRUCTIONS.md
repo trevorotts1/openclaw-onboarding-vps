@@ -57,6 +57,7 @@ Source: `references/v6.0-source-playbook.md` Steps 5-6.
 Source: `references/v6.0-source-playbook.md` Steps 7, 8, 9.
 
 - Step 7 — Install inbound message classification rules into AGENTS.md (skill 38's `scripts/05-update-agents-md.sh` handles part of this; the channel-classifying body is in the playbook).
+- Step 7.5 — **Preload the CLIENT agent's TOOLS.md with the verified GHL API quick-reference.** Run `scripts/24-update-tools-md.sh`. It idempotently injects the concise, verified GHL Convert-and-Flow API quick-reference (exact method/URL/3 headers/body/scope for every messaging channel type + calendar + appointment + invoice op) into the workspace `TOOLS.md`, so the agent has the canonical request shapes in its **core context** and responds fast at runtime instead of digging through the dense per-module references. WHERE/WHY: shapes belong in **TOOLS.md** (WHERE-THINGS-LIVE), NOT AGENTS.md (WHAT-TO-DO). It is universal (placeholders only — the client's real `PUBLIC_HOSTNAME`, if exported, is written ONLY as an orientation comment, never a token, never client data) and skips cleanly if the marker block is already present. Source of truth: `references/ghl-api-quick-reference.md`. **Machine-enforced** by `scripts/qc-tools-md-ghl-ref.sh` (wired into Step 11 QC + `.github/workflows/qc-static.yml`) — it FAILs if the block is missing any operation/scope, exceeds the concise size budget, or contains any personal/client identifier.
 - Step 8 — Scaffold the eight channel communication playbooks in Notion (SMS, Email, FB DM, FB Comments, Instagram DM, LinkedIn, Live Chat, All-in-One Chat).
 - Step 9 — Set up the conversation log system. Owned by `protocols/conversation-log-protocol.md` (verbatim from playbook).
 
@@ -148,7 +149,7 @@ Sunday 2am is intentional: it runs BEFORE Dreaming's 3am nightly pass, so the tu
 
 The roadmap shows 6 features pending after the v6.0 playbook (F14 Voice, F15 Proactive Outreach Campaigns, F16 A/B Testing, F17 Segmentation, F18 Webhook Chaining, F21 Multi-Tenant Isolation). The skill's structure is designed to absorb them without restructuring:
 
-- `scripts/` folder is numbered 00-23 with room to grow (a new numbered script slots in at the next free index; the QC linters live alongside them as `qc-*.sh`).
+- `scripts/` folder is numbered 00-24 with room to grow (a new numbered script slots in at the next free index; the QC linters live alongside them as `qc-*.sh`).
 - `protocols/` folder lists by name, not number — new protocols slot in alphabetically without reflow.
 - `references/` accommodates new deep-dives without disturbing existing ones.
 - `CORE_UPDATES.md` is semver-tagged so future versions land naturally.

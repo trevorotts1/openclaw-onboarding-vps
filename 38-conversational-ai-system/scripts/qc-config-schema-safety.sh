@@ -13,7 +13,7 @@
 #      REJECTS the `;` top-level separator with a compile error, so the merge
 #      never runs and the hook config is never written.
 #
-# HOW IT CHECKS: static scan over the numbered install scripts (00–23) +
+# HOW IT CHECKS: static scan over the numbered install scripts (00–24) +
 # skill38-calendar-sync.sh, looking for the BAD PATTERNS *as jq/config code*
 # (jq mutation/read expressions), not the explanatory PROSE that documents why
 # they are banned. Prose is excluded two ways: (a) full-line `#` comments are
