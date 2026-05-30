@@ -47,7 +47,7 @@ upstream is Skill 23: read its `INSTRUCTIONS.md → "Moment 3.8"`, then build th
 ## What This Skill Ships
 
 <!-- SELF-COUNTS: re-verify on EVERY version bump — see scripts/bump-version.sh "Skill 38 self-count
-     re-verification" note. Counts as of v1.5.2: protocols/=39 (*.md), scripts/=53 (*.sh), references/=19
+     re-verification" note. Counts as of v1.5.3: protocols/=39 (*.md), scripts/=54 (*.sh), references/=19
      (*.md), journey templates=8 dirs. Run: ls -1 protocols/*.md scripts/*.sh references/*.md | per-dir wc -l. -->
 - 39 protocol files under `protocols/` (humanizer is intentionally NOT here — skill 19 owns it; v1.5.0 added the Round-3 Queue-A six: `zhc-tag-prefix-protocol.md`, `aggression-detection-protocol.md` (F50 — EXTENDS the Safeguard family, bot detection NOT rebuilt), `smart-playbook-switching-protocol.md` (F44 — DETOUR-AND-RETURN, DISTINCT from F33 route-and-stay), `geo-qualification-protocol.md` (F45), `crm-field-write-protocol.md` (F46), `smart-faq-tool-protocol.md` (F47); v1.5.2 adds `zhc-pixel-protocol.md` (F49 — per-client visitor-signal pixel + Pixel Concierge, INSTRUCTIONS Step 9.43))
 - **8 customer journey templates** under `templates/journey-templates/` (coach + all 7 verticals fully detailed: consulting, course-creator, e-commerce, real-estate, saas, service-provider, wellness)

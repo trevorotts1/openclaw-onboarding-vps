@@ -1,7 +1,9 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` - this repo at v10.16.11.
+> **Version:** see `/version` - this repo at v10.16.12.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
+>
+> **NOTE (v10.16.12):** Round-3 cross-repo reconciliation + roadmap spec committed; **Skill 38 → v1.5.3**. The prior commit landed the Skill 38 Round-3 canonical reconciliation (this VPS repo's Skill 38 brought into EXACT parity with the sibling `openclaw-onboarding` repo) plus the committed roadmap spec, but merged WITHOUT rolling the eight repo-version-tracked files forward; this release packages it so GitHub Releases mirrors the shipped state. `SKILL.md` SELF-COUNTS re-verified against the live tree (protocols/=39, scripts/=54, references/=19, journey templates=8). (Skill 38's own `skill-version.txt` `1.5.3` is independent of these 8 repo-version locations.)
 >
 > **NOTE (v10.16.11):** Ships this morning's Skill 38 → **v1.5.2** Round-3 Queue-A work and adds two new skills. **Skill 38 v1.5.2:** ZHC tag-prefix rule, F50 two-tier aggression, F44 detour-and-return interrupts, F45 geo-qualification, F46 CRM field write/create, F47 inline smart-FAQ, F49 ZHC Pixel (per-client visitor-signal pixel + Pixel Concierge), plus the three QC-enforced standards (Communication-Playbook, GHL Raw-Body-JSON, Notion Client-Doc). **NEW Skill 39 — Real Estate Playbook.** **NEW Skill 40 — ZHC Public Records Scraper.** (Skill 38's own `skill-version.txt` `1.5.2` is independent of these 8 repo-version locations.)
 >
@@ -19,7 +21,7 @@
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.11)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.12)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 

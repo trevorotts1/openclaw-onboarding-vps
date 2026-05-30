@@ -1,3 +1,27 @@
+## [v10.16.12]  -  2026-05-30  -  Round-3 cross-repo reconciliation + roadmap spec committed; Skill 38 v1.5.3
+
+### Why
+
+Round-3 cross-repo reconciliation + roadmap spec committed; Skill 38 v1.5.3.
+
+The prior commit (#70) landed the Skill 38 (Conversational AI System) **v1.5.3** Round-3 canonical
+reconciliation — bringing this VPS repo's Skill 38 into EXACT parity with the sibling
+`openclaw-onboarding` repo — but merged WITHOUT rolling the eight repo-version-tracked files forward.
+This bump packages that reconciliation (and the committed roadmap spec) so GitHub Releases mirrors the
+shipped state. The eight repo-version-tracked files were rolled forward to `v10.16.12` via
+`scripts/bump-version.sh`. Skill 38's own `skill-version.txt` (`1.5.3`) is on an independent track and is
+NOT among the eight repo-version locations.
+
+### Shipped
+
+- **Skill 38 → v1.5.3** — Round-3 canonical cross-repo reconciliation: this VPS repo's Skill 38 now
+  matches the sibling `openclaw-onboarding` repo exactly, plus the committed roadmap spec.
+- **Self-counts re-verified** — the `SKILL.md` SELF-COUNTS comment corrected to the live tree state
+  (protocols/=39, scripts/=54, references/=19, journey templates=8) per the `bump-version.sh`
+  self-count re-verification rule.
+
+---
+
 ## [v10.16.11]  -  2026-05-30  -  Skill 38 Round-3 Queue-A (v1.5.2) + NEW Skill 39 + NEW Skill 40
 
 ### Why
