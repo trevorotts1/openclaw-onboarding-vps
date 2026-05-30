@@ -3192,6 +3192,114 @@ install_skill_38_conversational_ai_system() {
 install_skill_38_conversational_ai_system
 
 # ----------------------------------------------------------
+# Step 14c: Installing Skill 39 (Real Estate Playbook & Property Intelligence)
+# ----------------------------------------------------------
+# Why: Skill 39 is the real-estate VERTICAL brain on top of Skill 38
+# (Conversational AI System) + Skill 29 (GHL Convert and Flow). It adds property
+# intelligence (provider-abstracted lookup, address normalization, Street View,
+# comps), buyer/seller/investor qualification, showing scheduling, disclosure
+# compliance pointers, lead routing, open-house automation, and a pre-foreclosure
+# outreach playbook (pairs with Skill 40). The RE Sales-Brain extension is
+# installed ADDITIVELY into Skill 38's protocols/extensions/ (Skill 38 core is
+# never modified). NEVER fabricates property data — honest-gap when a provider
+# key is absent. Idempotent. OS-aware via the skill's own scripts.
+step "Step 14c: Installing Skill 39 (Real Estate Playbook & Property Intelligence) — property intelligence + buyer/seller/investor qualification + showings + disclosure + lead routing + pre-foreclosure outreach (additive Sales-Brain extension)"
+
+install_skill_39_real_estate_playbook() {
+    local SKILL_SRC="$ONBOARDING_DIR/39-real-estate-playbook"
+    local SKILL_DEST="$SKILLS_DIR/39-real-estate-playbook"
+
+    if [ ! -d "$SKILL_SRC" ]; then
+        warn "Skill 39 source dir not found at $SKILL_SRC — skipping (older onboarding bundle?)"
+        return 0
+    fi
+
+    # Idempotent: skip if dest version matches src
+    if [ -f "$SKILL_DEST/skill-version.txt" ] && [ -d "$SKILL_DEST/protocols" ]; then
+        local SKILL39_CURRENT
+        SKILL39_CURRENT=$(cat "$SKILL_DEST/skill-version.txt" 2>/dev/null | tr -d '[:space:]')
+        local SKILL39_SRC_VER
+        SKILL39_SRC_VER=$(cat "$SKILL_SRC/skill-version.txt" 2>/dev/null | tr -d '[:space:]')
+        if [ -n "$SKILL39_CURRENT" ] && [ "$SKILL39_CURRENT" = "$SKILL39_SRC_VER" ]; then
+            success "Skill 39 already installed at v${SKILL39_CURRENT}"
+            chmod +x "$SKILL_DEST/scripts/"*.sh 2>/dev/null || true
+            return 0
+        fi
+        note "Skill 39 present at v${SKILL39_CURRENT:-?}, source is v${SKILL39_SRC_VER:-?} — refreshing"
+    fi
+
+    mkdir -p "$SKILL_DEST"
+    cp -R "$SKILL_SRC/." "$SKILL_DEST/" 2>>"$LOG_FILE" || {
+        warn "Failed to copy Skill 39 from $SKILL_SRC -> $SKILL_DEST"
+        return 0
+    }
+    chmod +x "$SKILL_DEST/scripts/"*.sh 2>/dev/null || true
+    chown -R node:node "$SKILL_DEST" 2>/dev/null || true
+
+    success "Skill 39 (Real Estate Playbook & Property Intelligence) installed -> $SKILL_DEST"
+    note "Skill 39 ships 7 scripts (00-05 + qc-no-personal-data), 7 protocols, 3 references."
+    note "After this install completes, run: $SKILL_DEST/scripts/00-verify-prerequisites.sh"
+    note "  Skills 29 + 38 must be installed FIRST (hard prerequisites)."
+    return 0
+}
+
+install_skill_39_real_estate_playbook
+
+# ----------------------------------------------------------
+# Step 14d: Installing Skill 40 (ZHC Public Records Scraper)
+# ----------------------------------------------------------
+# Why: Skill 40 is a TIERED public-records lookup engine. Tier 1 = 20 curated
+# major-county portals; Tier 2 = a platform-adapter framework (1 adapter per
+# vendor, e.g. Tyler/GovOS, with 2 example adapters); Tier 3 = operator-buildable
+# validated scraper configs; Tier 4 = HONEST GAP (no source / blocked => told to
+# the operator, never fabricated). Respects robots.txt + ToS, attributes source +
+# timestamp, enforces per-day/per-target rate limits + a daily cost cap with a
+# cost estimate before bulk ops, and caches results 30 days. Pairs with Skill 39
+# (pre-foreclosure / NOD / tax-delinquency sourcing). Idempotent. OS-aware via the
+# skill's own scripts. No hard sibling prerequisite (curl required at runtime).
+step "Step 14d: Installing Skill 40 (ZHC Public Records Scraper) — tiered (curated -> vendor-adapter -> operator-config -> honest-gap) public-records engine + robots.txt/ToS compliance + rate/cost limits + 30-day cache"
+
+install_skill_40_zhc_public_records_scraper() {
+    local SKILL_SRC="$ONBOARDING_DIR/40-zhc-public-records-scraper"
+    local SKILL_DEST="$SKILLS_DIR/40-zhc-public-records-scraper"
+
+    if [ ! -d "$SKILL_SRC" ]; then
+        warn "Skill 40 source dir not found at $SKILL_SRC — skipping (older onboarding bundle?)"
+        return 0
+    fi
+
+    # Idempotent: skip if dest version matches src
+    if [ -f "$SKILL_DEST/skill-version.txt" ] && [ -d "$SKILL_DEST/references" ]; then
+        local SKILL40_CURRENT
+        SKILL40_CURRENT=$(cat "$SKILL_DEST/skill-version.txt" 2>/dev/null | tr -d '[:space:]')
+        local SKILL40_SRC_VER
+        SKILL40_SRC_VER=$(cat "$SKILL_SRC/skill-version.txt" 2>/dev/null | tr -d '[:space:]')
+        if [ -n "$SKILL40_CURRENT" ] && [ "$SKILL40_CURRENT" = "$SKILL40_SRC_VER" ]; then
+            success "Skill 40 already installed at v${SKILL40_CURRENT}"
+            chmod +x "$SKILL_DEST/scripts/"*.sh "$SKILL_DEST/scripts/adapters/"*.sh 2>/dev/null || true
+            return 0
+        fi
+        note "Skill 40 present at v${SKILL40_CURRENT:-?}, source is v${SKILL40_SRC_VER:-?} — refreshing"
+    fi
+
+    mkdir -p "$SKILL_DEST"
+    cp -R "$SKILL_SRC/." "$SKILL_DEST/" 2>>"$LOG_FILE" || {
+        warn "Failed to copy Skill 40 from $SKILL_SRC -> $SKILL_DEST"
+        return 0
+    }
+    chmod +x "$SKILL_DEST/scripts/"*.sh "$SKILL_DEST/scripts/adapters/"*.sh 2>/dev/null || true
+    chown -R node:node "$SKILL_DEST" 2>/dev/null || true
+
+    success "Skill 40 (ZHC Public Records Scraper) installed -> $SKILL_DEST"
+    note "Skill 40 ships 6 scripts + 2 Tier 2 adapters, 3 protocols, 4 references (incl. the 20-county Tier 1 registry)."
+    note "After this install completes, run: $SKILL_DEST/scripts/00-verify-prerequisites.sh"
+    note "  COMPLIANCE: respects robots.txt + ToS, attributes source+timestamp, never fabricates a record (Tier 4 honest gap)."
+    return 0
+}
+
+install_skill_40_zhc_public_records_scraper
+
+# ----------------------------------------------------------
 # Step 15: Register Skill 32's materialize-dept-agents.sh (v10.14.19)
 # ----------------------------------------------------------
 # Why: pre-v10.14.19 Skill 23 marked depts "done" purely on file presence,
