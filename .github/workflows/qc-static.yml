@@ -355,3 +355,46 @@ jobs:
 
           rm -rf "$tdir"
           echo "✓ Skill 38 TOOLS.md GHL quick-reference: source complete + concise + leak-free; installer idempotent; live gate + negatives all behave"
+
+      - name: Skill 38 ZHC- programmatic tag-prefix rule (v1.5.0)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce that every tag the agent CREATES programmatically is
+          # ZHC- prefixed (protocols/zhc-tag-prefix-protocol.md + MEMORY.md Rule
+          # 20): the rule is documented (prefix + not-retroactive), the canonical
+          # F44/F45/F47/F50 tag tokens are the ZHC- forms, and no bare create-tag
+          # example literal (create_tag name= / POST .../tags "name":) survives
+          # un-prefixed. BASH only (respects the .py claude-/anthropic ban).
+          bash 38-conversational-ai-system/scripts/qc-zhc-tag-prefix.sh
+          # Negative self-test: a planted bare create-tag example MUST FAIL (exit 1).
+          ng="$(mktemp -d)"
+          cp -r 38-conversational-ai-system "$ng/skill"
+          printf '\nghl_skill.create_tag(location_id=<LOCATION_ID>, name="hot-lead")\n' \
+            >> "$ng/skill/protocols/aggression-detection-protocol.md"
+          rc=0
+          bash "$ng/skill/scripts/qc-zhc-tag-prefix.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ ZHC- gate should FAIL (exit 1) on a planted bare create-tag, got $rc"; exit 1; }
+          rm -rf "$ng"
+          echo "✓ Skill 38 ZHC- tag-prefix rule documented + enforced; fails closed on a bare programmatic tag"
+
+      - name: Skill 38 F52 JSONL data contract (v1.5.0)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce the F52 data contract: each of the five Round-3
+          # feature logs is JSONL with timestamp + event_type, documented in its
+          # protocol (path + a timestamp+event_type example line) AND in
+          # INSTRUCTIONS.md (path + event_type), and seeded by
+          # 25-seed-round3-feature-files.sh. BASH only.
+          bash 38-conversational-ai-system/scripts/qc-feature-logs.sh
+          # Negative self-test: drop a JSONL path from INSTRUCTIONS.md => FAIL (exit 1).
+          ng="$(mktemp -d)"
+          cp -r 38-conversational-ai-system "$ng/skill"
+          grep -v 'interrupt-log.jsonl' "$ng/skill/INSTRUCTIONS.md" > "$ng/skill/INSTRUCTIONS.md.tmp"
+          mv "$ng/skill/INSTRUCTIONS.md.tmp" "$ng/skill/INSTRUCTIONS.md"
+          rc=0
+          bash "$ng/skill/scripts/qc-feature-logs.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ F52 gate should FAIL (exit 1) when a JSONL path is undocumented, got $rc"; exit 1; }
+          rm -rf "$ng"
+          echo "✓ Skill 38 F52 data contract enforced (5 JSONL logs documented + seeded); fails closed on an undocumented log"

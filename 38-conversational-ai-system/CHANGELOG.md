@@ -1,5 +1,37 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.5.0] - 2026-05-30 - Round-3 Queue-A feature wave: ZHC tag-prefix, F50 aggression (two-tier), F44 detour-and-return, F45 geo-qualification, F46 CRM field write, F47 inline FAQ — one coherent minor bump
+
+### Why
+Round-3 Queue-A bundles six CORE conversational behaviors into one coherent minor bump. Each is UNIVERSAL (no personal/client data — `qc-no-personal-data.sh` passes), each ships as a `protocols/<name>-protocol.md` + a new INSTRUCTIONS Step 9.37–9.41, each new AGENTS.md step lands ONLY via `scripts/05-update-agents-md.sh` marker blocks, and each behavioral feature emits a JSONL log under the F52 data contract. Two new machine-enforced QC gates (ZHC- tag-prefix + F52 data contract) are wired into `scripts/11-run-qc-checklist.sh` and CI.
+
+### Added — protocols (6)
+- **`protocols/zhc-tag-prefix-protocol.md`** — every tag the agent CREATES programmatically (GHL skill `create_tag` / `POST /locations/{locationId}/tags`) MUST be prefixed `ZHC-`. NOT retroactive; never renames operator/human/3rd-party tags. CRM custom fields the agent creates use the parallel `ZHC_` (underscore) prefix. Reuses the EXISTING create-tag mechanism (conversation-workflows-protocol.md §D.1 + workflow-ai-instructions-standard.md §6) — only constrains the name. MEMORY.md Rule 20.
+- **`protocols/aggression-detection-protocol.md` (F50)** — EXTENDS the Safeguard family in `conversational-safeguards.md` (Safeguard 4); does NOT rebuild bot detection (Safeguard 3 is unchanged; NEW bot firings tag `ZHC-bot-suspected`). Two-tier classifier at AGENTS.md **Step 1.35**, PRE-routing (before workflow match, before LLM spend). Tier 1 tension (multiple irritation words / sustained 3+ msgs / `!!!`/`???` → tag `ZHC-tension-detected`, heightened attention, no reroute); Tier 2 aggression (profanity-AT-agent / threats legal-physical-public / ALLCAPS+profanity+direct-address / 3+ signals → tag `ZHC-aggression-detected`, route to aggression-handler as an F44 detour, notify operator). **ALL CAPS ALONE does NOT fire.** openclaw.json `aggression_detection.{enabled (default true), sensitivity (lenient|standard|strict, default standard)}` with documented per-sensitivity thresholds. Logs to `aggression-detection-log.md` + `aggression-detection-log.jsonl`.
+- **`protocols/smart-playbook-switching-protocol.md` (F44)** — NEW protocol, **DETOUR-AND-RETURN**, explicitly DISTINCT from F33 route-and-stay (`intelligent-routing-protocol.md`, Step 9.33). Always-listening layer parallel to the active workflow at AGENTS.md **Step 2.0**; on trigger (operator urgent keywords, FAQ types, compliance redirects, F50 aggression, F49 pixel-priority) SAVE workflow state (step + gathered data + context) → EXECUTE sub-flow → RETURN to the saved state with a soft transition ("Coming back to where we were…"). Max 2 levels deep then escalate; multiple triggers = highest priority first, queue the rest. Tags `ZHC-interrupt-handled` / `ZHC-faq-detoured` / `ZHC-aggression-handled-and-resumed`. Logs to `interrupt-log.jsonl`.
+- **`protocols/geo-qualification-protocol.md` (F45)** — per-client toggle, openclaw.json `geo_qualification.enabled` default **OFF**. Location-detection priority pixel/IP (if F49) → phone area code → form address → explicit ask. CRITICAL: signals are HINTS; the agent **ALWAYS ASKS to confirm before any disqualification**. Operator-configured out-of-area handling (decline+referral / limited-remote / waitlist / full-decline). Per-product service areas in `KnowledgeBases/sales/service-areas.md` (ZIP/county/state/radius). Tags `ZHC-out-of-service-area` / `ZHC-service-area-confirmed` / `ZHC-service-area-flexible`. Logs to `geo-qualification-log.jsonl`. AGENTS.md **Step 2.5**.
+- **`protocols/crm-field-write-protocol.md` (F46)** — agent writes ANY GHL contact custom field mid-conversation (type-aware: text/number/date/dropdown), discovering via `GET /locations/{locationId}/customFields` and validating before write. CREATE-IF-MISSING: create via `POST /locations/{locationId}/customFields` with `ZHC_` prefix (e.g. `ZHC_budget_range`), notify operator, record the per-workflow mapping in `crm-field-mappings.md`. F35 weekly tune-up reviews usage. Operator-approved allow-list action, NEVER customer-invoked. Logs to `crm-field-writes-log.jsonl`.
+- **`protocols/smart-faq-tool-protocol.md` (F47)** — lightweight sibling of F44: a SENTENCE, not a sub-flow. Parallel FAQ-match layer against `KnowledgeBases/business/faqs.md`; brief inline answer then RETURN to the current step ("By the way, [answer]. Coming back to [topic]…"). Per-workflow scope in `conversation-workflows/<id>/faq-scope.md`. Tag `ZHC-faq-answered`. Logs to `faq-detour-log.jsonl`. AGENTS.md **Step 2.0** (same always-listening layer).
+
+### Added — scripts (3)
+- **`scripts/25-seed-round3-feature-files.sh`** — idempotently seeds `service-areas.md` (F45), `faqs.md` (F47), `crm-field-mappings.md` (F46), the five F52 JSONL sinks, and `aggression-detection-log.md`. Never overwrites operator content. Universal (placeholders only).
+- **`scripts/qc-zhc-tag-prefix.sh`** — machine-enforces the ZHC- programmatic tag-prefix rule (rule documented + not-retroactive; canonical F44/F45/F47/F50 tag tokens are ZHC- forms; no bare create-tag example literal). Pure bash. Wired into Step 11 QC + CI (with a negative self-test).
+- **`scripts/qc-feature-logs.sh`** — machine-enforces the F52 data contract (each of the five logs is JSONL with timestamp+event_type, documented in its protocol AND INSTRUCTIONS.md, and seeded by script 25). Pure bash. Wired into Step 11 QC + CI (with a negative self-test).
+
+### Changed
+- **`protocols/conversational-safeguards.md`** — EXTENDED with Safeguard 4 (aggression two-tier, pointing at the new protocol) and a `ZHC-bot-suspected` tag note; bot-detection logic itself untouched. Safeguard ordering gains the pre-routing aggression check (3.5).
+- **`scripts/05-update-agents-md.sh`** — four new marker blocks: `STEP_1_35_AGGRESSION`, `STEP_2_0_INTERRUPTS`, `STEP_2_5_GEO`, `STEP_TAG_PREFIX` (the ZHC-/ZHC_ namespace note). AGENTS.md is mutated ONLY here.
+- **`scripts/06-append-memory-rules.sh`** — new `v1.5.0` marker block appends rules 20-24 (does NOT renumber 6-18).
+- **`scripts/11-run-qc-checklist.sh`** — runs the two new gates; the AGENTS.md marker check now includes the four new markers.
+- **`INSTRUCTIONS.md`** — Steps 9.37–9.41 table + the centralized F52 JSONL data-contract index + three new Hard rules.
+- **`SKILL.md`** — self-counts updated (protocols 32→38, scripts 41→44, eleven→thirteen QC linters); AGENTS/MEMORY summary lines updated.
+- **`.github/workflows/qc-static.yml`** — two new CI steps (ZHC- tag-prefix + F52 data contract), each with a negative self-test.
+
+### Notes
+- F50 was **EXTENDED, not rebuilt** — bot detection already lived in Safeguard 3 and is untouched.
+- F44 was **BUILT as detour-and-return** — it is distinct from F33 (route-and-stay); the earlier recon's conflation is corrected here.
+- Skill 38 ONLY. UNIVERSAL (`qc-no-personal-data.sh` passes). Repo-wide version and repo-root CHANGELOG untouched.
+
 ## [1.4.21] - 2026-05-30 - Correct the reply mechanic: MIRROR the inbound channel + send BY contactId (conversationId is READ-only), QC-enforced
 
 ### Why

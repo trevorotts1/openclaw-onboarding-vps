@@ -147,7 +147,8 @@ section "AGENTS.md marker blocks"
 AGENTS_MD="${AGENTS_MD:-${HOME}/.openclaw/AGENTS.md}"
 [ -f "$AGENTS_MD" ] || AGENTS_MD="${MASTER_FILES_DIR:-}/AGENTS.md"
 if [ -f "$AGENTS_MD" ]; then
-  for marker in "INBOUND_WEBHOOK_CLASSIFICATION" "SKILL38_RUNTIME_ROUTING" "workflow-builder"; do
+  for marker in "INBOUND_WEBHOOK_CLASSIFICATION" "SKILL38_RUNTIME_ROUTING" "workflow-builder" \
+                "STEP_1_35_AGGRESSION" "STEP_2_0_INTERRUPTS" "STEP_2_5_GEO" "STEP_TAG_PREFIX"; do
     if grep -q "$marker" "$AGENTS_MD"; then
       report_pass "AGENTS.md contains marker: $marker"
     else
@@ -376,6 +377,34 @@ if [ -f "$QC_TOOLS" ]; then
   fi
 else
   report_fail "qc-tools-md-ghl-ref.sh not found (looked in scripts/)"
+fi
+
+# -------- ZHC tag-prefix rule (machine-enforced) --------
+section "ZHC- programmatic tag-prefix (qc-zhc-tag-prefix.sh)"
+QC_ZHC="$SCRIPT_DIR/qc-zhc-tag-prefix.sh"
+[ -f "$QC_ZHC" ] || QC_ZHC="$SKILL38_ROOT/scripts/qc-zhc-tag-prefix.sh"
+if [ -f "$QC_ZHC" ]; then
+  if bash "$QC_ZHC" >/dev/null 2>&1; then
+    report_pass "every programmatic tag example is ZHC- prefixed (rule documented, canonical tags present, no bare create-tag literal)"
+  else
+    report_fail "qc-zhc-tag-prefix.sh found a ZHC- prefix violation — run it directly for detail"
+  fi
+else
+  report_fail "qc-zhc-tag-prefix.sh not found (looked in scripts/)"
+fi
+
+# -------- F52 JSONL data contract (machine-enforced) --------
+section "F52 JSONL data contract (qc-feature-logs.sh)"
+QC_LOGS="$SCRIPT_DIR/qc-feature-logs.sh"
+[ -f "$QC_LOGS" ] || QC_LOGS="$SKILL38_ROOT/scripts/qc-feature-logs.sh"
+if [ -f "$QC_LOGS" ]; then
+  if bash "$QC_LOGS" >/dev/null 2>&1; then
+    report_pass "all five Round-3 feature logs are JSONL (timestamp+event_type), documented in protocol + INSTRUCTIONS.md, and seeded by the installer"
+  else
+    report_fail "qc-feature-logs.sh found an F52 data-contract violation — run it directly for detail"
+  fi
+else
+  report_fail "qc-feature-logs.sh not found (looked in scripts/)"
 fi
 
 # -------- Final summary --------

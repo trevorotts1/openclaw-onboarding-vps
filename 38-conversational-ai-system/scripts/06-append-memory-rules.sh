@@ -89,3 +89,60 @@ cat >> "$MEM_MD" <<'BLOCK14'
 BLOCK14
 
 echo "[skill 38] MEMORY.md updated (rules 15-18 appended; backup at $MEM_MD.bak-skill38-v140-*)"
+
+# --- v1.5.0 top-up: Round-3 Queue-A rules 20-24 (own marker = upgrade-safe) ---
+# Does NOT renumber the existing rules 6-18 — appends in a fresh marker block.
+MARKER_BEGIN_150="<!-- BEGIN skill-38 memory-rules v1.5.0 -->"
+if grep -qF "$MARKER_BEGIN_150" "$MEM_MD"; then
+  echo "[skill 38] MEMORY.md already contains skill 38 rules 20-24 — preserved"
+  exit 0
+fi
+cp "$MEM_MD" "$MEM_MD.bak-skill38-v150-$(date +%Y%m%dT%H%M%SZ)"
+cat >> "$MEM_MD" <<'BLOCK150'
+
+<!-- BEGIN skill-38 memory-rules v1.5.0 -->
+## Skill 38 — Round-3 Queue-A design rules 20-24 (v1.5.0)
+
+20. ZHC Tag-Prefix Rule — every tag you CREATE programmatically (via the GHL skill
+    create_tag method or POST /locations/{locationId}/tags) MUST be prefixed `ZHC-`
+    (e.g. `ZHC-pricing-interest`, `ZHC-aggression-detected`). This is NOT retroactive
+    and NEVER renames a tag the operator/human/another tool created — apply those
+    verbatim. The test is "did I create this tag?" -> if yes, `ZHC-`. CRM custom
+    FIELDS you create use the parallel `ZHC_` (underscore) prefix. See
+    protocols/zhc-tag-prefix-protocol.md.
+21. Aggression Rule (F50) — PRE-routing (Step 1.35), before workflow match and before
+    any reply-drafting LLM spend, run a two-tier aggression classifier (extends the
+    bot/abuse Safeguard family; bot detection is NOT rebuilt). Tier 1 (tension) tags
+    `ZHC-tension-detected` and continues with heightened attention; Tier 2 (aggression)
+    tags `ZHC-aggression-detected`, routes to the aggression-handler sub-flow, and
+    notifies the operator. ALL CAPS ALONE never fires. Toggle: openclaw.json
+    aggression_detection.{enabled,sensitivity}. See protocols/aggression-detection-protocol.md.
+22. Detour-and-Return Rule (F44) — while a workflow is active, an always-listening layer
+    watches for interrupts (operator-urgent, FAQ, compliance, F50 aggression, F49
+    pixel-priority). On a trigger: SAVE state -> EXECUTE sub-flow -> RETURN to the saved
+    step with a soft transition ("Coming back to where we were..."). Max 2 levels deep
+    then escalate; multiple triggers = highest priority first, queue the rest. This is
+    DISTINCT from F33 route-and-stay (Rule 13 / Step 9.33). See
+    protocols/smart-playbook-switching-protocol.md.
+23. Geo-Qualification + CRM-Field Rules — (F45) when geo_qualification.enabled is true,
+    location signals are HINTS only (pixel/IP -> area code -> form address -> ask);
+    ALWAYS confirm with the customer before ANY disqualification, then apply the
+    operator-configured out-of-area mode. (F46) you may write ANY GHL contact custom
+    field mid-conversation (type-aware, validate first); if none exists, create it as
+    `ZHC_<snake_purpose>`, notify the operator, record the mapping. Field writes/creates
+    are OPERATOR-APPROVED allow-list actions, NEVER customer-invoked. See
+    protocols/geo-qualification-protocol.md + protocols/crm-field-write-protocol.md.
+24. Smart-FAQ + Logging Rules — (F47) the lightweight sibling of F44: a SENTENCE not a
+    sub-flow. For a simple factual question answerable from
+    KnowledgeBases/business/faqs.md (and in the workflow's faq-scope), answer inline in
+    one line and continue the SAME step ("By the way, [answer]. Coming back to
+    [topic]..."); tag `ZHC-faq-answered`. (F52 data contract) every new behavioral
+    feature emits a JSONL log (timestamp + event_type + event data) at its documented
+    <MASTER_FILES_DIR> path — aggression-detection-log.jsonl, interrupt-log.jsonl,
+    geo-qualification-log.jsonl, crm-field-writes-log.jsonl, faq-detour-log.jsonl. See
+    protocols/smart-faq-tool-protocol.md.
+
+<!-- END skill-38 memory-rules v1.5.0 -->
+BLOCK150
+
+echo "[skill 38] MEMORY.md updated (rules 20-24 appended; backup at $MEM_MD.bak-skill38-v150-*)"
