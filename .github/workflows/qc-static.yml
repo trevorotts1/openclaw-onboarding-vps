@@ -465,3 +465,34 @@ jobs:
           [ "$rc" -eq 1 ] || { echo "✗ dropping 'Quick Start FIRST' should FAIL the gate (exit 1), got $rc"; exit 1; }
           rm -rf "$ng"
           echo "✓ Skill 38 Notion Client-Doc Standard documents the ordered mandatory list; gate fails closed when a mandatory item is dropped (and composes qc-reference-sheet.sh)"
+
+      - name: Skill 38 ZHC Pixel (Feature 49) invariants
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce the F49 ZHC Pixel invariants from the repo alone: the
+          # pixel JS template + its three placeholders + the generator that substitutes
+          # them (27-render-pixel-js.sh); the OpenClaw `pixel-visitor-signal` hook
+          # (deliver:false, bot-gate-first messageTemplate, scoped Pixel Concierge agent
+          # + hook:pixel: allow-list — 28-configure-pixel-hook.sh); the
+          # STEP_1_45_PIXEL_CONCIERGE AGENTS.md block + protocols/zhc-pixel-protocol.md;
+          # the ZHC- pixel tag prefixes (ZHC-pixel-visitor/-returning-visitor/-high-intent)
+          # and ZHC_ field set (ZHC_first_visit_date/_total_visits/_pages_viewed/
+          # _high_intent_signal); the GDPR/CCPA/DNT/deletion privacy controls in BOTH the
+          # protocol and the template; the scope precheck (26-verify-pixel-prerequisites.sh)
+          # naming Pages:Edit + Workers Scripts:Edit + Workers Routes:Edit + the token Doc;
+          # and the scope-gated deploy (29-deploy-pixel-cloudflare.sh). BASH only.
+          bash 38-conversational-ai-system/scripts/qc-zhc-pixel.sh
+          echo "✓ Skill 38 ZHC Pixel (F49) invariants hold"
+
+      - name: Skill 38 ZHC Pixel gate negative test (fixture)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Prove qc-zhc-pixel.sh actually FAILS when an F49 invariant is broken (a green
+          # gate that can never go red is worthless). The fixture copies the skill, breaks
+          # three different invariants in three throwaway copies (removes the
+          # pixel-visitor-signal hook registration, drops a required ZHC_ field, neuters a
+          # required scope name), and asserts the gate exits non-zero each time.
+          bash 38-conversational-ai-system/scripts/qc-zhc-pixel-test.sh
+          echo "✓ qc-zhc-pixel negative test passes (the gate fails on a broken invariant)"
