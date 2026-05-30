@@ -1,75 +1,56 @@
 #!/usr/bin/env bash
 # 00-verify-prerequisites.sh — Skill 40 (ZHC Public Records Scraper)
-#
-# Verifies install prerequisites BEFORE any Skill 40 step runs.
-#
-# Governed by ../../QC-PROTOCOL.md (Sub-Agent Handoff + Mandatory QC Protocol).
-#
-# Skill 40 is a TIERED public-records lookup engine. It has NO hard sibling-skill
-# prerequisite — it can run standalone — but it is most useful paired with
-# Skill 39 (Real Estate Playbook), whose pre-foreclosure protocol consumes the
-# NOD / tax-delinquency signals Skill 40 produces.
-#
-# Tooling prerequisites (checked; soft unless noted):
-#   - curl        — REQUIRED for any live fetch (Tier 1/2/3). HARD.
-#   - A fetch path — at least one of: curl reachable network, or a configured
-#                    browser tool (Playwright via Skill 03/agent-browser). The
-#                    skill warns if neither is obviously available; it NEVER
-#                    fabricates records when it cannot fetch (Tier 4 honest gap).
-#
-# Soft (pairing) prerequisite:
-#   - Skill 39 — Real Estate Playbook (consumes Skill 40 output). Warn-only.
-#
-# Idempotent (read-only). OS-aware Darwin + Linux. set -uo pipefail.
+# Verifies install prerequisites BEFORE any tier runs. Read-only. Idempotent.
+# OS-aware Darwin + Linux. Governed by ../../QC-PROTOCOL.md (Category 10).
 
 set -uo pipefail
-
 OS="$(uname -s)"
 case "$OS" in
-  Darwin) DEFAULT_SKILLS_DIR="$HOME/.openclaw/skills" ;;
-  Linux)  DEFAULT_SKILLS_DIR="/data/.openclaw/skills" ;;
+  Darwin) DEFAULT_SKILLS_DIR="$HOME/.openclaw/skills"; DEFAULT_MFD="$HOME/Downloads" ;;
+  Linux)  DEFAULT_SKILLS_DIR="/data/.openclaw/skills"; DEFAULT_MFD="/data" ;;
   *) echo "Unsupported OS: $OS"; exit 2 ;;
 esac
 SKILLS_DIR="${OPENCLAW_SKILLS_DIR:-$DEFAULT_SKILLS_DIR}"
-
-PREFIX="[skill 40][prereq]"
+MFD="${MASTER_FILES_DIR:-$DEFAULT_MFD}"
+P="[skill 40][prereq]"
 FAIL=0
 
-echo "=== $PREFIX verifying prerequisites (OS: $OS) ==="
-
-# HARD: curl
-if command -v curl >/dev/null 2>&1; then
-  echo "  ✓ curl present ($(command -v curl))"
+# ---- A. MASTER_FILES_DIR (cache + event log live there) ----
+if [ -d "$MFD" ]; then
+  echo "$P OK — MASTER_FILES_DIR resolvable ($MFD)"
 else
-  echo "  ✗ curl MISSING — required for any live public-records fetch."
-  FAIL=1
+  echo "$P WARN: MASTER_FILES_DIR ($MFD) not present yet — 01-locate-master-files-folder.sh resolves/creates it."
 fi
 
-# SOFT: a browser fetch path (some county sites need JS / forms)
-if [ -d "$SKILLS_DIR/03-agent-browser" ] || command -v playwright >/dev/null 2>&1; then
-  echo "  ✓ a browser fetch path appears available (Skill 03 / playwright)"
+# ---- B. jq + curl (mandatory) ----
+for bin in jq curl; do
+  if command -v "$bin" >/dev/null 2>&1; then
+    echo "$P OK — $bin present"
+  else
+    echo "$P BLOCKED: $bin not found on PATH (required for config JSON + robots/HTTP)"
+    FAIL=1
+  fi
+done
+
+# ---- C. Skill 39 (recommended — consumes Skill 40 output) ----
+if [ -f "$SKILLS_DIR/39-real-estate-playbook/SKILL.md" ]; then
+  echo "$P OK — Skill 39 (Real Estate Playbook) present (it consumes Skill 40 output for pre-foreclosure outreach)"
 else
-  echo "  ⚠️  no obvious browser fetch path — JS-heavy county portals may be an honest gap"
+  echo "$P NOTE: Skill 39 not found — Skill 40 still works standalone, but pre-foreclosure pairing needs Skill 39."
 fi
 
-# SOFT: Skill 39 pairing
-if [ -d "$SKILLS_DIR/39-real-estate-playbook" ]; then
-  echo "  ✓ Skill 39 (Real Estate Playbook) present — pre-foreclosure pairing enabled"
+# ---- D. Headless browser (optional — for JS-rendered portals) ----
+if command -v playwright >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1 || command -v google-chrome >/dev/null 2>&1; then
+  echo "$P OK — a headless browser is available (some Tier-1/2 portals are JS-rendered)"
 else
-  echo "  ⚠️  Skill 39 not installed — Skill 40 still runs standalone, but the"
-  echo "      pre-foreclosure outreach pairing is unavailable until Skill 39 is added."
+  echo "$P NOTE: no headless browser detected — static fetch handles non-JS portals; install Playwright/Chromium for JS-rendered ones."
 fi
 
-# Compliance reminder (always printed)
-echo "  ℹ️  COMPLIANCE: Skill 40 respects robots.txt, references each target's ToS,"
-echo "      attributes source + timestamp on every record, and NEVER fabricates a"
-echo "      record. No online DB / blocked target => Tier 4 HONEST GAP (told to operator)."
-
-echo ""
+echo
 if [ "$FAIL" -eq 0 ]; then
-  echo "RESULT: PASS — proceed with Skill 40 install."
+  echo "$P ALL MANDATORY PREREQUISITES PASS — proceed to 01-locate-master-files-folder.sh"
   exit 0
 else
-  echo "RESULT: FAIL — a hard prerequisite is missing (named above). Fix it, then re-run."
+  echo "$P PREREQUISITES FAILED — fix the BLOCKED item(s), then re-run."
   exit 1
 fi
