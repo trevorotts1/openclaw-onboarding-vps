@@ -1,3 +1,46 @@
+## [v10.16.14]  -  2026-05-30  -  Version-surface reconcile (tag + Release + main HEAD now agree); advertising rolled forward to the live tree
+
+### Why
+
+The repo's three release layers had drifted apart:
+
+- `main` HEAD was at the commit advertised as `v10.16.13`, but the `v10.16.13` git **tag** actually
+  pointed three commits **behind** HEAD (at the file-bump commit), and **no `v10.16.13` GitHub Release
+  was ever published** (the newest published Release was `v10.16.12`).
+- After the `v10.16.13` file-bump, three more substantive commits landed on `main` — the F47 (Smart FAQ)
+  + F45 (Geo-Qualification) deep-fix, the Skill 40 canonical tiered-build port (+ raw-PII log kill), and
+  the F46 (Conversational CRM Field Write) reconcile + ZHC Tag-Prefix Rule QC fix — driving Skill 38 from
+  `1.5.3` → **`1.5.6`**.
+
+Because a tag/Release is immutable and must mirror the exact `main` HEAD it ships, the stale `v10.16.13`
+tag could not be reused for HEAD. This release rolls the eight repo-version-tracked files forward to
+`v10.16.14` at the current HEAD, then tags `v10.16.14` and publishes a matching GitHub Release so the
+tag, the Release, and the tree all agree.
+
+**No skill CONTENT changed in this release.** Only version-advertising surfaces and the README were
+touched. The protocols/scripts/templates inside skill folders were left byte-for-byte alone.
+
+### Shipped
+
+- **Eight repo-version-tracked files → `v10.16.14`** via `scripts/bump-version.sh` (CI
+  `version-consistency.yml` proves all eight agree).
+- **README de-fossilized to the LIVE state of `main`:**
+  - Replaced the seven stale NOTE blocks (which still advertised Skill 38 `v1.4.0`–`v1.5.3`) with a
+    single accurate NOTE stating **Skill 38 → v1.5.6**, Skills 39 + 40 present, and the Round-3 +
+    fix-wave shipped.
+  - Removed the fossil `Current Version: v10.3.0` headline, the `36 skill folders` claim, the inline
+    `v2.1 — Zero-Human Company Spec (PRD v2.1)` block, and the long embedded "What's New in v10.3.0 …
+    v6.0.7" version-history stack (that history lives in this CHANGELOG, not the README).
+  - Rebuilt the **Skill Inventory** table to the real on-disk tree: **40 numbered folders (01–40)**,
+    with the previously-missing **Skill 37 (ZHC Closeout)** row added, the Skill 36 fossil `(v9.0.0)`
+    label and Skill 38 fossil `(v5.14) / 27 protocols / 9 scripts` counts corrected to the live
+    Skill 38 `v1.5.6` (39 protocols / 55 scripts / 20 references / 8 journeys), and the footer corrected
+    to **40 numbered folders (37 active + 3 archived: 13, 33, 34)**.
+- **Skill 38's own `skill-version.txt` (`1.5.6`) stays on its independent track** — it is NOT one of
+  the eight repo-version locations and was NOT force-matched to `v10.16.14`.
+
+---
+
 ## [v10.16.12]  -  2026-05-30  -  Round-3 cross-repo reconciliation + roadmap spec committed; Skill 38 v1.5.3
 
 ### Why
