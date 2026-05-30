@@ -3291,9 +3291,9 @@ install_skill_40_zhc_public_records_scraper() {
     chown -R node:node "$SKILL_DEST" 2>/dev/null || true
 
     success "Skill 40 (ZHC Public Records Scraper) installed -> $SKILL_DEST"
-    note "Skill 40 ships 6 scripts + 2 Tier 2 adapters, 3 protocols, 4 references (incl. the 20-county Tier 1 registry)."
-    note "After this install completes, run: $SKILL_DEST/scripts/00-verify-prerequisites.sh"
-    note "  COMPLIANCE: respects robots.txt + ToS, attributes source+timestamp, never fabricates a record (Tier 4 honest gap)."
+    note "Skill 40 ships the numbered install scripts 00-07 + 3 helper libs (lib-records/lib-cost-cap/lib-pr-events) + 3 QC gates + 2 Tier-2 adapters, 4 protocols, and 21 per-county Tier-1 configs (references/tier1-counties/*.json)."
+    note "After this install completes, run: $SKILL_DEST/scripts/00-verify-prerequisites.sh then 01..04 in order; 05/06 are per-target (validate before any live run)."
+    note "  COMPLIANCE: respects robots.txt + ToS, attributes source+timestamp, never fabricates a record (Tier 4 honest gap). Event log (public-records-queries.jsonl) is PII-free (opaque query_ref/target_ref)."
     return 0
 }
 

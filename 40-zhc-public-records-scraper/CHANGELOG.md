@@ -1,54 +1,63 @@
-# Skill 40 — ZHC Public Records Scraper — Changelog
+# Changelog - Skill 40: ZHC Public Records Scraper
 
-This skill has its OWN `skill-version.txt`, independent of the repo version and of
-every other skill's version.
+## [1.0.1] - 2026-05-30 - Canonical reconciliation: adopt the canonical tiered build
 
-## v1.0.0 — initial release
+Reconciles this repo's Skill 40 with the canonical sibling build (the
+`openclaw-onboarding` Mac repo is the canonical base per the Round-3 QC decision).
+This repo previously shipped a structurally DIFFERENT design (a monolithic
+`scripts/02-detect-and-route.sh`, a 20-row `tier1-county-registry.tsv`, a single
+coarse `records_query` event, and only `qc-no-personal-data.sh`). That divergent
+feature logic is replaced with the canonical build so the two repos are
+functionally equivalent (environment differences — Linux `/data` vs Darwin
+`~/Downloads` — are handled OS-aware inside each script).
 
-A tiered public-records lookup engine. Resolves a county+state from an
-address/ZIP and routes through four tiers to a lawful, attributed PUBLIC-records
-source — and honest-gaps when none exists. Pairs with Skill 39 (Real Estate
-Playbook).
+### Added (from the canonical build)
+- Router split into helper libs: `scripts/lib-records.sh` (resolve → tier → cache
+  → cost-cap → honest-gap), `scripts/lib-cost-cap.sh` (per-day cap + per-target
+  rate limit + bulk cost estimate/confirm), `scripts/lib-pr-events.sh` (the
+  append-one-line F52 emitter).
+- Per-county Tier-1 configs under `references/tier1-counties/*.json` (each with
+  `tos_url` + a selector contract), replacing the flat registry TSV.
+- Three machine-enforced QC gates: `scripts/qc-no-fabrication.sh` (drives
+  lib-records.sh in a sandbox and asserts the Tier-4 honest gap),
+  `scripts/qc-compliance.sh` (asserts every Tier-1 config carries `tos_url` +
+  robots gate + attribution), and `scripts/qc-no-personal-data.sh` (zero banned
+  identifiers — now TSV-independent).
+- Machine-readable event schema `templates/public-records-queries.schema.json`.
+- Numbered install scripts `00`–`07` (verify, locate-MFD, init-cache,
+  load-tier1, configure-caps, validate-target, build-tier3, update-core-files)
+  + the four runtime protocols (tier-routing, compliance, cost-cap, cache).
+- Tier-1 county UNION: the curated set is now **21** counties — the prior
+  20-county registry set PLUS Wayne County MI (which was in the canonical set but
+  missing here), reconciled so both repos ship the identical 21 per-county
+  configs: Cook IL, Los Angeles CA, Maricopa AZ, Harris TX, San Diego CA,
+  Orange CA, Miami-Dade FL, Kings NY, Dallas TX, King WA, Clark NV, Santa Clara
+  CA, Tarrant TX, Riverside CA, Wayne MI, Broward FL, Bexar TX, Sacramento CA,
+  San Bernardino CA (FIPS 06071), Hillsborough FL (FIPS 12057), Pierce WA
+  (FIPS 53053).
 
-Shipped:
-- **6 scripts + 2 Tier 2 example adapters** (idempotent, OS-aware Darwin + Linux):
-  - `00-verify-prerequisites.sh` — `curl` HARD; browser fetch path + Skill 39 SOFT.
-  - `01-locate-master-files-folder.sh` — resolves `<MASTER_FILES_DIR>`; reuses
-    Skill 38/39's selection when present.
-  - `02-detect-and-route.sh` — the ROUTER: auto-detect county+state → Tier 1/2/3/4
-    decision → 30-day cache check → per-day + per-target rate limits + daily cost
-    cap + cost estimate → append one F52 event.
-  - `03-build-scraper-config.sh` — Tier 3 config builder + validator (well-formed
-    URL, robots.txt not disallowing the path, required keys, ROBOTS_OK
-    attestation); only a VALIDATED config goes live.
-  - `04-update-agents-md.sh` — ADDITIVE, marker-fenced AGENTS.md block
-    (idempotent in-place refresh).
-  - `qc-no-personal-data.sh` — universal-skill identifier guard + Tier-1-registry
-    invariant (>=10 rows, 6 cols) + tier-vocabulary invariant.
-  - `adapters/tyler-technologies.sh`, `adapters/govos-landmark.sh` — Tier 2
-    example adapters implementing the adapter contract (`--covers`/`--plan`/`--vendor`).
-- **3 protocols:** adapter-authoring, pre-foreclosure sourcing, record-type routing.
-- **4 references:** compliance-and-tiers (the four tiers + binding compliance
-  rules), the 20-county Tier 1 registry (`.md` + machine-readable `.tsv`), the F52
-  `public-records-queries.jsonl` event contract.
-- **AGENTS.md:** one additive marker-fenced block.
+### Fixed (PII)
+- **Raw PII removed from the event log.** The old `02-detect-and-route.sh` and the
+  old `master-files-event-contract-F52.md` wrote the raw input `address`/`zip`
+  into `public-records-queries.jsonl`. The canonical build logs only opaque
+  handles (`query_ref`/`target_ref`), record TYPES + counts, and cache/cost/
+  compliance status — NEVER a raw address or raw record contents. The single log
+  contract now matches `INSTRUCTIONS.md`, `SKILL.md`, and the machine-readable
+  schema (event enum `cache_init`/`tier_decision`/`cache_hit`/`force_refresh`/
+  `query`/`compliance_block`/`cost_estimate`/`cost_block`/`rate_limit_wait`/
+  `honest_gap`).
 
-Tier 1 curated counties (20): Cook IL, Los Angeles, Maricopa AZ, Harris TX, San
-Diego, Orange CA, Kings/Brooklyn NY, Riverside CA, San Bernardino CA, King WA,
-Clark NV, Miami-Dade FL, Dallas TX, Tarrant TX, Bexar TX, Broward FL, Sacramento
-CA, Santa Clara CA, Hillsborough FL, Pierce WA. (6 confirmed against the county's
-own site at authoring time; the rest follow the county's known official pattern
-and are confirmed LIVE by the agent — record presence is never assumed.)
+### Kept
+- The executable Tier-2 vendor adapters `scripts/adapters/tyler-technologies.sh`
+  + `scripts/adapters/govos-landmark.sh` (byte-identical across both repos).
 
-Compliance (binding): robots.txt respected, each target's ToS referenced + an
-operator ROBOTS_OK attestation for Tier 3, source + retrieval timestamp attributed
-on every record, per-day + per-target rate limits, daily cost cap + estimate before
-bulk ops, 30-day cache. NEVER fabricates a record — no source / blocked /
-not-online → Tier 4 honest gap.
+## [1.0.0] - 2026-05-30 - Initial release
 
-MVP honesty: the engine, routing, compliance, caching, and limits are REAL; the
-live per-county FETCH + PARSE is wired to the agent's fetch tools (curl/browser)
-via the emitted plan rather than bundled brittle per-site parsers. STUB *honestly*.
-
-Independence: does not modify other skills (appends only its own AGENTS.md block);
-ships no licensed/paid data, no scraped dumps, no ZIP→county DB, no client data.
+First release of the tiered, compliance-first public-records intelligence layer —
+the data SIBLING of Skill 39 (Real Estate Playbook). Skill 40 finds + attributes
++ caches + logs records; Skill 39 runs the outreach. The skill NEVER fabricates a
+record (no source → Tier-4 honest gap). robots.txt respected, ToS referenced per
+target, source + timestamp attribution; per-day + per-target rate limits + daily
+cost cap + cost estimate before bulk ops; 30-day cache. Pairs with Skill 39 for
+pre-foreclosure / NOD / tax-delinquency sourcing. Registered in `install.sh`
+(`install_skill_40_zhc_public_records_scraper`) + the README skill catalog.
