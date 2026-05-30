@@ -170,6 +170,17 @@ POST https://services.leadconnectorhq.com/invoices/<invoiceId>/send # send by id
 
 ---
 
+## CUSTOM FIELDS (F46 — Step 9.40, `crm-field-write-protocol.md`)
+
+LOCATION-scoped discover/create; the VALUE is written onto the contact via `PUT /contacts/<contactId>` `customFields` (see that protocol). **Version `2021-07-28`** (the contact/location API version — NOT the `2021-04-15` used above).
+
+| Operation | Method + URL | Returns / Body |
+|---|---|---|
+| Discover | `GET /locations/<LOCATION_ID>/customFields` | each field's `id`, `name`, `fieldKey`, `dataType` (TEXT/LARGE_TEXT/NUMERICAL/MONETARY/DATE/PHONE/SINGLE_OPTIONS/RADIO/MULTIPLE_OPTIONS/CHECKBOX); option types also return `options` |
+| Create (if missing) | `POST /locations/<LOCATION_ID>/customFields` | `{"name":"ZHC_<lower_snake>","dataType":"<TYPE>","locationId":"<LOCATION_ID>"}` (option fields add `"options":[…]`) → returns new field `id`. Operator-approved, NEVER customer-invoked; always `ZHC_` prefix |
+
+---
+
 > **Deeper detail:** for full body field lists, query params, and edge cases, see
 > `references/GHL-INBOUND-AND-PLAYBOOKS.md` (§7 verified send-type enum, §8 messaging recipe,
 > §9 calendar recipe) and Skill 29 `references/{conversations,calendars,payments}.md`. This
