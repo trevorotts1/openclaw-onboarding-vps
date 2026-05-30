@@ -22,6 +22,21 @@ You don't have to build this workflow by hand. In Convert and Flow's **Automatio
 > **Standard:** the full field-by-field Custom Webhook spec + multi-action teaching live in
 > `references/workflow-ai-instructions-standard.md`. This template is the rendered SMS case.
 
+## This prompt always contains the same five mandatory parts
+
+Every workflow-AI prompt this skill produces — for every client — contains ALL of these, in this exact
+order (only the substituted values change). This is the standardization contract from
+`references/workflow-ai-instructions-standard.md` §0:
+
+1. **Workflow name + PUBLISH** (publish when done; never leave as draft).
+2. **Trigger: type + sub-option + filters in exact order** (Customer Replied / On Reply / Channel = SMS /
+   Message Direction = Inbound).
+3. **Settings → Allow Re-entry = ON** (the workflow must be allowed to re-enter / fire repeatedly per
+   contact, so every inbound text re-triggers it; default off fires once then goes dead).
+4. **Custom Webhook — every field with the exact value** (EVENT, METHOD, URL, AUTHORIZATION dropdown, both
+   HEADERS, CONTENT-TYPE, the full FLAT 23-key RAW BODY).
+5. **Save → Publish toggle ON → Save** (the closing sequence that takes it live).
+
 ## The copy-paste prompt
 
 ```text
@@ -38,6 +53,9 @@ TRIGGER:
 FILTERS (in this exact order):
 - Filter 1: Channel equals "SMS"
 - Filter 2: Message Direction equals "Inbound"
+
+SETTINGS:
+- Allow Re-entry: ON  (the workflow must be allowed to re-enter / fire repeatedly per contact, so EVERY inbound text re-triggers it; if this is off it fires once per contact then silently never fires again)
 
 ACTIONS (in this exact order):
 - Action 1: Send Custom Webhook
@@ -80,7 +98,7 @@ ACTIONS (in this exact order):
       "location_name": "{{location.name}}"
     }
 
-PUBLISH: Yes, publish the workflow when done — don't leave it as draft.
+PUBLISH: Save the workflow, flip the top-right Publish toggle to ON, then Save again. Don't leave it as draft.
 
 RUN SCHEDULE: All Day (so the AI can respond at any hour the customer texts in).
 ```
@@ -92,6 +110,7 @@ After you paste the prompt above, **Build with AI** should produce a workflow wi
 - **One trigger node**: "Customer Replied" with sub-option "On Reply" and channel filter "SMS".
 - **Two filter nodes** (in order): Channel = SMS, Message Direction = Inbound.
 - **One action node**: "Send Custom Webhook" pointing at `https://<PUBLIC_HOSTNAME>/hooks/<ROUTE_ID>` with the two headers above and the Raw JSON body above.
+- **Settings → Allow Re-entry**: ON (so every inbound text re-triggers the workflow).
 - **Status**: Published (NOT draft).
 - **Run schedule**: All Day.
 
@@ -114,9 +133,11 @@ Webhook action and enter these values by hand:
    - `Content-Type` → `application/json`
 6. **Content-Type dropdown:** `application/json`.
 7. **Raw Body:** paste the FULL FLAT 23-key JSON from the prompt above (the block beginning `{ "id": ... }`).
-8. **Save** the action, then **Publish** the workflow.
-9. **Verify every field above is non-empty before you publish** — an empty URL, header, or body means
-   every text silently goes nowhere.
+8. **Settings → Allow Re-entry:** open the workflow's **Settings** tab and set **Allow Re-entry** to **ON**
+   so every inbound text re-triggers the workflow (default off fires once, then goes dead).
+9. **Save** the action, flip the top-right **Publish** toggle **ON**, then **Save** again.
+10. **Verify every field above is non-empty before you publish** — an empty URL, header, or body means
+    every text silently goes nowhere.
 
 There is no shortcut here: GHL Automations have no API and no MCP, and Build with AI won't paste these in.
 This is your step — paste the values into the Custom Webhook action yourself, then verify and publish.
@@ -157,10 +178,13 @@ Build with AI is helpful but has known failure modes. The most common ones:
   must stay PLACEHOLDER-FREE (a templated messageTemplate in the body makes GHL throw "Error while parsing
   the object to JSON" and the webhook is Skipped). Keep it the plain instruction string shown above.
 - **Builds a trigger/If-Else tag filter (`does not contain` / `contains`) that references a BLANK or
-  non-existent tag** — a known live bug (the Teresa gotcha). A blank tag in a `does not contain` filter
+  non-existent tag** — a known live bug (the blank-tag gotcha). A blank tag in a `does not contain` filter
   silently never matches, so the workflow never fires. Verify the filter shows a REAL tag name that exists
   under **Settings → Tags**; if blank/wrong, select (or create first) the correct tag, or remove the bad
   filter.
+- **Leaves Settings → Allow Re-entry OFF** — the workflow then fires ONCE per contact and silently never
+  fires again, so the AI answers the first text and goes dead on every text after. Set **Allow Re-entry =
+  ON**.
 - Saves the workflow as **Draft** instead of **Published**.
 - **Ships a stripped/short body (fewer than 23 keys)** — the body MUST contain ALL 23 keys. Build with AI
   most often drops `id`, `model`, `to`, `thinking`, `location_id`, or `session_key`. Re-paste the full
@@ -173,13 +197,13 @@ Each of these failure modes is covered in **Section 4 — Workflow Verification 
 
 When this template is rendered for a real client, the following placeholders are substituted with concrete values:
 
-- `<CLIENT_BUSINESS_NAME>` — e.g., "The Winning Formula Course"
-- `<CLIENT_FIRST_NAME>` — e.g., "Christy"
-- `<PUBLIC_HOSTNAME>` — e.g., `claw.thewinningformulacourse.com`
+- `<CLIENT_BUSINESS_NAME>` — the client's business name (e.g., a generic "Acme Co")
+- `<CLIENT_FIRST_NAME>` — the client's first name
+- `<PUBLIC_HOSTNAME>` — the client's public tunnel hostname, e.g., `claw.<client-domain>.com`
 - `<ROUTE_ID>` — e.g., `ghl-sales` (the hooks.mappings key / `match.path` configured in Step 3; also the
   body's `match` value)
 - `<AGENT_ID>` — the target agent id for this hook path, e.g., `sales` (body data only; the real routing
   `agentId` is hardcoded on the server mapping — agentId is NOT templatable, see GHL-INBOUND §14.9)
 - `<HOOKS_TOKEN>` — the bearer token from `SECRETS_ENV_FILE`
-- `<INDUSTRY_CONTEXT>` — e.g., "grants writing", "real estate", "coaching"
+- `<INDUSTRY_CONTEXT>` — the client's industry, e.g., "real estate", "coaching", "med spa"
 - `<DESIRED_OUTCOME>` — e.g., "book a 15-minute discovery call on your calendar", "set up a free consultation"

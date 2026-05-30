@@ -21,14 +21,15 @@ TEMPLATES_DIR="${SKILL38_TEMPLATES_DIR:-$TEMPLATES_DIR_DEFAULT}"
 
 # ----- required inputs -----
 : "${MASTER_FILES_DIR:?MASTER_FILES_DIR must be set}"
-: "${PUBLIC_HOSTNAME:?PUBLIC_HOSTNAME must be set (e.g., claw.thewinningformulacourse.com)}"
+: "${PUBLIC_HOSTNAME:?PUBLIC_HOSTNAME must be set (e.g., claw.<client-domain>.com)}"
 : "${ROUTE_ID:?ROUTE_ID must be set (e.g., ZHC)}"
 : "${HOOKS_TOKEN:?HOOKS_TOKEN must be set}"
 : "${CLIENT_BUSINESS_NAME:?CLIENT_BUSINESS_NAME must be set}"
 : "${CLIENT_TELEGRAM_CHAT_ID:?CLIENT_TELEGRAM_CHAT_ID must be set}"
 
 # ----- optional / defaulted inputs -----
-OPERATOR_TELEGRAM_CHAT_ID="${OPERATOR_TELEGRAM_CHAT_ID:-5252140759}"
+# Operator id is supplied per-install (NOT hardcoded to any person); empty by default.
+OPERATOR_TELEGRAM_CHAT_ID="${OPERATOR_TELEGRAM_CHAT_ID:-}"
 CLIENT_FIRST_NAME="${CLIENT_FIRST_NAME:-there}"
 INDUSTRY_CONTEXT="${INDUSTRY_CONTEXT:-your industry}"
 DESIRED_OUTCOME="${DESIRED_OUTCOME:-book a discovery call}"
@@ -308,7 +309,7 @@ substitute_template "$CHECKLIST_TEMPLATE" > "$SEC4"
 # this script (NOT left to the template) into a LEAD block that is PREPENDED to
 # the reference sheet (see below), so the sheet LEADS with the copy-paste values
 # in the required order and they ALWAYS appear as real, copyable fenced code
-# blocks regardless of how the template wraps its prose. A live client (Teresa)
+# blocks regardless of how the template wraps its prose. A live client once
 # opened a reference sheet that had NO bearer token and NO copyable Raw Body JSON
 # — there was no `Authorization: Bearer <token>` to paste and no ```json body to
 # drop into GHL's Build-with-AI, which stranded the client. qc-reference-sheet.sh
@@ -378,9 +379,12 @@ REF_ENDPOINT_URL="https://${PUBLIC_HOSTNAME}/hooks/${REF_HOOK_NAME}"
 #   5) Tags — create FIRST (where to check: Settings -> Tags; what you should see)
 #   6) Manual Custom-Webhook fill steps ("Build-with-AI won't fill it, do it yourself")
 #   7) Workflow-AI prompt pointer (the full prompt is Section 2 of this doc)
-#   8) Post-build verification — Trigger / Custom Webhook / Publish, each with
-#      WHERE-to-go + WHAT-you-should-SEE + WHAT-to-put-if-missing. Includes the
-#      Teresa gotcha: a blank/non-existent tag in a "does not contain" filter.
+#   8) Post-build verification — Trigger / Allow Re-entry / Custom Webhook /
+#      Publish, each as a DEAD-SIMPLE per-area check (one imperative line + the
+#      exact value in a COPY CODE BLOCK + a one-line "if you do not see it, paste
+#      this"). Built for a 60-year-old to do each step without reading an essay.
+#      Includes the blank-tag gotcha: a blank/non-existent tag in a "does not
+#      contain" filter.
 # qc-reference-sheet.sh machine-enforces: "🚀 Quick Start", a "Reference &
 # explanation" section AFTER it, separate Authorization key + value code blocks,
 # the bearer token, a ```json fence, the hook URL, the manual-fill instructions,
@@ -479,30 +483,90 @@ LEAD="$STAGE_DIR/.reference-sheet.lead.md"
   printf '6. **Headers** — click **"Add item"** again, then paste **Content-Type** (section 3) into the **Key box** and `application/json` (section 3) into the **Value box**.\n'
   printf '7. **Content-Type dropdown:** select `application/json`.\n'
   printf '8. **RAW BODY box:** paste the JSON from section 4.\n'
-  printf '9. **Save** the action.\n'
-  printf '10. **Verify every field above is non-empty before publishing** — an empty URL, header, or body means every inbound message silently goes nowhere.\n\n'
+  printf '9. **Settings -> Allow Re-entry:** open the workflow **Settings** tab and turn **Allow Re-entry ON** so every inbound message re-triggers the workflow (if this is OFF it fires once per contact then silently never fires again).\n'
+  printf '10. **Save** the action, then turn the top-right **Publish** toggle **ON**, then **Save** again.\n'
+  printf '11. **Verify every field above is non-empty before publishing** — an empty URL, header, or body means every inbound message silently goes nowhere.\n\n'
 
   # 7) Workflow-AI prompt pointer (the full prompt is rendered as Section 2 of this doc)
   printf '### 7. Workflow-AI Prompt (paste into Build with AI)\n\n'
   printf 'The full copy-paste **Workflow-AI prompt** for your first workflow (SMS Inquiry Responder) is in **Section 2 — Your First Workflow** of this document. Open your GHL/Convert and Flow account -> **Automations** -> new automation -> **Build with AI** (top-right), paste that prompt, then come back here and do section 6 (manually fill the Custom Webhook) before publishing.\n\n'
 
-  # 8) Post-build verification — the Teresa gotcha (blank tag in a "does not contain" filter)
-  printf '### 8. After Build with AI runs — VERIFY before you publish\n\n'
-  printf 'Build with AI gets the shape *roughly* right but leaves gaps. For EACH item below, the doc says WHERE to go, WHAT you should SEE, and WHAT to put if it is missing or wrong. Walk all three before publishing:\n\n'
-  printf '**TRIGGER**\n'
-  printf -- '- WHERE: open the workflow and click the **trigger** node.\n'
-  printf -- '- WHAT YOU SHOULD SEE: the correct trigger type (e.g. "Customer Replied"), and if there is a tag filter (e.g. "tag does not contain ..." / "tag contains ..."), a REAL tag name from Settings -> Tags.\n'
-  printf -- '- KNOWN BUG (this stranded a live client): Build with AI created a tag filter like **"does not contain <tag>"** but the referenced tag was **blank / never created**, so the trigger silently never matched.\n'
-  printf -- '- IF BLANK/WRONG: select (or create, per section 5) the correct existing tag, or remove the bad filter entirely.\n\n'
-  printf '**CUSTOM WEBHOOK**\n'
-  printf -- '- WHERE: open the **Custom Webhook** action.\n'
-  printf -- '- WHAT YOU SHOULD SEE: **Method = POST**, the **URL** filled, **both headers** present (Authorization + Content-Type), and the **Raw Body** filled with all 23 keys.\n'
-  printf -- '- NOTE: Build with AI does NOT fill these. If any are blank, that is expected — paste them yourself.\n'
-  printf -- '- IF BLANK: put the values from the Quick Start (sections 1-4 above).\n\n'
-  printf '**PUBLISH**\n'
-  printf -- '- WHERE: top-right of the workflow.\n'
-  printf -- '- WHAT YOU SHOULD SEE: the workflow is **Published**, not Draft.\n'
-  printf -- '- IF DRAFT: toggle it to **Published**.\n\n'
+  # 8) Post-build verification — DEAD SIMPLE, per-area, for a 60-year-old.
+  # Each check = one short imperative line + the exact value in a COPY CODE BLOCK
+  # + a one-line "if you do not see it, paste this." No essays. Order: open the
+  # workflow -> Trigger -> Allow Re-entry -> Webhook URL -> Headers -> Raw Body ->
+  # Save -> Publish -> Save. Includes the blank-tag gotcha.
+  printf '### 8. After Build with AI runs — VERIFY before you publish (simple checklist)\n\n'
+  printf 'Do these in order. Each one is a quick look — open the thing, check it shows what we say, and **if you do not see it, copy the block and paste it in.** That is the whole job.\n\n'
+
+  printf '**A. Open the workflow.** In Convert and Flow, go to **Automations** and open the workflow Build with AI just made.\n\n'
+
+  printf '**B. Trigger.** Click the **trigger** at the top.\n'
+  printf -- '- You should see: **Customer Replied** / **On Reply** / **Channel = SMS** / **Message Direction = Inbound**.\n'
+  printf -- '- If a tag filter shows up **blank** (e.g. "tag does not contain" with nothing after it), that is a known bug — it makes the workflow never fire. Pick a real tag (see section 5) or delete that filter.\n'
+  printf -- '- If the trigger is not set, set it to:\n\n'
+  printf '```\n'
+  printf 'Customer Replied / On Reply / Channel = SMS / Message Direction = Inbound\n'
+  printf '```\n\n'
+
+  printf '**C. Allow Re-entry.** Open the workflow **Settings** tab and find **Allow Re-entry**.\n'
+  printf -- '- It should be **ON**. (If it is OFF, the AI answers the first text and then goes silent on every text after.)\n'
+  printf -- '- If it is off, turn it **ON**:\n\n'
+  printf '```\n'
+  printf 'Allow Re-entry = ON\n'
+  printf '```\n\n'
+
+  printf '**D. Webhook URL.** Click the **Custom Webhook** action and look at the **URL** box.\n'
+  printf -- '- It should show your webhook URL.\n'
+  printf -- '- If it is empty or shows a sample, paste this:\n\n'
+  printf '```\n'
+  printf '%s\n' "$REF_ENDPOINT_URL"
+  printf '```\n\n'
+
+  printf '**E. Headers.** Still in the Custom Webhook action, look at **Headers**.\n'
+  printf -- '- You should see **Authorization = Bearer ...** and **Content-Type = application/json**.\n'
+  printf -- '- If they are missing: click **Add item**, paste this into the Key box:\n\n'
+  printf '```\n'
+  printf 'Authorization\n'
+  printf '```\n\n'
+  printf '  then paste this into the Value box:\n\n'
+  printf '```\n'
+  printf 'Bearer %s\n' "$RESOLVED_HOOKS_TOKEN"
+  printf '```\n\n'
+  printf '  Click **Add item** again, paste this into the Key box:\n\n'
+  printf '```\n'
+  printf 'Content-Type\n'
+  printf '```\n\n'
+  printf '  then paste this into the Value box:\n\n'
+  printf '```\n'
+  printf 'application/json\n'
+  printf '```\n\n'
+
+  printf '**F. Raw Body.** Still in the Custom Webhook action, look at the **Raw Body**.\n'
+  printf -- '- It should be a block of JSON.\n'
+  printf -- '- If it is empty, paste the body from **section 4** above (the `\`\`\`json` block).\n\n'
+
+  printf '**G. Save.** Click **Save** on the Custom Webhook action.\n\n'
+
+  printf '**H. Publish.** Top-right of the workflow, flip the **Publish** toggle to **ON** (it should say **Published**, not Draft). Then click **Save** again.\n\n'
+
+  printf -- '---\n\n'
+
+  # ── HOW TO TEST YOUR SYSTEM — client self-test (REQ 4). Dead-simple, in order.
+  # The client texts themselves, replies from their phone, then reads the
+  # Execution Logs and confirms every step (especially the Custom Webhook) is
+  # green. qc-reference-sheet.sh machine-enforces this section is present.
+  printf '## 🧪 How to test your system\n\n'
+  printf 'Once your workflow is **Published**, test it yourself in a couple of minutes. Do these in order:\n\n'
+  printf -- '1. In Convert and Flow, click **Contacts** in the left menu.\n'
+  printf -- '2. In the search box, type **your own name** and open **your own contact record**.\n'
+  printf -- '3. From your contact record, **send yourself a text (SMS)**.\n'
+  printf -- '4. On your phone, **reply** to that text (just like a real customer would).\n'
+  printf -- '5. Back in Convert and Flow, go to **Automations** and open **the workflow you built**.\n'
+  printf -- '6. Click **Execution Logs**.\n'
+  printf -- '7. Look at the steps for your test reply. **Every step should show green / success — ESPECIALLY the Custom Webhook step.**\n\n'
+  printf '> ✅ **All green = your AI is live and answering.** Your reply should also come back to your phone as a text from your AI.\n\n'
+  printf '> 🔴 **Anything red = a failure.** A red step (most often the Custom Webhook) means a value is wrong. Go back to **section 8 (the verification checklist)** above and re-check that step, fix it, then re-run this test. If it is still red after that, **contact your setup admin / support** with a screenshot of the red step.\n\n'
   printf -- '---\n\n'
 
   # ── YOUR COMMUNICATION PLAYBOOKS — AFTER Quick Start, BEFORE the deep how-it-works.
@@ -731,7 +795,7 @@ if [ -n "$NOTION_PAGE_URL" ]; then
     printf 'In Convert and Flow: Automations -> new automation -> click "Build with AI" (top-right) -> paste Section 2 of the Notion page.\n'
     printf 'Then open Section 4 (Verification Checklist) and walk top-to-bottom before publishing.\n'
     printf -- '--- end embedded fallback ---\n\n'
-    printf 'Anything you do not understand: screenshot it and message me. - Keez\n'
+    printf 'Anything you do not understand: screenshot it and message your setup admin.\n'
   } > "$CLIENT_MSG_FILE"
 else
   {
@@ -744,7 +808,7 @@ else
     printf 'Webhook URL: https://%s/hooks/%s\n' "$PUBLIC_HOSTNAME" "$ROUTE_ID"
     printf 'Authorization header: Bearer %s\n' "$HOOKS_TOKEN"
     printf 'Content-Type header: application/json\n\n'
-    printf 'Anything you do not understand: screenshot it and message me. - Keez\n'
+    printf 'Anything you do not understand: screenshot it and message your setup admin.\n'
   } > "$CLIENT_MSG_FILE"
 fi
 
@@ -787,9 +851,11 @@ OP_MSG_FILE="$STAGE_DIR/.operator-telegram-message.txt"
   printf 'Client Telegram send result: %s\n' "${CLIENT_MSG_ID:-unknown}"
 } > "$OP_MSG_FILE"
 
-if command -v openclaw >/dev/null 2>&1; then
+if command -v openclaw >/dev/null 2>&1 && [ -n "$OPERATOR_TELEGRAM_CHAT_ID" ]; then
   openclaw message send --channel telegram -t "$OPERATOR_TELEGRAM_CHAT_ID" --file "$OP_MSG_FILE" >/dev/null 2>&1 || \
     echo "[21-generate-client-reference-sheet] WARN: operator Telegram send failed" >&2
+elif [ -z "$OPERATOR_TELEGRAM_CHAT_ID" ]; then
+  echo "[21-generate-client-reference-sheet] NOTE: OPERATOR_TELEGRAM_CHAT_ID not set — operator summary not sent (set it to receive the summary)" >&2
 fi
 
 echo "[21-generate-client-reference-sheet] DONE  layer=$LAYER  url=${NOTION_PAGE_URL:-<none>}  fallback=${MD_FALLBACK_PATH:-<none>}"

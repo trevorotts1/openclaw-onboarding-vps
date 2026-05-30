@@ -10,7 +10,7 @@
 > **Scope: VPS / Hostinger-Docker installs.** Paths use `/data/…`, secrets live in host-level
 > `/docker/<project>/.env`, cloudflared runs via pm2. See the "VPS specifics" call-outs throughout.
 >
-> Everything here was verified against a live client build (Corey, Hostinger Docker VPS) and probed
+> Everything here was verified against a live client build (a Hostinger Docker VPS) and probed
 > against the live GHL API. Where a value was probed, it is marked **VERIFIED**.
 >
 > **⚠️ READ §14 FIRST — "CORRECTED GHL HOOK STRUCTURE (2026-05-29)".** The GHL Custom Webhook Raw Body
@@ -31,7 +31,7 @@ cause of a broken install. Never collapse them, never reuse one in another's slo
 | 1 | **`CLOUDFLARE_API_TOKEN`** (a.k.a. "Cloudflare API key" — SAME secret) | `cfut_…` | The client creates it in their Cloudflare account. The agent uses it **once** to build the tunnel + DNS CNAME, then never again. | Agent → Cloudflare API (build-time only) | Create once per client; used once, then idle |
 | 2 | **Tunnel connector token** | `eyJ…` (long JWT) | Returned when the tunnel is created. `cloudflared` uses it to **run** the tunnel (connect the VPS to Cloudflare's edge). | cloudflared → Cloudflare edge (runtime, always) | Created once with the tunnel; reused for the life of the tunnel |
 | 3 | **`HOOKS_TOKEN`** | 64-hex e.g. `527cef27…` | GHL sends it as `Authorization: Bearer` on **inbound** webhooks. OpenClaw's hooks layer verifies it. **Shared by ALL hook paths** on this client; does not change. **This is the header token that goes in the Build-with-AI prompt.** | GHL → OpenClaw (inbound, every message) | Created once per client; reused by every hook path |
-| 4 | **`GHL_PRIVATE_INTEGRATION_TOKEN`** (PIT) | `pit-9f…` | The agent (e.g. "Candace") uses it as `Bearer` to call GHL's API to **send** replies and book appointments (outbound). | OpenClaw → GHL API (outbound, every reply/booking) | Created once per client (their GHL sub-account); reused for all outbound calls |
+| 4 | **`GHL_PRIVATE_INTEGRATION_TOKEN`** (PIT) | `pit-9f…` | The agent uses it as `Bearer` to call GHL's API to **send** replies and book appointments (outbound). | OpenClaw → GHL API (outbound, every reply/booking) | Created once per client (their GHL sub-account); reused for all outbound calls |
 
 **Mnemonic:**
 - Token **1** *builds* the road (one-time).
@@ -214,6 +214,46 @@ action.
 > (`contact.id`, `message.body` come through blank), so a 200 from the Test button proves the URL/auth
 > only — it does NOT prove the body maps correctly. **Use a real inbound message** to verify the full
 > path.
+
+---
+
+## 4.5 AI BACKEND SELF-TEST (BINDING — the agent tests ITSELF before the client ever does)
+
+> **The agent self-tests the full inbound→reply chain by GROUND TRUTH BEFORE telling the client to test.**
+> Setup is NOT marked complete, and the client is NOT told to test, until this self-test passes. Executable
+> gate: `scripts/24-self-test-hook.sh` (wired as a BLOCKING readiness gate in `scripts/11-run-qc-checklist.sh`).
+> If ANY step fails, the agent FIXES the cause and RE-RUNS until GREEN.
+
+After the agent configures the OpenClaw hook, and BEFORE telling the client to test, it MUST self-test the
+full chain:
+
+1. **(a) Backend prepared to receive.** Confirm: `hooks.enabled`; at least one inbound mapping present; the
+   mapping has a working `model`; `deliver:false` on the inbound mapping; the `conversational-logs/`
+   directory is node-owned + writable; GHL creds are present in `secrets/.env`
+   (`GHL_PRIVATE_INTEGRATION_TOKEN` + `GHL_LOCATION_ID`); and the gateway answers `healthz` with HTTP 200.
+2. **(b) POST a SYNTHETIC GHL inbound to its OWN public hook URL.** The FULL FLAT 23-key body (object A),
+   `channel: sms`, with the REAL Bearer token (`HOOKS_TOKEN`) in the `Authorization` header, addressed to a
+   **dedicated throwaway test contact** (created via the GHL API — never a real customer).
+3. **(c) VERIFY by ground truth (NOT the agent's self-report):**
+   - the hook returns **HTTP 200 / `{ok:true}`**;
+   - the agent session ran on the **configured model with NO 401/429** (provider auth / rate-limit);
+   - the agent **READ** the contact's conversation log;
+   - the agent **CALLED the GHL Conversations API** (`POST conversations/messages`) and got **200/201 with a
+     messageId** (drafting is NOT sending — this is what proves it SENT). If a real contact is required,
+     CREATE a temporary test contact via the GHL API, confirm the send returns a messageId, then **DELETE**
+     the temp contact + the test conversation log.
+4. **(d) If ANY step fails, the agent FIXES it** (creds location, model/provider key, DND, `secrets/.env`
+   placement, URL/route/token) and **RE-TESTS until green.**
+5. **(e) Setup is NOT marked complete and the client is NOT told to test until the self-test passes.**
+
+**The exact synthetic payload, the PASS/FAIL criteria, and the cleanup are documented in the header of
+`scripts/24-self-test-hook.sh`.** The body is the canonical FLAT 23-key object A (only the throwaway
+contact's id/phone change per run): `channel: sms`, `deliver: false`, `model` = the configured model,
+`session_key: hook:ghl:sms:<TEST_CONTACT_ID>`, `message_body: "SELF-TEST: please reply with the word
+READY."`, `location_id: <GHL_LOCATION_ID>`. **PASS** = (a) all prepared facts true AND (b) the synthetic
+POST accepted (HTTP 200 / `{ok:true}`) AND (c) ran on the configured model with no 401/429, read the log,
+and the GHL send returned 200/201 + a messageId, AND cleanup completed. **FAIL** = any of those false →
+fix the failing hop and re-run; never mark complete or tell the client to test on a FAIL.
 
 ---
 
@@ -543,7 +583,7 @@ bound channel (e.g. an internal admin echo) — never for GHL API-reply hooks.
 
 ## 14. CORRECTED GHL HOOK STRUCTURE (2026-05-29) — SUPERSEDES ALL OLDER EXAMPLES
 
-> **Verified LIVE on Corey / Explore Growth, 2026-05-29, OpenClaw 2026.5.27.** This section supersedes
+> **Verified LIVE on a client build, 2026-05-29, OpenClaw 2026.5.27.** This section supersedes
 > ANY older nested-body or stripped/short-body example anywhere in Skill 38. The GHL Custom Webhook body
 > MUST contain all **23 keys** (23 = minimum). If another file in this skill still shows a nested
 > `contact:{…}` / `customer_message:{…}` body or a sub-23-key body, THIS section wins.
@@ -636,7 +676,7 @@ on a GHL inbound. It MUST carry BOTH:
    across messages is the per-contact conversation log under `conversational-logs/`. So the template MUST
    tell the agent to **READ** that log BEFORE replying (and continue any in-progress topic/booking it
    finds) and to **APPEND** the inbound + its reply AFTER sending. A simplified template that drops these
-   steps makes the agent forget mid-conversation (the Corey incident — the canonical template was
+   steps makes the agent forget mid-conversation (a live-client incident — the canonical template was
    simplified during testing, the log read/append was lost, and the agent "didn't remember anything"
    mid-booking).
 

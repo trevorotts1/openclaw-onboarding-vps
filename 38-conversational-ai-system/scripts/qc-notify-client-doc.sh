@@ -12,7 +12,7 @@
 #   2. It GREPS THE TRANSCRIPTS (agents/*/sessions/*.jsonl) for the chat id — it
 #      must reference the .jsonl transcripts AND at least one of the id forms
 #      ("chat":{"id" / telegram:direct / "chatId" / "from":{"id") so it can't
-#      regress to a sessions.json-keys-only scan (the Teresa lesson).
+#      regress to a sessions.json-keys-only scan (the paired-chat lesson).
 #   3. It is GATED: it records clientDocDelivered (true/false) AND exits NON-ZERO
 #      when no chat is found / the send fails (never a silent skip).
 #   4. It SENDS via the OpenClaw gateway (openclaw message send --channel telegram)

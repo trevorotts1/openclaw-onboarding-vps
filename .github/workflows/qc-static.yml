@@ -212,24 +212,28 @@ jobs:
           tdir="$(mktemp -d)"
           mkdir -p "$tdir/home/.openclaw/agents/main/sessions" "$tdir/master"
           jl="$tdir/home/.openclaw/agents/main/sessions/s1.jsonl"
-          printf '%s\n' '{"meta":{"chat":{"id":5252140759}},"text":"operator"}' >  "$jl"
-          printf '%s\n' '{"meta":{"chat":{"id":7029068588}},"text":"client"}'   >> "$jl"
-          printf '%s\n' '{"key":"agent:main:telegram:direct:7029068588"}'        >> "$jl"
-          printf '%s\n' '{"from":{"id":7029068588},"chatId":7029068588}'         >> "$jl"
+          # Synthetic ids only (no real person): 1000000001 = the operator (excluded),
+          # 2000000002 = the client (the most-frequent non-operator id => should win).
+          printf '%s\n' '{"meta":{"chat":{"id":1000000001}},"text":"operator"}' >  "$jl"
+          printf '%s\n' '{"meta":{"chat":{"id":2000000002}},"text":"client"}'   >> "$jl"
+          printf '%s\n' '{"key":"agent:main:telegram:direct:2000000002"}'        >> "$jl"
+          printf '%s\n' '{"from":{"id":2000000002},"chatId":2000000002}'         >> "$jl"
           echo "https://notion.so/demo-abc" > "$tdir/master/.notion-reference-page-url"
           printf '# Run Manifest\n' > "$tdir/master/run-manifest-20260529-000000.md"
           out="$(HOME="$tdir/home" MASTER_FILES_DIR="$tdir/master" OPENCLAW_HOME="$tdir/home/.openclaw" \
+            OPERATOR_TELEGRAM_CHAT_ID=1000000001 \
             bash 38-conversational-ai-system/scripts/22-notify-client-doc.sh --dry-run --json)"
-          echo "$out" | grep -q '"chat":"7029068588"' || { echo "✗ transcript-grep did not pick the client id"; exit 1; }
+          echo "$out" | grep -q '"chat":"2000000002"' || { echo "✗ transcript-grep did not pick the client id"; exit 1; }
           echo "$out" | grep -q '"clientDocDelivered":true' || { echo "✗ dry-run did not record delivered=true"; exit 1; }
           # --- fixture smoke test (failure path: only operator id => exit 1, false) ---
           tdir2="$(mktemp -d)"
           mkdir -p "$tdir2/home/.openclaw/agents/main/sessions" "$tdir2/master"
-          printf '{"meta":{"chat":{"id":5252140759}}}\n' > "$tdir2/home/.openclaw/agents/main/sessions/s1.jsonl"
+          printf '{"meta":{"chat":{"id":1000000001}}}\n' > "$tdir2/home/.openclaw/agents/main/sessions/s1.jsonl"
           echo "https://notion.so/demo-xyz" > "$tdir2/master/.notion-reference-page-url"
           printf '# Run Manifest\n' > "$tdir2/master/run-manifest-20260529-000000.md"
           rc=0
           HOME="$tdir2/home" MASTER_FILES_DIR="$tdir2/master" OPENCLAW_HOME="$tdir2/home/.openclaw" \
+            OPERATOR_TELEGRAM_CHAT_ID=1000000001 \
             bash 38-conversational-ai-system/scripts/22-notify-client-doc.sh >/dev/null 2>&1 || rc=$?
           [ "$rc" -eq 1 ] || { echo "✗ no-client-chat path should exit 1, got $rc"; exit 1; }
           grep -q 'clientDocDelivered=false' "$tdir2/master/run-manifest-20260529-000000.md" || { echo "✗ no-chat path did not record clientDocDelivered=false"; exit 1; }
@@ -261,3 +265,43 @@ jobs:
           # the top-level `;`). A regression that reintroduces any of them fails CI.
           bash 38-conversational-ai-system/scripts/qc-config-schema-safety.sh
           echo "✓ Skill 38 install scripts are config-schema-safe (no .cron.jobs / agents.defaults.async-batch / jq '//= …;')"
+
+      - name: Skill 38 AI backend self-test wiring (24-self-test-hook.sh)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # The agent self-tests the FULL inbound->reply chain by GROUND TRUTH
+          # BEFORE the client ever tests: backend prepared -> POST a synthetic
+          # 23-key GHL inbound to its OWN public hook (real Bearer token) -> verify
+          # hook 200 + configured model (no 401/429) + read the log + GHL
+          # Conversations API send returned a messageId (temp test contact created
+          # then deleted, test log removed). The live run needs an install; CI runs
+          # the STATIC wiring check (script present + documents the full chain +
+          # pass/fail + cleanup + wired as a BLOCKING gate in the QC checklist).
+          bash 38-conversational-ai-system/scripts/24-self-test-hook.sh --check-wiring
+          # Also assert the live mode SKIPs (exit 3) when there is no install.
+          rc=0
+          bash 38-conversational-ai-system/scripts/24-self-test-hook.sh --live --config /nonexistent/openclaw.json >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 3 ] || { echo "✗ self-test --live with no config should exit 3 (SKIP), got $rc"; exit 1; }
+          echo "✓ Skill 38 AI backend self-test exists, documents the full chain + cleanup, is wired as a blocking gate, and SKIPs cleanly with no install"
+
+      - name: Skill 38 NO personal/client data (universal-skill guard)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Skill 38 is UNIVERSAL — the SAME brain for any client. Real names /
+          # client data must NOT appear anywhere in the skill OR in the doc it
+          # generates (a client once opened "their" Notion doc and saw someone
+          # else's name). qc-no-personal-data.sh scans the whole tree AND drives
+          # 21-generate-client-reference-sheet.sh in an offline sandbox to scan the
+          # generated markdown, and FAILS on any forbidden identifier.
+          bash 38-conversational-ai-system/scripts/qc-no-personal-data.sh
+          # Negative self-test: a planted identifier MUST make the gate FAIL (exit 1).
+          ng="$(mktemp -d)"
+          cp -r 38-conversational-ai-system "$ng/skill"
+          printf '\n<!-- planted leak: Teresa / 5252140759 -->\n' >> "$ng/skill/INSTRUCTIONS.md"
+          rc=0
+          bash "$ng/skill/scripts/qc-no-personal-data.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ no-personal-data gate should FAIL (exit 1) on a planted identifier, got $rc"; exit 1; }
+          rm -rf "$ng"
+          echo "✓ Skill 38 carries no personal/client data (tree + generated output), and the guard fails closed on a planted identifier"

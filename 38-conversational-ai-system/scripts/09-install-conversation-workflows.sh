@@ -45,7 +45,7 @@ mkdir -p "$WORKFLOWS_DIR"
 # GHL inbound hook sessions are SINGLE-TURN — the agent's only memory of a
 # contact across messages is the per-contact log file under conversational-logs/.
 # The directory MUST exist AND be writable by the gateway RUNTIME user, or the
-# agent silently fails to persist context (root cause of the Corey incident,
+# agent silently fails to persist context (root cause of a live-client incident,
 # where the dir was root-owned and the agent could not write until chowned to
 # the node runtime user).
 # -----------------------------------------------------------------------------

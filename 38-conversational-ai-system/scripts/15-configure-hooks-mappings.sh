@@ -84,7 +84,7 @@ else
   # Fail-closed guard: refuse to write a hook config whose messageTemplate lacks
   # the conversation-memory READ-before and APPEND-after steps. GHL inbound hook
   # sessions are SINGLE-TURN — without these two steps the agent has zero memory
-  # across messages (root cause of the Corey "didn't remember anything" incident).
+  # across messages (root cause of a live-client "didn't remember anything" incident).
   # Needles are case-insensitive: "conversational-logs", "read", "append".
   GUARD_TMPL="$(jq -r '.messageTemplate' <<<"$NEW_MAPPING")"
   GUARD_LC="$(printf '%s' "$GUARD_TMPL" | tr '[:upper:]' '[:lower:]')"

@@ -8,7 +8,7 @@
 #   2. The GHL Custom Webhook RAW BODY as a real ```json fenced code block
 #      (copyable), plus the hook URL (`https://<host>/hooks/<id>`).
 #
-# ROOT CAUSE this gate kills: on a live client (Teresa) the generated reference
+# ROOT CAUSE this gate kills: on a live client the generated reference
 # sheet had NO bearer token and NO copyable ```json Raw Body. The client opened
 # their reference doc, the token was missing, and there was no JSON to copy into
 # GHL's Build-with-AI. That stranded the client. The reference sheet MUST contain
@@ -43,8 +43,13 @@
 #   - the create-tag-FIRST instruction pointing at "Settings -> Tags" (a tag used in
 #     a filter/Add-Tag action must EXIST before the workflow is built)
 #   - the POST-BUILD VERIFICATION section ("After Build with AI runs"/"VERIFY") that
-#     covers the TRIGGER, the CUSTOM WEBHOOK, and PUBLISH (the Teresa gotcha: a blank/
+#     covers the TRIGGER, the CUSTOM WEBHOOK, and PUBLISH (the blank-tag gotcha: a blank/
 #     non-existent tag in a "does not contain" filter)
+#   - the "Settings -> Allow Re-entry = ON" instruction (the workflow must be allowed to
+#     re-enter / fire repeatedly per contact, or it fires once then goes dead)
+#   - the "How to test your system" client self-test section (Contacts -> own record ->
+#     text yourself -> reply from your phone -> Automations -> Execution Logs -> every
+#     step green, especially the Custom Webhook; red = failure)
 #   - the NEW-PLAYBOOK CREATION experience (client-facing): the personal "trigger word"
 #     concept explained voice-assistant style ("like Alexa / Hey Siri"); the "I Do / You
 #     Do" process + the ~15-30 minute expectation; and the brainstorm "things to think
@@ -263,7 +268,7 @@ grep -Eiq 'create (it|the tag|them) first|tag(s)? .*(first|before you build)|cre
 grep -Eiq 'Settings[[:space:]]*-+>[[:space:]]*Tags|Settings[[:space:]]*→[[:space:]]*Tags' "$SHEET" || \
   MISSING+=('where to check tags: "Settings -> Tags"')
 
-# --- POST-BUILD VERIFICATION (the Teresa gotcha) ---
+# --- POST-BUILD VERIFICATION (the blank-tag gotcha) ---
 # After Build-with-AI runs the client MUST verify TRIGGER + CUSTOM WEBHOOK +
 # PUBLISH. Require the verification section header and all three covered items,
 # plus the blank/non-existent-tag-in-a-filter known bug.
@@ -275,6 +280,29 @@ grep -Eiq 'PUBLISH' "$SHEET" || \
   MISSING+=('the post-build verification must cover PUBLISH (Published, not Draft)')
 grep -Eiq 'does not contain|blank|never created|non-existent tag' "$SHEET" || \
   MISSING+=('the post-build verification must call out the blank/non-existent tag-in-a-filter bug')
+
+# --- ALLOW RE-ENTRY (mandatory standardization item) ---
+# Every workflow must be allowed to re-enter / fire repeatedly per contact, or it
+# fires once and goes dead. The doc must instruct setting Settings -> Allow
+# Re-entry = ON (in the manual-fill steps AND the post-build verification).
+grep -Eiq 'Allow Re-entry' "$SHEET" || \
+  MISSING+=('the "Settings -> Allow Re-entry = ON" instruction (the workflow must be allowed to re-enter / fire repeatedly per contact)')
+
+# --- HOW TO TEST YOUR SYSTEM (client self-test section, REQ 4) ---
+# The generated client doc must carry a "How to test your system" section that
+# walks the client through testing it themselves: Contacts -> their own record ->
+# text themselves -> reply from their phone -> Automations -> the workflow ->
+# Execution Logs -> every step green (especially the Custom Webhook); red = fail.
+grep -Eiq 'How to test your system' "$SHEET" || \
+  MISSING+=('a "How to test your system" section (client self-test)')
+grep -Eiq 'Execution Logs' "$SHEET" || \
+  MISSING+=('the self-test must tell the client to open Execution Logs and confirm every step is green')
+grep -Eiq 'Contacts' "$SHEET" || \
+  MISSING+=('the self-test must tell the client to go to Contacts and open their own contact record')
+grep -Eiq 'reply' "$SHEET" || \
+  MISSING+=('the self-test must tell the client to reply to the text from their phone')
+grep -Eiq 'red' "$SHEET" || \
+  MISSING+=('the self-test must explain that any red step = a failure (re-run the verification checklist / contact support)')
 
 # --- YOUR COMMUNICATION PLAYBOOKS section (after Quick Start, before deep how-it-works) ---
 # The first question every client asks on their first test: "where are my
@@ -404,7 +432,9 @@ else
     echo "  [PASS] hook URL present"
     echo "  [PASS] manual Custom-Webhook fill instructions present"
     echo "  [PASS] create-tag-FIRST + Settings -> Tags present"
-    echo "  [PASS] post-build verification (Trigger/Custom Webhook/Publish + blank-tag bug) present"
+    echo "  [PASS] post-build verification (Trigger/Allow Re-entry/Custom Webhook/Publish + blank-tag bug) present"
+    echo "  [PASS] Settings -> Allow Re-entry = ON instruction present"
+    echo "  [PASS] 🧪 How to test your system (self-test: Contacts -> reply -> Execution Logs -> all green) present"
     echo "  [PASS] ⚙️ VPS-vs-Mac install section present (VPS force-recreate/secrets.env/OPENCLAW_HOOKS_TOKEN + Mac openclaw.json env block/launchctl kickstart)$([ "$REQUIRE_MANUAL_FILL" = "1" ] && echo ' [--require-manual-fill asserted]')"
     echo ""
     echo "RESULT: PASS — the reference sheet leads with 🚀 Quick Start (separate copy boxes per field), carries the bearer token + copyable JSON Raw Body + hook URL + manual-fill steps + create-tag-first + post-build verification + the VPS-vs-Mac install section, and keeps the full explanation after."

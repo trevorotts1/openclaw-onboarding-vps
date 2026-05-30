@@ -7,7 +7,7 @@
 > environment lives and gives you a copy-paste discovery sequence you MUST run before reporting
 > anything missing.
 
-These facts are **verified live on a real client box** (Corey, Hostinger Docker VPS). Use them exactly.
+These facts are **verified live on a real client box** (a Hostinger Docker VPS). Use them exactly.
 
 ---
 
