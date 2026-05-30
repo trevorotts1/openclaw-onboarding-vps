@@ -1,3 +1,53 @@
+## [v10.16.11]  -  2026-05-30  -  Skill 38 Round-3 Queue-A (v1.5.2) + NEW Skill 39 + NEW Skill 40
+
+### Why
+
+This repo-level bump packages the Skill 38 (Conversational AI System) Round-3 Queue-A work —
+`skill-version.txt` is at **v1.5.2** — and lands two brand-new skills (39 and 40) so GitHub Releases
+mirrors the shipped state. The eight repo-version-tracked files were rolled forward to `v10.16.11`
+via `scripts/bump-version.sh`. Skill 38's own `skill-version.txt` (`1.5.2`), Skill 39's, and Skill 40's
+own `skill-version.txt` files are on independent tracks and are NOT among the eight repo-version
+locations.
+
+### Shipped in Skill 38 (Round-3 Queue-A, v1.5.2)
+
+- **ZHC tag-prefix rule** — Zero-Human-Company tags follow a canonical prefix convention so tag-driven
+  routing/automation never collides across playbooks.
+- **F50 — aggression two-tier** — a two-tier follow-up aggression model (a measured tier and an
+  escalated tier) instead of a single fixed cadence.
+- **F44 — detour-and-return interrupts** — the conversation can detour to handle an out-of-flow
+  interrupt and then return to the exact point it left off.
+- **F45 — geo-qualification** — qualify a contact by geography (service-area / location gating) as part
+  of the conversation flow.
+- **F46 — CRM field write/create** — the agent can write to an existing CRM custom field and create the
+  field when it does not yet exist.
+- **F47 — inline smart-FAQ** — answer common questions inline from a smart-FAQ source without breaking
+  the active playbook.
+- **F49 — ZHC Pixel** — a per-client visitor-signal pixel plus a **Pixel Concierge** that acts on the
+  captured visitor signals (landed earlier in `v1.5.1 → v1.5.2`).
+- **Three QC-enforced standards** — the **Communication-Playbook** standard, the **GHL Raw-Body-JSON**
+  standard (23-key flat body), and the **Notion Client-Doc** standard are now machine-enforced QC gates,
+  not suggestions.
+
+### Added — NEW Skill 39: Real Estate Playbook
+
+- New `39-real-estate-playbook/` skill — a dedicated conversational-AI playbook tailored to real-estate
+  lead handling, qualification, and booking.
+
+### Added — NEW Skill 40: ZHC Public Records Scraper
+
+- New `40-zhc-public-records-scraper/` skill — a Zero-Human-Company public-records scraper for sourcing
+  and enriching contact/property data.
+
+### Changed
+
+- Repo version → `v10.16.11` (all 8 version-tracked locations via `bump-version.sh`): `/version`,
+  `install.sh`, `update-skills.sh`, `23-ai-workforce-blueprint/skill-version.txt`,
+  `templates/role-library/_index.json`, `templates/role-library/_qc-summary.md`, `README.md`
+  (`this repo at vX.Y.Z` marker), and `DIRECT-TO-AGENT-UPDATE-MESSAGE.md` (`**vX.Y.Z**`).
+- `README.md` — added a `NOTE (v10.16.11)` release note (prior release notes preserved) and rolled the
+  "READ THIS FIRST" install-path heading to v10.16.11.
+
 ## [v10.16.10]  -  2026-05-30  -  Ship this morning's Skill 38 work (v1.4.18 → v1.4.21)
 
 ### Why

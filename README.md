@@ -1,7 +1,9 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` - this repo at v10.16.10.
+> **Version:** see `/version` - this repo at v10.16.11.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
+>
+> **NOTE (v10.16.11):** Ships this morning's Skill 38 → **v1.5.2** Round-3 Queue-A work and adds two new skills. **Skill 38 v1.5.2:** ZHC tag-prefix rule, F50 two-tier aggression, F44 detour-and-return interrupts, F45 geo-qualification, F46 CRM field write/create, F47 inline smart-FAQ, F49 ZHC Pixel (per-client visitor-signal pixel + Pixel Concierge), plus the three QC-enforced standards (Communication-Playbook, GHL Raw-Body-JSON, Notion Client-Doc). **NEW Skill 39 — Real Estate Playbook.** **NEW Skill 40 — ZHC Public Records Scraper.** (Skill 38's own `skill-version.txt` `1.5.2` is independent of these 8 repo-version locations.)
 >
 > **NOTE (v10.16.10):** Skill 38 → **v1.4.18 → v1.4.21**. Workflow-AI instruction standardization + an exhaustive **Build-with-AI Custom Webhook** spec (URL / headers / RAW body / **Allow Re-entry**); **60-year-old-friendly** verification with copy-paste code blocks; a **client self-test** section plus an **AI-backend self-test** (`12/24-self-test-hook.sh`); heavily-enforced **Notion doc delivery**; explicit **VPS-vs-Mac install considerations**; a **GHL API quick-reference preloaded into the client's TOOLS.md** (all channels via one `/conversations/messages` endpoint + calendars / appointments / invoices + scopes); **channel-mirroring reply** (mirror the inbound channel as `type`, send by `contactId`, `conversationId` read-only); and a full **UNIVERSAL personal-data scrub** with a `qc-no-personal-data` gate. (Skill 38's own `skill-version.txt` is independent of these 8 repo-version locations.)
 >
@@ -17,7 +19,7 @@
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.10)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.11)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 
