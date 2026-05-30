@@ -1,5 +1,67 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.20] - 2026-05-30 - Preload client TOOLS.md with the verified GHL API quick-reference (faster runtime, QC-enforced)
+
+### Why
+At runtime the conversational-AI agent had to dig through the dense per-module GHL references
+(`references/GHL-INBOUND-AND-PLAYBOOKS.md` §7-§9, Skill 29 `references/{conversations,calendars,payments}.md`)
+to recall the exact request shape for a send / book / reschedule / cancel / invoice call. That is
+slow and error-prone mid-conversation. The fix: preload the **canonical request shapes** into the
+CLIENT agent's **TOOLS.md** so they live in the agent's **core context** — exact method, full URL,
+the 3 required headers, the JSON body shape (placeholders), and the required PIT scope per operation.
+WHERE/WHY: shapes belong in **TOOLS.md** (WHERE-THINGS-LIVE), not AGENTS.md (WHAT-TO-DO). The block
+is kept **concise** (canonical subset only, not the whole API) to avoid core-file bloat.
+
+### Added
+- **`references/ghl-api-quick-reference.md`** — the concise canonical block, grouped MESSAGING /
+  CALENDARS / APPOINTMENTS / INVOICES, with a "Required PIT scopes" summary at top. Verified against
+  the in-repo sources (do NOT invent): the live-probed `references/GHL-INBOUND-AND-PLAYBOOKS.md`
+  §7 (send-`type` enum) / §8 (messaging) / §9 (calendars), plus Skill 29
+  `references/{conversations,calendars,payments}.md`. Canonical shapes:
+  - **Messaging — one endpoint, switch on `type`:** `POST /conversations/messages`
+    (scope `conversations/message.write`) for `SMS` / `Email` (subject+html) / `FB` / `IG` /
+    `WhatsApp` / `Live_Chat`. **Chat Widget = Live Chat** (no distinct widget type). **All-in-One /
+    unified inbox is NOT a separate send type** — every channel flows through this one endpoint; pick
+    the `type` matching the inbound channel. Verified-REJECTED `type`s documented: `GMB`, `TikTok`,
+    `Call`, and long-forms `Instagram`/`Facebook`/`Webchat` (4xx — reply to GMB/TikTok via a GHL
+    workflow automation instead).
+  - **Calendars:** list `GET /calendars/?locationId=` (scope `calendars.readonly`), get
+    `GET /calendars/<calendarId>` (`calendars.readonly`), create `POST /calendars/`
+    (`calendars.write`), free-slots `GET /calendars/<calendarId>/free-slots?startDate=&endDate=`
+    (epoch **milliseconds**, scope `calendars.readonly`).
+  - **Appointments:** book `POST /calendars/events/appointments` (required `calendarId`,
+    `locationId`, `contactId`, `startTime`; optional `endTime`), reschedule
+    `PUT /calendars/events/appointments/<eventId>`, cancel `DELETE /calendars/events/<eventId>`
+    (the book response `id` IS the `eventId`) — all scope `calendars/events.write`.
+  - **Invoices:** create `POST /invoices/` then send `POST /invoices/<invoiceId>/send` —
+    both scope `invoices.write`.
+  - Headers everywhere: `Authorization: Bearer $GHL_PRIVATE_INTEGRATION_TOKEN`,
+    `Version: 2021-04-15`, `Content-Type: application/json` (the repo's verified Version).
+- **`scripts/24-update-tools-md.sh`** — idempotently injects that canonical block into the workspace
+  `TOOLS.md` (OS-aware: `/data/.openclaw/workspace/TOOLS.md` / `$HOME/.openclaw/workspace/TOOLS.md`,
+  override via `TOOLS_MD` env or arg 1). Marker-wrapped (`<!-- BEGIN/END SKILL38: GHL_API_QUICK_REFERENCE -->`),
+  timestamped backup before any write, skips cleanly if the block is already present. Universal: the
+  block carries placeholders only; the client's real `PUBLIC_HOSTNAME`, if exported, is written ONLY
+  as a one-line orientation comment — never a token, never client data. Runs in the core-file-updater
+  wave (alongside `05-update-agents-md.sh` / `06-append-memory-rules.sh`).
+- **`scripts/qc-tools-md-ghl-ref.sh`** — machine-enforces the block. FAILs if it is missing any
+  messaging type (SMS/Email/FB/IG/Live_Chat) or the unified-inbox note, any calendar op
+  (list/get/create/free-slots), any appointment op (book/reschedule/cancel), the send-invoice op, or
+  any required scope; if it exceeds the concise size budget (default 160 lines); or if it leaks any
+  personal/client identifier (literal Bearer token / email / phone / 20+ char real-id). SOURCE mode
+  scans `references/ghl-api-quick-reference.md` (CI-runnable, no install needed); `--tools-md FILE`
+  scans an installed `TOOLS.md` (exit 3 = block missing = step skipped). Negative-tested: a dropped
+  op, a dropped scope, an oversize budget, and an email/phone/token/real-id leak each FAIL.
+
+### Changed
+- `scripts/11-run-qc-checklist.sh` — runs the new gate (source block always; live `TOOLS.md` when present).
+- `.github/workflows/qc-static.yml` — new step proves the source block is complete/concise/leak-free,
+  the installer is idempotent and preserves existing content, the live gate passes on an injected
+  `TOOLS.md` and exits 3 on a missing marker, and the negative cases (leak / oversize / dropped op) FAIL.
+- `INSTALL.md` + `INSTRUCTIONS.md` (new Step 7.5) reference the installer + gate.
+- Self-counts: `scripts/` (`*.sh`) and `references/` (`*.md`) bumped for the new GHL-quick-ref installer +
+  gate + reference, layered on top of the v1.4.19 self-test/no-personal-data additions.
+
 ## [1.4.19] - 2026-05-30 - Standardized workflow-AI output + exhaustive Build-with-AI webhook + 60yo-simple verification + client self-test + AI backend self-test + Notion-doc enforcement + UNIVERSAL no-personal-data guard
 
 ### Why

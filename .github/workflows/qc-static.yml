@@ -305,3 +305,53 @@ jobs:
           [ "$rc" -eq 1 ] || { echo "✗ no-personal-data gate should FAIL (exit 1) on a planted identifier, got $rc"; exit 1; }
           rm -rf "$ng"
           echo "✓ Skill 38 carries no personal/client data (tree + generated output), and the guard fails closed on a planted identifier"
+
+      - name: Skill 38 TOOLS.md GHL API quick-reference (source + installer + gate fixtures)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # The installer (24-update-tools-md.sh) preloads the CLIENT agent's TOOLS.md
+          # with the verified GHL Convert-and-Flow API quick-reference so the agent has
+          # the exact request shapes (method/URL/3 headers/body/scope) in its CORE
+          # context and answers fast at runtime. The gate (qc-tools-md-ghl-ref.sh)
+          # FAILs if the canonical block is missing any messaging type (SMS/Email/FB/
+          # IG/Live_Chat), any calendar op (list/get/create/free-slots), any
+          # appointment op (book/reschedule/cancel), the send-invoice op, or any
+          # required scope; if it exceeds the concise size budget; or if it leaks any
+          # personal/client identifier. CI proves all of it statically (no install
+          # needed). BASH only (respects the .py claude-/anthropic ban).
+          ref=38-conversational-ai-system/references/ghl-api-quick-reference.md
+          gate=38-conversational-ai-system/scripts/qc-tools-md-ghl-ref.sh
+          inst=38-conversational-ai-system/scripts/24-update-tools-md.sh
+
+          # (1) source block is complete + concise + leak-free
+          bash "$gate"
+
+          # (2) installer injects the block, is idempotent, and the injected block passes LIVE
+          tdir="$(mktemp -d)"
+          tm="$tdir/TOOLS.md"
+          printf '# TOOLS.md\n\npre-existing content\n' > "$tm"
+          PUBLIC_HOSTNAME="claw.ci-fixture.example.com" bash "$inst" "$tm" >/dev/null
+          [ "$(grep -c 'BEGIN SKILL38: GHL_API_QUICK_REFERENCE' "$tm")" -eq 1 ] || { echo "✗ installer did not inject exactly one block"; exit 1; }
+          grep -q 'pre-existing content' "$tm" || { echo "✗ installer clobbered existing TOOLS.md content"; exit 1; }
+          PUBLIC_HOSTNAME="claw.ci-fixture.example.com" bash "$inst" "$tm" >/dev/null   # idempotent re-run
+          [ "$(grep -c 'BEGIN SKILL38: GHL_API_QUICK_REFERENCE' "$tm")" -eq 1 ] || { echo "✗ installer duplicated the block on re-run (not idempotent)"; exit 1; }
+          bash "$gate" --tools-md "$tm" >/dev/null || { echo "✗ injected block failed the live gate"; exit 1; }
+
+          # (3) live gate exits 3 (SKIPPED-INCOMPLETE) when the marker is absent
+          printf '# TOOLS.md\n\nno block\n' > "$tdir/empty.md"
+          rc=0; bash "$gate" --tools-md "$tdir/empty.md" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 3 ] || { echo "✗ missing-marker TOOLS.md should exit 3, got $rc"; exit 1; }
+
+          # (4) negative: a leaked email / oversize budget / dropped op each FAIL (exit 1)
+          cp "$ref" "$tdir/leak.md"; printf '\nclient@acmeco.com\n' >> "$tdir/leak.md"
+          rc=0; bash "$gate" --ref-file "$tdir/leak.md" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ email-leak block should FAIL (exit 1), got $rc"; exit 1; }
+          rc=0; bash "$gate" --ref-file "$ref" --max-lines 10 >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ oversize block should FAIL (exit 1), got $rc"; exit 1; }
+          grep -v '"type":"Live_Chat"' "$ref" > "$tdir/drop.md"
+          rc=0; bash "$gate" --ref-file "$tdir/drop.md" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ dropped-operation block should FAIL (exit 1), got $rc"; exit 1; }
+
+          rm -rf "$tdir"
+          echo "✓ Skill 38 TOOLS.md GHL quick-reference: source complete + concise + leak-free; installer idempotent; live gate + negatives all behave"

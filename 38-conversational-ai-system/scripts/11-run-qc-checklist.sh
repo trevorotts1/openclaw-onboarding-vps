@@ -344,6 +344,40 @@ else
   report_fail "qc-no-personal-data.sh not found (looked in scripts/)"
 fi
 
+# -------- TOOLS.md GHL API quick-reference (machine-enforced) --------
+# Two checks: (1) the SOURCE block that 24-update-tools-md.sh injects is complete +
+# concise + leak-free (always runnable, no install needed); (2) if a client
+# workspace TOOLS.md exists, the injected marker block is present + valid (LIVE).
+section "TOOLS.md GHL API quick-reference (qc-tools-md-ghl-ref.sh)"
+QC_TOOLS="$SCRIPT_DIR/qc-tools-md-ghl-ref.sh"
+[ -f "$QC_TOOLS" ] || QC_TOOLS="$SKILL38_ROOT/scripts/qc-tools-md-ghl-ref.sh"
+if [ -f "$QC_TOOLS" ]; then
+  # (1) source block (the canonical reference that gets injected)
+  if bash "$QC_TOOLS" >/dev/null 2>&1; then
+    report_pass "GHL API quick-reference SOURCE block is complete (all messaging types + calendars + appointments + invoices), carries every required scope, is concise, and has zero personal/client data"
+  else
+    report_fail "qc-tools-md-ghl-ref.sh: the GHL API quick-reference source block is incomplete / oversized / leaks client data — run it directly for detail"
+  fi
+  # (2) live: is the marker block actually injected into the client TOOLS.md?
+  CLIENT_TOOLS=""
+  for T in "/data/.openclaw/workspace/TOOLS.md" "$HOME/.openclaw/workspace/TOOLS.md"; do
+    [ -f "$T" ] && CLIENT_TOOLS="$T" && break
+  done
+  if [ -n "$CLIENT_TOOLS" ]; then
+    TOOLS_RC=0
+    bash "$QC_TOOLS" --tools-md "$CLIENT_TOOLS" >/dev/null 2>&1 || TOOLS_RC=$?
+    case "$TOOLS_RC" in
+      0) report_pass "client TOOLS.md ($CLIENT_TOOLS) has the GHL API quick-reference block — the agent has the canonical request shapes in core context" ;;
+      3) report_fail "client TOOLS.md ($CLIENT_TOOLS) is MISSING the GHL quick-reference block — run scripts/24-update-tools-md.sh, then re-check" ;;
+      *) report_fail "qc-tools-md-ghl-ref.sh: the injected block in $CLIENT_TOOLS is incomplete / oversized / leaks client data — run it directly for detail" ;;
+    esac
+  else
+    echo "  [SKIP] no client workspace TOOLS.md on this box — source-block check above still applies"
+  fi
+else
+  report_fail "qc-tools-md-ghl-ref.sh not found (looked in scripts/)"
+fi
+
 # -------- Final summary --------
 section "QC SUMMARY"
 echo "  PASS: $PASS"
