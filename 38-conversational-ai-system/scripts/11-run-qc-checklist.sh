@@ -148,7 +148,8 @@ AGENTS_MD="${AGENTS_MD:-${HOME}/.openclaw/AGENTS.md}"
 [ -f "$AGENTS_MD" ] || AGENTS_MD="${MASTER_FILES_DIR:-}/AGENTS.md"
 if [ -f "$AGENTS_MD" ]; then
   for marker in "INBOUND_WEBHOOK_CLASSIFICATION" "SKILL38_RUNTIME_ROUTING" "workflow-builder" \
-                "STEP_1_35_AGGRESSION" "STEP_2_0_INTERRUPTS" "STEP_2_5_GEO" "STEP_TAG_PREFIX"; do
+                "SKILL38_ZHC_TAG_PREFIX" "STEP_1_35_AGGRESSION_PRE_ROUTING" "STEP_1_42_INTERRUPTS_AND_FAQ" \
+                "STEP_2_0_GEO_QUALIFICATION" "STEP_2_5_CRM_FIELD_WRITE"; do
     if grep -q "$marker" "$AGENTS_MD"; then
       report_pass "AGENTS.md contains marker: $marker"
     else
@@ -315,6 +316,20 @@ if [ -f "$QC_SELFTEST" ]; then
   esac
 else
   report_fail "24-self-test-hook.sh not found (looked in scripts/)"
+fi
+
+# -------- Backend self-test STANDARD (static gate — proves the self-test exists + is wired) --------
+section "Backend self-test standard (qc-self-test.sh)"
+QC_SELFTEST_STD="$SCRIPT_DIR/qc-self-test.sh"
+[ -f "$QC_SELFTEST_STD" ] || QC_SELFTEST_STD="$SKILL38_ROOT/scripts/qc-self-test.sh"
+if [ -f "$QC_SELFTEST_STD" ]; then
+  if bash "$QC_SELFTEST_STD" >/dev/null 2>&1; then
+    report_pass "qc-self-test.sh: the backend self-test (24-self-test-hook.sh) exists, POSTs a synthetic flat-23-key inbound with the real Bearer, verifies 200/{ok:true} + no 401/429 + log read + GHL send + temp-contact cleanup, and is wired as a blocking readiness gate + documented"
+  else
+    report_fail "qc-self-test.sh: the backend self-test standard is missing or not wired — run it directly for detail"
+  fi
+else
+  report_fail "qc-self-test.sh not found (looked in scripts/)"
 fi
 
 # -------- Config schema-safety (machine-enforced) --------

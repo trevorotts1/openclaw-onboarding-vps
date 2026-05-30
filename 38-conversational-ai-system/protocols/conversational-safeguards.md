@@ -111,6 +111,23 @@ ALL CAPS ALONE never fires. Full rules, signals, the `aggression_detection`
 openclaw.json toggle (`enabled` / `sensitivity`), and the JSONL data contract:
 `protocols/aggression-detection-protocol.md` (Step 9.37).
 
+- **Tier 1 — TENSION (low):** multiple irritation words, a sustained 3+
+  message frustration streak, or `!!!`/`???` → tag `ZHC-tension-detected`,
+  heighten attention, NO reroute, no operator notify.
+- **Tier 2 — AGGRESSION (high):** profanity directed AT the agent, threats
+  (legal/physical/public), ALLCAPS+profanity+direct-address, or 3+ signals
+  in one message → tag `ZHC-aggression-detected`, route to the
+  `aggression-handler` workflow, notify the operator.
+- **ALL CAPS ALONE does NOT fire.** Sensitivity is operator-tunable
+  (`lenient`/`standard`/`strict`) in `openclaw.json`
+  (`skill38.aggression_detection`). Firings + reasoning are logged to
+  `<MASTER_FILES_DIR>/aggression-detection-log.md` AND emitted as JSONL to
+  `<MASTER_FILES_DIR>/aggression-detection-log.jsonl`.
+
+Aggression detection does NOT replace bot-detection (Safeguard 3) — the two
+are independent. Full detail (signals, sensitivity thresholds, log schema)
+lives in `aggression-detection-protocol.md`.
+
 ## Safeguard ordering
 
 The agent checks safeguards in this order on every reply turn:

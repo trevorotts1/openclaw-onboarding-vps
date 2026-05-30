@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# qc-zhc-pixel-test.sh — negative test for qc-zhc-pixel.sh.
+# qc-zhc-pixel.test.sh — negative test for qc-zhc-pixel.sh.
 #
 # A QC gate that can never fail is worthless. This proves qc-zhc-pixel.sh:
 #   (A) PASSES on the real, intact skill tree, and

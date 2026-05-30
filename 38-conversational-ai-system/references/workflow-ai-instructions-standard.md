@@ -304,8 +304,9 @@ single Custom Webhook. Teach the operator (and write the prompt) for:
 
 - **if/else (if-else) branches** — additional filtering after the trigger (e.g. "If contact has tag
   `vip` → branch A; else → branch B"). Spell out each branch's condition and its actions.
-- **Add-Tag actions** — apply a tag at a point in the flow (e.g. tag `pricing-interest` after the
-  webhook fires).
+- **Add-Tag actions** — apply a tag at a point in the flow (e.g. tag `ZHC-discovery-scheduled` after
+  the webhook fires; agent-created tags carry the `ZHC-` prefix per MEMORY Rule 20 /
+  `zhc-tag-prefix-protocol.md`).
 - **tag-check conditions** — branch on whether a contact already has a tag.
 - **multiple sequential actions** — e.g. Custom Webhook → wait → Add-Tag → if/else. Each action gets
   its full field spec, same rigor as §3 for any webhook in the chain.
@@ -313,7 +314,9 @@ single Custom Webhook. Teach the operator (and write the prompt) for:
 **CREATE-TAG-FIRST rule (binding).** If the workflow uses ANY tag — a trigger/If-Else filter (`tag is` /
 `tag contains` / `tag does not contain`) OR an Add-Tag action — the agent CREATES the tag FIRST via the
 GHL skill (per conversation-workflows-protocol.md §D.1) BEFORE building the workflow, then references the
-now-existing tag in the Build-with-AI prompt. **Why it matters:** Build-with-AI will happily build a
+now-existing tag in the Build-with-AI prompt. **Every tag the agent creates programmatically carries the
+`ZHC-` prefix** (e.g. `ZHC-discovery-scheduled`) per MEMORY Rule 20 — only the NAME changes; the
+mechanism is unchanged. **Why it matters:** Build-with-AI will happily build a
 filter that references a tag that does not exist (it leaves it blank), and a blank/non-existent tag in a
 `does not contain` filter silently never matches — so the workflow never fires (the blank-tag gotcha). Do not
 tell the operator to create tags by hand, and do not reference a tag that does not exist yet.

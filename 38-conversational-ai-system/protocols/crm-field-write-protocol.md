@@ -1,4 +1,4 @@
-# CRM Field Write + Create-If-Missing Protocol (F46)
+# CRM Field Write + Create-If-Missing Protocol (F46) — Step 9.40
 
 The agent can write ANY GHL contact custom field mid-conversation (type-aware),
 and — when no matching field exists — CREATE the field first (with a reserved
@@ -127,14 +127,34 @@ auto-created field namespace from sprawling. The tune-up reads
 
 ## Logging (the data contract — F52)
 
-Every field write (and create) is recorded as JSONL, one line appended to
-`<MASTER_FILES_DIR>/crm-field-writes-log.jsonl`:
+Every write, create, and validation-skip is recorded as JSONL, one JSON object
+per line, appended to `<MASTER_FILES_DIR>/crm-field-writes-log.jsonl`. There are
+THREE distinct event types so the contract captures successful writes,
+create-if-missing field minting, AND validation skips (a skipped write is just as
+important to surface as a successful one):
+
+```json
+{"timestamp":"2026-05-30T16:10:00Z","event_type":"field_write","contact_id":"<contact_id>","workflow":"appointment-booking","field_key":"budget_range","field_type":"TEXT","value_written":"<value>","validated":true}
+{"timestamp":"2026-05-30T16:11:30Z","event_type":"field_created","contact_id":"<contact_id>","workflow":"quote-request","field_key":"ZHC_party_size","field_type":"NUMBER","operator_notified":true}
+{"timestamp":"2026-05-30T16:12:05Z","event_type":"field_write_skipped","contact_id":"<contact_id>","workflow":"quote-request","field_key":"timeline","field_type":"DATE","reason":"value_not_parseable_to_date"}
+```
+
+- `field_write` — a value was validated and written to an existing (or
+  just-created) field.
+- `field_created` — a new `ZHC_`-prefixed field was minted via create-if-missing
+  (operator notified).
+- `field_write_skipped` — validation failed (e.g. a value that is not a valid
+  dropdown option or a non-parseable date), so NO malformed value was written; the
+  `reason` records why.
+
+A combined `crm_field_write` summary line is also acceptable for back-compat (the
+F52 data contract keys on `timestamp` + `event_type`):
 
 ```json
 {"timestamp":"2026-05-30T17:03:55Z","event_type":"crm_field_write","contact_id":"<CONTACT_ID>","workflow_id":"appointment-booking","field_name":"ZHC_budget_range","field_id":"<FIELD_ID>","data_type":"TEXT","created_now":true,"validated":true,"operator_notified":true}
 ```
 
-JSONL schema (one object per line):
+JSONL schema (the `crm_field_write` summary form — one object per line):
 
 | field | type | meaning |
 |---|---|---|
@@ -153,11 +173,40 @@ JSONL schema (one object per line):
 > value (PII stays out of the structured log; the value lives in GHL + the
 > conversation log per the PII protocol).
 
+## openclaw.json toggles
+
+```json
+{
+  "skill38": {
+    "crm_field_write": {
+      "enabled": true,
+      "create_if_missing": true,
+      "created_field_prefix": "ZHC_"
+    }
+  }
+}
+```
+
+- `crm_field_write.enabled` — default **true**.
+- `crm_field_write.create_if_missing` — default **true**; when false, the agent only writes
+  existing fields and notifies the operator that a needed field is missing (no auto-create).
+- `crm_field_write.created_field_prefix` — default **`ZHC_`** (the programmatic-creation
+  prefix; do not change without operator approval).
+
+## MEMORY.md (Rule 24)
+
+The agent writes ANY GHL contact custom field mid-conversation, type-aware (text/number/
+date/dropdown), discovering fields via `GET /locations/{id}/customFields` and validating
+before write. If no matching field exists it CREATES one with the `ZHC_` prefix (operator-
+approved allow-list action, NEVER customer-invoked), notifies the operator, and records the
+mapping in `crm-field-mappings.md`. The weekly tune-up reviews field usage. See
+`<MASTER_FILES_DIR>/crm-field-write-protocol.md`.
+
 ## Cross-references
 
 - Discovery/write API shapes: `references/ghl-api-quick-reference.md` (preloaded into TOOLS.md).
 - Field namespace parallels the tag namespace: `protocols/zhc-tag-prefix-protocol.md`.
 - Usage review: `protocols/weekly-tune-up-protocol.md` (F35).
 - Injection guard (customer can't drive field ops): `protocols/prompt-injection-protection-protocol.md`.
-- AGENTS.md tag/field note: `scripts/05-update-agents-md.sh` (marker `STEP_TAG_PREFIX`).
+- AGENTS.md Step 2.5: `scripts/05-update-agents-md.sh` (marker `STEP_2_5_CRM_FIELD_WRITE`).
 - INSTRUCTIONS.md Step 9.40.

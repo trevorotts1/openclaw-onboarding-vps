@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# qc-trinity-registry-test.sh — fixture tests for qc-trinity-registry.sh.
+# qc-trinity-registry.test.sh — fixture tests for qc-trinity-registry.sh.
 #
 # Proves the validator reconciles against the REAL registry format the installer
 # (09-install-conversation-workflows.sh) actually writes: the BULLET form

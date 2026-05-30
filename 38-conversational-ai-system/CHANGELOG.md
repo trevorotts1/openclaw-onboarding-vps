@@ -1,5 +1,93 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.5.3] - 2026-05-30 - Round-3 canonical reconciliation (match the sibling onboarding repo EXACTLY)
+
+### Why
+The two onboarding repos (`openclaw-onboarding` Mac + `openclaw-onboarding-vps`) had drifted on the Round-3
+Queue-A artifacts: divergent AGENTS.md marker names + step numbers, a different MEMORY.md rule split, a thinner
+`qc-zhc-tag-prefix.sh`, a `qc-no-personal-data.sh` without `--no-gen`, `-test.sh` (vs `.test.sh`) test naming,
+a missing standalone `qc-self-test.sh`, and a roadmap that indexed ZERO Round-3 features. This release applies
+the CANONICAL reconciliation plan so this repo matches the sibling EXACTLY for every Round-3 artifact (only the
+intentional Mac-vs-VPS platform-plumbing differences remain). UNIVERSAL — zero personal/client data;
+`qc-no-personal-data.sh` passes.
+
+### Changed — AGENTS.md marker scheme + step numbers (canonical = one dedicated block per feature)
+- **`scripts/05-update-agents-md.sh`** — renamed/split the Round-3 marker blocks to the canonical scheme:
+  `STEP_1_35_AGGRESSION` → `STEP_1_35_AGGRESSION_PRE_ROUTING` (Step 1.35); `STEP_2_0_INTERRUPTS` →
+  `STEP_1_42_INTERRUPTS_AND_FAQ` (Step 2.0 → **1.42**); `STEP_2_5_GEO` → `STEP_2_0_GEO_QUALIFICATION`
+  (Step 2.5 → **2.0**); and the merged `STEP_TAG_PREFIX` block SPLIT into two dedicated blocks —
+  `SKILL38_ZHC_TAG_PREFIX` (tag-prefix note) + `STEP_2_5_CRM_FIELD_WRITE` (F46 CRM-field note at Step 2.5).
+  The Pixel block (`STEP_1_45_PIXEL_CONCIERGE`) was already canonical. Toggles shown nested under `skill38.`.
+
+### Changed — MEMORY.md rule numbering (canonical = 6 rules, one feature per rule)
+- **`scripts/06-append-memory-rules.sh`** — the v1.5.0 block now emits **rules 20-25** (was 20-24): un-merged
+  VPS's Rule 23 → canonical **23 (geo, F45)** + **24 (CRM, F46)**, and un-merged Rule 24 → canonical
+  **25 (smart-FAQ, F47)**; the F52 logging sentence moves to the centralized INSTRUCTIONS.md data-contract table
+  (NOT its own rule). 20 = ZHC tag-prefix, 21 = F50, 22 = F44. Marker comment + trailer echo updated to "20-25".
+
+### Changed — protocol bodies (merged to the canonical superset; every cross-ref points at the canonical marker/step/rule)
+- **`zhc-tag-prefix-protocol.md`** — H1 retitled `— Step 9.42`; cross-ref marker `STEP_TAG_PREFIX` →
+  `SKILL38_ZHC_TAG_PREFIX`.
+- **`aggression-detection-protocol.md`** — H1 `(F50) — Step 9.37`; marker (×2) →
+  `STEP_1_35_AGGRESSION_PRE_ROUTING`; added the "Severity is per-message, but tension can accumulate" section
+  and the dedicated **MEMORY.md (Rule 21)** section.
+- **`smart-playbook-switching-protocol.md`** — H1 `(F44) — Step 9.38`; added the operator-config
+  `interrupt-triggers.md` reference, the `skill38.smart_playbook_switching.{enabled, max_interrupt_depth}`
+  toggle block, and the **MEMORY.md (Rule 22)** section; cross-ref → Step 1.42 / `STEP_1_42_INTERRUPTS_AND_FAQ`.
+- **`geo-qualification-protocol.md`** — H1 `(F45) — Step 9.39`; nested the toggle under
+  `skill38.geo_qualification.enabled`; added the "PRE-FILL the confirmation question" guidance and the
+  **MEMORY.md (Rule 23)** section; cross-ref → Step 2.0 / `STEP_2_0_GEO_QUALIFICATION`.
+- **`crm-field-write-protocol.md`** — H1 `(F46) — Step 9.40`; added the THREE distinct JSONL event types
+  (`field_write` / `field_created` / `field_write_skipped`) alongside a back-compat `crm_field_write` summary
+  line, the `skill38.crm_field_write.{enabled, create_if_missing, created_field_prefix}` toggle block, and the
+  **MEMORY.md (Rule 24)** section; cross-ref → Step 2.5 / `STEP_2_5_CRM_FIELD_WRITE`.
+- **`smart-faq-tool-protocol.md`** — H1 `(F47) — Step 9.41`; added the `skill38.smart_faq.enabled` toggle block
+  and the **MEMORY.md (Rule 25)** section; cross-ref → Step 1.42 / `STEP_1_42_INTERRUPTS_AND_FAQ`.
+- **`conversational-safeguards.md`** — Safeguard 4 now carries the inline two-tier bullet detail (Tier 1 / Tier 2
+  / ALL-CAPS-alone) with the nested `skill38.aggression_detection` toggle path, so the safeguards file is
+  self-contained.
+- **`conversation-workflows-protocol.md`** (§D.1) + **`references/workflow-ai-instructions-standard.md`** (§6) —
+  the agent-created example tags updated to the `ZHC-` form (`ZHC-pricing-interest` / `ZHC-discovery-scheduled` /
+  `ZHC-quoted`) with the ZHC tag-prefix note, so no bare agent-created example tag is left behind.
+
+### Changed / Added — QC gates (canonical = the SUPERSET of both repos' checks)
+- **`scripts/qc-zhc-tag-prefix.sh`** — now the UNION: ONB's checks (MEMORY Rule 20 appended,
+  `SKILL38_ZHC_TAG_PREFIX` marker present, the D.1 + Section-6 example tags are ZHC-) PLUS the load-bearing
+  bare-create-tag literal parser (a `create_tag(... name="…")` / `POST .../tags` literal must be `ZHC-` or a
+  placeholder; `add_tag`/apply lines are NOT flagged). Negative-tested.
+- **`scripts/qc-no-personal-data.sh`** — adopted the `--no-gen`-aware version; the banned-identifier list keeps
+  every VPS-specific token from the prior version (the extra fleet client names + the operator brand domain) so
+  no coverage is lost in the swap.
+- **`scripts/qc-self-test.sh` (NEW).** Static gate that asserts the backend self-test standard against
+  `24-self-test-hook.sh` (exists/parses, POSTs the synthetic flat-23-key inbound with the real Bearer, verifies
+  hook 200/{ok:true} + no 401/429 + conversation-log read + GHL send + temp-contact cleanup, documents PASS/FAIL,
+  and is wired as a blocking readiness gate + documented). Wired into `11-run-qc-checklist.sh` + CI.
+- **Test-helper naming** — renamed `qc-playbook-doc-test.sh` → `qc-playbook-doc.test.sh`,
+  `qc-trinity-registry-test.sh` → `qc-trinity-registry.test.sh`, `qc-zhc-pixel-test.sh` → `qc-zhc-pixel.test.sh`
+  (the canonical `.test.sh` form); CI references updated.
+- **`scripts/11-run-qc-checklist.sh`** — the AGENTS.md marker grep list updated to the canonical markers
+  (`SKILL38_ZHC_TAG_PREFIX`, `STEP_1_35_AGGRESSION_PRE_ROUTING`, `STEP_1_42_INTERRUPTS_AND_FAQ`,
+  `STEP_2_0_GEO_QUALIFICATION`, `STEP_2_5_CRM_FIELD_WRITE`); added the `qc-self-test.sh` section.
+
+### Changed — INSTRUCTIONS.md
+- The Phase-5 Round-3 table + intro now reference the canonical marker names, step numbers, and nested
+  `skill38.*` toggle namespaces. The F52 JSONL data-contract documentation is unchanged (still enforced by
+  `qc-feature-logs.sh`).
+
+### Changed — roadmap (CAT1 traceability)
+- **`references/conversational-ai-strategic-roadmap.md`** — added a "Round 3 — Conversational Depth + Verticals"
+  section indexing EVERY Round-3 artifact (the ZHC- tag-prefix system rule + F44 + F45 + F46 + F47 + F49 + F50 +
+  F52 + Skill 39 + Skill 40) with each entry expanded from the matching in-repo protocol/skill file (no edge
+  cases stripped), plus a "Round-3 QC-enforced standards" subsection (the 3 standards + their gates). Footer
+  corrected to **39 protocol files** (was a stale 32); "Last updated" → May 30, 2026.
+
+### Notes
+- Skills 39 (real estate) + 40 (public-records scraper) are intentionally NOT modified here — they are divergent
+  independent builds between the two repos and require a build-level canonical decision (per the plan's Section 4)
+  before either repo's apply-agent touches them; auto-merging would risk diverging the two trees.
+- This is a Skill-38-only release (skill-version 1.5.2 → 1.5.3). The repo-wide OpenClaw version bump is handled
+  separately by the Cap phase.
+
 ## [1.5.2] - 2026-05-30 - Feature 49 (ZHC Pixel): per-client visitor-signal pixel + Pixel Concierge
 
 ### Why

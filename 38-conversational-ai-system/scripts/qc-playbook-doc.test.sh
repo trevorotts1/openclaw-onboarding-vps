@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# qc-playbook-doc-test.sh — fixture tests for qc-playbook-doc.sh.
+# qc-playbook-doc.test.sh — fixture tests for qc-playbook-doc.sh.
 #
 # The live gate runs against a client's installed conversation-workflows/ folder
 # (needs a real install), so CI proves it via throwaway fixtures instead — same
-# posture as qc-trinity-registry-test.sh. Each case builds a temp
+# posture as qc-trinity-registry.test.sh. Each case builds a temp
 # conversation-workflows/ folder (+ optional run manifest), runs
 # qc-playbook-doc.sh --dir <fixture> [--manifest <m>] --json, and asserts the
 # verdict + (optionally) the missing slug it flags.

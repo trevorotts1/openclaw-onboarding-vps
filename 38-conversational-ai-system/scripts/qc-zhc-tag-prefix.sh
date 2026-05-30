@@ -1,33 +1,33 @@
 #!/usr/bin/env bash
-# qc-zhc-tag-prefix.sh — machine-enforce the ZHC tag-prefix rule (v1.5.0).
+# qc-zhc-tag-prefix.sh — machine-enforce the ZHC tag-prefix rule (Round-3 Queue-A,
+# v1.5.0): every tag the agent CREATES programmatically must be prefixed `ZHC-`
+# (per protocols/zhc-tag-prefix-protocol.md + MEMORY.md Rule 20), the rule is
+# documented where it must be, and no bare programmatic create-tag EXAMPLE survives.
 #
-# WHAT IT ENFORCES
-# ----------------
-# Every tag the agent CREATES programmatically must be prefixed `ZHC-` (per
-# protocols/zhc-tag-prefix-protocol.md + MEMORY.md Rule 20). This gate proves the
-# rule is documented and that the canonical PROGRAMMATIC tag EXAMPLES the skill
-# ships all carry the `ZHC-` prefix — so a future edit can't quietly reintroduce a
-# bare auto-created tag.
+# WHY: tags the agent creates PROGRAMMATICALLY must be `ZHC-`-prefixed so operators can
+# tell agent-created tags apart from their own. This gate proves the skill's own
+# documentation + examples are consistent with that rule, so a regression that drops the
+# prefix (or an example that introduces a bare agent-created tag) fails the build.
 #
-# CHECKS
-#   1. The protocol file exists and states the rule (the prefix + "not retroactive").
-#   2. The five F44/F45/F47/F50 canonical tag tokens are the ZHC- forms (the
-#      feature protocols use them, and they must be prefixed):
-#        ZHC-tension-detected ZHC-aggression-detected ZHC-bot-suspected
-#        ZHC-interrupt-handled ZHC-faq-detoured ZHC-aggression-handled-and-resumed
-#        ZHC-out-of-service-area ZHC-service-area-confirmed ZHC-service-area-flexible
-#        ZHC-faq-answered
-#   3. No "bare" programmatic-creation EXAMPLE survives: a create_tag(...) /
+# WHAT IT CHECKS (all from the repo alone — CI-safe, BASH-only so it respects the .py
+# claude-/anthropic ban):
+#   1. MEMORY Rule 20 is appended by 06-append-memory-rules.sh (the ZHC- prefix rule),
+#      and the rule states it is NOT retroactive.
+#   2. AGENTS.md gets the SKILL38_ZHC_TAG_PREFIX marker block (05-update-agents-md.sh).
+#   3. The dedicated protocol exists (zhc-tag-prefix-protocol.md) and states "NOT
+#      retroactive" + reuses the D.1 / Section-6 create_tag mechanism.
+#   4. Every Round-3 Queue-A feature tag named across the new protocols carries `ZHC-`.
+#   5. The D.1 example tags + the workflow-AI Section-6 Add-Tag example were updated to
+#      the `ZHC-` form (no bare agent-created example tag left behind).
+#   6. No "bare" programmatic-creation EXAMPLE survives: a create_tag(...) /
 #      POST .../tags example whose name= / "name": value is a quoted literal must
 #      use a ZHC- value (or a placeholder). This is the load-bearing assert — it
 #      scans the create-tag mechanism docs (conversation-workflows-protocol.md +
-#      workflow-ai-instructions-standard.md) and the v1.5.0 protocols.
+#      workflow-ai-instructions-standard.md) and the v1.5.0 protocols. An
+#      add_tag / Add-Tag / apply line (applying an operator's pre-existing tag) is
+#      NOT flagged.
 #
-# Pure BASH (grep/sed) — respects qc-static's ban on claude-/anthropic strings in
-# .py. bash -n clean. set -uo pipefail.
-#
-# Exit 0 = clean; 1 = a violation (missing rule, missing ZHC- token, or a bare
-# programmatic tag example).
+# Exit codes: 0 = clean; 1 = at least one ZHC tag-prefix-rule violation.
 #
 # Usage:
 #   bash scripts/qc-zhc-tag-prefix.sh
@@ -41,36 +41,56 @@ SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 while [ $# -gt 0 ]; do
   case "$1" in
     --skill-dir) SKILL_DIR="$2"; shift 2 ;;
-    -h|--help) sed -n '1,40p' "$0"; exit 0 ;;
+    -h|--help)   sed -n '1,40p' "$0"; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
 
 FAIL=0
-PROTO="$SKILL_DIR/protocols/zhc-tag-prefix-protocol.md"
+pass() { echo "  [PASS] $1"; }
+fail() { echo "  [FAIL] $1"; FAIL=1; }
 
-echo "=== qc-zhc-tag-prefix: ZHC- programmatic tag-prefix guard ==="
+echo "=== qc-zhc-tag-prefix: ZHC programmatic-tag-prefix rule gate ==="
 echo "skill_dir : $SKILL_DIR"
 echo ""
 
-# --- 1. The protocol exists and states the rule. ---
-if [ ! -f "$PROTO" ]; then
-  echo "  [FAIL] missing protocols/zhc-tag-prefix-protocol.md"
-  FAIL=1
+# 1. MEMORY Rule 20 in the appender.
+MEM_SCRIPT="$SKILL_DIR/scripts/06-append-memory-rules.sh"
+if [ -f "$MEM_SCRIPT" ] && grep -qE '^20\. *ZHC Tag-Prefix Rule' "$MEM_SCRIPT" && grep -q 'ZHC-' "$MEM_SCRIPT"; then
+  pass "06-append-memory-rules.sh appends MEMORY Rule 20 (ZHC Tag-Prefix Rule)"
 else
-  if grep -q 'ZHC-' "$PROTO" && grep -qi 'not retroactive' "$PROTO" && grep -qi 'prefix' "$PROTO"; then
-    echo "  [PASS] zhc-tag-prefix-protocol.md states the rule (ZHC- prefix, not retroactive)"
-  else
-    echo "  [FAIL] zhc-tag-prefix-protocol.md does not clearly state the prefix + not-retroactive rule"
-    FAIL=1
-  fi
+  fail "06-append-memory-rules.sh is missing MEMORY Rule 20 (ZHC Tag-Prefix Rule)"
+fi
+if grep -q 'NOT retroactive\|not retroactive' "$MEM_SCRIPT" 2>/dev/null; then
+  pass "MEMORY Rule 20 states the rule is NOT retroactive"
+else
+  fail "MEMORY Rule 20 must state the rule is NOT retroactive"
 fi
 
-# --- 2. The canonical ZHC- tag tokens appear (the feature protocols use them). ---
-REQUIRED_TOKENS=(
+# 2. AGENTS.md marker block in the updater.
+AG_SCRIPT="$SKILL_DIR/scripts/05-update-agents-md.sh"
+if [ -f "$AG_SCRIPT" ] && grep -q 'SKILL38_ZHC_TAG_PREFIX' "$AG_SCRIPT"; then
+  pass "05-update-agents-md.sh inserts the SKILL38_ZHC_TAG_PREFIX behavioral block"
+else
+  fail "05-update-agents-md.sh is missing the SKILL38_ZHC_TAG_PREFIX block"
+fi
+
+# 3. Dedicated protocol exists + key clauses.
+PROTO="$SKILL_DIR/protocols/zhc-tag-prefix-protocol.md"
+if [ -f "$PROTO" ]; then
+  pass "protocols/zhc-tag-prefix-protocol.md exists"
+  grep -q 'ZHC-' "$PROTO" && pass "protocol states the ZHC- prefix" || fail "protocol must state the ZHC- prefix"
+  grep -qi 'not retroactive' "$PROTO" && pass "protocol states NOT retroactive" || fail "protocol must state NOT retroactive"
+  grep -qi 'create_tag\|D.1\|Section 6' "$PROTO" && pass "protocol reuses the existing create_tag mechanism (D.1 / Section 6)" || fail "protocol must reuse the existing create_tag mechanism (reference D.1 / Section 6)"
+else
+  fail "protocols/zhc-tag-prefix-protocol.md MISSING"
+fi
+
+# 4. Every Round-3 Queue-A feature tag named in the new protocols carries ZHC-.
+#    The canonical tag names this wave introduces:
+EXPECTED_TAGS=(
   "ZHC-tension-detected"
   "ZHC-aggression-detected"
-  "ZHC-bot-suspected"
   "ZHC-interrupt-handled"
   "ZHC-faq-detoured"
   "ZHC-aggression-handled-and-resumed"
@@ -78,22 +98,56 @@ REQUIRED_TOKENS=(
   "ZHC-service-area-confirmed"
   "ZHC-service-area-flexible"
   "ZHC-faq-answered"
+  "ZHC-bot-suspected"
 )
 echo ""
-for tok in "${REQUIRED_TOKENS[@]}"; do
-  if grep -rqF -- "$tok" "$SKILL_DIR/protocols" 2>/dev/null; then
-    echo "  [PASS] canonical tag present: $tok"
+for t in "${EXPECTED_TAGS[@]}"; do
+  if grep -rqF "$t" "$SKILL_DIR/protocols" 2>/dev/null; then
+    pass "tag present and ZHC-prefixed: $t"
   else
-    echo "  [FAIL] canonical ZHC- tag token missing from protocols/: $tok"
-    FAIL=1
+    fail "expected ZHC-prefixed tag not found in protocols/: $t"
   fi
 done
 
-# --- 3. No bare programmatic-creation tag EXAMPLE. ---
-# Scan the create-tag mechanism docs + the v1.5.0 protocols for create_tag(...)
-# name= and "name": literals, and the POST .../tags body "name": literals that
-# sit in a create-tag context. Any quoted literal value that is NOT a placeholder
-# (<...> / $...) and NOT already ZHC-prefixed is a violation.
+# 5. The D.1 example tags + the Section-6 Add-Tag example were updated to ZHC- form.
+#    Catch a regression that reintroduces a BARE agent-created example tag in those
+#    two authoritative tag-creation docs (NOT a blanket ban — operator-owned tags in
+#    filters elsewhere are fine; these two docs are where the AGENT creates tags).
+echo ""
+CWP="$SKILL_DIR/protocols/conversation-workflows-protocol.md"
+if [ -f "$CWP" ]; then
+  # The D.1 example list must now use the ZHC- forms.
+  if grep -qF 'ZHC-pricing-interest' "$CWP" && grep -qF 'ZHC-discovery-scheduled' "$CWP"; then
+    pass "D.1 example tags use the ZHC- form (ZHC-pricing-interest / ZHC-discovery-scheduled)"
+  else
+    fail "D.1 example tags must use the ZHC- form (conversation-workflows-protocol.md Section D.1)"
+  fi
+  # And must NOT leave the bare back-ticked agent-created example tags behind.
+  if grep -qE '`pricing-interest`|`discovery-scheduled`|`quoted`' "$CWP"; then
+    fail "D.1 still shows a BARE agent-created example tag (\`pricing-interest\`/\`discovery-scheduled\`/\`quoted\`) — prefix it ZHC-"
+  else
+    pass "D.1 has no bare agent-created example tag left behind"
+  fi
+else
+  fail "protocols/conversation-workflows-protocol.md MISSING (cannot check D.1)"
+fi
+
+WFAI="$SKILL_DIR/references/workflow-ai-instructions-standard.md"
+if [ -f "$WFAI" ]; then
+  if grep -qF 'ZHC-discovery-scheduled' "$WFAI"; then
+    pass "workflow-AI Section-6 Add-Tag example uses the ZHC- form"
+  else
+    fail "workflow-AI Section-6 Add-Tag example must use the ZHC- form (references/workflow-ai-instructions-standard.md)"
+  fi
+else
+  fail "references/workflow-ai-instructions-standard.md MISSING (cannot check Section 6)"
+fi
+
+# 6. No bare programmatic-creation tag EXAMPLE (the load-bearing literal parser).
+#    Scan the create-tag mechanism docs + the v1.5.0 protocols for create_tag(...)
+#    name= and "name": literals, and the POST .../tags body "name": literals that
+#    sit in a create-tag context. Any quoted literal value that is NOT a placeholder
+#    (<...> / $...) and NOT already ZHC-prefixed is a violation.
 echo ""
 SCAN_FILES=(
   "$SKILL_DIR/protocols/conversation-workflows-protocol.md"
@@ -136,14 +190,14 @@ for f in "${SCAN_FILES[@]}"; do
   done < <(grep -nE '(create_tag|/tags)' "$f" 2>/dev/null | grep -E '(name=|"name"[[:space:]]*:)' )
 done
 if [ "$bare_hits" -eq 0 ]; then
-  echo "  [PASS] no bare programmatic create-tag examples (all are ZHC- or placeholders)"
+  pass "no bare programmatic create-tag examples (all are ZHC- or placeholders)"
 fi
 
 echo ""
 if [ "$FAIL" -eq 0 ]; then
-  echo "RESULT: PASS — ZHC- tag-prefix rule documented; canonical tags prefixed; no bare programmatic tag example."
+  echo "RESULT: PASS — the ZHC tag-prefix rule is documented (MEMORY Rule 20 + AGENTS block + protocol), every programmatic-tag example uses the ZHC- prefix, and no bare programmatic tag example survives."
   exit 0
 else
-  echo "RESULT: FAIL — a ZHC- tag-prefix violation is present. See above."
+  echo "RESULT: FAIL — a ZHC tag-prefix-rule violation was found (see above)."
   exit 1
 fi

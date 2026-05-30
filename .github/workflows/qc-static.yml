@@ -123,7 +123,7 @@ jobs:
           # Prove qc-trinity-registry.sh reconciles the BULLET registry the
           # installer actually writes (not just the documented table) — catches
           # registered-but-missing-files and file-present-but-unregistered rows.
-          bash 38-conversational-ai-system/scripts/qc-trinity-registry-test.sh
+          bash 38-conversational-ai-system/scripts/qc-trinity-registry.test.sh
           echo "✓ qc-trinity-registry reconciles bullet and table registries"
 
       - name: Skill 38 MANDATORY GHL send-directive
@@ -163,9 +163,9 @@ jobs:
           # locally and reported "clean" but never created the client's Notion doc.
           # The live gate (qc-playbook-doc.sh) runs against a client's installed
           # conversation-workflows/ folder, so CI proves it via the fixture suite
-          # (mirroring qc-trinity-registry-test.sh): a playbook with no recorded doc
+          # (mirroring qc-trinity-registry.test.sh): a playbook with no recorded doc
           # FAILS; an empty folder is NO_PLAYBOOKS (exit 2), never a blind pass.
-          bash 38-conversational-ai-system/scripts/qc-playbook-doc-test.sh
+          bash 38-conversational-ai-system/scripts/qc-playbook-doc.test.sh
           echo "✓ qc-playbook-doc enforces the per-playbook human-facing doc deliverable"
 
       - name: Skill 38 client reference sheet copy-paste artifacts
@@ -279,6 +279,11 @@ jobs:
           # the STATIC wiring check (script present + documents the full chain +
           # pass/fail + cleanup + wired as a BLOCKING gate in the QC checklist).
           bash 38-conversational-ai-system/scripts/24-self-test-hook.sh --check-wiring
+          # The standalone backend-self-test STANDARD gate (static assertions:
+          # the self-test script exists/parses, POSTs the synthetic flat-23-key
+          # inbound with the real Bearer, verifies the full chain + cleanup, and is
+          # wired as a blocking readiness gate + documented).
+          bash 38-conversational-ai-system/scripts/qc-self-test.sh
           # Also assert the live mode SKIPs (exit 3) when there is no install.
           rc=0
           bash 38-conversational-ai-system/scripts/24-self-test-hook.sh --live --config /nonexistent/openclaw.json >/dev/null 2>&1 || rc=$?
@@ -494,5 +499,5 @@ jobs:
           # three different invariants in three throwaway copies (removes the
           # pixel-visitor-signal hook registration, drops a required ZHC_ field, neuters a
           # required scope name), and asserts the gate exits non-zero each time.
-          bash 38-conversational-ai-system/scripts/qc-zhc-pixel-test.sh
+          bash 38-conversational-ai-system/scripts/qc-zhc-pixel.test.sh
           echo "✓ qc-zhc-pixel negative test passes (the gate fails on a broken invariant)"
