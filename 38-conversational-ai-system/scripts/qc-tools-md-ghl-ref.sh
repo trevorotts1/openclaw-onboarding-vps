@@ -8,8 +8,15 @@
 #        - calendars: list, get, create, free-slots
 #        - appointments: book, reschedule, cancel
 #        - invoices: send
+#   1b. (v1.4.21) Corrected send/read shape — verified against GHL SendMessageBodyDto:
+#        - channel-mirroring is documented (reply `type` mirrors the inbound channel; not hardcoded SMS)
+#        - the send body uses contactId (GHL threads BY contactId)
+#        - conversationId is NEVER on a send-shape line (it is the READ key only)
+#        - the READ-thread-history path is present (GET /conversations/search + GET /conversations/<id>/messages)
+#        - GMB is documented as inbound-only (not a valid send type)
+#        - send `type`s use the short forms FB/IG/Live_Chat (no rejected long-forms Facebook/Instagram/Webchat)
 #   2. Every required SCOPE is present:
-#        conversations/message.write, calendars.readonly, calendars.write,
+#        conversations/message.write, conversations.readonly, calendars.readonly, calendars.write,
 #        calendars/events.readonly, calendars/events.write, invoices.write
 #   3. The canonical block stays CONCISE (size budget) so it does not bloat the core file.
 #   4. NO personal/client identifier leaks in — only placeholders are allowed.
@@ -41,8 +48,13 @@ TOOLS_MD=""
 MARKER="GHL_API_QUICK_REFERENCE"
 # Concise size budget for the canonical block (lines). Keeps the core file lean;
 # the current canonical reference is well under this. Bumping the budget is a
-# deliberate decision, not a silent drift.
-MAX_LINES="${MAX_LINES:-160}"
+# deliberate decision, not a silent drift. v1.4.21: raised 160 -> 185 to fit the
+# corrected MESSAGING section (channel-mirroring `type`, send body
+# {type,contactId,locationId,message} with NO conversationId, GMB inbound-only
+# note) + the new READ-thread-history block (GET /conversations/search + GET
+# /conversations/<id>/messages, scope conversations.readonly). Still the fast
+# canonical subset, not the whole API.
+MAX_LINES="${MAX_LINES:-185}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -119,6 +131,57 @@ else
   report_fail 'missing the All-in-One / unified-inbox note (every channel = same endpoint, switch on type)'
 fi
 
+# v1.4.21 — corrected-send-shape invariants (verified against the GHL
+# SendMessageBodyDto): the agent must MIRROR the inbound channel, SEND BY
+# contactId (NOT conversationId), and read history via /conversations/search.
+echo ""
+echo "-- corrected send/read shape (v1.4.21) --"
+
+# (a) channel-mirroring must be documented (reply on the inbound channel).
+if grep -qiE 'mirror' "$WORK"; then
+  report_pass 'channel-mirroring documented (reply on the inbound channel; do not hardcode SMS)'
+else
+  report_fail 'missing the channel-mirroring note (the reply `type` MUST mirror the inbound channel — not a hardcoded SMS)'
+fi
+
+# (b) the send body must use contactId.
+if grep -qF 'contactId' "$WORK"; then
+  report_pass 'send body uses contactId (GHL threads by contactId)'
+else
+  report_fail 'send body does not reference contactId (the send must be threaded BY contactId)'
+fi
+
+# (c) conversationId must NOT appear as a send-body field. It is the READ key only.
+#     Guard: a send-shape JSON line is one that has BOTH "type": and "contactId"
+#     on it; conversationId must never be on such a line.
+if grep -E '"type":' "$WORK" | grep -qF 'conversationId'; then
+  report_fail 'conversationId appears on a SEND-shape line ("type":… + conversationId) — the send body must NOT contain conversationId (it is the READ key only)'
+else
+  report_pass 'no conversationId on any send-shape line (send body is type/contactId/locationId/message)'
+fi
+
+# (d) conversationId MUST be documented as a READ key (the search→messages read path).
+if grep -qF '/conversations/search' "$WORK" && grep -qiE 'conversationId' "$WORK"; then
+  report_pass 'read-thread-history documented (GET /conversations/search + conversationId as the read key)'
+else
+  report_fail 'missing the read-thread-history path (GET /conversations/search to find the thread, then GET /conversations/<conversationId>/messages)'
+fi
+
+# (e) GMB documented as inbound-only (not a send type).
+if grep -qiE 'gmb' "$WORK"; then
+  report_pass 'GMB documented (inbound-only — not a valid send type)'
+else
+  report_fail 'missing the GMB inbound-only note (GMB cannot be replied to via the API send)'
+fi
+
+# (f) short-form send types only — the SEND-shape JSON lines must use FB/IG, never
+#     the rejected long-forms "Facebook"/"Instagram"/"Webchat" as a send `type`.
+if grep -E '"type":' "$WORK" | grep -qE '"type":"(Facebook|Instagram|Webchat)"'; then
+  report_fail 'a SEND-shape line uses a rejected long-form type ("Facebook"/"Instagram"/"Webchat") — use the short forms FB/IG/Live_Chat'
+else
+  report_pass 'send `type`s use the short forms (FB/IG/Live_Chat) — no rejected long-forms'
+fi
+
 # Calendars
 need '/calendars/?locationId'                                'calendars list (GET /calendars/?locationId=…)'
 need '/calendars/<calendarId>'                                'calendars get (GET /calendars/<calendarId>)'
@@ -141,6 +204,7 @@ echo ""
 echo "-- scopes --"
 for scope in \
   'conversations/message.write' \
+  'conversations.readonly' \
   'calendars.readonly' \
   'calendars.write' \
   'calendars/events.readonly' \

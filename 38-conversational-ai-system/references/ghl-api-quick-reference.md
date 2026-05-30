@@ -22,24 +22,33 @@ Content-Type: application/json
 - Credential var: `GHL_PRIVATE_INTEGRATION_TOKEN` (the PIT, token #4). Never expose it to a customer.
 - `Version` is exactly `2021-04-15` on every Convert-and-Flow call (messaging, calendars, invoices).
 
-**Required PIT scopes (summary):** `conversations/message.write`, `calendars.readonly`,
-`calendars.write`, `calendars/events.readonly`, `calendars/events.write`, `invoices.write`.
+**Required PIT scopes (summary):** `conversations/message.write`, `conversations.readonly`,
+`calendars.readonly`, `calendars.write`, `calendars/events.readonly`, `calendars/events.write`,
+`invoices.write`.
 
 ---
 
-## MESSAGING — ONE endpoint, switch on `type`
+## MESSAGING — ONE send endpoint, MIRROR the inbound channel on `type`
 
 **Every channel sends through the SAME endpoint** — `POST /conversations/messages` — and GHL
 switches behavior on the `type` field. Required scope for all of them: **`conversations/message.write`**.
 
+> **MIRROR the inbound channel.** Reply on the SAME channel the message arrived on — set `type` to the
+> MIRRORED value of the inbound channel (SMS→`SMS`, Email→`Email`, Facebook Messenger→`FB`, Instagram
+> DM→`IG`, WhatsApp→`WhatsApp`, Live Chat / Chat Widget→`Live_Chat`). Do NOT hardcode `SMS`.
+>
 > **All-in-One Chat (unified inbox):** GHL's unified inbox is **NOT** a separate send type. EVERY
 > channel below flows through this one endpoint; pick the `type` that **matches the inbound channel**
-> the customer messaged on (from the hook payload), and reply on that same channel.
+> the customer messaged on (from the hook payload `{{channel}}` / `messageType`), and reply on that same channel.
+>
+> **Threading.** The send body does **NOT** take a `conversationId`. GHL threads the reply into the
+> contact's conversation **BY `contactId`** and returns `conversationId` + `messageId` in the response.
+> `conversationId` is the **READ key only** (see "Read thread history" below) — never a send-body field.
 
-| Channel | `type` value | Body shape (besides `contactId`) |
+| Channel | `type` value | Body shape (besides `type` + `contactId` + `locationId`) |
 |---|---|---|
 | SMS | `SMS` | `"message"` |
-| Email | `Email` | `"subject"`, `"html"` |
+| Email | `Email` | `"subject"`, `"html"`, `"emailFrom"`, `"emailTo"` |
 | Facebook Messenger | `FB` | `"message"` |
 | Instagram DM | `IG` | `"message"` |
 | WhatsApp | `WhatsApp` | `"message"` |
@@ -48,25 +57,51 @@ switches behavior on the `type` field. Required scope for all of them: **`conver
 > **Chat Widget = Live Chat.** The website chat widget routes through Live Chat — use
 > `type: "Live_Chat"`. There is no distinct widget send type in the verified enum.
 >
-> **Rejected `type` values (do NOT use — the API 4xx's, verified live):** `GMB`, `TikTok`, `Call`,
-> and long-forms `Instagram` / `Facebook` / `Webchat`. To reply to a Google Business (GMB) or TikTok
-> inbound, send via a **GHL workflow automation**, not this API.
+> **Other valid send `type`s in the GHL enum (SendMessageBodyDto):** `RCS`, `Custom`, `TIKTOK`
+> (TikTok send `type` is `TIKTOK`; TikTok INBOUND is workflow-action-only). Use these only when the
+> client actually has that channel wired.
+>
+> **GMB = INBOUND-ONLY — NOT a valid send type.** Google Business Messages arrives inbound but
+> **cannot be replied to via this API send** — there is no GMB send `type`. To reply to a GMB inbound,
+> use a **GHL workflow automation**, not this endpoint. Long-forms `Instagram` / `Facebook` / `Webchat`
+> and `Call` are also rejected (use `IG` / `FB` / `Live_Chat`).
 
 ```bash
-# SMS / FB / IG / WhatsApp / Live_Chat  (same shape, swap the type)
+# SMS / FB / IG / WhatsApp / Live_Chat  (same shape — MIRROR the inbound channel into the type)
 POST https://services.leadconnectorhq.com/conversations/messages
 # scope: conversations/message.write
-{"type":"SMS","contactId":"<CONTACT_ID>","message":"<reply text>"}
-{"type":"FB","contactId":"<CONTACT_ID>","message":"<reply text>"}
-{"type":"IG","contactId":"<CONTACT_ID>","message":"<reply text>"}
-{"type":"WhatsApp","contactId":"<CONTACT_ID>","message":"<reply text>"}
-{"type":"Live_Chat","contactId":"<CONTACT_ID>","message":"<reply text>"}
+{"type":"SMS","contactId":"<CONTACT_ID>","locationId":"<LOCATION_ID>","message":"<reply text>"}
+{"type":"FB","contactId":"<CONTACT_ID>","locationId":"<LOCATION_ID>","message":"<reply text>"}
+{"type":"IG","contactId":"<CONTACT_ID>","locationId":"<LOCATION_ID>","message":"<reply text>"}
+{"type":"WhatsApp","contactId":"<CONTACT_ID>","locationId":"<LOCATION_ID>","message":"<reply text>"}
+{"type":"Live_Chat","contactId":"<CONTACT_ID>","locationId":"<LOCATION_ID>","message":"<reply text>"}
 
-# Email  (subject + html instead of message)
+# Email  (subject + html + emailFrom + emailTo instead of message)
 POST https://services.leadconnectorhq.com/conversations/messages
 # scope: conversations/message.write
-{"type":"Email","contactId":"<CONTACT_ID>","subject":"<subject>","html":"<html body>"}
+{"type":"Email","contactId":"<CONTACT_ID>","locationId":"<LOCATION_ID>","subject":"<subject>","html":"<html body>","emailFrom":"<from addr>","emailTo":"<to addr>"}
 ```
+
+> **Send body = `{type, contactId, locationId, message}`** (Email swaps `message` for
+> `subject`+`html`+`emailFrom`+`emailTo`) — **NO `conversationId`** on send.
+
+### Read thread history (conversationId is a READ key, not a send field)
+
+To pull prior history for a contact, find the thread, then read its messages. Scope:
+**`conversations.readonly`**.
+
+```bash
+# 1. Find the contact's conversation thread (returns conversationId)
+GET https://services.leadconnectorhq.com/conversations/search?locationId=<LOCATION_ID>&contactId=<CONTACT_ID>
+# scope: conversations.readonly
+
+# 2. Read that thread's message history
+GET https://services.leadconnectorhq.com/conversations/<conversationId>/messages
+# scope: conversations.readonly
+```
+
+> The inbound webhook payload also carries `conversationId`, `contactId`, and `messageType` — use
+> `messageType`/`{{channel}}` to pick the mirrored send `type`, and `contactId` to send + thread.
 
 ---
 

@@ -133,7 +133,7 @@ field in the GHL Custom Webhook action editor:
   "wakeMode": "now",
   "name": "GHL Sales Inbound",
   "session_key": "hook:ghl:sms:{{contact.id}}",
-  "messageTemplate": "Respond as the Sales agent. MANDATORY — SEND, do not just draft: you MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for this contact on this channel, per TOOLS.md. Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId.",
+  "messageTemplate": "Respond as the Sales agent. MANDATORY — SEND on the SAME channel the message arrived on, do not just draft: SEND your reply via the GHL Conversations API (POST conversations/messages) with type = the MIRRORED inbound channel value (SMS->SMS, Email->Email, Facebook->FB, Instagram->IG, WhatsApp->WhatsApp, Live Chat->Live_Chat; do NOT hardcode SMS), contactId, locationId, and message — GHL threads it by contactId and returns conversationId+messageId (conversationId is the READ key only, never a send-body field). Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId.",
   "deliver": false,
   "timeoutSeconds": 300,
   "channel": "sms",
@@ -194,6 +194,31 @@ client always knows: **paste these values into the Custom Webhook action yoursel
 
 ---
 
+## 3.6 CRITICAL DESIGN PATTERN — one send endpoint, mirror the channel, send by contactId
+
+How the agent actually replies to a GHL inbound (verified against the GHL SendMessageBodyDto — do not
+re-derive). Four rules:
+
+1. **ONE send endpoint.** Every channel replies through `POST /conversations/messages` (scope
+   `conversations/message.write`). There is no per-channel send endpoint.
+2. **MIRROR the inbound channel into `type`.** Read the inbound channel (the hook payload `{{channel}}` /
+   `messageType`) and set the send `type` to its MIRRORED value: SMS→`SMS`, Email→`Email`, Facebook
+   Messenger→`FB`, Instagram DM→`IG`, WhatsApp→`WhatsApp`, Live Chat / Chat Widget→`Live_Chat`. **Do NOT
+   hardcode `SMS`** — reply on the SAME channel the customer used. (GMB is inbound-only — it has NO send
+   `type`; reply to a GMB inbound via a GHL workflow automation, not this API.)
+3. **Send BY `contactId` — GHL threads automatically.** The send body is
+   `{type, contactId, locationId, message}` (Email swaps `message` for `subject`+`html`+`emailFrom`+
+   `emailTo`). The body carries **NO `conversationId`** — GHL threads the reply into the contact's
+   conversation by `contactId` and returns `conversationId`+`messageId` in the response.
+4. **`conversationId` is READ-ONLY (thread history).** To read prior history, `GET /conversations/search?
+   locationId=&contactId=` to find the thread, then `GET /conversations/<conversationId>/messages` (scope
+   `conversations.readonly`). `conversationId` is never a send-body field.
+
+The exact request shapes live in `references/ghl-api-quick-reference.md` (preloaded into the client agent's
+TOOLS.md) and `references/GHL-INBOUND-AND-PLAYBOOKS.md` §7–§8.
+
+---
+
 ## 4. BUILD-WITH-AI VERIFICATION CHECKLIST (run AFTER Build-with-AI finishes)
 
 Build-with-AI populates poorly, so run this every time — even when the prompt "succeeded". (The
@@ -236,9 +261,11 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
       short body. Re-paste the full 23-key body if any key is missing.
 - [ ] **SEND-directive on the OpenClaw server mapping** — the `hooks.mappings` server-mapping
       `messageTemplate` (object B — NOT the GHL body) ORDERS the agent to SEND via the GHL Conversations
-      API (POST conversations/messages) and to NOT end its turn until a messageId/conversationId is
-      returned. Drafting is NOT sending — without this clause the agent drafts a reply and the customer
-      gets nothing. Machine-check: `scripts/qc-send-directive.sh` must PASS.
+      API (POST conversations/messages), **mirroring the inbound channel** into the send `type` (not a
+      hardcoded SMS), **threaded by `contactId`** (the send body is `{type, contactId, locationId,
+      message}` — no `conversationId` on send), and to NOT end its turn until a messageId is returned.
+      Drafting is NOT sending — without this clause the agent drafts a reply and the customer gets
+      nothing. Machine-check: `scripts/qc-send-directive.sh` must PASS.
 - [ ] **Conversation-MEMORY steps on the OpenClaw server mapping** — the same SERVER-mapping
       `messageTemplate` (object B) ALSO orders the agent to **READ** the contact's conversation log at
       `<MASTER_FILES_DIR>/conversational-logs/<contact_id>__<name>.md` BEFORE replying (continue any
