@@ -1,9 +1,13 @@
 <!-- OPERATOR HEADER -->
 <!-- Skill 38 reference/protocol doc: Communications Playbook Standard. -->
-<!-- This is the FULL standard. AGENTS.md / TOOLS.md get only a 1-2 line pointer to this file -->
+<!-- This is the FULL standard. AGENTS.md / TOOLS.md / SKILL.md get only a 1-2 line pointer to this file -->
 <!-- (what the playbook is + its file path) — NEVER the playbook body inline (avoid core-md bloat). -->
+<!-- §0 below is the BINDING "EVERY COMMUNICATION PLAYBOOK MUST INCLUDE ALL OF THE FOLLOWING" checklist, -->
+<!-- machine-enforced by scripts/qc-communications-playbook-standard.sh (wired into -->
+<!-- scripts/11-run-qc-checklist.sh + .github/workflows/qc-static.yml). Mirrors workflow-ai-instructions-standard.md §0. -->
 <!-- Companion docs: conversation-workflows-protocol.md (THE TRINITY + builder), -->
 <!-- workflow-ai-instructions-standard.md (the Build-with-AI prompt standard), -->
+<!-- ghl-raw-body-json-standard.md (the FLAT 23-key body standard), -->
 <!-- references/GHL-INBOUND-AND-PLAYBOOKS.md §14 (the canonical 23-key body + reply-via-GHL mechanism). -->
 
 # Communications Playbook Standard
@@ -21,6 +25,64 @@ in every playbook, plus where playbooks are stored and registered.
 
 ---
 
+## 0. EVERY COMMUNICATION PLAYBOOK MUST INCLUDE ALL OF THE FOLLOWING (BINDING — NON-NEGOTIABLE)
+
+> **STANDARDIZATION CONTRACT.** A communications playbook is NOT free-form. Two different installs of this
+> skill must produce structurally identical playbooks — only the substituted values (the channel, the
+> persona/voice, the scenario goal, the trigger phrases, the tags) change. No improvising, no reordering,
+> no dropping an item. If ANY one of the mandatory inclusions below is missing, the playbook is INVALID and
+> the install is not complete. This §0 is what `scripts/qc-communications-playbook-standard.sh`
+> machine-enforces (wired into `scripts/11-run-qc-checklist.sh` + `.github/workflows/qc-static.yml`); the
+> field-by-field detail is in §1–§8 below.
+>
+> **Scope of "communication playbook" here.** This standard covers BOTH (a) the per-channel voice/behavior
+> doc for the **8 supported channels** — **SMS, Email, Facebook Messenger, Facebook comments, Instagram DM,
+> LinkedIn, Live Chat, and the All-in-One / Chat Widget** — and (b) the per-scenario conversation playbook
+> that rides on top of that channel voice. Every playbook this skill emits, on any of those channels, MUST
+> carry all of the following.
+
+EVERY COMMUNICATION PLAYBOOK MUST INCLUDE ALL OF THE FOLLOWING:
+
+1. **(a) Channel + persona / voice identity.** The exact channel (one of the 8 above) AND the persona/voice
+   the agent speaks in on it — the named agent identity + tone/brand voice. The reader must know *who* is
+   speaking and *on which channel* from the top of the doc.
+2. **(b) Opening behavior + how to greet.** How the agent OPENS the conversation / greets the contact on
+   this channel (first-touch vs returning contact), so first contact is consistent — not improvised.
+3. **(c) Conversation goal / desired outcome.** One sentence: what success looks like for THIS scenario
+   (booking / sale / info delivered / escalation) — the desired customer outcome.
+4. **(d) MANDATORY SEND rule.** The reply is **SENT via the GHL Conversations API** (`POST
+   conversations/messages`), **mirroring the inbound channel** into the send `type` (SMS→SMS, Email→Email,
+   Facebook→FB, Instagram→IG, WhatsApp→WhatsApp, Live Chat→Live_Chat — never a hardcoded SMS), sent **BY
+   `contactId`** (`conversationId` is the READ key only, never a send-body field). **Drafting/composing is
+   NOT sending** — the agent must make the send call and must NOT end its turn until a `messageId` is
+   returned, or the customer gets nothing. Never reply direct-to-carrier or via raw curl.
+5. **(e) Conversation-MEMORY protocol.** GHL inbound hook sessions are **single-turn / stateless** — the
+   per-contact log `<MASTER_FILES_DIR>/conversational-logs/<contact_id>__<name>.md` is the agent's ONLY
+   cross-message memory. The playbook MUST state: **READ that log BEFORE replying** (continue any
+   in-progress topic/booking) and **APPEND the inbound + sent reply AFTER sending.**
+6. **(f) Escalation / handoff rules + honesty floor.** When and to whom the agent hands off (frustration →
+   sentiment-monitoring-protocol.md; legal/compliance → compliance-keyword-detection-protocol.md; low
+   confidence → confidence-threshold-protocol.md), AND the **honesty floor** — the agent NEVER fabricates
+   price, availability, policy, or outcome; when unsure it says so and escalates/researches, it does NOT
+   guess. This is binding.
+7. **(g) Quiet-hours + compliance-keyword respect.** The playbook MUST honor **quiet hours**
+   (`quiet-hours-protocol.md`) and **compliance keywords** (`compliance-keyword-detection-protocol.md`,
+   e.g. STOP / UNSUBSCRIBE on SMS — never reply to those; the channel's send-window rules, e.g. Facebook /
+   Instagram's 24-hour window).
+8. **(h) ZHC- tag-prefix for any programmatic tags.** Any tag the agent CREATES or APPLIES programmatically
+   MUST be prefixed **`ZHC-`** (e.g. `ZHC-pricing-interest`) so machine-created tags are namespaced and
+   never collide with the operator's hand-made tags. Tags must be CREATED FIRST via the GHL skill (per
+   `workflow-ai-instructions-standard.md` "create the tag first").
+9. **(i) Per-channel formatting constraints.** The character/format limits for the channel (SMS: ≤160 chars
+   where possible; Email: 2–4 short paragraphs + subject-line matching; FB/IG: 1–3 conversational
+   sentences; LinkedIn: professional register; Live Chat / Chat Widget: short, fast, typing-cadence
+   replies). The playbook states the constraint that applies to ITS channel.
+
+These nine are the floor. They appear in every playbook this skill emits, for every channel, for every
+client. The §1 MUST-APPEAR tick-list and the §2 canonical skeleton below restate and operationalize them.
+
+---
+
 ## 1. MUST-APPEAR CHECKLIST (every communications playbook, no exceptions)
 
 A communications playbook is NOT complete until EVERY item below is present. The
@@ -30,11 +92,17 @@ Build-with-AI verification checklist and QC pass both check for these.
       (`<slug>.md`) and the registry row.
 - [ ] **owner agent id** — the OpenClaw agent id that runs this playbook (e.g. `sales`,
       `support`, `main`). This is the `agent_id` the Trinity's webhook body routes to.
-- [ ] **channel** — the channel(s) this playbook applies to (sms / email / facebook / instagram /
-      whatsapp / live_chat / gmb / conversations). Must match the workflow-AI prompt's `channel`.
+- [ ] **channel + persona / voice identity (§0.a)** — the channel(s) this playbook applies to (one of the
+      8: sms / email / facebook-messenger / facebook-comments / instagram / linkedin / live_chat /
+      all-in-one-chat-widget; whatsapp / gmb / conversations also routable). Must match the workflow-AI
+      prompt's `channel`. AND the persona/voice the agent speaks in (named agent identity + tone/brand
+      voice) — who is speaking, on which channel.
+- [ ] **opening behavior / greeting (§0.b)** — how the agent OPENS / greets on this channel (first-touch
+      vs returning contact), so first contact is consistent rather than improvised.
 - [ ] **trigger phrases / intent** — the keywords/phrases AND the semantic intent that activate
       this playbook (so the agent can recognize it from message content).
-- [ ] **goal** — one sentence: what success looks like (booking / sale / info delivered / escalation).
+- [ ] **goal / desired outcome (§0.c)** — one sentence: what success looks like (booking / sale / info
+      delivered / escalation) — the desired customer outcome.
 - [ ] **step-by-step flow** — the phases the agent walks through (acknowledge → qualify → gather →
       deliver value → close). Each phase says what to say, what to ask, what to listen for.
 - [ ] **GHL reply mechanism (MANDATORY SEND)** — the playbook reply is SENT **via the GHL Conversations
@@ -58,12 +126,23 @@ Build-with-AI verification checklist and QC pass both check for these.
 - [ ] **cross-playbook transition rules** — when this playbook should hand off to another playbook
       mid-conversation, and which one (max 3 switches, soft transitions — see Step 9.33 Intelligent
       Playbook Routing). If none, say "none".
-- [ ] **edge cases** — at minimum: customer frustration (→ sentiment-monitoring-protocol.md), refund
-      request, legal/compliance escalation (→ compliance-keyword-detection-protocol.md), and
-      low-confidence (→ confidence-threshold-protocol.md).
-- [ ] **on-success / tagging** — the action(s) that fire when the scenario succeeds (book, invoice,
-      escalate, send doc, AND the GHL tag(s) to apply). If a tag is needed, it must already have been
-      created via the GHL skill (see workflow-ai-instructions-standard.md "create the tag first").
+- [ ] **edge cases + escalation/handoff (§0.f)** — at minimum: customer frustration (→
+      sentiment-monitoring-protocol.md), refund request, legal/compliance escalation (→
+      compliance-keyword-detection-protocol.md), and low-confidence (→ confidence-threshold-protocol.md).
+      State WHEN and to WHOM the agent hands off.
+- [ ] **quiet-hours + compliance-keyword respect (§0.g)** — the playbook honors quiet hours
+      (`quiet-hours-protocol.md`) and compliance keywords (`compliance-keyword-detection-protocol.md`) —
+      e.g. STOP / UNSUBSCRIBE on SMS (never reply), and the channel's send-window rules (e.g. Facebook /
+      Instagram 24-hour window). State the rule that applies to THIS channel.
+- [ ] **on-success / tagging — ZHC- prefix (§0.h)** — the action(s) that fire when the scenario succeeds
+      (book, invoice, escalate, send doc, AND the GHL tag(s) to apply). Any tag the agent
+      CREATES/APPLIES programmatically MUST be **`ZHC-` prefixed** (e.g. `ZHC-pricing-interest`) so
+      machine-created tags are namespaced away from the operator's hand-made tags. The tag must already
+      have been created via the GHL skill (see workflow-ai-instructions-standard.md "create the tag first").
+- [ ] **per-channel formatting constraints (§0.i)** — the character/format limit for THIS channel (SMS
+      ≤160 chars where possible; Email 2–4 short paragraphs + match the subject-line format; FB/IG 1–3
+      conversational sentences; LinkedIn professional register; Live Chat / Chat Widget short, fast,
+      typing-cadence replies).
 - [ ] **tone** — the specific tone for THIS scenario, layered on top of the channel communication
       playbook's baseline voice.
 - [ ] **honesty floor** — the agent never fabricates prices, availability, policy, or outcomes. When
@@ -95,12 +174,17 @@ interchangeable.)
 
 **Slug/id:** <slug>
 **Owner agent id:** <agent_id>
-**Channel:** <sms | email | facebook | instagram | whatsapp | live_chat | gmb | conversations>
+**Channel:** <sms | email | facebook-messenger | facebook-comments | instagram | linkedin | live_chat | all-in-one-chat-widget | whatsapp | gmb | conversations>
+**Persona / voice:** <named agent identity + tone/brand voice on THIS channel>   (§0.a)
 **Created:** <ISO date>
 **Trigger phrases / intent:** <keywords + semantic description>
-**Goal:** <one sentence>
+**Goal:** <one sentence>   (§0.c)
 **Customer profile:** <who this is for>
 **Desired customer outcome:** <what good looks like for THEM>
+
+## Opening / greeting (§0.b)
+- First-touch: <how the agent greets a brand-new contact on this channel>
+- Returning contact: <how the agent re-opens, after READING the conversation log>
 
 ## When to invoke
 - <trigger condition / keyword / semantic intent>
@@ -122,14 +206,23 @@ or via raw curl. (The Trinity webhook delivers the inbound; the agent replies on
 - Transition to <other-slug> when <condition>. (Max 3 switches, soft transitions — Step 9.33.)
   If none: "none".
 
-## Edge cases
+## Edge cases (§0.f)
 ### Frustration → escalate via sentiment-monitoring-protocol.md
 ### Refund request → <policy + escalation>
 ### Legal / compliance → compliance-keyword-detection-protocol.md (hard gate)
 ### Low confidence → confidence-threshold-protocol.md
 
-## On success / tagging
-- <action(s)>; apply tag(s): <tag(s) — created beforehand via the GHL skill>
+## Quiet hours & compliance (§0.g)
+- Quiet hours: honor quiet-hours-protocol.md (do not send outside the window).
+- Compliance keywords: honor compliance-keyword-detection-protocol.md (e.g. STOP / UNSUBSCRIBE on SMS —
+  never reply; respect the channel send-window, e.g. FB/IG 24-hour rule).
+
+## Per-channel formatting (§0.i)
+- <the limit for THIS channel — SMS ≤160 chars / Email 2–4 short paragraphs / FB-IG 1–3 sentences /
+  LinkedIn professional / Live Chat short & fast>
+
+## On success / tagging (§0.h — ZHC- prefix)
+- <action(s)>; apply tag(s): <ZHC-<tag> — `ZHC-` prefixed, created beforehand via the GHL skill>
 
 ## Tone
 <scenario tone, on top of the channel communication playbook baseline>
