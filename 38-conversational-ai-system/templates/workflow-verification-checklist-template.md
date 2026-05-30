@@ -23,7 +23,7 @@ WHAT you should SEE, WHAT to put if it's missing/wrong.**
 - [ ] **Trigger type + filter** correct (e.g. "Customer Replied", filtered to `<CHANNEL>` — not all channels).
       (WHERE: open the workflow → click the trigger node. WHAT YOU SHOULD SEE: the correct trigger type +
       channel. IF WRONG: fix the trigger type / channel filter.)
-- [ ] **TAG FILTER references a REAL, existing tag** (the Teresa gotcha). If the trigger or an If-Else has
+- [ ] **TAG FILTER references a REAL, existing tag** (the blank-tag gotcha). If the trigger or an If-Else has
       a tag filter — `tag is` / `tag contains` / **`tag does not contain`** — confirm the referenced tag
       ACTUALLY EXISTS and is the intended one. (WHERE: the filter, cross-checked against **Settings →
       Tags**. WHAT YOU SHOULD SEE: a real tag name — NOT a blank. KNOWN BUG: Build-with-AI built a
@@ -38,6 +38,10 @@ WHAT you should SEE, WHAT to put if it's missing/wrong.**
 - [ ] **HEADERS contain** `Authorization: Bearer <HOOKS_TOKEN>` (added via "Add item") **and**
       `Content-Type: application/json`.
 - [ ] **CONTENT-TYPE = application/json.**
+- [ ] **SETTINGS → ALLOW RE-ENTRY = ON** — open the workflow **Settings** tab; Allow Re-entry must be ON so
+      every inbound message re-triggers the workflow. (WHERE: the workflow Settings tab. WHAT YOU SHOULD
+      SEE: Allow Re-entry = ON/Enabled. IF OFF: toggle it ON — off fires once per contact then silently
+      never again.)
 - [ ] **RAW BODY = all 23 keys, FLAT** (no nesting), `messageTemplate` placeholder-free, no stripped body.
       (The skill's body EXAMPLES are machine-checked by `scripts/qc-23-key-bodies.sh` — run it if you
       edit any embedded body.)
@@ -143,6 +147,16 @@ If any item is wrong, the fix is listed right there.
   - FIX IF WRONG: Click Raw Body → replace entirely with the full 23-key
     JSON above
 
+## Settings
+
+- [ ] Allow Re-entry is ON (Settings tab) — the workflow must be allowed to
+       re-enter / fire repeatedly per contact, so EVERY inbound message
+       re-triggers it
+  - Common Build with AI mistake: leaves Allow Re-entry OFF, so the workflow
+    fires ONCE per contact and then silently never fires again (the AI answers
+    the first message and goes dead on every one after)
+  - FIX IF WRONG: Settings tab → Allow Re-entry → ON
+
 ## Publish
 
 - [ ] Workflow status is "Published" (NOT "Draft" — Build with AI often
@@ -154,18 +168,22 @@ If any item is wrong, the fix is listed right there.
        hours)
   - FIX IF WRONG: Click workflow settings → adjust schedule
 
-## End-to-end test
+## End-to-end test (test it yourself)
 
-- [ ] Trigger the workflow manually (e.g., reply to your test SMS)
-- [ ] Watch the workflow execution log in Convert and Flow — should
-       show "Webhook sent successfully" with a 2xx status
-- [ ] Check your conversation log file — should show the new message
-       arrived in the AI's log
+- [ ] In Convert and Flow, go to Contacts → search your own name → open your
+       own contact record → send yourself a text (SMS)
+- [ ] On your phone, reply to that text (like a real customer would)
+- [ ] Go to Automations → open the workflow you built → click Execution Logs
+- [ ] Every step shows green / success — ESPECIALLY the Custom Webhook step
+       (should show a 2xx status)
+- [ ] Your reply comes back to your phone as a text from your AI
 
-If end-to-end test passes, the workflow is fully wired and live.
+If every step is green, the workflow is fully wired and live.
 
-If end-to-end test fails, copy the error from the Convert and Flow
-execution log and bring it back to the agent.
+If any step is red (most often the Custom Webhook), re-run the verification
+checklist above, fix the flagged field, and test again. If it is still red,
+copy the error from the Execution Logs and bring it to your setup admin /
+support.
 ```
 
 Each verification item is generated from the same source-of-truth as the prompt — so they're guaranteed to match.

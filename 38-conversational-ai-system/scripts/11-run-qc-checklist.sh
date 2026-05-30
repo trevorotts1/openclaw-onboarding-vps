@@ -294,6 +294,28 @@ else
   report_fail "qc-backend-ready.sh not found (looked in scripts/)"
 fi
 
+# -------- AI BACKEND SELF-TEST (blocking readiness gate) --------
+# The agent self-tests the FULL chain by GROUND TRUTH BEFORE the client ever
+# tests: backend prepared -> POST a synthetic 23-key GHL inbound to its OWN
+# public hook with the real Bearer token -> verify the hook 200s, the run used
+# the configured model with no 401/429, the agent read the log, and the GHL
+# Conversations API send returned a messageId (temp test contact created + then
+# deleted, test log removed). On a repo/CI box with no install it exits 3 (SKIP).
+section "AI backend self-test (24-self-test-hook.sh — blocking readiness gate)"
+QC_SELFTEST="$SCRIPT_DIR/24-self-test-hook.sh"
+[ -f "$QC_SELFTEST" ] || QC_SELFTEST="$SKILL38_ROOT/scripts/24-self-test-hook.sh"
+if [ -f "$QC_SELFTEST" ]; then
+  SELFTEST_RC=0
+  bash "$QC_SELFTEST" --live >/dev/null 2>&1 || SELFTEST_RC=$?
+  case "$SELFTEST_RC" in
+    0) report_pass "backend self-test GREEN: synthetic inbound -> hook 200 -> configured model (no 401/429) -> read the log -> GHL send returned a messageId (temp contact + test log cleaned up). Client may be told to test." ;;
+    3) echo "  [SKIP] no openclaw.json on this box — cannot run the live self-test here" ;;
+    *) report_fail "24-self-test-hook.sh: backend self-test FAILED — FIX the failing hop (creds/location, model/provider key, DND, secrets/.env placement, URL/route/token) and RE-RUN. Do NOT hand off; do NOT tell the client to test." ;;
+  esac
+else
+  report_fail "24-self-test-hook.sh not found (looked in scripts/)"
+fi
+
 # -------- Config schema-safety (machine-enforced) --------
 section "Config schema-safety — no config-invalidating install scripts (qc-config-schema-safety.sh)"
 QC_CFG="$SCRIPT_DIR/qc-config-schema-safety.sh"
@@ -306,6 +328,20 @@ if [ -f "$QC_CFG" ]; then
   fi
 else
   report_fail "qc-config-schema-safety.sh not found (looked in scripts/)"
+fi
+
+# -------- NO personal/client data (universal-skill guard) --------
+section "No personal/client data — universal-skill guard (qc-no-personal-data.sh)"
+QC_NOPD="$SCRIPT_DIR/qc-no-personal-data.sh"
+[ -f "$QC_NOPD" ] || QC_NOPD="$SKILL38_ROOT/scripts/qc-no-personal-data.sh"
+if [ -f "$QC_NOPD" ]; then
+  if bash "$QC_NOPD" >/dev/null 2>&1; then
+    report_pass "no personal/client identifiers anywhere in the skill or its generated output (this is a UNIVERSAL skill)"
+  else
+    report_fail "qc-no-personal-data.sh found a personal/client identifier in the skill or its generated output — genericize it; run it directly for detail"
+  fi
+else
+  report_fail "qc-no-personal-data.sh not found (looked in scripts/)"
 fi
 
 # -------- Final summary --------

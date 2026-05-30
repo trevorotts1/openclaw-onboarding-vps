@@ -243,7 +243,7 @@ never omitted:
       **Content-Type** (`application/json`), each as a copyable code block. The body stays placeholder-free
       in `messageTemplate` and is never nested or stripped below 23 keys.
 
-A live client (Teresa) was stranded by a reference sheet that had NEITHER the bearer token NOR a copyable
+A live client was once stranded by a reference sheet that had NEITHER the bearer token NOR a copyable
 Raw Body JSON — there was nothing to paste into GHL's Build-with-AI. This is now **machine-enforced by
 `scripts/qc-reference-sheet.sh`** (wired into `scripts/11-run-qc-checklist.sh` AND CI
 `.github/workflows/qc-static.yml`): the gate drives the generator in an offline sandbox and FAILS the

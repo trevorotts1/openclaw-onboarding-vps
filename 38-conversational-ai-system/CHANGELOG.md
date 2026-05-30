@@ -1,5 +1,83 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.19] - 2026-05-30 - Standardized workflow-AI output + exhaustive Build-with-AI webhook + 60yo-simple verification + client self-test + AI backend self-test + Notion-doc enforcement + UNIVERSAL no-personal-data guard
+
+### Why
+Three problems with the workflow-AI output: (a) it was NOT standardized — wildly different each run;
+(b) it was too light on the GHL Build-with-AI Custom Webhook instructions (the part Build-with-AI gets
+wrong most); and (c) the templates + source playbook were authored using a specific operator + client as
+the worked example, so real names and client data leaked into the generated client Notion docs (a client
+opened "their" doc and saw someone else's name). This release standardizes the output, spells out every
+webhook field, rewrites the human verification to be dead-simple for a 60-year-old, adds a client
+self-test and an AI backend self-test, hard-enforces the Notion doc, and strips ALL personal/client data
+from a UNIVERSAL skill. The GHL body stays EXACTLY 23 keys, flat (non-negotiable).
+
+### Added
+- **`scripts/24-self-test-hook.sh`** — the AI BACKEND SELF-TEST (the agent tests ITSELF before the client
+  ever does), a BLOCKING readiness gate. After configuring the hook and BEFORE telling the client to test,
+  the agent: (a) confirms the backend is prepared to receive (hooks.enabled, an inbound mapping with a
+  working model, `deliver:false`, node-owned `conversational-logs/`, GHL creds in `secrets/.env`, gateway
+  healthz 200); (b) POSTs a SYNTHETIC FLAT 23-key GHL inbound (channel sms, a dedicated throwaway test
+  contact) to its OWN public hook with the real Bearer token; (c) VERIFIES by ground truth — hook returns
+  200/{ok:true}, the run used the configured model with NO 401/429, the agent READ the conversation log,
+  and the GHL Conversations API send returned a messageId (creates a temporary test contact via the GHL
+  API, confirms the send, then DELETEs the temp contact + the test log); (d) on any failure the agent FIXES
+  the cause and RE-TESTS until green; (e) setup is NOT marked complete and the client NOT told to test until
+  it passes. `--check-wiring` static mode + no-config `--live` SKIP (exit 3) for CI. Standard documented in
+  `references/GHL-INBOUND-AND-PLAYBOOKS.md` §4.5; wired as a blocking gate in `scripts/11-run-qc-checklist.sh`.
+- **`scripts/qc-no-personal-data.sh`** — UNIVERSAL-skill guard. Scans the whole `38-conversational-ai-system/`
+  tree AND drives `21-generate-client-reference-sheet.sh` offline to scan the generated reference sheet, and
+  FAILS on ANY forbidden identifier (operator/client names, real hostnames, real tokens, real location ids,
+  real phone/email, real Telegram ids). Negative-tested (a planted identifier exits 1). Wired into
+  `scripts/11-run-qc-checklist.sh` + CI (with an in-CI negative self-test).
+- **`references/workflow-ai-instructions-standard.md` §0** — a hard, explicit block: **"EVERY workflow-AI
+  instruction set MUST INCLUDE ALL OF THE FOLLOWING"** — the five mandatory inclusions, in exact order:
+  (1) workflow name + PUBLISH; (2) Trigger: type + sub-option + filters in exact order; (3) **Settings →
+  Allow Re-entry = ON**; (4) Custom Webhook — every field with the exact value; (5) Save → Publish toggle ON
+  → Save. `scripts/21-generate-client-reference-sheet.sh` + `templates/sms-workflow-ai-prompt-template.md`
+  emit this exact structure every run, for every client.
+- **🧪 "How to test your system"** section in the generated client doc — a client self-test: Contacts →
+  search your own name → open your own contact record → send yourself a text → reply from your phone →
+  Automations → open the workflow → **Execution Logs** → every step green (especially the Custom Webhook);
+  anything red = failure (re-run the verification checklist / contact support).
+
+### Changed
+- **REQ 1 STANDARDIZATION** — the workflow-AI prompt + the manual-fill steps + the verification now carry
+  the §0 five-part structure every run, including the previously-missing **Settings → Allow Re-entry = ON**
+  (a workflow left at the default fires once per contact then silently goes dead).
+- **REQ 2 EXHAUSTIVE Build-with-AI webhook** — the Build-with-AI prompt AND the verification now spell out
+  EVERY Custom Webhook field with the EXACT value: EVENT = CUSTOM; METHOD = POST; URL = the exact hook URL
+  (no placeholder); AUTHORIZATION dropdown = None (token goes in headers); HEADERS via "Add item" with the
+  value box holding ONLY `Bearer <token>` (never the word "Authorization"), then Content-Type =
+  application/json; RAW BODY = the full FLAT 23-key JSON; plus Settings → Allow Re-entry = ON. Every value
+  the human copies is in its OWN code block.
+- **REQ 3 60-year-old-simple verification** — `scripts/21-generate-client-reference-sheet.sh` §8 rewritten
+  to a dead-simple per-area checklist: one short imperative line per check + the exact value in a COPY CODE
+  BLOCK + a one-line "if you do not see it, paste this." Covers, in order: open the workflow; Trigger;
+  Settings → Allow Re-entry; Webhook URL; Headers; Raw Body; Save; Publish; Save.
+- **REQ 6 Notion doc HARD-enforced** — `scripts/qc-reference-sheet.sh` now also requires the **Allow
+  Re-entry** instruction and the **🧪 How to test your system** section (Execution Logs / Contacts / reply /
+  red = fail); combined with the existing gates the install cannot be marked complete unless the doc was
+  created (Quick Start + 23-key body + split Authorization + playbooks/trigger/I-Do-You-Do + VPS-vs-Mac +
+  How-to-test) AND delivered via Telegram (`qc-notify-client-doc.sh`, fail-closed). The
+  `templates/workflow-verification-checklist-template.md` also gained the Allow-Re-entry checks + an
+  Execution-Logs self-test end-to-end test.
+- **REQ 7 UNIVERSAL — stripped ALL personal/client data** from the entire tree (templates, scripts,
+  references including the v6.0 source playbook, and the CHANGELOG narrative): operator/client names, the
+  worked-example client + brand, real hostnames, the hardcoded operator Telegram id, and a real personal
+  email local-part — all replaced with generic placeholders (`<CLIENT_BUSINESS_NAME>`, `<PUBLIC_HOSTNAME>`,
+  `<HOOKS_TOKEN>`, `<LOCATION_ID>`, "the operator", "your setup admin"). The operator chat id is now
+  supplied per-install (`OPERATOR_TELEGRAM_CHAT_ID`), never hardcoded to a person. The operator-personal
+  Cloudflare-OTP-suppression note was rewritten as a generic deliverability gotcha. Telegram message
+  sign-offs changed from a person's name to "your setup admin." Enforced going forward by
+  `scripts/qc-no-personal-data.sh`.
+
+### Files
+- scripts/ 37 → 39 (`24-self-test-hook.sh`, `qc-no-personal-data.sh`). QC linters 9 → 10.
+- CI (`.github/workflows/qc-static.yml`): added the self-test wiring gate, the no-personal-data gate (with
+  an in-CI negative self-test), and the Allow-Re-entry/How-to-test markers ride along in the reference-sheet
+  gate. Touched ONLY `38-conversational-ai-system/` + its CI steps.
+
 ## [1.4.18] - 2026-05-30 - Audit/prune (v6.0 playbook labels + stale self-counts) + VPS-vs-Mac install section (QC-enforced)
 
 ### Why
@@ -224,7 +302,7 @@ the perfect playbook WITH them.
 - **(A) The client doc kept not getting sent.** The operator has said it repeatedly — "every client gets
   their link via Telegram, no matter what" — yet the install kept finishing without the client ever being
   SENT their Quick-Start / Notion doc LINK over Telegram. It was prose, not an enforced gate, so it got
-  skipped. (And finding the chat from `sessions.json` keys alone misses paired chats — the Teresa lesson.)
+  skipped. (And finding the chat from `sessions.json` keys alone misses paired chats — the paired-chat lesson.)
 - **(B) Clients ask "where are my workflows?" on their first test.** The generated doc had no prominent
   answer to where their communication playbooks live, or how to get a new one.
 - **(C) "Complete" was declared before the backend could receive.** No single gate asserted hooks.mappings
@@ -281,14 +359,14 @@ the perfect playbook WITH them.
 ## [1.4.14] - 2026-05-29 - Bulletproof Quick-Start + workflow-AI (where-to-paste, tag-first, post-build verify)
 
 ### Root cause this prevents
-Verified from live client pain on Teresa + Maria.
+Verified from live client pain on multiple client builds.
 - **(A) Clients copy each field individually (they are 50+).** A combined `Authorization: Bearer <token>`
   line in one code block forces the client to hand-edit after pasting; the header KEY and the header VALUE
   need their OWN copy boxes. Same for `Content-Type` / `application/json`.
 - **(B) Quick Start without explanation strands the client; explanation without Quick Start buries the
   copy-paste.** The sheet must lead with an actionable **🚀 Quick Start** AND still carry a full
   **Reference & explanation** section after it — both, in that order.
-- **(C) The Teresa gotcha — blank tag in a filter.** Build-with-AI created a trigger filter like
+- **(C) The blank-tag gotcha — blank tag in a filter.** Build-with-AI created a trigger filter like
   `does not contain <tag>` where the referenced tag was **blank / never created**, so the trigger silently
   never matched and every inbound message went nowhere. Tags must be created FIRST (and the client must
   know WHERE to check: **Settings → Tags**), and the post-build verification must re-check that any tag in
@@ -314,7 +392,7 @@ Verified from live client pain on Teresa + Maria.
   covering TRIGGER + PUBLISH + the blank-tag-in-a-filter bug. (Still BASH; no `openclaw` on PATH in the
   sandbox → offline Layer-3 markdown.)
 - **`references/workflow-ai-instructions-standard.md`** — §4 verification now gives WHERE/WHAT/WHAT-to-put
-  per item and adds a dedicated **TAG FILTER references a REAL, existing tag** item (the Teresa gotcha);
+  per item and adds a dedicated **TAG FILTER references a REAL, existing tag** item (the blank-tag gotcha);
   §5 create-tag-first rule now covers filter tags (not just Add-Tag), states **WHERE tags live (Settings →
   Tags)**, and explains why a blank tag in a `does not contain` filter silently never matches.
 - **`templates/sms-workflow-ai-prompt-template.md`** — create-tag-first note now covers filter tags + says
@@ -322,7 +400,7 @@ Verified from live client pain on Teresa + Maria.
   blank/non-existent tag-in-a-filter failure mode.
 - **`templates/workflow-verification-checklist-template.md`** — the concise checklist now annotates each
   item with WHERE/WHAT-you-should-SEE/WHAT-to-put, and adds a dedicated **TAG FILTER references a REAL,
-  existing tag** item (the Teresa gotcha).
+  existing tag** item (the blank-tag gotcha).
 - **`SKILL.md`** — SELF-COUNTS stamp → v1.4.14 (counts unchanged: protocols/=32, scripts/=34,
   references/=15, journeys=8); the `qc-reference-sheet.sh` description updated to list the new enforcement.
 
@@ -416,7 +494,7 @@ and paste those values in by hand — so the webhook shipped empty and silently 
 ## [1.4.12] - 2026-05-29 - client reference sheet MUST include the bearer token + a copyable GHL Raw Body JSON (machine-enforced)
 
 ### Root cause this prevents
-On a live client (Teresa) the generated Client Reference Sheet
+On a live client the generated Client Reference Sheet
 (`scripts/21-generate-client-reference-sheet.sh`) had NEITHER the hooks Bearer token NOR the GHL Custom
 Webhook Raw Body as a copyable ` ```json ` fenced code block. The client opened their reference doc, the
 token was simply missing, and there was no JSON to copy into GHL's Build-with-AI — which stranded the
@@ -520,7 +598,7 @@ verify/resume gate + a QC check").
 GHL inbound hook sessions are **SINGLE-TURN / stateless** — every hook run is a fresh session
 (`user-turns=1`) with no chat history. The agent's only memory of a contact across messages is the
 per-contact conversation log file under `conversational-logs/` — it must READ that log BEFORE replying
-and APPEND to it AFTER replying. On a live client (Corey) this broke: the canonical server-mapping
+and APPEND to it AFTER replying. On a live client this broke: the canonical server-mapping
 `messageTemplate` was simplified during testing and lost the conversation-log read/append steps, the
 `conversational-logs/` directory was never created (and on creation was root-owned so the agent couldn't
 write), and AGENTS.md had no memory protocol — so the agent had zero memory and "didn't remember
@@ -550,7 +628,7 @@ This release makes the conversation-memory logic un-droppable, enforced exactly 
   (`scripts/09-install-conversation-workflows.sh` — the Step-9 conversation-system installer). Now
   `mkdir -p <MASTER_FILES_DIR>/conversational-logs` and, when running as root, `chown -R` it to the gateway
   runtime user (`node` on VPS/Docker; override via `OPENCLAW_RUNTIME_USER`) so the agent can write logs
-  (Corey's dir was root-owned and unwritable). Non-root runs warn to chown if the gateway runs as a
+  (the client's dir was root-owned and unwritable). Non-root runs warn to chown if the gateway runs as a
   different user.
 - **Documented canonical server template updated** so the conversation-memory steps are part of the
   documented canonical template (replacing simplified templates that lacked them):
@@ -753,7 +831,7 @@ email). The OpenClaw server `hooks.mappings` entry (object B) is unchanged — i
 
 ## [1.4.2] - 2026-05-29 - Corrected GHL inbound hook structure: FLAT body, no nesting, server-only messageTemplate
 
-GHL inbound-hook correction verified LIVE on Corey / Explore Growth (OpenClaw 2026.5.27). The GHL Custom
+GHL inbound-hook correction verified LIVE on a client build (OpenClaw 2026.5.27). The GHL Custom
 Webhook RAW BODY is now documented as **FLAT** (no nested `contact:{}` / `customer_message:{}` objects — a
 nested body makes EVERY field resolve EMPTY at the hook) and **data-only** (it must NOT contain a
 `messageTemplate` — a templated messageTemplate in the body makes GHL throw "Error while parsing the object
@@ -832,7 +910,7 @@ bare `cat` for the operator to read on the box). `skill-version.txt` is bumped t
 ## [1.4.0] - 2026-05-28 - GHL inbound hardening: Build-with-AI prompt, 4-token model, verified APIs, calendar-sync
 
 ### Why
-Debugging a live client (Corey, Hostinger Docker VPS) surfaced a cluster of repeatable failures that
+Debugging a live client (a Hostinger Docker VPS) surfaced a cluster of repeatable failures that
 every future VPS client would otherwise hit: the four secrets in this system kept getting confused;
 `deliver: true` on GHL API-reply hooks silently broke replies; the `cron.jobs` JSON format stopped
 validating on current openclaw; the VPS wrapper resets `hooks.token` on every boot; and there was no
@@ -887,7 +965,7 @@ programmatic automation-build path), the verified channel→type enum, or the ve
 ## [1.0.0] - 2026-05-28 - Initial release (packages v5.14 playbook)
 
 ### Why
-Christy's v5.14 conversational AI playbook (~8,800 lines, 14 version iterations) packaged as
+The v5.14 conversational AI playbook (~8,800 lines, 14 version iterations) packaged as
 an installable skill. Builds the conversational AI BRAIN on top of skill 29 (GHL Convert and Flow).
 
 ### Added

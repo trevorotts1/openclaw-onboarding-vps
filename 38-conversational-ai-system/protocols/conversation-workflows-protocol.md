@@ -313,7 +313,7 @@ If Layer 1 is needed, the agent does THREE things in sequence:
 
 #### D.1 — Auto-create required tags via the GHL skill
 
-Per Christy's design preference (automation over operator manual steps), the agent creates tags programmatically using the GHL skill rather than telling the operator to navigate Settings → Tags.
+Per this skill's design preference (automation over operator manual steps), the agent creates tags programmatically using the GHL skill rather than telling the operator to navigate Settings → Tags.
 
 The agent identifies what tags this workflow needs (e.g., `pricing-interest`, `discovery-scheduled`, `quoted`). For each tag, it calls the GHL skill:
 

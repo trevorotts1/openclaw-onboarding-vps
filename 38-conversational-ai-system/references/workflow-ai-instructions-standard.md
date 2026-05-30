@@ -18,6 +18,40 @@ Custom Webhook steps (the part Build-with-AI fails at most), and how to teach MU
 
 ---
 
+## 0. EVERY workflow-AI instruction set MUST INCLUDE ALL OF THE FOLLOWING (BINDING — NON-NEGOTIABLE)
+
+> **STANDARDIZATION CONTRACT.** The workflow-AI output is NOT free-form. It is the SAME five-part
+> structure, in the SAME order, EVERY run, for EVERY client. Two different installs of this skill must
+> produce structurally identical workflow-AI instruction sets — only the substituted values
+> (`<CLIENT_BUSINESS_NAME>`, `<PUBLIC_HOSTNAME>`, `<HOOKS_TOKEN>`, `<ROUTE_ID>`, `<AGENT_ID>`,
+> `<DESIRED_OUTCOME>`) change. No improvising, no reordering, no dropping a part, no adding parts. If any
+> one of the five mandatory inclusions below is missing, the instruction set is INVALID and the install is
+> not complete. This is what `scripts/21-generate-client-reference-sheet.sh` and
+> `templates/sms-workflow-ai-prompt-template.md` emit verbatim, and what `scripts/qc-reference-sheet.sh`
+> machine-enforces (wired into `scripts/11-run-qc-checklist.sh` + CI).
+
+EVERY workflow-AI instruction set MUST INCLUDE ALL OF THE FOLLOWING:
+
+1. **Workflow name + PUBLISH.** A concrete workflow name AND the explicit instruction to PUBLISH when done
+   (toggle to Published — never leave it as a draft).
+2. **Trigger: type + sub-option + filters in EXACT order.** The trigger type (e.g. "Customer Replied"), its
+   sub-option (e.g. "On Reply"), and every filter listed in the exact order they must be entered (e.g.
+   Filter 1: Channel = SMS; Filter 2: Message Direction = Inbound).
+3. **Settings → ALLOW RE-ENTRY = ON.** The workflow MUST be allowed to re-enter / fire repeatedly per
+   contact — every inbound message must re-trigger it. (A workflow left at the default "allow re-entry =
+   off" fires ONCE per contact and then silently never fires again, so the AI answers the first text and
+   goes dead on every text after. Set **Settings → Allow Re-entry = ON**.)
+4. **Custom Webhook — EVERY field (see §3), with the EXACT value to enter.** EVENT, METHOD, URL,
+   AUTHORIZATION dropdown, both HEADERS (each a Key field + Value field), CONTENT-TYPE, and the FULL FLAT
+   23-key RAW BODY — no hand-waving, no "configure the webhook", every value spelled out.
+5. **Save → Publish toggle ON → Save.** The closing sequence: Save the action/workflow, flip the
+   top-right Publish toggle to ON, then Save again so it goes live (not Draft).
+
+These five are the floor. They appear in this exact order in every rendered prompt, every client reference
+sheet, and every verification checklist this skill emits.
+
+---
+
 ## 1. WHERE the prompt goes (exact)
 
 1. Open the client's GHL / Convert and Flow account.
@@ -35,14 +69,21 @@ There is no GHL API and no MCP for Automations. Do not propose one. The "Build w
 
 ## 2. MUST-APPEAR CHECKLIST (every workflow-AI instruction set)
 
-- [ ] **Workflow name** + **PUBLISH instruction** ("publish when done — do not leave as draft").
-- [ ] **Trigger** — type (e.g. "Customer Replied") + sub-option (e.g. "On Reply") + **filters**
+This is the §0 mandatory-inclusions contract restated as a tick-list. All five §0 items + the supporting
+detail must be present:
+
+- [ ] **(§0.1) Workflow name** + **PUBLISH instruction** ("publish when done — do not leave as draft").
+- [ ] **(§0.2) Trigger** — type (e.g. "Customer Replied") + sub-option (e.g. "On Reply") + **filters**
       (e.g. Channel = SMS, Message Direction = Inbound), in exact order.
-- [ ] **For EACH action, EVERY field spelled out.** No "configure the webhook" hand-waving.
-- [ ] **Custom Webhook action — field by field (see §3).** Build-with-AI repeatedly fails to populate
-      these; spell out all of them.
-- [ ] **RAW BODY = the FULL 23-key flat JSON** (§3) via the Custom Values picker. Do NOT shorten to
+- [ ] **(§0.3) Settings → Allow Re-entry = ON** — the workflow must be allowed to re-enter / fire
+      repeatedly per contact, so every inbound message re-triggers it (default "off" fires once then goes
+      dead).
+- [ ] **(§0.4) For EACH action, EVERY field spelled out.** No "configure the webhook" hand-waving.
+- [ ] **(§0.4) Custom Webhook action — field by field (see §3).** Build-with-AI repeatedly fails to
+      populate these; spell out all of them.
+- [ ] **(§0.4) RAW BODY = the FULL 23-key flat JSON** (§3) via the Custom Values picker. Do NOT shorten to
       4 keys (or any sub-23 count). 23 is the MINIMUM.
+- [ ] **(§0.5) Save → Publish toggle ON → Save** — the closing sequence that takes it live.
 - [ ] **MULTI-ACTION teaching where applicable (see §5)** — if/else branches, Add-Tag, tag-check
       conditions, and multiple sequential actions. If a tag is needed, CREATE the tag first via the
       GHL skill (before building the workflow), then reference it in the prompt.
@@ -75,6 +116,10 @@ field in the GHL Custom Webhook action editor:
   as-text tokens send EMPTY). FLAT (no nesting — nesting makes every field arrive empty). Keep
   `messageTemplate` **placeholder-free** (no `{{…}}` in the body's messageTemplate, or GHL throws
   "Error while parsing the object to JSON"). Do NOT shorten to 4 keys — all 23 are required.
+- **SETTINGS → ALLOW RE-ENTRY = `ON`** — open the workflow's **Settings** tab and set **Allow Re-entry**
+  to **ON / Enabled**. The workflow must be allowed to re-enter / fire repeatedly per contact so EVERY
+  inbound message re-triggers it. Left at the default (off), the workflow fires ONCE per contact and then
+  silently never fires again — the AI answers the first text and goes dead on every text afterward.
 
 ### The canonical 23-key body (embed this exactly; per-channel variants change only `channel` + the `session_key` prefix)
 
@@ -137,9 +182,11 @@ After Build-with-AI finishes, do this — every time, no exceptions:
 6. **Content-Type dropdown** — set to **`application/json`**.
 7. **Raw Body** — paste the FULL FLAT 23-key JSON from §3 (insert the data values via the Custom Values
    picker; keep `messageTemplate` placeholder-free).
-8. **Save** the action, then **Publish** the workflow (not Draft).
-9. **Verify every field above is non-empty before publishing** — an empty URL/header/body silently drops
-   every inbound message.
+8. **Settings → Allow Re-entry** — open the workflow's **Settings** tab and set **Allow Re-entry** to
+   **ON** so every inbound message re-triggers the workflow (default off fires once, then goes dead).
+9. **Save** the action, then flip the top-right **Publish** toggle **ON**, then **Save** again (not Draft).
+10. **Verify every field above is non-empty before publishing** — an empty URL/header/body silently drops
+    every inbound message.
 
 This is a manual step the client OWNS — there is no API, no MCP, and Build-with-AI will not do it. Every
 client doc (the reference sheet, the SMS prompt template, the verification checklist) repeats this so the
@@ -161,7 +208,7 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
       - **WHERE:** open the workflow → click the **trigger** node.
       - **WHAT YOU SHOULD SEE:** the correct trigger type + (if there is a tag filter) a REAL tag name.
       - **WHAT TO PUT IF WRONG:** fix the trigger type / channel filter.
-- [ ] **TAG FILTER references a REAL, existing tag** (the Teresa gotcha — known live bug). If the trigger
+- [ ] **TAG FILTER references a REAL, existing tag** (the blank-tag gotcha — a known live bug). If the trigger
       (or an If-Else) has a tag filter — `tag is` / `tag contains` / **`tag does not contain`** — confirm
       the referenced tag ACTUALLY EXISTS and is the intended one.
       - **WHERE:** the trigger/If-Else filter, cross-checked against **Settings → Tags**.
@@ -181,6 +228,10 @@ per-workflow rendered version lives at `<slug>--verification-checklist.md`; the 
       **no `Authorization:` prefix in the value box**) **and** Key `Content-Type` / Value
       `application/json`.
 - [ ] **CONTENT-TYPE = application/json.**
+- [ ] **SETTINGS → ALLOW RE-ENTRY = ON** — open the workflow **Settings** tab; Allow Re-entry must be ON
+      so every inbound message re-triggers the workflow.
+      - **WHERE:** the workflow's **Settings** tab. **WHAT YOU SHOULD SEE:** Allow Re-entry = ON/Enabled.
+      - **IF OFF:** toggle it ON (off = fires once per contact then silently never again).
 - [ ] **RAW BODY = all 23 keys, FLAT** (no nesting), `messageTemplate` placeholder-free, no stripped/
       short body. Re-paste the full 23-key body if any key is missing.
 - [ ] **SEND-directive on the OpenClaw server mapping** — the `hooks.mappings` server-mapping
@@ -237,7 +288,7 @@ single Custom Webhook. Teach the operator (and write the prompt) for:
 GHL skill (per conversation-workflows-protocol.md §D.1) BEFORE building the workflow, then references the
 now-existing tag in the Build-with-AI prompt. **Why it matters:** Build-with-AI will happily build a
 filter that references a tag that does not exist (it leaves it blank), and a blank/non-existent tag in a
-`does not contain` filter silently never matches — so the workflow never fires (the Teresa gotcha). Do not
+`does not contain` filter silently never matches — so the workflow never fires (the blank-tag gotcha). Do not
 tell the operator to create tags by hand, and do not reference a tag that does not exist yet.
 
 **WHERE tags live (tell the client).** Tags are managed in GHL under **Settings → Tags**. That is where
@@ -257,6 +308,9 @@ TRIGGER:
 FILTERS (exact order):
 - Filter 1: <Field> = <Value>
 - Filter 2: <Field> = <Value>
+
+SETTINGS:
+- Allow Re-entry: ON   (the workflow must be allowed to re-enter / fire repeatedly per contact, so every inbound message re-triggers it)
 
 IF/ELSE (optional):
 - IF <condition, e.g. contact has tag `vip`>:
@@ -279,7 +333,7 @@ ACTIONS (exact order):
 - Action 2: Add Tag — `<tag>` (tag already created via the GHL skill)
 - Action 3 (optional): <...>
 
-PUBLISH: Yes — publish when done. Do NOT leave it as a draft.
+PUBLISH: Save the workflow, flip the top-right Publish toggle to ON, then Save again. Do NOT leave it as a draft.
 RUN SCHEDULE: <e.g. All Day>
 ```
 

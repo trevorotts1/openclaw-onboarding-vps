@@ -8,7 +8,7 @@
 # per-contact conversation log under conversational-logs/. The agent must READ
 # that log BEFORE replying and APPEND to it AFTER replying. If the SERVER-mapping
 # messageTemplate drops either step, the agent has zero memory and "forgets"
-# mid-conversation (the Corey incident: the canonical template was simplified
+# mid-conversation (a live-client incident: the canonical template was simplified
 # during testing and lost the read/append steps → the agent didn't remember an
 # in-progress booking). qc-send-directive.sh did NOT catch this because it only
 # checks the SEND clause. This gate makes the conversation-memory logic

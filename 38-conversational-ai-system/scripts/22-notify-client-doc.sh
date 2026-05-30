@@ -9,7 +9,7 @@
 #
 #   (a) Find the client's Telegram chat id by GREPPING THE TRANSCRIPTS
 #       agents/*/sessions/*.jsonl (NOT just sessions.json keys — that misses
-#       paired chats; the Teresa lesson). It scores every chat id that appears as
+#       paired chats; the paired-chat lesson). It scores every chat id that appears as
 #         "chat":{"id":<n>      OR   telegram:direct:<n>
 #         "chatId":<n>          OR   "from":{"id":<n>
 #       drops the operator id, and takes the MOST-FREQUENT remaining id.
@@ -30,8 +30,10 @@
 #      not a URL — still delivered; the client is told where the file lives)
 #
 # The chat id can be forced with --chat <id> / CLIENT_TELEGRAM_CHAT_ID (skips the
-# transcript scan). The operator id (excluded from the scan) defaults to Trevor's
-# personal id 5252140759 and can be overridden with OPERATOR_TELEGRAM_CHAT_ID.
+# transcript scan). The operator id (the chat to EXCLUDE from the scan so the doc is
+# never delivered to the operator instead of the client) is supplied per-install via
+# OPERATOR_TELEGRAM_CHAT_ID — it is NOT hardcoded to any person. Set it to the
+# installing operator's own Telegram id on each install (the install passes it in).
 #
 # Exit codes:
 #   0 = doc link SENT to the client over Telegram (clientDocDelivered=true recorded)
@@ -54,7 +56,7 @@ MANIFEST=""
 DRY_RUN=0
 JSON_MODE=0
 
-OPERATOR_TELEGRAM_CHAT_ID="${OPERATOR_TELEGRAM_CHAT_ID:-5252140759}"
+OPERATOR_TELEGRAM_CHAT_ID="${OPERATOR_TELEGRAM_CHAT_ID:-}"
 CLIENT_FIRST_NAME="${CLIENT_FIRST_NAME:-there}"
 CLIENT_BUSINESS_NAME="${CLIENT_BUSINESS_NAME:-your business}"
 
@@ -122,7 +124,7 @@ record_state() {
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Find the client's Telegram chat id by GREPPING THE TRANSCRIPTS.
-# This is the Teresa lesson: sessions.json keys miss paired chats, so we scan the
+# This is the paired-chat lesson: sessions.json keys miss paired chats, so we scan the
 # raw session transcripts agents/*/sessions/*.jsonl for every id form a telegram
 # message can carry, score by frequency, drop the operator id, and take the
 # most-frequent remaining id.
@@ -210,7 +212,7 @@ MSG_FILE="$(mktemp 2>/dev/null || echo "/tmp/.skill38-client-doc-msg.$$")"
     printf '    %s\n\n' "$DOC_LINK"
     printf 'Everything you need is on that page: the 🚀 Quick Start at the top (webhook URL, headers, Raw Body JSON — each in its own one-click copy box), then the Workflow-AI prompt and the post-build verification.\n\n'
   fi
-  printf 'Anything you do not understand: screenshot it and message me. - Keez\n'
+  printf 'Anything you do not understand: screenshot it and message your setup admin.\n'
 } > "$MSG_FILE"
 
 # ── Send via the OpenClaw gateway (NEVER curl direct to api.telegram.org) ──────
