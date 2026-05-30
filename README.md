@@ -1,7 +1,9 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` - this repo at v10.16.9.
+> **Version:** see `/version` - this repo at v10.16.10.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
+>
+> **NOTE (v10.16.10):** Skill 38 → **v1.4.18 → v1.4.21**. Workflow-AI instruction standardization + an exhaustive **Build-with-AI Custom Webhook** spec (URL / headers / RAW body / **Allow Re-entry**); **60-year-old-friendly** verification with copy-paste code blocks; a **client self-test** section plus an **AI-backend self-test** (`12/24-self-test-hook.sh`); heavily-enforced **Notion doc delivery**; explicit **VPS-vs-Mac install considerations**; a **GHL API quick-reference preloaded into the client's TOOLS.md** (all channels via one `/conversations/messages` endpoint + calendars / appointments / invoices + scopes); **channel-mirroring reply** (mirror the inbound channel as `type`, send by `contactId`, `conversationId` read-only); and a full **UNIVERSAL personal-data scrub** with a `qc-no-personal-data` gate. (Skill 38's own `skill-version.txt` is independent of these 8 repo-version locations.)
 >
 > **NOTE (v10.16.9):** The 8 rated Skill 38 + Skill 23 improvements (push to 10). Skill 38 → v1.4.5: two QC linters that machine-enforce the **23-key GHL body rule** (`scripts/qc-23-key-bodies.sh`, also in CI) and **THE TRINITY** (`scripts/qc-trinity-registry.sh`); the "Use Workflow AI" mislabel corrected to GHL **Automations → "Build with AI"** everywhere operator-facing; stale self-counts fixed (protocols=32, scripts=27, references=15); all 7 stub journey templates fleshed out; a distinction-map table at the top of `conversation-workflows-protocol.md`. Skill 23 → **ENFORCED cross-skill chain to Skill 38** (new `commsAutomationStatus` build-state field + `[COMMS-AUTOMATION-RESUME]` gate so a Comms/Sales/Support workforce hands off to Skill 38) and operator-facing library-gate status surfacing near the resume cap.
 >
@@ -15,7 +17,7 @@
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.9)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.10)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 

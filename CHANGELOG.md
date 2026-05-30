@@ -1,3 +1,45 @@
+## [v10.16.10]  -  2026-05-30  -  Ship this morning's Skill 38 work (v1.4.18 → v1.4.21)
+
+### Why
+
+This repo-level bump packages the Skill 38 (Conversational AI System) work landed this morning —
+`skill-version.txt` advanced **v1.4.18 → v1.4.21**. The eight repo-version-tracked files were rolled
+forward to `v10.16.10` so GitHub Releases mirrors the shipped state; Skill 38's own `skill-version.txt`
+(already `1.4.21`) is on its independent track and is NOT one of the eight repo-version locations.
+
+### Shipped in Skill 38 (v1.4.18 → v1.4.21)
+
+- **Workflow-AI instruction standardization** — the Workflow-AI step prompt (the run-time reply drafter
+  inside a GHL workflow AI node) is normalized to one canonical, must-appear shape across the playbook,
+  references, templates, and protocols.
+- **Exhaustive Build-with-AI Custom Webhook spec** — field-by-field instructions for the GHL
+  **Automations → "Build with AI"** Custom Webhook action: the **URL**, the **headers**, the **RAW
+  body**, and the **Allow Re-entry** setting, written out so there is no ambiguity at build time.
+- **60-year-old-friendly verification** — every verification step is rewritten for a non-technical
+  operator, with **copy-paste code blocks** so nothing has to be retyped or interpreted.
+- **Client self-test + AI-backend self-test** — a client-facing self-test section plus an automated
+  AI-backend self-test hook (`12/24-self-test-hook.sh`) that exercises the wired path end to end.
+- **Heavily-enforced Notion doc delivery** — the client-facing documentation MUST be delivered to the
+  client's own Notion (per the storage order), enforced rather than suggested.
+- **VPS-vs-Mac install considerations** — explicit, documented differences for the Hostinger Docker VPS
+  vs the Mac install path so the same playbook works on both deployment models.
+- **GHL API quick-reference preloaded into the client's TOOLS.md** — all channels via one
+  `/conversations/messages` endpoint, plus calendars / appointments / invoices, plus the required
+  scopes, baked into the client TOOLS.md so the agent never has to rediscover the surface.
+- **Channel-mirroring reply** — the reply mirrors the inbound channel as the `type`, sends by
+  `contactId`, and treats `conversationId` as read-only (never invented / never written).
+- **UNIVERSAL personal-data scrub + `qc-no-personal-data` gate** — a full sweep that removes personal
+  data from the shipped artifacts, machine-enforced by a `qc-no-personal-data` QC gate.
+
+### Changed
+
+- Repo version → `v10.16.10` (all 8 version-tracked locations via `bump-version.sh`): `/version`,
+  `install.sh`, `update-skills.sh`, `23-ai-workforce-blueprint/skill-version.txt`,
+  `templates/role-library/_index.json`, `templates/role-library/_qc-summary.md`, `README.md`
+  (`this repo at vX.Y.Z` marker), and `DIRECT-TO-AGENT-UPDATE-MESSAGE.md` (`**vX.Y.Z**`).
+- `README.md` — added a `NOTE (v10.16.10)` release note (prior release notes preserved) and rolled the
+  "READ THIS FIRST" install-path heading to v10.16.10.
+
 ## [Skill 38 v1.4.9]  -  2026-05-29  -  Enforce the MANDATORY GHL send-directive (drafting != sending)
 
 ### Why
