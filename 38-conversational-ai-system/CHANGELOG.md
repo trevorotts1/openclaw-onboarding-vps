@@ -1,5 +1,66 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.5.1] - 2026-05-30 - THREE QC-enforced standards: Communications Playbook (elevated), GHL Raw Body JSON (new), Notion Client-Doc (new)
+
+### Why
+Skill 38 already shipped one formal, machine-enforced standard — `references/workflow-ai-instructions-standard.md`
+(OPERATOR HEADER → a hard "EVERY … MUST INCLUDE ALL OF THE FOLLOWING" §0 checklist → field-by-field detail,
+gated in CI). The communications playbook, the GHL Custom Webhook RAW BODY, and the client Notion setup doc
+each had their rules scattered across protocols, the source playbook, and inline prose, enforced (where at
+all) only obliquely. This release brings all three to the SAME rigor as the workflow-AI standard: a hard
+mandatory-checklist headline, codified field-by-field detail, and a dedicated machine-enforced QC gate that
+FAILS the build (and is negative-tested) if the standard is violated. Standards are still POINTERS from
+SKILL.md / INSTRUCTIONS.md — the bodies are never inlined into AGENTS.md/SKILL.md. (Lands on top of the
+[1.5.0] Round-3 feature wave; the ZHC- tag-prefix inclusion in the Communications Playbook Standard aligns
+with [1.5.0]'s `zhc-tag-prefix-protocol.md`.)
+
+### Added
+- **`references/ghl-raw-body-json-standard.md` (NEW STANDARD).** The single human-readable standard for the
+  GHL Custom Webhook RAW BODY (object A): the BINDING §0 "EVERY GHL RAW BODY MUST BE THE FULL 23-KEY FLAT
+  JSON" rule (23 = minimum AND standard, never fewer, never nested), the FLAT rule, the placeholder-free
+  `messageTemplate` stub rule, `deliver:false`, the per-channel-variant rule (only `channel` + `session_key`
+  prefix change), the EXACT 23 keys with a one-line purpose each, and the canonical body shown once.
+  Codifies `references/GHL-INBOUND-AND-PLAYBOOKS.md` §14 (the source of truth) and points at
+  `scripts/qc-23-key-bodies.sh` as the body linter.
+- **`references/notion-client-doc-standard.md` (NEW STANDARD).** The single standard for the client
+  Quick-Start Notion setup doc: the BINDING §0 "EVERY CLIENT NOTION SETUP DOC MUST INCLUDE ALL OF THE
+  FOLLOWING, IN THIS ORDER" 12-item list — Quick-Start first; Webhook URL (own block); Authorization as TWO
+  blocks (block1 `Authorization` / block2 `Bearer <token>` value-only, NEVER combined); Content-Type as two
+  blocks; the FLAT 23-key Raw Body; tags-first + field-by-field manual fill + "Build-with-AI builds the
+  SHAPE only" warning + post-build VERIFY; the Communication Playbooks section (CTA + trigger-word +
+  I-Do/You-Do + brainstorm); VPS-vs-Mac; how-it-works LAST; every copyable value in its own code block;
+  Telegram delivery; universal/no-personal-data.
+- **`scripts/qc-communications-playbook-standard.sh` (NEW QC GATE).** Asserts the Communications Playbook
+  Standard still carries its §0 mandatory checklist + every required item. Negative-tested (dropping the
+  ZHC- tag prefix FAILS). Pure bash.
+- **`scripts/qc-ghl-raw-body-standard.sh` (NEW QC GATE).** Asserts the GHL Raw Body JSON Standard documents
+  the §0 FLAT-23-key rule + the exact 23 keys, and COMPOSES with `scripts/qc-23-key-bodies.sh` so every real
+  object-A body obeys it. Negative-tested (dropping a key FAILS). Pure bash.
+- **`scripts/qc-notion-doc-standard.sh` (NEW QC GATE).** Asserts the Notion Client-Doc Standard documents
+  the §0 ordered mandatory list, and COMPOSES with `scripts/qc-reference-sheet.sh` so the actually-generated
+  doc conforms. Negative-tested (dropping "Quick Start FIRST" FAILS). Pure bash.
+
+### Changed (ELEVATED, not duplicated)
+- **`references/communications-playbook-standard.md` — ELEVATED** to the same mandatory-checklist + QC rigor
+  as the workflow-AI standard. Added a hard, leading **§0 "EVERY COMMUNICATION PLAYBOOK MUST INCLUDE ALL OF
+  THE FOLLOWING"** binding checklist (9 inclusions: channel+persona/voice identity, opening behavior/greeting,
+  goal/desired outcome, the MANDATORY SEND rule, the conversation-memory read-before/append-after protocol,
+  escalation/handoff + honesty floor, quiet-hours + compliance-keyword respect, the **ZHC-** tag prefix for
+  programmatic tags, per-channel formatting), scoped to the 8 channels (SMS, Email, FB Messenger, FB
+  comments, IG DM, LinkedIn, Live Chat, All-in-One/Chat Widget). Enriched the §1 tick-list and the §2
+  canonical skeleton to match (added Persona/voice, Opening/greeting, Quiet-hours & compliance, Per-channel
+  formatting, ZHC- prefix on tagging). The pre-existing file was elevated in place — NOT duplicated.
+- **`scripts/11-run-qc-checklist.sh`** — wired in the three new gates (sections before the final summary).
+- **`.github/workflows/qc-static.yml`** — wired in three new CI steps, each running the gate (positive) AND
+  a negative test that proves the gate fails closed when a mandatory item is removed.
+- **`SKILL.md` / `INSTRUCTIONS.md`** — added one-line POINTERS to each new/elevated standard (bodies not
+  inlined). Self-counts updated for the three new references + three new scripts.
+
+### QC
+- All Skill 38 gates pass (incl. `qc-no-personal-data.sh` — UNIVERSAL, zero personal/client data in the new
+  docs + the generated output). The three new gates pass positive and FAIL on a removed mandatory item
+  (negative-tested locally + in CI).
+
 ## [1.5.0] - 2026-05-30 - Round-3 Queue-A feature wave: ZHC tag-prefix, F50 aggression (two-tier), F44 detour-and-return, F45 geo-qualification, F46 CRM field write, F47 inline FAQ — one coherent minor bump
 
 ### Why

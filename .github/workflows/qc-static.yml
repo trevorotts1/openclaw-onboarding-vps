@@ -398,3 +398,70 @@ jobs:
           [ "$rc" -eq 1 ] || { echo "✗ F52 gate should FAIL (exit 1) when a JSONL path is undocumented, got $rc"; exit 1; }
           rm -rf "$ng"
           echo "✓ Skill 38 F52 data contract enforced (5 JSONL logs documented + seeded); fails closed on an undocumented log"
+
+      - name: Skill 38 Communications Playbook Standard (mandatory checklist + negative)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce that references/communications-playbook-standard.md still
+          # carries its hard §0 "EVERY COMMUNICATION PLAYBOOK MUST INCLUDE ALL OF THE
+          # FOLLOWING" mandatory checklist and every required item: channel+persona/
+          # voice, opening behavior, goal/desired-outcome, the MANDATORY SEND rule
+          # (GHL Conversations API, mirror the channel, send by contactId,
+          # conversationId READ-only, drafting != sending), the conversation-memory
+          # read-before/append-after protocol, escalation/handoff + honesty floor,
+          # quiet-hours + compliance-keyword respect, the ZHC- tag prefix for
+          # programmatic tags, per-channel formatting, and the 8 channels. Mirrors the
+          # workflow-ai-instructions-standard §0 rigor.
+          bash 38-conversational-ai-system/scripts/qc-communications-playbook-standard.sh
+          # Negative: dropping a mandatory item (the ZHC- tag prefix) MUST FAIL (exit 1).
+          ng="$(mktemp -d)"; cp -r 38-conversational-ai-system "$ng/skill"
+          grep -v 'ZHC-' "$ng/skill/references/communications-playbook-standard.md" > "$ng/skill/references/cps.tmp"
+          mv "$ng/skill/references/cps.tmp" "$ng/skill/references/communications-playbook-standard.md"
+          rc=0; bash "$ng/skill/scripts/qc-communications-playbook-standard.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ dropping the ZHC- tag prefix should FAIL the gate (exit 1), got $rc"; exit 1; }
+          rm -rf "$ng"
+          echo "✓ Skill 38 Communications Playbook Standard carries its §0 mandatory checklist; gate fails closed when a mandatory item is dropped"
+
+      - name: Skill 38 GHL Raw Body JSON Standard (23-key FLAT rule + negative)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce that references/ghl-raw-body-json-standard.md documents the
+          # §0 "FULL 23-key FLAT JSON" rule (23 = minimum AND standard, never fewer,
+          # never nested), the FLAT rule, the placeholder-free messageTemplate stub,
+          # deliver:false, and the EXACT 23 keys — and composes with qc-23-key-bodies.sh
+          # so every real object-A body in the skill obeys it.
+          bash 38-conversational-ai-system/scripts/qc-ghl-raw-body-standard.sh
+          # Negative: dropping one of the 23 keys (location_name) MUST FAIL (exit 1).
+          ng="$(mktemp -d)"; cp -r 38-conversational-ai-system "$ng/skill"
+          grep -v 'location_name' "$ng/skill/references/ghl-raw-body-json-standard.md" > "$ng/skill/references/rb.tmp"
+          mv "$ng/skill/references/rb.tmp" "$ng/skill/references/ghl-raw-body-json-standard.md"
+          rc=0; bash "$ng/skill/scripts/qc-ghl-raw-body-standard.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ dropping a 23-key list entry should FAIL the gate (exit 1), got $rc"; exit 1; }
+          rm -rf "$ng"
+          echo "✓ Skill 38 GHL Raw Body JSON Standard documents the FLAT 23-key rule + list; gate fails closed when a key is dropped (and composes qc-23-key-bodies.sh)"
+
+      - name: Skill 38 Notion Client-Doc Standard (ordered mandatory list + negative)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce that references/notion-client-doc-standard.md documents the
+          # §0 "EVERY CLIENT NOTION SETUP DOC MUST INCLUDE ALL OF THE FOLLOWING, IN THIS
+          # ORDER" list and its 12 items: Quick-Start first, the two-block Authorization
+          # (block1 "Authorization" / block2 "Bearer <token>" value-only, NEVER a
+          # combined block), the two-block Content-Type, the FLAT 23-key Raw Body,
+          # tags-first + field-by-field manual fill + "Build-with-AI builds the SHAPE
+          # only" warning + post-build VERIFY, the Communication Playbooks section,
+          # VPS-vs-Mac, how-it-works LAST, each value in its own code block, Telegram
+          # delivery, and the universal no-personal-data rule — and composes with
+          # qc-reference-sheet.sh so the actually-generated doc conforms.
+          bash 38-conversational-ai-system/scripts/qc-notion-doc-standard.sh
+          # Negative: dropping the "Quick Start FIRST" item MUST FAIL (exit 1).
+          ng="$(mktemp -d)"; cp -r 38-conversational-ai-system "$ng/skill"
+          grep -v 'Quick Start FIRST' "$ng/skill/references/notion-client-doc-standard.md" > "$ng/skill/references/nd.tmp"
+          mv "$ng/skill/references/nd.tmp" "$ng/skill/references/notion-client-doc-standard.md"
+          rc=0; bash "$ng/skill/scripts/qc-notion-doc-standard.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ dropping 'Quick Start FIRST' should FAIL the gate (exit 1), got $rc"; exit 1; }
+          rm -rf "$ng"
+          echo "✓ Skill 38 Notion Client-Doc Standard documents the ordered mandatory list; gate fails closed when a mandatory item is dropped (and composes qc-reference-sheet.sh)"

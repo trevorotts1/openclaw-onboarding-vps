@@ -407,6 +407,48 @@ else
   report_fail "qc-feature-logs.sh not found (looked in scripts/)"
 fi
 
+# -------- Communications Playbook Standard (machine-enforced) --------
+section "Communications Playbook Standard (qc-communications-playbook-standard.sh)"
+QC_CPS="$SCRIPT_DIR/qc-communications-playbook-standard.sh"
+[ -f "$QC_CPS" ] || QC_CPS="$SKILL38_ROOT/scripts/qc-communications-playbook-standard.sh"
+if [ -f "$QC_CPS" ]; then
+  if bash "$QC_CPS" >/dev/null 2>&1; then
+    report_pass "Communications Playbook Standard carries its §0 'EVERY COMMUNICATION PLAYBOOK MUST INCLUDE ALL OF THE FOLLOWING' mandatory checklist + every required item (channel/persona, opening, goal, SEND rule, conversation-memory, escalation/honesty, quiet-hours/compliance, ZHC- tag prefix, per-channel formatting, the 8 channels)"
+  else
+    report_fail "qc-communications-playbook-standard.sh: the Communications Playbook Standard is missing a mandatory item — run it directly for detail"
+  fi
+else
+  report_fail "qc-communications-playbook-standard.sh not found (looked in scripts/)"
+fi
+
+# -------- GHL Raw Body JSON Standard (machine-enforced) --------
+section "GHL Raw Body JSON Standard (qc-ghl-raw-body-standard.sh)"
+QC_RAWBODY="$SCRIPT_DIR/qc-ghl-raw-body-standard.sh"
+[ -f "$QC_RAWBODY" ] || QC_RAWBODY="$SKILL38_ROOT/scripts/qc-ghl-raw-body-standard.sh"
+if [ -f "$QC_RAWBODY" ]; then
+  if bash "$QC_RAWBODY" >/dev/null 2>&1; then
+    report_pass "GHL Raw Body JSON Standard documents the §0 'FULL 23-key FLAT JSON' rule + FLAT rule + placeholder-free messageTemplate + deliver:false + the exact 23 keys, AND every real object-A body obeys it (composes qc-23-key-bodies.sh)"
+  else
+    report_fail "qc-ghl-raw-body-standard.sh: the GHL Raw Body JSON Standard is incomplete or a real body violates the 23-key rule — run it directly for detail"
+  fi
+else
+  report_fail "qc-ghl-raw-body-standard.sh not found (looked in scripts/)"
+fi
+
+# -------- Notion Client-Doc Standard (machine-enforced) --------
+section "Notion Client-Doc Standard (qc-notion-doc-standard.sh)"
+QC_NOTIONDOC="$SCRIPT_DIR/qc-notion-doc-standard.sh"
+[ -f "$QC_NOTIONDOC" ] || QC_NOTIONDOC="$SKILL38_ROOT/scripts/qc-notion-doc-standard.sh"
+if [ -f "$QC_NOTIONDOC" ]; then
+  if bash "$QC_NOTIONDOC" >/dev/null 2>&1; then
+    report_pass "Notion Client-Doc Standard documents the §0 ordered mandatory list (Quick-Start first, split Authorization two-block, split Content-Type, FLAT 23-key body, tags-first + manual-fill + Build-with-AI-shape-only + post-build VERIFY, Communication Playbooks section, VPS-vs-Mac, how-it-works LAST, each value its own code block, Telegram delivery, universal/no-personal-data), AND the generated doc conforms (composes qc-reference-sheet.sh)"
+  else
+    report_fail "qc-notion-doc-standard.sh: the Notion Client-Doc Standard is incomplete or the generated doc fails — run it directly for detail"
+  fi
+else
+  report_fail "qc-notion-doc-standard.sh not found (looked in scripts/)"
+fi
+
 # -------- Final summary --------
 section "QC SUMMARY"
 echo "  PASS: $PASS"
