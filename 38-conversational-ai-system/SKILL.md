@@ -1,4 +1,4 @@
-# Skill 38: Conversational AI System (v5.14)
+# Skill 38: Conversational AI System (packages playbook v6.0)
 
 ## MANDATORY - Teach Yourself Protocol (TYP)
 
@@ -7,7 +7,7 @@
 Required read order:
 1. SKILL.md (this file)
 2. INSTALL.md — one-time setup: prerequisites + the numbered install scripts (`00`–`23`) + QC linters in `scripts/`
-3. INSTRUCTIONS.md — the v5.14 playbook organized by Phase 0 through Phase 7 (the operator's runtime walkthrough)
+3. INSTRUCTIONS.md — the v6.0 playbook organized by Phase 0 through Phase 7 (the operator's runtime walkthrough)
 4. CORE_UPDATES.md — what gets appended to AGENTS.md + MEMORY.md
 5. references/conversational-ai-strategic-roadmap.md — strategic context (what's ✅ shipped vs 📋 pending)
 6. CHANGELOG.md — change history
@@ -21,7 +21,7 @@ This skill is governed by `../QC-PROTOCOL.md` (repo root) — the Sub-Agent Hand
 
 ## What This Skill Is
 
-**Skill 38 is the conversational AI BRAIN that runs on top of skill 29 (GHL Convert and Flow).** Skill 29 installs Convert and Flow and the basic GHL integration. Skill 38 adds the brain layer: sales best practices, intelligent follow-up, dual-mode customer service + support, typed knowledge bases, intelligent routing, weekly + monthly self-tuning, model version freshness checking, and the rest of the 32 protocols from v5.14 (see the SELF-COUNTS note under "What This Skill Ships").
+**Skill 38 is the conversational AI BRAIN that runs on top of skill 29 (GHL Convert and Flow).** Skill 29 installs Convert and Flow and the basic GHL integration. Skill 38 adds the brain layer: sales best practices, intelligent follow-up, dual-mode customer service + support, typed knowledge bases, intelligent routing, weekly + monthly self-tuning, model version freshness checking, and the rest of the 32 protocols from the v6.0 playbook (see the SELF-COUNTS note under "What This Skill Ships").
 
 These two skills are SIBLINGS, not duplicates. **Skill 29 is a hard prerequisite.**
 
@@ -47,12 +47,12 @@ upstream is Skill 23: read its `INSTRUCTIONS.md → "Moment 3.8"`, then build th
 ## What This Skill Ships
 
 <!-- SELF-COUNTS: re-verify on EVERY version bump — see scripts/bump-version.sh "Skill 38 self-count
-     re-verification" note. Counts as of v1.4.17: protocols/=32 (*.md), scripts/=37 (*.sh), references/=15
+     re-verification" note. Counts as of v1.4.18: protocols/=32 (*.md), scripts/=37 (*.sh), references/=16
      (*.md), journey templates=8 dirs. Run: ls -1 protocols/*.md scripts/*.sh references/*.md | per-dir wc -l. -->
 - 32 protocol files under `protocols/` (humanizer is intentionally NOT here — skill 19 owns it)
 - **8 customer journey templates** under `templates/journey-templates/` (coach + all 7 verticals fully detailed: consulting, course-creator, e-commerce, real-estate, saas, service-provider, wellness)
 - **37 scripts** under `scripts/` (idempotent, OS-aware: Darwin + Linux) — the numbered install scripts `00`–`23` (including `22-notify-client-doc.sh`, the MANDATORY GATED Telegram doc-delivery step: finds the client's chat id by GREPPING THE TRANSCRIPTS `agents/*/sessions/*.jsonl`, sends the doc LINK via the OpenClaw gateway, records `clientDocDelivered` — FLAGS LOUDLY + non-zero on no-chat/send-failure, never a silent skip) plus `skill38-calendar-sync.sh`, the nine QC linters `qc-23-key-bodies.sh` (machine-enforces the 23-key GHL body rule) + `qc-trinity-registry.sh` (machine-enforces THE TRINITY) + `qc-send-directive.sh` (machine-enforces the MANDATORY GHL send-directive — SEND, not just draft) + `qc-conversation-memory.sh` (machine-enforces the conversation-MEMORY read-before/append-after — hook sessions are single-turn, the per-contact log IS the memory) + `qc-playbook-doc.sh` (machine-enforces the per-playbook human-facing DOC deliverable — Notion → Google Docs → text, URL recorded; a skipped doc fail-closes hand-off) + `qc-notify-client-doc.sh` (machine-enforces the MANDATORY Telegram doc-delivery — the client always gets their link, transcript-grep-based + gated + wired) + `qc-backend-ready.sh` (machine-enforces the backend is ready to RECEIVE — hooks.mappings live + deliver:false + a working model + healthz 200 — before testing/hand-off) + `qc-reference-sheet.sh` (machine-enforces that the generated client reference sheet leads with a literal **🚀 Quick Start** section followed by a full **Reference & explanation** section, with each copyable value in its OWN code block — the **Authorization** key and the `Bearer <token>` value in SEPARATE blocks (the value block holds ONLY `Bearer <token>` — it must NOT contain the word "Authorization", and a combined `Authorization: Bearer` block FAILs), the **Content-Type** key and `application/json` value in SEPARATE blocks — plus the copyable ```json GHL Raw Body, the hook URL, the manual Custom-Webhook fill instructions, the **create-tag-FIRST + Settings → Tags** instruction, the **post-build verification** section (Trigger / Custom Webhook / Publish, including the blank-tag-in-a-filter gotcha), AND the enriched **Your Communication Playbooks** section (where playbooks live — `conversation-workflows/` mirrored to Notion — the **"Want another communication playbook? Just ask me!"** CTA with a concrete copyable example, the build walkthrough — brainstorm not a 50-question form → create → store → wire the Workflow-AI prompt to **Convert and Flow** — and the Convert-and-Flow abilities: **create tags / update calendar / book appointments**, plus the explicit "you have an AI connected to your Convert and Flow account — just ask" line, AND the new-playbook CREATION experience — the personal **🔑 trigger word** explained voice-assistant style (Alexa / Hey Siri), the **🤝 "I Do / You Do"** process + the **⏱️ ~15-30 minute** expectation, and the **🧠 brainstorm "things to think about"** list + the "if you're unsure, that's what I'm here to brainstorm" reassurance) — drives the generator offline and FAILs if any is missing) + `qc-config-schema-safety.sh` (machine-enforces that no install script writes a config shape that fails `openclaw config validate` on 2026.5.27 — no `.cron.jobs`, no `agents.defaults.async/.batch`, no jq `//= …;` — and FAILs on any reintroduction), and the `qc-trinity-registry-test.sh` + `qc-playbook-doc-test.sh` fixture suites (prove registry reconciliation + the doc gate)
-- 15 reference documents under `references/` (deep-dives + the full v5.14 source playbook + the communications-playbook & workflow-AI/Build-with-AI standards + the **Cloudflare & GoDaddy Setup Guide** from School of AI — the client-facing walk-through for the missing-CF-token halt path)
+- 16 reference documents under `references/` (deep-dives + the full v6.0 source playbook + the communications-playbook & workflow-AI/Build-with-AI standards + the **Cloudflare & GoDaddy Setup Guide** from School of AI — the client-facing walk-through for the missing-CF-token halt path — plus **VPS-VS-MAC-INSTALL.md**, the VPS-vs-Mac install-considerations reference mirrored into the generated client doc)
 - **AGENTS.md updates:** Steps 1.7, 1.8, 1.9, 2.8 inserted; Step 1.75 upgraded
 - **MEMORY.md design rules 6-14** appended
 - **4 cron jobs registered:** Sunday 2am tune-up; Saturday 11pm proactive scan + 11:30pm model freshness; 1st-of-month comprehensive review
@@ -67,4 +67,4 @@ upstream is Skill 23: read its `INSTRUCTIONS.md → "Moment 3.8"`, then build th
 
 ## When the Agent Should Invoke This Skill
 
-After skills 05, 10, 19, 29 are installed AND the operator is ready to wire up the full conversational AI brain. Estimated install time: 60-90 minutes (per v5.14 playbook).
+After skills 05, 10, 19, 29 are installed AND the operator is ready to wire up the full conversational AI brain. Estimated install time: 60-90 minutes (per the v6.0 playbook).

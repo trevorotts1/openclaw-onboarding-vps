@@ -1,5 +1,103 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.18] - 2026-05-30 - Audit/prune (v6.0 playbook labels + stale self-counts) + VPS-vs-Mac install section (QC-enforced)
+
+### Why
+A full audit/prune pass plus a new installer-facing deliverable. (1) The packaged playbook was
+consolidated to **v6.0** (the file is `references/v6.0-source-playbook.md`, banner "Version: 6.0",
+"Supersedes v5.x"), but the skill-package files (SKILL.md / INSTALL.md / INSTRUCTIONS.md /
+CORE_UPDATES.md / EXAMPLES.md) and several deep-dive references still NAMED the current canonical
+doc "the v5.14 playbook" — including self-contradictions like "the v5.14 playbook … lives at
+`references/v6.0-source-playbook.md`". (2) Several self-counts had drifted (playbook line count,
+"27 protocols", a stale AGENTS.md marker name, "scripts/ numbered 00-08"). (3) Installers had no
+single place that spelled out how a Skill 38 install differs on a Hostinger Docker VPS vs a Mac mini,
+which is the #1 source of "the hook is live but inbound does nothing" / "the token vanished on reboot".
+
+### Added
+- **`references/VPS-VS-MAC-INSTALL.md`** — a new reference: **⚙️ Things to consider when installing:
+  VPS (Hostinger Docker) vs Mac mini**. VPS column: env in host `/docker/<project>/.env` applied with
+  `docker compose up -d --force-recreate` (plain restart ignores `env_file`); GHL/provider creds ALSO
+  in the container `/data/.openclaw/secrets/.env`; the `/hostinger/server.mjs` wrapper rewrites
+  `hooks.token` to `hooks_${OPENCLAW_GATEWAY_TOKEN}` each boot UNLESS `OPENCLAW_HOOKS_TOKEN` is set in
+  the host `.env`; the gateway port is often NOT 18789 (read `PORT` / `openclaw gateway status`);
+  public hook via cloudflared-on-PM2 (`pm2 save`) or an existing Traefik `*.hstgr.cloud` route; `apt`
+  is a brew shim (use `/data/linuxbrew/.linuxbrew/bin/brew`). Mac column: provider keys in the
+  `openclaw.json` top-level `env` block (launchd service-env / `~/.openclaw/.env` alone insufficient);
+  GHL creds in `~/.openclaw/secrets/.env`; restart via
+  `launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway`; remote access via Cloudflare tunnel +
+  Access token (wrap remote cmds in `zsh -lc`); public hook via `sudo cloudflared service install`.
+  COMMON to both: 23-key FLAT body, node-owned `conversational-logs/`, GHL creds in `secrets/.env`,
+  `deliver:false`, Ollama Cloud `:cloud` `maxTokens` capped at 65536. References count 15 → 16.
+- **`scripts/21-generate-client-reference-sheet.sh`** now emits that VPS-vs-Mac section into the
+  generated client reference sheet, placed AFTER the 🚀 Quick Start and BEFORE the deep
+  Reference & explanation (Quick-Start-first ordering preserved). The block mirrors
+  `references/VPS-VS-MAC-INSTALL.md` verbatim.
+- **`scripts/qc-reference-sheet.sh`** now machine-enforces the VPS-vs-Mac section (and gained a
+  `--require-manual-fill` flag that asserts it explicitly; it is checked by default regardless).
+  FAILs the generated doc if the section is missing OR if either the VPS points (force-recreate /
+  container `secrets/.env` / `OPENCLAW_HOOKS_TOKEN` / the server.mjs wrapper) or the Mac points
+  (`openclaw.json` top-level `env` block / `launchctl kickstart`) are absent. Negative-tested:
+  removing the whole section, the lone `launchctl` line, or the lone `force-recreate` line each
+  produces a named FAIL (exit 1).
+- **`INSTRUCTIONS.md`** — a new BINDING hard rule for the VPS-vs-Mac section + Step 6 pointer.
+
+### Fixed (audit/prune — stale, conflicting, or drifted)
+- **Stale version labels (the packaged playbook is v6.0, not v5.14).** Renamed the operative
+  "the v5.14 playbook / v5.14 walkthrough / Skill 38 (v5.14)" references to **v6.0** in:
+  `SKILL.md` (title + read-order + ships list + estimate), `INSTALL.md` (protocols / source-playbook /
+  Step-9.21 / estimate / Phases-0-7 / read-next), `INSTRUCTIONS.md` (banner + read-order + "ship in
+  full" + Step 5 + Phase-5 header + pending-features), `CORE_UPDATES.md` (title + AGENTS-block source),
+  `EXAMPLES.md` (model-freshness rule), and the deep-dive cross-references in
+  `references/{stripe-webhooks-reference,shopify-graphql-reference,cloudflare-tunnel-troubleshooting,
+  stripe-coupons-api,sales-frameworks-deep-dive,ghl-coupons-api,cloudflare-godaddy-setup-guide}.md`
+  and `scripts/{02-create-knowledgebases,07-stripe-setup-wizard}.sh`. **Deliberately preserved** as
+  accurate history: the playbook's own internal changelog, the per-feature "shipped in vX.Y" roadmap
+  tags, the VERBATIM-extraction provenance headers/comments (with their original source filename +
+  line ranges), and the live MEMORY.md idempotency marker names (renaming them would re-append rules
+  on installed boxes — clarified in CORE_UPDATES.md that those labels are stable identifiers).
+- **`INSTRUCTIONS.md` "8,797 lines" → "9,483 lines"** and **`INSTALL.md` "8,797-line" → "9,483-line"**
+  (actual `wc -l` of `references/v6.0-source-playbook.md`).
+- **`references/conversational-ai-strategic-roadmap.md` "packages 27 protocol files" → "32"** (the
+  actual count; the 27 contradicted SKILL.md's "32 protocol files" + the SELF-COUNTS). Refreshed the
+  status-legend / "Last updated" banner from v5.4 to v6.0 (per-feature "shipped in vX.Y" tags kept).
+- **`INSTRUCTIONS.md` "where the 27 protocols ship" → "the bulk of the 32 protocols"** and
+  **"scripts/ folder is numbered 00-08" → "00-23"** (both stale self-counts).
+- **`CORE_UPDATES.md` AGENTS.md marker correction.** It documented a marker
+  `<!-- BEGIN skill-38 conversational-ai v5.14 -->` that `scripts/05-update-agents-md.sh` does NOT
+  write; corrected to the real `<!-- BEGIN SKILL38: <NAME> -->` convention (e.g.
+  `SKILL38_RUNTIME_ROUTING`).
+- **`references/cloudflare-tunnel-troubleshooting.md` hardcoded `localhost:18789`** softened to
+  `localhost:<PORT>` with an explicit note that a VPS gateway often binds a non-18789 port (read
+  `PORT` / `openclaw gateway status`).
+- Self-counts: `SKILL.md` SELF-COUNTS comment and the "16 reference documents" lines updated for the
+  new reference; counts re-verified (`protocols/=32`, `scripts/=37`, `references/=16`, journeys=8).
+
+### Verified (no change required)
+- **The 23-key FLAT GHL Custom Webhook body holds everywhere.** `qc-23-key-bodies.sh` scans
+  references/ + templates/ + scripts/ (incl. the ~9.5k-line v6.0 playbook) — all 22 object-A bodies
+  PASS (23-key, flat, placeholder-free). The body in `protocols/conversation-workflows-protocol.md`
+  was hand-verified as the full flat 23-key body. No 8/11/13-key or nested body exists anywhere; the
+  only sub-23 mentions are "no stripped bodies allowed" rules. messageTemplate stays server-only +
+  placeholder-free, `deliver:false`, send-directive + conversation-memory read-before/append-after all
+  green (`qc-send-directive.sh`, `qc-conversation-memory.sh`).
+- The Authorization header in the client doc stays TWO separate copy blocks ("Authorization" / "Bearer
+  <token>"), Content-Type likewise split; Quick-Start-first ordering, the "Your Communication
+  Playbooks" section (trigger word + I-Do/You-Do + brainstorm), and the mandatory Telegram doc-delivery
+  are all intact and still QC-green.
+
+### QC
+All Skill 38 gates green: `qc-23-key-bodies`, `qc-trinity-registry-test`, `qc-send-directive`,
+`qc-conversation-memory`, `qc-playbook-doc-test`, `qc-reference-sheet` (now incl. the VPS-vs-Mac
+markers), `qc-notify-client-doc`, `qc-config-schema-safety`. `bash -n` clean across all 37 scripts.
+QC-PROTOCOL.md 10-category rubric: every category ≥ 8.5.
+
+### Notes
+- Additive only; no schema/config changes; no `.py` added (the inline grep/awk QC core stays BASH, so
+  the `.py` claude-/anthropic ban is respected). `38-conversational-ai-system/skill-version.txt` is the
+  only version bumped (1.4.17 → 1.4.18) — it is NOT one of the repo's 8 version locations, so
+  `bump-version.sh` was correctly not run. SCOPE: 38-conversational-ai-system only; no other skill
+  touched.
+
 ## [1.4.17] - 2026-05-29 - New-playbook CREATION experience: personal trigger word + "I Do / You Do" + brainstorm prep
 
 ### Why

@@ -21,4 +21,4 @@ else
     echo "[skill 38] Stripe setup skipped (no key entered)."
   fi
 fi
-echo "[skill 38] See protocols/stripe-integration-protocol.md for full v5.14 wiring."
+echo "[skill 38] See protocols/stripe-integration-protocol.md for full v6.0 wiring."

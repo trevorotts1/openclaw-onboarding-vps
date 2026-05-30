@@ -1,6 +1,6 @@
 # Cloudflare Tunnel — Troubleshooting (Phase 1-2)
 
-> Deep-dive reference for the v5.14 playbook Phase 1 (Build Network Plumbing) +
+> Deep-dive reference for the v6.0 playbook Phase 1 (Build Network Plumbing) +
 > Phase 2 (Configure OpenClaw). See `references/v6.0-source-playbook.md` Steps 1, 2,
 > 3, 3.5, 4 for the canonical setup steps. This file is the failure-mode map.
 
@@ -8,8 +8,13 @@
 
 Inbound message path:
 ```
-GHL  →  Cloudflare DNS  →  cloudflared tunnel  →  OpenClaw gateway (localhost:18789)  →  agent
+GHL  →  Cloudflare DNS  →  cloudflared tunnel  →  OpenClaw gateway (localhost:<PORT>)  →  agent
 ```
+
+> **Gateway port — do NOT assume 18789.** On a Mac the default is usually `18789`, but on a
+> Hostinger Docker VPS the gateway often binds a different port (read the `PORT` env / run
+> `openclaw gateway status`, or check the container's published port). The tunnel ingress and
+> every `localhost:<PORT>` below must point at the ACTUAL gateway port for this box.
 
 When inbound messages don't reach the agent, one of those four layers broke. The order
 to check is the order they're listed.
@@ -24,7 +29,7 @@ Check:
 - The zone must be active in the Cloudflare account that owns the tunnel.
 
 Fix:
-- Re-create the CNAME via the Cloudflare API. The v5.14 playbook Step 1 has the exact
+- Re-create the CNAME via the Cloudflare API. The v6.0 playbook Step 1 has the exact
   curl invocation.
 
 ## Layer 2 — cloudflared tunnel
@@ -33,11 +38,11 @@ Symptom: DNS resolves, but TLS connection times out or returns 502.
 
 Check:
 - `systemctl status cloudflared` (Linux) or `launchctl list | grep cloudflared` (Mac).
-- The tunnel's ingress config must list the tunnel hostname → `http://localhost:18789`.
+- The tunnel's ingress config must list the tunnel hostname → `http://localhost:<PORT>` (the gateway's actual port — see the port note at the top; do NOT assume 18789 on a VPS).
 - The tunnel's connector token must match the one created via API.
 
 Fix:
-- Reinstall as a persistent system service (Step 2 of the v5.14 playbook). On Mac use
+- Reinstall as a persistent system service (Step 2 of the v6.0 playbook). On Mac use
   `sudo cloudflared service install <TOKEN>`; on Linux use the apt-package post-install
   systemd unit. Skill 38's `04-register-crons.sh` does NOT manage cloudflared — that
   lives in Phase 1 of the playbook itself.
@@ -47,7 +52,7 @@ Fix:
 Symptom: tunnel is up and serving, but the gateway returns no response or 500.
 
 Check:
-- `openclaw gateway status` should report `Listening: 127.0.0.1:18789`.
+- `openclaw gateway status` should report `Listening: 127.0.0.1:<PORT>` — note the ACTUAL port it prints (18789 on most Macs; often different on a Hostinger Docker VPS) and use that everywhere above.
 - `openclaw config validate` must pass.
 - `hooks.mappings` must contain a `ghl-inbound` entry (and `stripe-events`,
   `shopify-events` if those integrations are active).

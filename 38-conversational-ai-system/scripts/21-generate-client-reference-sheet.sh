@@ -579,6 +579,42 @@ LEAD="$STAGE_DIR/.reference-sheet.lead.md"
 
   printf -- '---\n\n'
 
+  # ── ⚙️ VPS vs Mac install considerations — installer/operator-facing. Lives
+  # AFTER the Quick Start (Quick-Start-first ordering preserved) and BEFORE the
+  # deep "Reference & explanation". Mirrors references/VPS-VS-MAC-INSTALL.md
+  # verbatim. qc-reference-sheet.sh machine-enforces this section is present with
+  # BOTH the VPS points (force-recreate / secrets.env / hooks-token persistence)
+  # and the Mac points (openclaw.json env block / launchctl kickstart).
+  printf '## ⚙️ Things to consider when installing: VPS (Hostinger Docker) vs Mac mini\n\n'
+  printf 'Skill 38 installs cleanly on BOTH a Hostinger Docker VPS and a Mac mini, but the two environments differ in WHERE env vars live, HOW you reload them, HOW you restart the gateway, and HOW the public hook is exposed. Read the column for the box you are on BEFORE wiring the GHL hook.\n\n'
+
+  printf '### 🟦 VPS (Hostinger Docker)\n\n'
+  printf 'OpenClaw runs INSIDE a Docker container — the host filesystem and the container filesystem are different places.\n\n'
+  printf -- '- **Env vars live in the HOST file `/docker/<project>/.env`** (the docker-compose `env_file`) — the canonical place to read and add keys.\n'
+  printf -- '- **Apply env changes with `docker compose -f /docker/<project>/docker-compose.yml up -d --force-recreate`.** A plain `docker compose restart` does NOT reload `env_file` changes, so a key you add stays invisible until you force-recreate.\n'
+  printf -- '- **GHL / provider creds ALSO go in the container `/data/.openclaw/secrets/.env`** — the GHL skill reads its credentials from `secrets/.env` (not the docker-compose `env_file`). On the host that path is `/docker/<project>/data/.openclaw/secrets/.env`.\n'
+  printf -- '- **The `/hostinger/server.mjs` wrapper REWRITES `hooks.token` on EVERY container boot** to `hooks_${OPENCLAW_GATEWAY_TOKEN}` UNLESS `OPENCLAW_HOOKS_TOKEN` is set in the host `/docker/<project>/.env`. Set it (then force-recreate) to make your `Authorization: Bearer` token PERSIST — otherwise the token you set by hand is silently replaced on the next boot and the GHL hook stops matching.\n'
+  printf -- '- **The gateway port is often NOT 18789.** Do not assume it — read the `PORT` env var or run `openclaw gateway status` and use the port it actually reports for the tunnel ingress and any `localhost:<PORT>` smoke test.\n'
+  printf -- '- **Public hook** — run `cloudflared` as a PM2 process (`pm2 start ... && pm2 save` so it survives reboot) OR reuse an existing Traefik route (`*.hstgr.cloud`).\n'
+  printf -- '- **`apt` is a Homebrew shim** and brew is off PATH — install packages with the full path `/data/linuxbrew/.linuxbrew/bin/brew install <pkg>`.\n\n'
+
+  printf '### 🍎 Mac mini (Homebrew / launchd)\n\n'
+  printf 'OpenClaw runs natively as a launchd user service — no Docker; paths are under `$HOME`.\n\n'
+  printf -- '- **PROVIDER keys (e.g. `OLLAMA_API_KEY`) MUST go in the `openclaw.json` top-level `env` block.** The launchd service-env file does NOT carry provider keys to the running gateway, and `~/.openclaw/.env` alone is insufficient for provider auth.\n'
+  printf -- '- **GHL creds still live in `~/.openclaw/secrets/.env`** (same `secrets/.env` pattern as the VPS).\n'
+  printf -- '- **Restart the gateway with `launchctl kickstart -k gui/$(id -u)/ai.openclaw.gateway`.**\n'
+  printf -- '- **Remote access** is via Cloudflare Tunnel + an Access service token (SSH as the user login) — wrap remote commands in `zsh -lc "..."` or `node` is off PATH.\n'
+  printf -- '- **Public hook** — install `cloudflared` as a persistent system service with `sudo cloudflared service install <TOKEN>`.\n\n'
+
+  printf '### 🟰 COMMON to BOTH\n\n'
+  printf -- '- **The GHL Custom Webhook RAW BODY is the FLAT 23-key body — always** (23 = minimum AND standard; never stripped, never nested).\n'
+  printf -- '- **`deliver: false`** on the server `hooks.mappings` entry (the agent SENDS via the GHL Conversations API).\n'
+  printf -- '- **GHL creds are read from `secrets/.env`** (VPS `/data/.openclaw/secrets/.env`; Mac `~/.openclaw/secrets/.env`).\n'
+  printf -- '- **The `conversational-logs/` directory is node-owned** (read the per-contact log BEFORE replying, append the inbound + sent reply AFTER — the log file IS the conversation memory).\n'
+  printf -- '- **Ollama Cloud `:cloud` models hard-cap `maxTokens` at 65536** (NOT 384k) — set `maxTokens: 65536` / `contextWindow: 1048576`, or every call returns HTTP 400.\n\n'
+
+  printf -- '---\n\n'
+
   printf '## Reference & explanation\n\n'
   printf 'Everything below is background/reference — how it works, what each piece is, and troubleshooting. The actionable copy-paste values you need are in the **🚀 Quick Start** sections 1-8 above.\n\n'
 } > "$LEAD"
