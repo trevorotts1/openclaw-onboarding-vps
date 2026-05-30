@@ -100,6 +100,34 @@ This is where the bulk of the 32 protocols ship. The mapping table:
 | 9.35 | `monthly-comprehensive-review-protocol.md` (1st-of-month cron) |
 | 9.36 | `model-version-freshness-protocol.md` (bundled into Saturday 11:30pm cron) |
 
+### Round-3 Queue-A feature wave (Steps 9.37–9.41, shipped v1.5.0)
+
+These five behavioral steps extend Phase 5. Each owns a `protocols/<name>-protocol.md`, a new AGENTS.md step (inserted ONLY by `scripts/05-update-agents-md.sh` marker blocks), and an `openclaw.json` toggle and/or a JSONL log (the F52 data contract, documented below). The cross-cutting **ZHC- tag-prefix rule** governs every programmatic tag any of them creates (`protocols/zhc-tag-prefix-protocol.md`, MEMORY.md Rule 20, AGENTS.md marker `STEP_TAG_PREFIX`); CRM custom fields the agent creates use the parallel `ZHC_` prefix.
+
+| Step | Protocol | AGENTS.md | openclaw.json toggle | JSONL log |
+|---|---|---|---|---|
+| 9.37 | `aggression-detection-protocol.md` (F50 — EXTENDS the Safeguard family / Step 9.5; bot detection NOT rebuilt) | Step 1.35 (PRE-routing, pre-LLM-spend; marker `STEP_1_35_AGGRESSION`) | `aggression_detection.enabled` (default `true`), `aggression_detection.sensitivity` (`lenient`\|`standard`\|`strict`, default `standard`) | `aggression-detection-log.jsonl` (+ `aggression-detection-log.md`) |
+| 9.38 | `smart-playbook-switching-protocol.md` (F44 — DETOUR-AND-RETURN; DISTINCT from F33 route-and-stay at Step 9.33) | Step 2.0 (always-listening layer; marker `STEP_2_0_INTERRUPTS`) | — | `interrupt-log.jsonl` |
+| 9.39 | `geo-qualification-protocol.md` (F45 — HINTS only, ALWAYS confirm before disqualifying) | Step 2.5 (marker `STEP_2_5_GEO`) | `geo_qualification.enabled` (default `false`/OFF) | `geo-qualification-log.jsonl` |
+| 9.40 | `crm-field-write-protocol.md` (F46 — type-aware write + create-if-missing `ZHC_…`; operator-approved allow-list, never customer-invoked) | tag/field note (marker `STEP_TAG_PREFIX`) | — | `crm-field-writes-log.jsonl` |
+| 9.41 | `smart-faq-tool-protocol.md` (F47 — lightweight sibling of F44: a SENTENCE, not a sub-flow) | Step 2.0 (same always-listening layer; marker `STEP_2_0_INTERRUPTS`) | — | `faq-detour-log.jsonl` |
+
+Supporting data files (seeded idempotently by `scripts/25-seed-round3-feature-files.sh`, never overwriting operator content): `KnowledgeBases/sales/service-areas.md` (F45, per-product ZIP/county/state/radius), `KnowledgeBases/business/faqs.md` (F47, Q/A pairs; per-workflow scope in `conversation-workflows/<id>/faq-scope.md`), `crm-field-mappings.md` (F46, per-workflow field map).
+
+#### F52 data contract — JSONL log schemas (centralized)
+
+Every Round-3 feature emits a JSONL log (one JSON object per line) at the documented `<MASTER_FILES_DIR>` path. Every line carries `timestamp` (ISO-8601 UTC) + `event_type` + the event's data. The full per-field schema for each lives in its protocol; the index of path → `event_type`(s):
+
+| JSONL path (under `<MASTER_FILES_DIR>`) | `event_type`(s) | owning protocol |
+|---|---|---|
+| `aggression-detection-log.jsonl` | `aggression_detected` (Tier 2), `tension_detected` (Tier 1) | `aggression-detection-protocol.md` |
+| `interrupt-log.jsonl` | `interrupt_detour` | `smart-playbook-switching-protocol.md` |
+| `geo-qualification-log.jsonl` | `geo_qualification` | `geo-qualification-protocol.md` |
+| `crm-field-writes-log.jsonl` | `crm_field_write` | `crm-field-write-protocol.md` |
+| `faq-detour-log.jsonl` | `faq_answered` | `smart-faq-tool-protocol.md` |
+
+These logs feed F52 analytics and the F35 weekly tune-up (which also reviews `ZHC_`-field usage per F46). The data contract is machine-enforced by `scripts/qc-feature-logs.sh` (path + timestamp+event_type example documented in the protocol AND here, and seeded by script 25); the ZHC- tag-prefix rule is machine-enforced by `scripts/qc-zhc-tag-prefix.sh` (both wired into `scripts/11-run-qc-checklist.sh` + CI).
+
 ## Phase 6 — Document Agent Capabilities (Step 10)
 
 Source: `references/v6.0-source-playbook.md` Step 10.
@@ -140,6 +168,9 @@ Sunday 2am is intentional: it runs BEFORE Dreaming's 3am nightly pass, so the tu
 - **Client SELF-TEST section in the doc (BINDING).** The generated client doc MUST carry a **🧪 How to test your system** section: Contacts (left menu) → search your own name → open your own contact record → send yourself a text → reply from your phone → Automations → open the workflow → **Execution Logs** → every step green (ESPECIALLY the Custom Webhook); anything red = failure (re-run the verification checklist / contact support). Machine-enforced by `scripts/qc-reference-sheet.sh`.
 - **AI BACKEND SELF-TEST before the client (BINDING — blocking gate).** See Phase 7 Step 11.5. The agent self-tests the full inbound→reply chain by ground truth (synthetic 23-key POST to its own hook → hook 200 → configured model with no 401/429 → read the log → GHL send returned a messageId → cleanup) and FIXES + RE-TESTS until green BEFORE marking complete or telling the client to test. Executable gate `scripts/24-self-test-hook.sh`; standard in `references/GHL-INBOUND-AND-PLAYBOOKS.md` §4.5; wired into `scripts/11-run-qc-checklist.sh` + CI.
 - **UNIVERSAL skill — NO personal/client data (BINDING).** This skill installs the SAME brain for any client. No real names or client data (operator names, client names, real hostnames, real tokens, real location ids, real phone/email, real Telegram ids) may appear ANYWHERE in the skill or in the doc it generates — use generic placeholders (`<CLIENT_BUSINESS_NAME>`, `<PUBLIC_HOSTNAME>`, `<HOOKS_TOKEN>`, `<LOCATION_ID>`, "the operator", "your setup admin"). Machine-enforced by `scripts/qc-no-personal-data.sh`, which scans the whole tree AND the generated reference sheet and FAILS (and is negative-tested) on any forbidden identifier (wired into `scripts/11-run-qc-checklist.sh` + CI).
+- **ZHC- tag namespace + ZHC_ field namespace (BINDING — v1.5.0).** Every tag the agent CREATES programmatically MUST be `ZHC-` prefixed; every CRM custom field it creates MUST be `ZHC_` prefixed. NOT retroactive — never rename operator/human/3rd-party tags or fields. CRM field writes/creates are an OPERATOR-APPROVED allow-list action, NEVER customer-invoked. Source: `protocols/zhc-tag-prefix-protocol.md` + `protocols/crm-field-write-protocol.md` + MEMORY.md Rule 20. Machine-enforced by `scripts/qc-zhc-tag-prefix.sh`.
+- **Aggression: ALL CAPS ALONE never fires; geo: ALWAYS confirm before disqualifying (BINDING — v1.5.0).** F50 (`aggression-detection-protocol.md`, Step 1.35, PRE-routing) is a two-tier classifier that EXTENDS the Safeguard family — it does NOT rebuild bot detection; an all-caps message with no profanity/threat/other signal is not aggression. F45 (`geo-qualification-protocol.md`, opt-in via `geo_qualification.enabled`, default OFF) treats location signals as HINTS and NEVER disqualifies a customer without confirming their actual service location first. F44 (`smart-playbook-switching-protocol.md`, Step 2.0) is DETOUR-AND-RETURN and is DISTINCT from F33 route-and-stay (Step 9.33).
+- **F52 data contract (BINDING — v1.5.0).** Each Round-3 feature emits a JSONL log (timestamp + event_type + event data) at its documented `<MASTER_FILES_DIR>` path; the schema is documented in the protocol AND in INSTRUCTIONS.md, and the sink is seeded by `scripts/25-seed-round3-feature-files.sh`. Machine-enforced by `scripts/qc-feature-logs.sh`.
 - **Honesty floor** (per `sales-best-practices-protocol.md` + `customer-service-support-protocol.md`): never fabricate, never deceive, never false urgency, never promise refunds/exceptions without operator approval.
 - **Cost caps** (per `web-scraper-protocol.md`): scrapes estimated over $5 require double-confirmation; over $25 are refused.
 - **Operator approval requirements** (per `model-version-freshness-protocol.md`): never auto-update primary models. Always surface, always ask, always wait for YES/NO/DEFER.
