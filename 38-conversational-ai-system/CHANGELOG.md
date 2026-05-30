@@ -1,5 +1,71 @@
 # Skill 38 — Conversational AI System: Changelog
 
+## [1.4.21] - 2026-05-30 - Correct the reply mechanic: MIRROR the inbound channel + send BY contactId (conversationId is READ-only), QC-enforced
+
+### Why
+The send-directive and the GHL API quick-reference described the reply as a single hardcoded-SMS call and
+implied `conversationId` could be a send field. Verified against the GoHighLevel official OpenAPI
+**SendMessageBodyDto**, the correct mechanic is: ONE send endpoint (`POST /conversations/messages`), the
+send `type` **MIRRORS the inbound channel** (SMS→SMS, Email→Email, Facebook→FB, Instagram→IG,
+WhatsApp→WhatsApp, Live Chat→Live_Chat — never a hardcoded SMS), the reply is **threaded BY `contactId`**
+(the send body is `{type, contactId, locationId, message}` — Email adds subject+html+emailFrom+emailTo),
+and the body does **NOT** accept `conversationId`. GHL threads the reply into the contact's conversation
+by `contactId` and returns `conversationId`+`messageId`. `conversationId` is the **READ key only** —
+`GET /conversations/search?locationId=&contactId=` to find the thread, then
+`GET /conversations/{conversationId}/messages` to read history. GMB is **inbound-only** (not a valid send
+`type`); TikTok send `type` is `TIKTOK` (TikTok inbound is workflow-action-only); RCS/Custom are also valid
+enum members.
+
+### Changed
+- **`scripts/15-configure-hooks-mappings.sh`** — the installer's canonical SERVER-mapping `messageTemplate`
+  (object B, the only instruction that reaches the agent) rewritten to **channel-mirroring + contactId-
+  threaded**: read the inbound `{{channel}}`, SEND via `POST /conversations/messages` with `type` = the
+  MIRRORED channel value (do NOT hardcode SMS), body `{type, contactId, locationId, message}` (Email adds
+  subject+html+emailFrom+emailTo), GHL threads by `contactId`. Added the READ path (`GET
+  /conversations/search` → `GET /conversations/<conversationId>/messages`, `conversationId` = READ key
+  only) and a GMB-inbound-only note. PRESERVED the READ-before / APPEND-after conversation-log memory steps
+  and every element the QC gates require. The Step-4 E2E body messageTemplate aligned to the same mirroring
+  directive.
+- **`references/ghl-api-quick-reference.md`** (preloaded into the client `TOOLS.md`) — MESSAGING section
+  corrected: send `type` enum is exactly **SMS / Email / FB / IG / WhatsApp / Live_Chat** (note RCS / Custom
+  / TIKTOK also exist; **GMB = inbound-only, NOT a send type**; long-forms Instagram/Facebook/Webchat and
+  Call are rejected). Send body shows **`{type, contactId, locationId, message}`** (NO `conversationId`).
+  Added a **Read thread history** block: `GET /conversations/search?locationId=&contactId=` +
+  `GET /conversations/<conversationId>/messages` (scope `conversations.readonly`, added to the scopes
+  summary). Documented channel-mirroring and contactId-threading.
+- **`references/workflow-ai-instructions-standard.md`** — added a concise **§3.6 "Critical Design Pattern"**
+  (one endpoint, mirror the inbound channel, send by `contactId`, `conversationId` is read-only) and updated
+  the §4 SEND-directive verification item to channel-mirroring + contactId.
+- **`references/GHL-INBOUND-AND-PLAYBOOKS.md`** — §7 send-`type` enum reworded (GMB inbound-only; RCS/Custom/
+  TIKTOK valid; mirror the inbound channel); §8 send body annotated `{type, contactId, locationId, message}`
+  (no `conversationId`) + new **§8.1 read recipe** (search → messages); §14.1 23-key body gains a note that
+  the thread is preserved BY `contact_id` on send and `conversationId` is looked up only to READ history
+  (**the 23 keys are UNCHANGED**); §14.4 server-mapping directive + example rewritten to mirroring +
+  contactId.
+- **`references/v6.0-source-playbook.md`**, **`templates/sms-workflow-ai-prompt-template.md`**,
+  **`templates/client-reference-sheet-template.md`**, **`scripts/21-generate-client-reference-sheet.sh`**,
+  **`scripts/24-self-test-hook.sh`** — the body (object A) `messageTemplate` send directive updated to the
+  channel-mirroring + contactId phrasing (kept **placeholder-free**, no `{{…}}`, per the 23-key rule).
+
+### QC
+- **`scripts/qc-tools-md-ghl-ref.sh`** — extended to assert the corrected shape (verified against the GHL
+  SendMessageBodyDto): channel-mirroring is documented, the send body uses `contactId`, **`conversationId`
+  is NEVER on a send-shape line** (it is the READ key only), the READ-thread-history path
+  (`GET /conversations/search` + `conversationId` as the read key) is present, GMB is documented as
+  inbound-only, and send `type`s use the short forms FB/IG/Live_Chat (no rejected long-forms). Added the
+  `conversations.readonly` scope to the required-scopes set and raised the concise size budget 160→185 to
+  fit the corrected MESSAGING section + the new read block (still the fast canonical subset, not the whole
+  API). Negative-tested (the CI job's email-leak / oversize / dropped-op negatives still FAIL as expected).
+- All Skill 38 gates pass: qc-23-key-bodies (23 keys UNCHANGED, placeholder-free), qc-send-directive,
+  qc-conversation-memory, qc-tools-md-ghl-ref, qc-reference-sheet, qc-no-personal-data (UNIVERSAL — zero
+  personal/client data; planted-leak negative still fails closed), qc-config-schema-safety,
+  qc-trinity-registry-test, qc-playbook-doc-test, and the self-test wiring check.
+
+### Notes
+- **23-key GHL RAW BODY: UNCHANGED** — no key added/removed/renamed. The thread is preserved by `contact_id`
+  on send; `conversationId` is looked up only to READ history.
+- Universal skill — zero personal/client data.
+
 ## [1.4.20] - 2026-05-30 - Preload client TOOLS.md with the verified GHL API quick-reference (faster runtime, QC-enforced)
 
 ### Why

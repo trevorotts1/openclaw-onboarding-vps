@@ -47,7 +47,7 @@ upstream is Skill 23: read its `INSTRUCTIONS.md → "Moment 3.8"`, then build th
 ## What This Skill Ships
 
 <!-- SELF-COUNTS: re-verify on EVERY version bump — see scripts/bump-version.sh "Skill 38 self-count
-     re-verification" note. Counts as of v1.4.20: protocols/=32 (*.md), scripts/=41 (*.sh), references/=17
+     re-verification" note. Counts as of v1.4.21: protocols/=32 (*.md), scripts/=41 (*.sh), references/=17
      (*.md), journey templates=8 dirs. Run: ls -1 protocols/*.md scripts/*.sh references/*.md | per-dir wc -l. -->
 - 32 protocol files under `protocols/` (humanizer is intentionally NOT here — skill 19 owns it)
 - **8 customer journey templates** under `templates/journey-templates/` (coach + all 7 verticals fully detailed: consulting, course-creator, e-commerce, real-estate, saas, service-provider, wellness)

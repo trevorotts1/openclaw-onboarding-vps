@@ -138,7 +138,7 @@ ACTION (exactly one action):
       "wakeMode": "now",
       "name": "GHL Sales Inbound",
       "session_key": "hook:ghl:{{CHANNEL}}:{{contact.id}}",
-      "messageTemplate": "Respond as the Sales agent. MANDATORY — SEND, do not just draft: you MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for this contact on this channel, per TOOLS.md. Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId.",
+      "messageTemplate": "Respond as the Sales agent. MANDATORY — SEND on the SAME channel the message arrived on, do not just draft: SEND your reply via the GHL Conversations API (POST conversations/messages) with type = the MIRRORED inbound channel value (SMS->SMS, Email->Email, Facebook->FB, Instagram->IG, WhatsApp->WhatsApp, Live Chat->Live_Chat; do NOT hardcode SMS), contactId, locationId, and message — GHL threads it by contactId and returns conversationId+messageId (conversationId is the READ key only, never a send-body field). Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId.",
       "deliver": false,
       "timeoutSeconds": 300,
       "channel": "{{CHANNEL}}",
@@ -344,13 +344,18 @@ live GHL API**:
 | WhatsApp | `WhatsApp` |
 | Live Chat | `Live_Chat` |
 
-**INVALID (API REJECTS — do not use):**
-- `TikTok`, `Call`, `GMB`
-- long-forms: `Instagram`, `Facebook`, `Webchat`
+> **Mirror the inbound channel.** On a GHL inbound, set the send `type` to the MIRRORED value of the
+> channel the message arrived on (SMS→`SMS`, Email→`Email`, Facebook Messenger→`FB`, Instagram DM→`IG`,
+> WhatsApp→`WhatsApp`, Live Chat / Chat Widget→`Live_Chat`). Do NOT hardcode `SMS`.
 
-> **TikTok caveat:** TikTok **inbound** triggers exist in GHL, but TikTok is **not** an API send
-> `type`. To reply to a TikTok inbound you must use a **GHL workflow automation** to send, not the
-> Conversations API. Do not attempt `type: "TikTok"` — it 4xx's.
+**Also valid in the GHL SendMessageBodyDto enum (use only if the client has that channel wired):**
+`RCS`, `Custom`, `TIKTOK`. (TikTok **send** `type` is `TIKTOK`; TikTok **inbound** is workflow-action-only.)
+
+**INVALID / not-a-send-type (do not use as a send `type`):**
+- `GMB` — Google Business Messages is **INBOUND-ONLY**: it cannot be replied to via this API send (no GMB
+  send `type`). To reply to a GMB inbound, use a **GHL workflow automation**, not the Conversations API.
+- `Call`
+- long-forms: `Instagram`, `Facebook`, `Webchat` (use the short forms `IG` / `FB` / `Live_Chat`)
 
 ---
 
@@ -367,7 +372,13 @@ Content-Type: application/json
 
 Credential var: **`GHL_PRIVATE_INTEGRATION_TOKEN`** (token #4, the PIT). Version: **`2021-04-15`**.
 
-**Per-channel body** (`type` from the §7 enum):
+> **Send body = `{type, contactId, locationId, message}`** (Email swaps `message` for
+> `subject`+`html`+`emailFrom`+`emailTo`). The send body does **NOT** accept `conversationId` — GHL
+> threads the reply into the contact's conversation **by `contactId`** and returns
+> `conversationId`+`messageId`. Mirror the inbound channel into `type` (§7).
+
+**Per-channel body** (`type` from the §7 enum; the examples below add `contactId` — `locationId` is also
+accepted/recommended on the body):
 
 ```bash
 # SMS
@@ -406,6 +417,24 @@ curl -s -X POST https://services.leadconnectorhq.com/conversations/messages \
   -H "Version: 2021-04-15" -H "Content-Type: application/json" \
   -d '{"type":"Live_Chat","contactId":"<CONTACT_ID>","message":"<reply text>"}'
 ```
+
+### 8.1 Read prior thread history (conversationId is the READ key, not a send field)
+
+`conversationId` is **never** sent on the reply body — it is used only to READ a contact's history. Find
+the thread by `contactId`, then read its messages. Scope: **`conversations.readonly`**.
+
+```bash
+# 1. Find the contact's conversation thread (returns the conversationId)
+curl -s "https://services.leadconnectorhq.com/conversations/search?locationId=<LOCATION_ID>&contactId=<CONTACT_ID>" \
+  -H "Authorization: Bearer $GHL_PRIVATE_INTEGRATION_TOKEN" -H "Version: 2021-04-15"
+
+# 2. Read that thread's message history
+curl -s "https://services.leadconnectorhq.com/conversations/<conversationId>/messages" \
+  -H "Authorization: Bearer $GHL_PRIVATE_INTEGRATION_TOKEN" -H "Version: 2021-04-15"
+```
+
+The inbound webhook payload also carries `conversationId`, `contactId`, and `messageType` — use
+`messageType` (the inbound channel) to pick the mirrored send `type`, and `contactId` to send + thread.
 
 ---
 
@@ -616,7 +645,7 @@ contain **all 23 keys** — 23 is the MINIMUM, no stripped/short (8/11/13-key) b
   "wakeMode": "now",
   "name": "GHL Sales Inbound",
   "session_key": "hook:ghl:sms:{{contact.id}}",
-  "messageTemplate": "Respond as the Sales agent. MANDATORY — SEND, do not just draft: you MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for this contact on this channel, per TOOLS.md. Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId.",
+  "messageTemplate": "Respond as the Sales agent. MANDATORY — SEND on the SAME channel the message arrived on, do not just draft: SEND your reply via the GHL Conversations API (POST conversations/messages) with type = the MIRRORED inbound channel value (SMS->SMS, Email->Email, Facebook->FB, Instagram->IG, WhatsApp->WhatsApp, Live Chat->Live_Chat; do NOT hardcode SMS), contactId, locationId, and message — GHL threads it by contactId and returns conversationId+messageId (conversationId is the READ key only, never a send-body field). Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId.",
   "deliver": false,
   "timeoutSeconds": 300,
   "channel": "sms",
@@ -637,6 +666,14 @@ contain **all 23 keys** — 23 is the MINIMUM, no stripped/short (8/11/13-key) b
 **The 23 keys (exact):** `id`, `match`, `action`, `agent_id`, `model`, `wakeMode`, `name`, `session_key`,
 `messageTemplate`, `deliver`, `timeoutSeconds`, `channel`, `to`, `thinking`, `contact_id`, `first_name`,
 `last_name`, `email`, `phone`, `subject`, `message_body`, `location_id`, `location_name`.
+
+> **No `conversation_id` key — and that is correct.** The body keys are unchanged. On send, the GHL
+> conversation **thread is preserved BY `contact_id`** (GHL threads the reply into the contact's
+> conversation automatically and returns the `conversationId`+`messageId`). `conversationId` is **looked up
+> only to READ** prior thread history (`GET /conversations/search?locationId=&contactId=` → `GET
+> /conversations/<conversationId>/messages`, scope `conversations.readonly`); it is **never** a send-body
+> field and never a hook-body key. `channel` is the key that drives reply-channel mirroring; `contact_id`
+> + `location_id` are already in the 23 keys.
 
 **PER-CHANNEL VARIANTS — keep ALL 23 keys; change only `channel` + the `session_key` prefix:**
 
@@ -669,8 +706,14 @@ With none, the hook returns `{"ok":false,"error":"hook mapping requires message"
 The server-mapping `messageTemplate` (object B) is the ONLY instruction that actually reaches the agent
 on a GHL inbound. It MUST carry BOTH:
 
-1. **The SEND-directive** — order the agent to SEND via the GHL Conversations API; otherwise it drafts a
-   reply and never sends it (zero GHL API calls → the customer gets nothing).
+1. **The SEND-directive** — order the agent to SEND via the GHL Conversations API
+   (`POST /conversations/messages`), **mirroring the inbound channel** into the send `type` (SMS→`SMS`,
+   Email→`Email`, Facebook→`FB`, Instagram→`IG`, WhatsApp→`WhatsApp`, Live Chat→`Live_Chat`; do NOT
+   hardcode SMS), **threaded by `contactId`** (send body `{type, contactId, locationId, message}` — NO
+   `conversationId` on send; GHL threads by `contactId` and returns `conversationId`+`messageId`). Without
+   the directive the agent drafts a reply and never sends it (zero GHL API calls → the customer gets
+   nothing). `conversationId` is the READ key only — `GET /conversations/search` then
+   `GET /conversations/<conversationId>/messages` for thread history (§8.1).
 2. **The conversation-MEMORY steps** — GHL inbound hook sessions are **SINGLE-TURN / stateless** (every
    hook run is a fresh session with `user-turns=1`, no chat history). The agent's ONLY memory of a contact
    across messages is the per-contact conversation log under `conversational-logs/`. So the template MUST
@@ -693,7 +736,7 @@ installer writes in `scripts/15-configure-hooks-mappings.sh` and the v6.0 playbo
   "wakeMode": "now",
   "name": "GHL Sales Inbound",
   "sessionKey": "{{session_key}}",
-  "messageTemplate": "INBOUND MESSAGE FROM GOHIGHLEVEL — {{channel}} channel From: {{first_name}} {{last_name}} Contact ID: {{contact_id}} Customer message body: {{message_body}} MEMORY — READ FIRST (this is a SINGLE-TURN hook session; your only memory of this contact is the conversation log file): BEFORE drafting anything, read this contact's conversation log at <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md for the full prior conversation and any in-progress booking/topic, and check the matching playbook in conversation-workflows; if the log file is missing, treat this as a new contact. CONTINUE: reply continuing any in-progress topic/booking found in the log — do not restart or re-ask what the log already answers. MANDATORY — SEND, do not just draft: you MUST send your reply by calling the GHL Conversations API (POST conversations/messages) for contact {{contact_id}} on this channel, per TOOLS.md. Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId/conversationId. APPEND — LOG AFTER SENDING: append this inbound message AND your sent reply to <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md (create the file if missing) per the conversation-log protocol — a reply that fails to update the log is a failure.",
+  "messageTemplate": "INBOUND MESSAGE FROM GOHIGHLEVEL — {{channel}} channel From: {{first_name}} {{last_name}} Contact ID: {{contact_id}} Location ID: {{location_id}} Customer message body: {{message_body}} MEMORY — READ FIRST (this is a SINGLE-TURN hook session; your only memory of this contact is the conversation log file): BEFORE drafting anything, read this contact's conversation log at <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md for the full prior conversation and any in-progress booking/topic, and check the matching playbook in conversation-workflows; if the log file is missing, treat this as a new contact. To pull prior GHL thread history when the local log is thin, GET conversations/search?locationId={{location_id}}&contactId={{contact_id}} to find the thread then GET conversations/<conversationId>/messages to read it (conversationId is the READ key only — NEVER a send-body field). CONTINUE: reply continuing any in-progress topic/booking found in the log — do not restart or re-ask what the log already answers. MANDATORY — SEND on the SAME channel the message arrived on, do not just draft: read the inbound channel ({{channel}}) and SEND via the GHL Conversations API — POST conversations/messages — with type = the MIRRORED channel value (SMS->SMS, Email->Email, Facebook->FB, Instagram->IG, WhatsApp->WhatsApp, Live Chat->Live_Chat); do NOT hardcode SMS. Send body = {type:<mirrored>, contactId:{{contact_id}}, locationId:{{location_id}}, message:<your reply>} (Email also needs subject+html+emailFrom+emailTo); GHL threads it into this contact's conversation BY contactId and returns conversationId+messageId. Composing or drafting a reply is NOT sending — the customer receives nothing unless you make the API call. Do NOT end your turn until the send call returns a messageId. (GMB inbound cannot be replied to via this API — escalate per protocol.) APPEND — LOG AFTER SENDING: append this inbound message AND your sent reply to <MASTER_FILES_DIR>/conversational-logs/{{contact_id}}__<name>.md (create the file if missing) per the conversation-log protocol — a reply that fails to update the log is a failure.",
   "deliver": false,
   "timeoutSeconds": 300
 }
