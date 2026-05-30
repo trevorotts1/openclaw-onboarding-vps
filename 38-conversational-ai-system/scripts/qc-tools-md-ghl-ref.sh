@@ -54,7 +54,11 @@ MARKER="GHL_API_QUICK_REFERENCE"
 # note) + the new READ-thread-history block (GET /conversations/search + GET
 # /conversations/<id>/messages, scope conversations.readonly). Still the fast
 # canonical subset, not the whole API.
-MAX_LINES="${MAX_LINES:-185}"
+# F46 CRM-field fix: raised 185 -> 195 to fit the required new CUSTOM FIELDS
+# section (GET + POST /locations/<id>/customFields, the dataType enum, the ZHC_
+# create rule, Version 2021-07-28), kept to a 2-row table + one note. Same
+# deliberate-bump rationale as the 160->185 change above.
+MAX_LINES="${MAX_LINES:-195}"
 
 while [ $# -gt 0 ]; do
   case "$1" in

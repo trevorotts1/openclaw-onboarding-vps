@@ -127,16 +127,15 @@ auto-created field namespace from sprawling. The tune-up reads
 
 ## Logging (the data contract — F52)
 
-Every write, create, and validation-skip is recorded as JSONL, one JSON object
-per line, appended to `<MASTER_FILES_DIR>/crm-field-writes-log.jsonl`. There are
-THREE distinct event types so the contract captures successful writes,
-create-if-missing field minting, AND validation skips (a skipped write is just as
-important to surface as a successful one):
+Every field write, create, and validation-skip is recorded as JSONL, one line
+appended to `<MASTER_FILES_DIR>/crm-field-writes-log.jsonl`. The contract uses
+three distinct `event_type`s so the dashboard can distinguish a write from a
+create from a skip:
 
 ```json
-{"timestamp":"2026-05-30T16:10:00Z","event_type":"field_write","contact_id":"<contact_id>","workflow":"appointment-booking","field_key":"budget_range","field_type":"TEXT","value_written":"<value>","validated":true}
-{"timestamp":"2026-05-30T16:11:30Z","event_type":"field_created","contact_id":"<contact_id>","workflow":"quote-request","field_key":"ZHC_party_size","field_type":"NUMBER","operator_notified":true}
-{"timestamp":"2026-05-30T16:12:05Z","event_type":"field_write_skipped","contact_id":"<contact_id>","workflow":"quote-request","field_key":"timeline","field_type":"DATE","reason":"value_not_parseable_to_date"}
+{"timestamp":"2026-05-30T16:10:00Z","event_type":"field_write","contact_id":"<CONTACT_ID>","workflow":"appointment-booking","field_name":"budget_range","field_id":"<FIELD_ID>","data_type":"TEXT","created_now":false,"validated":true,"operator_notified":false}
+{"timestamp":"2026-05-30T16:11:30Z","event_type":"field_created","contact_id":"<CONTACT_ID>","workflow":"quote-request","field_name":"ZHC_party_size","field_id":"<FIELD_ID>","data_type":"NUMERICAL","created_now":true,"validated":true,"operator_notified":true}
+{"timestamp":"2026-05-30T16:12:05Z","event_type":"field_write_skipped","contact_id":"<CONTACT_ID>","workflow":"quote-request","field_name":"timeline","field_id":"<FIELD_ID>","data_type":"DATE","validated":false,"reason":"value_not_parseable_to_date","operator_notified":false}
 ```
 
 - `field_write` — a value was validated and written to an existing (or
@@ -147,31 +146,29 @@ important to surface as a successful one):
   dropdown option or a non-parseable date), so NO malformed value was written; the
   `reason` records why.
 
-A combined `crm_field_write` summary line is also acceptable for back-compat (the
-F52 data contract keys on `timestamp` + `event_type`):
-
-```json
-{"timestamp":"2026-05-30T17:03:55Z","event_type":"crm_field_write","contact_id":"<CONTACT_ID>","workflow_id":"appointment-booking","field_name":"ZHC_budget_range","field_id":"<FIELD_ID>","data_type":"TEXT","created_now":true,"validated":true,"operator_notified":true}
-```
-
-JSONL schema (the `crm_field_write` summary form — one object per line):
+The aggregate event family (`field_write` / `field_created` / `field_write_skipped`)
+is collectively the `crm_field_write` contract for this skill. JSONL schema (one
+object per line):
 
 | field | type | meaning |
 |---|---|---|
 | `timestamp` | string (ISO-8601 UTC) | when the write happened |
-| `event_type` | string | `crm_field_write` (always, for F46 firings) |
+| `event_type` | string | `field_write` (existing field set) / `field_created` (create-if-missing) / `field_write_skipped` (validation failed) — the `crm_field_write` event family |
 | `contact_id` | string | GHL contact id |
-| `workflow_id` | string | the workflow that owns this write |
+| `workflow` | string | the workflow that owns this write |
 | `field_name` | string | the GHL field name (created ones are `ZHC_…`) |
 | `field_id` | string | the GHL custom-field id written to |
 | `data_type` | string | the field's GHL `dataType` |
 | `created_now` | boolean | `true` if the field was created on this turn (create-if-missing) |
 | `validated` | boolean | whether the value passed type validation before the write |
+| `reason` | string | (skips only) why the write was skipped |
 | `operator_notified` | boolean | whether the operator was notified (always `true` when `created_now` is `true`) |
 
 > The write log records the field NAME/ID and metadata, never the raw customer
 > value (PII stays out of the structured log; the value lives in GHL + the
 > conversation log per the PII protocol).
+
+The JSONL schema is also documented in `INSTRUCTIONS.md` (Phase 5 data contract table).
 
 ## openclaw.json toggles
 

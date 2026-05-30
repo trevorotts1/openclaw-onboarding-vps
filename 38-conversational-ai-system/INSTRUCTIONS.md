@@ -126,7 +126,7 @@ Every Round-3 feature emits a JSONL log (one JSON object per line) at the docume
 | `aggression-detection-log.jsonl` | `aggression_detected` (Tier 2), `tension_detected` (Tier 1) | `aggression-detection-protocol.md` |
 | `interrupt-log.jsonl` | `interrupt_detour` | `smart-playbook-switching-protocol.md` |
 | `geo-qualification-log.jsonl` | `geo_qualification` | `geo-qualification-protocol.md` |
-| `crm-field-writes-log.jsonl` | `crm_field_write` | `crm-field-write-protocol.md` |
+| `crm-field-writes-log.jsonl` | `field_write`, `field_created`, `field_write_skipped` (the `crm_field_write` event family) | `crm-field-write-protocol.md` (line carries `contact_id`, `workflow`, `field_name`, `field_id`, `data_type`, `created_now`, `validated`, `reason` (skip), `operator_notified` — NEVER the raw customer value) |
 | `faq-detour-log.jsonl` | `faq_answered` | `smart-faq-tool-protocol.md` |
 | `pixel-events/YYYY-MM-DD.jsonl` (daily file) | `pageview`, `scroll`, `click`, `page_hidden`, `delete_request` | `zhc-pixel-protocol.md` (F49 — line also carries `site_id`, `agent_id`, `visitor_id` (anonymous-but-persistent, NOT a person), `fingerprint` (null under DNT), `path`, `referrer`, `seconds_on_page`, `total_visits`, `first_visit_date`, `data`) |
 
