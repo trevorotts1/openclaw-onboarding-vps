@@ -393,6 +393,20 @@ else
   report_fail "qc-zhc-tag-prefix.sh not found (looked in scripts/)"
 fi
 
+# -------- ZHC Pixel (Feature 49) invariants (machine-enforced) --------
+section "ZHC Pixel rule (qc-zhc-pixel.sh)"
+QC_PIXEL="$SCRIPT_DIR/qc-zhc-pixel.sh"
+[ -f "$QC_PIXEL" ] || QC_PIXEL="$SKILL38_ROOT/scripts/qc-zhc-pixel.sh"
+if [ -f "$QC_PIXEL" ]; then
+  if bash "$QC_PIXEL" >/dev/null 2>&1; then
+    report_pass "ZHC Pixel (F49) invariants hold: pixel JS template + 3 placeholders + generator; pixel-visitor-signal hook (deliver:false, bot-gate-first, scoped Pixel Concierge + hook:pixel: allow-list); STEP_1_45_PIXEL_CONCIERGE AGENTS block + protocol; ZHC-/ZHC_ prefixes; GDPR/CCPA/DNT/deletion privacy controls; scope precheck + gated deploy; no personal data"
+  else
+    report_fail "qc-zhc-pixel.sh found an F49 invariant violation — run it directly for detail"
+  fi
+else
+  report_fail "qc-zhc-pixel.sh not found (looked in scripts/)"
+fi
+
 # -------- F52 JSONL data contract (machine-enforced) --------
 section "F52 JSONL data contract (qc-feature-logs.sh)"
 QC_LOGS="$SCRIPT_DIR/qc-feature-logs.sh"
