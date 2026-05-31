@@ -1,9 +1,9 @@
 name: Version consistency
 
-# Fails the build if any of the 8 version locations disagree.
+# Fails the build if any of the 9 version locations disagree.
 # Triggered on every push to main and every PR targeting main.
 #
-# Locations checked (expanded from 5 -> 8 in v10.14.35, matching bump-version.sh):
+# Locations checked (expanded 5 -> 8 in v10.14.35, 8 -> 9 in v10.16.16; matches bump-version.sh):
 #   1. /version
 #   2. /install.sh ONBOARDING_VERSION=
 #   3. /update-skills.sh ONBOARDING_VERSION=
@@ -12,6 +12,9 @@ name: Version consistency
 #   6. /23-ai-workforce-blueprint/templates/role-library/_qc-summary.md
 #   7. /README.md (this repo at vX.Y.Z)
 #   8. /DIRECT-TO-AGENT-UPDATE-MESSAGE.md (**vX.Y.Z**)
+#   9. /README.md (**Current Version:** ... (currently **vX.Y.Z**)) — added
+#      v10.16.16 after this prose line silently lagged a patch behind in the
+#      v10.16.14 -> v10.16.15 roll (matched by no prior marker).
 #
 # Security note: this workflow consumes only repo file content (no
 # untrusted GitHub event fields like PR title/body/commit message),
@@ -25,7 +28,7 @@ on:
 
 jobs:
   check-version-drift:
-    name: Verify all 8 version locations agree
+    name: Verify all 9 version locations agree
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -40,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "Reading 8 version locations..."
+          echo "Reading 9 version locations..."
 
           # Loc 1: /version (with v prefix)
           V_ROOT=$(head -1 version | tr -d '[:space:]')
@@ -90,6 +93,15 @@ jobs:
             V_DIRECT="MISSING"
           fi
 
+          # Loc 9: /README.md "**Current Version:** ... (currently **vX.Y.Z**)" prose line
+          if [ -f README.md ]; then
+            V_README_CUR=$(grep -oE 'currently \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' README.md \
+              | head -1 | sed -E 's/.*\*\*(v[0-9]+\.[0-9]+\.[0-9]+)\*\*/\1/' || true)
+            [ -z "$V_README_CUR" ] && V_README_CUR="MISSING"
+          else
+            V_README_CUR="MISSING"
+          fi
+
           # Normalize (strip leading v)
           norm() { echo "${1#v}"; }
           N_ROOT=$(norm "$V_ROOT")
@@ -100,6 +112,7 @@ jobs:
           N_QC=$(norm "$V_QC")
           N_README=$(norm "$V_README")
           N_DIRECT=$(norm "$V_DIRECT")
+          N_README_CUR=$(norm "$V_README_CUR")
 
           echo ""
           echo "Version state:"
@@ -111,6 +124,7 @@ jobs:
           printf "  %-55s %s\n" "/.../templates/role-library/_qc-summary.md heading"      "$V_QC"
           printf "  %-55s %s\n" "/README.md (this repo at vX.Y.Z)"                        "$V_README"
           printf "  %-55s %s\n" "/DIRECT-TO-AGENT-UPDATE-MESSAGE.md (**vX.Y.Z**)"         "$V_DIRECT"
+          printf "  %-55s %s\n" "/README.md (Current Version: currently **vX.Y.Z**)"      "$V_README_CUR"
           echo ""
 
           # Compare normalized values
@@ -122,6 +136,7 @@ jobs:
           [ "$N_ROOT" = "$N_QC"             ] || FAIL="$FAIL _qc-summary.md($N_QC)"
           [ "$N_ROOT" = "$N_README"         ] || FAIL="$FAIL README.md($N_README)"
           [ "$N_ROOT" = "$N_DIRECT"         ] || FAIL="$FAIL DIRECT-TO-AGENT-UPDATE-MESSAGE.md($N_DIRECT)"
+          [ "$N_ROOT" = "$N_README_CUR"     ] || FAIL="$FAIL README.md-CurrentVersion($N_README_CUR)"
 
           if [ -n "$FAIL" ]; then
             echo "VERSION DRIFT DETECTED"
@@ -129,8 +144,8 @@ jobs:
             echo "   Disagrees with:$FAIL"
             echo ""
             echo "FIX: run ./scripts/bump-version.sh v$N_ROOT (or your intended version)"
-            echo "     to rewrite all 8 files atomically, then commit + push."
+            echo "     to rewrite all 9 locations atomically, then commit + push."
             exit 1
           fi
 
-          echo "All 8 version locations agree at $V_ROOT"
+          echo "All 9 version locations agree at $V_ROOT"
