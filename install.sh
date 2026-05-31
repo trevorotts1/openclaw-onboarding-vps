@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.15"
+ONBOARDING_VERSION="v10.16.16"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1818,8 +1818,21 @@ fi
 # /data/linuxbrew/.linuxbrew/bin) OR the official Calibre Linux installer.
 # Without Calibre, Skill 22 silently skips MOBI/AZW/AZW3/KFX formats and
 # only processes PDF/EPUB. Auto-install here so it's ready by Wave 5.
+# v10.16.16: Guard every `ebook-convert --version` with a hard timeout.
+# `ebook-convert --version` can wedge forever if Calibre tries to bring up a
+# Qt/GUI subsystem on a headless box, stalling the install at this gate. Resolve
+# a timeout wrapper up front: Linux ships `timeout` (coreutils); Mac uses
+# `gtimeout` (Homebrew coreutils). If neither exists, run bare (the `|| true`
+# keeps the gate non-fatal).
+if command -v timeout >/dev/null 2>&1; then
+    EBOOK_TIMEOUT="timeout 20"
+elif command -v gtimeout >/dev/null 2>&1; then
+    EBOOK_TIMEOUT="gtimeout 20"
+else
+    EBOOK_TIMEOUT=""
+fi
 if command -v ebook-convert >/dev/null 2>&1; then
-    success "Calibre (ebook-convert) already installed: $(ebook-convert --version 2>&1 | head -1)"
+    success "Calibre (ebook-convert) already installed: $($EBOOK_TIMEOUT ebook-convert --version 2>&1 | head -1 || true)"
 else
     note "Installing Calibre (ebook-convert) for Skill 22 ebook extraction..."
 
@@ -1847,7 +1860,7 @@ else
                 if [ -x "$CAL_BIN" ]; then
                     mkdir -p /data/.npm-global/bin
                     ln -sf "$CAL_BIN" /data/.npm-global/bin/ebook-convert 2>>"$CAL_LOG" || true
-                    success "Calibre installed via official Linux installer: $(/data/.npm-global/bin/ebook-convert --version 2>&1 | head -1)"
+                    success "Calibre installed via official Linux installer: $($EBOOK_TIMEOUT /data/.npm-global/bin/ebook-convert --version 2>&1 | head -1 || true)"
                 else
                     warn "Official Calibre installer ran but $CAL_BIN is missing. Skill 22 ebook extraction limited to PDF/EPUB. See $CAL_LOG."
                 fi
