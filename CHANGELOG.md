@@ -1,3 +1,44 @@
+## [v10.16.15]  -  2026-05-30  -  Skill 38 Round-2 backlog shipped (six default-OFF features) + version-surface roll
+
+### Why
+
+PR #77 (`feat/round2-backlog`) carried the QC-passed Skill 38 Round-2 backlog — six new default-OFF
+features — but `main` moved under it when the `v10.16.13 → v10.16.14` version-surface reconcile (#76)
+merged first. To ship the features and their advertising together with **no drift window**, `main` was
+merged into the branch (clean — no conflicts; both sides preserved) and the eight repo-version-tracked
+files were rolled forward to `v10.16.15` IN the same branch before merging. CI `version-consistency.yml`
+proves all eight agree at `v10.16.15`.
+
+### Shipped
+
+- **Skill 38 → v1.5.12** — the **Round-2 backlog (v1.5.7 → v1.5.12)**, six features, **all default-OFF**
+  (opt-in advanced; the installer never flips them ON), each operator-only / never-customer-invoked:
+  - **F21 — Multi-Tenant Agent Isolation** (the AGENCY tier; INSTRUCTIONS Step 9.44 / AGENTS Step 0.8 /
+    MEMORY Rule 26; opaque `tenant_id` routing + per-tenant `tenants/<tenant_id>/` scoping of all four
+    surfaces; "Client A never leaks to Client B").
+  - **F17 — Customer Segmentation Awareness** (Step 9.45 / AGENTS Step 1.85 / MEMORY Rule 27; five
+    canonical segments, GHL-tag → segment mapping, behavior overrides before the reply draft).
+  - **F15 — Proactive Outreach Campaigns** (Step 9.46 / MEMORY Rule 28; cron + event-driven, so NO
+    AGENTS step; campaign registry, quiet-hours + opt-out respect, reactive-vs-proactive separation).
+  - **F16 — A/B Testing of Reply Variants** (Step 9.47 / AGENTS Step 1.87 / MEMORY Rule 29; deterministic
+    sticky-by-contact assignment at draft time, two-proportion z-test, auto-promote-with-notify).
+  - **F14 — Voice/Phone Integration** (Step 9.48 / `VOICE_PHONE_PIPELINE` marker / MEMORY Rule 30; STT →
+    brain → TTS pipeline scaffold + Twilio transport + `30-voice-phone-setup-wizard.sh`; honest
+    live-telephony gap — provisioned at setup, NOT faked).
+  - **F18 — Webhook Chaining** (Step 9.49 / AGENTS Step 2.9 / MEMORY Rule 31; OUTBOUND post-action
+    front-door, operator-defined `webhook-chains/` registry, four allow-listed trigger events, PII-free
+    payload, exponential-backoff retry, SSRF/exfiltration guard).
+  - Each feature ships its `protocols/*.md` + a `qc-*.sh` machine gate + a `qc-*.test.sh` negative test.
+  - Live `SKILL.md` self-counts re-verified to the on-disk tree: **protocols/=45, scripts/=68,
+    references/=20, journey templates=8**.
+- **Eight repo-version-tracked files → `v10.16.15`** via `scripts/bump-version.sh` (CI
+  `version-consistency.yml` proves all eight agree). Skill 38's own `skill-version.txt` (`1.5.12`) stays
+  on its independent track — NOT one of the eight repo-version locations.
+- **README** NOTE/headline + Skill-38 inventory row updated to the live shipped tree (Skill 38 → v1.5.12,
+  the six Round-2 features listed as default-OFF, counts 45/68/20/8).
+
+---
+
 ## [v10.16.14]  -  2026-05-30  -  Version-surface reconcile (tag + Release + main HEAD now agree); advertising rolled forward to the live tree
 
 ### Why
