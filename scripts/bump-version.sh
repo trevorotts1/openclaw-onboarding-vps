@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # bump-version.sh — atomically bump the OpenClaw version across ALL files.
 #
-# The problem this solves: "the version" is encoded in 8 separate files. Drift
-# is mathematically guaranteed unless one tool updates all 8 in one shot.
+# The problem this solves: "the version" is encoded in 9 separate locations.
+# Drift is mathematically guaranteed unless one tool updates all 9 in one shot.
 #
 # Coverage history:
 #   v10.14.0 and earlier: 5 files (version, install.sh, skill-version.txt,
@@ -10,12 +10,18 @@
 #   v10.14.34+:           8 files — added README.md, update-skills.sh,
 #                                   DIRECT-TO-AGENT-UPDATE-MESSAGE.md
 #                                   (per 2-day forensics finding #23)
+#   v10.16.16+:           9 locations — added the README "**Current Version:**
+#                                   ... (currently **vX.Y.Z**)" prose line, which
+#                                   silently lagged one patch behind during the
+#                                   v10.16.14 -> v10.16.15 roll because it was
+#                                   matched by NEITHER the "this repo at vX.Y.Z"
+#                                   marker NOR the bare "(vX.Y.Z)" heading heuristic.
 #
 # VERSION-BUMP CHECKLIST — SKILL 38 SELF-COUNT RE-VERIFICATION (added 2026-05-29):
 #   Skill 38's SKILL.md "What This Skill Ships" hard-codes file counts
 #   (protocols/, scripts/, references/, journey templates). They drift silently
 #   whenever a file is added/removed. On EVERY Skill-38 bump (its own
-#   38-conversational-ai-system/skill-version.txt — NOT one of the 8 files
+#   38-conversational-ai-system/skill-version.txt — NOT one of the 9 locations
 #   above), re-verify and correct those counts. The exact command:
 #     ( cd 38-conversational-ai-system && \
 #       echo "protocols=$(ls -1 protocols/*.md | wc -l)" && \
@@ -26,7 +32,7 @@
 #   qc-23-key-bodies.sh + trinity qc-trinity-registry.sh are part of scripts/.
 #
 # Usage:
-#   ./scripts/bump-version.sh v10.6.2          # update all 8 files
+#   ./scripts/bump-version.sh v10.6.2          # update all 9 locations
 #   ./scripts/bump-version.sh v10.6.2 --tag    # also create a git tag
 #   ./scripts/bump-version.sh v10.6.2 --tag --push   # also push the tag
 #   ./scripts/bump-version.sh --check          # exit 1 if drift; print state
@@ -69,8 +75,13 @@ read_current() {
   if [ -f "$F_README" ]; then
     V_README=$(grep -oE 'this repo at v[0-9]+\.[0-9]+\.[0-9]+' "$F_README" 2>/dev/null | head -1 | sed 's/this repo at //' || echo "MISSING")
     if [ -z "$V_README" ]; then V_README="MISSING"; fi
+    # Loc 9 (v10.16.16): README "**Current Version:** ... (currently **vX.Y.Z**)" prose line.
+    # Previously un-tracked → drifted one patch behind in the v10.16.14->.15 roll.
+    V_README_CUR=$(grep -oE 'currently \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$F_README" 2>/dev/null | head -1 | sed -E 's/.*\*\*(v[0-9]+\.[0-9]+\.[0-9]+)\*\*/\1/' || echo "MISSING")
+    if [ -z "$V_README_CUR" ]; then V_README_CUR="MISSING"; fi
   else
     V_README="MISSING"
+    V_README_CUR="MISSING"
   fi
   if [ -f "$F_UPDATE_SKILLS" ]; then
     V_UPDATE_SKILLS=$(grep -E '^ONBOARDING_VERSION=' "$F_UPDATE_SKILLS" 2>/dev/null | head -1 | sed -E 's/^ONBOARDING_VERSION="?([^"]*)"?.*/\1/' || echo "MISSING")
@@ -99,6 +110,7 @@ print_state() {
   printf "  %-50s %s\n" "templates/role-library/_index.json [version]" "$V_INDEX"
   printf "  %-50s %s\n" "templates/role-library/_qc-summary.md heading" "$V_QC"
   printf "  %-50s %s\n" "README.md (this repo at vX.Y.Z)" "$V_README"
+  printf "  %-50s %s\n" "README.md (Current Version: currently **vX.Y.Z**)" "$V_README_CUR"
   printf "  %-50s %s\n" "update-skills.sh ONBOARDING_VERSION" "$V_UPDATE_SKILLS"
   printf "  %-50s %s\n" "DIRECT-TO-AGENT-UPDATE-MESSAGE.md (**vX.Y.Z**)" "$V_DIRECT"
 }
@@ -111,12 +123,13 @@ check_drift() {
   N_INDEX=$(norm "$V_INDEX")
   N_QC=$(norm "$V_QC")
   N_README=$(norm "$V_README")
+  N_README_CUR=$(norm "$V_README_CUR")
   N_UPDATE=$(norm "$V_UPDATE_SKILLS")
   N_DIRECT=$(norm "$V_DIRECT")
   if [ "$N_ROOT" = "$N_INSTALL" ] && [ "$N_ROOT" = "$N_SKILL" ] && \
      [ "$N_ROOT" = "$N_INDEX" ] && [ "$N_ROOT" = "$N_QC" ] && \
-     [ "$N_ROOT" = "$N_README" ] && [ "$N_ROOT" = "$N_UPDATE" ] && \
-     [ "$N_ROOT" = "$N_DIRECT" ]; then
+     [ "$N_ROOT" = "$N_README" ] && [ "$N_ROOT" = "$N_README_CUR" ] && \
+     [ "$N_ROOT" = "$N_UPDATE" ] && [ "$N_ROOT" = "$N_DIRECT" ]; then
     return 0
   fi
   return 1
@@ -127,7 +140,7 @@ if [ "${1:-}" = "--check" ]; then
   print_state
   if check_drift; then
     echo ""
-    echo "All 8 locations agree."
+    echo "All 9 locations agree."
     exit 0
   else
     echo ""
@@ -205,9 +218,19 @@ import re
 p = "$F_README"
 target = "$TARGET"
 content = open(p).read()
-# Replace "this repo at vX.Y.Z." patterns
+# Replace "this repo at vX.Y.Z." patterns (CI-tracked marker — loc 7)
 new = re.sub(r'(this repo at )v[0-9]+\.[0-9]+\.[0-9]+',
              r'\1' + target, content)
+# Roll the "**Current Version:** see /version (currently **vX.Y.Z**)" prose line.
+# This is now Loc 9 of the CI-tracked set (version-consistency.yml). It used to
+# be UN-tracked and silently drifted one patch behind through the
+# v10.16.14->.15 roll, because the parens contain "currently **vX.Y.Z**" so it
+# matched NEITHER the "this repo at vX.Y.Z" marker NOR the bare "(vX.Y.Z)"
+# heading heuristic below. Both this roll-rule and the CI loc keep it in sync.
+#   — v10.16.16
+new = re.sub(r'(\*\*Current Version:\*\* see \`/version\` \(currently \*\*)'
+             r'v[0-9]+\.[0-9]+\.[0-9]+(\*\*\))',
+             r'\g<1>' + target + r'\g<2>', new)
 # Replace any "(vX.Y.Z)" heading suffix that matches the prior version
 # (heuristic: only first 200 lines, to avoid rewriting CHANGELOG entries)
 lines = new.split('\n')
@@ -258,7 +281,7 @@ if ! check_drift; then
 fi
 
 echo ""
-echo "All 8 locations agree at $TARGET"
+echo "All 9 locations agree at $TARGET"
 
 # ─── Optional: tag + push ───────────────────────────────────────────────────
 if [ "${2:-}" = "--tag" ] || [ "${3:-}" = "--tag" ]; then
