@@ -1,3 +1,28 @@
+## [v10.16.16]  -  2026-05-31  -  Fix: guard every `ebook-convert --version` call with a hard timeout (headless install hang)
+
+### Why
+`ebook-convert --version` can wedge **forever** if Calibre tries to bring up a Qt/GUI subsystem on a
+headless box, and never returns. `install.sh` ran the Calibre version check in unguarded command
+substitutions (`$(ebook-convert --version 2>&1 | head -1)`), so the version probe had no timeout — the
+install could stall at the Calibre gate (the same class of bug that stalls Mac installs; guarded here too
+for cross-platform safety).
+
+### Fixed
+- `install.sh` (Calibre / Skill 22 block): resolve a timeout wrapper up front —
+  `EBOOK_TIMEOUT="timeout 20"` if coreutils' `timeout` is present (the Linux/VPS case),
+  else `gtimeout 20` (Mac), else empty (run bare). Both `ebook-convert --version` command
+  substitutions — the already-installed check and the post-installer success line
+  (`/data/.npm-global/bin/ebook-convert --version`) — are now wrapped with `$EBOOK_TIMEOUT … || true`
+  so the probe can never hang the install and the gate stays non-fatal.
+  - Before: `success "Calibre (ebook-convert) already installed: $(ebook-convert --version 2>&1 | head -1)"`
+  - After:  `success "Calibre (ebook-convert) already installed: $($EBOOK_TIMEOUT ebook-convert --version 2>&1 | head -1 || true)"`
+  - (same guard applied to the official-installer success line)
+
+### Version
+- 8 repo-version-tracked files rolled `v10.16.15 → v10.16.16` via `scripts/bump-version.sh` (CI `version-consistency.yml` proves agreement).
+
+---
+
 ## [v10.16.15]  -  2026-05-30  -  Skill 38 Round-2 backlog shipped (six default-OFF features) + version-surface roll
 
 ### Why
