@@ -1,3 +1,55 @@
+## [v10.16.17]  -  2026-05-31  -  Role + SOP libraries are now ALWAYS real (no more build-state lie): disk-QC substance gate, hard dept-map assertion, non-skippable SOP population, never-stop resume, GHL media link in closeout
+
+### Why
+Builds were reporting "done" while the role library / SOP library were empty or thin on disk. Root causes:
+(1) the library gate accepted empty/thin SOPs (`stubs==0 AND avg>0`) — no size/DMAIC/per-role-minimum floor;
+(2) a stale `DEPT_TO_SUGGESTED_ROLES` map keyed on legacy ids (`support`/`operations`/`creative`/`hr`/`it`)
+pointed at files that DON'T EXIST, so whole departments silently built ZERO roles; (3) SOP population's inline
+fallback wrote a work file and returned 0 ("done") without authoring anything, and the rc-derived
+`sopLibraryStatus="done"` trusted the subprocess exit code instead of disk; (4) the resume cron self-REMOVED
+after a run cap, stranding half-built workforces. Also: VPS had NO `verify-library-gate.sh` (Mac had it).
+
+### Fixed
+- **Ported `verify-library-gate.sh` to VPS (parity)** — it was Mac-only. Now both repos gate identically.
+- **Disk-QC is the authority, not subprocess rc:** the rc-derived statuses in `build_from_config` are now
+  PROVISIONAL (`pulling`/`authoring`, never `done`); `verify-library-gate.sh` runs last and OVERWRITES them
+  with the real on-disk verdict. An empty/thin library can never report "done" even if a subprocess exits 0.
+- **Substance gate (`qc-completeness.sh` + `verify-library-gate.sh`):** a SOP counts as substantive ONLY if
+  ≥7KB AND all 5 DMAIC headers AND no `[Step N - to be personalized]` placeholder. New per-dept fields
+  `substantive_sop_count`, `min_sop_per_role`, `roles_below_min_sops`. SOP "done" = every role ≥ its floor
+  (4) substantive SOPs; ROLE "done" also requires every dept ≥ its canonical role count.
+- **`_index.json` count key bug:** qc read `role_count` but the schema key is `count` → `expected_roles` was
+  always 0 → canonical-role-count check was a no-op. Now reads `count` (falls back to `len(roles)`).
+- **Dept-map hard assertion (`build-workforce.py`):** `DEPT_TO_SUGGESTED_ROLES` derived from
+  `department-naming-map.json` + legacy aliases; `assert_dept_map_resolves()` HARD-FAILS (exit 78) if any
+  selected dept does not resolve to an existing suggested-roles file — no zero-role departments ever again.
+- **Non-skippable SOP population (`populate-sops-from-manifest.py`):** inline-queue mode now returns rc=4
+  (queued-not-authored); the build sets `sopLibraryStatus=authoring` (not done) and the resume cron re-fires
+  until the substance gate passes.
+- **`verify-zhc-standard.sh` (NEW):** one idempotent end-to-end standard verifier (interview → 16 depts →
+  role library done → substantive SOP library done → closeout confirmed), wired into `run-closeout.sh` as a
+  preflight that REFUSES to close out (status `blocked-libraries-incomplete`) on an empty/thin library.
+- **Rule 8 never-stop (`resume-workforce-build.sh` + `resume-prompt.txt`):** the resume cron no longer
+  self-removes on a run/attempt cap — it escalates to Rescue Rangers + operator (once) and switches to a ~2h
+  slow-backoff retry, continuing until a REAL terminal state. The prompt forbids `sessions_yield` / premature
+  "done".
+- **Media → GHL closeout:** GHL upload moved BEFORE the Telegram step; writes a shareable
+  `ghlMediaLibraryUrl` that is included in the celebration message; honors a pre-created `GHL_MEDIA_FOLDER_ID`.
+- **Start Here flag mismatch (`Start Here.md`):** Step 0.1 now matches EITHER `UPDATE PENDING` OR
+  `ONBOARDING PENDING` (install + update both write `UPDATE PENDING`) + the standalone recovery file.
+- **`update-skills.sh` em-dash filename fix:** update download switched from `curl | unzip` to `git clone`
+  (hard remote verification + python3-zipfile UTF-8-safe fallback) so the role-library's em-dash filenames
+  survive intact.
+
+### Verified present on main (prior fixes)
+- `install.sh` ebook-convert probes guarded with a hard timeout (v10.16.16).
+- `install.sh` package extraction uses python3 `zipfile` (UTF-8-safe) when unzip is absent.
+
+### Version
+- 9 version markers rolled `v10.16.16 → v10.16.17` via `scripts/bump-version.sh`.
+
+---
+
 ## [v10.16.16]  -  2026-05-31  -  Fix: guard every `ebook-convert --version` call with a hard timeout (headless install hang)
 
 ### Why
