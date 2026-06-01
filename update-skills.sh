@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.16.16
+#  v10.16.17
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.16"
+ONBOARDING_VERSION="v10.16.17"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -395,25 +395,51 @@ main() {
   echo ""
   echo "  Downloading latest skills from GitHub..."
 
-  # Download and extract
+  # v10.16.17: clone instead of curl|unzip. Info-ZIP's `unzip` MANGLES UTF-8
+  # filenames (the role-library has em-dash filenames like
+  # `qc-specialist-—-sales.md` and `deep-research-role-—-openclaw-maintenance.md`)
+  # and silently partial-writes them, so a zip-based update would drop or
+  # corrupt those role docs. `git clone` preserves every filename byte-for-byte.
   TEMP_ZIP="/tmp/openclaw-onboarding-update.zip"
   TEMP_EXTRACT="/tmp/openclaw-onboarding-update"
-
-  curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
-
-  rm -rf "$TEMP_EXTRACT"
-  unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT"
-
-  # Find extracted folder
+  rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
   EXTRACTED_DIR=""
-  if [ -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
-    EXTRACTED_DIR="$TEMP_EXTRACT/openclaw-onboarding-vps-main"
-  else
-    EXTRACTED_DIR=$(find "$TEMP_EXTRACT" -maxdepth 1 -mindepth 1 -type d | head -1)
+
+  if command -v git >/dev/null 2>&1; then
+    if git clone --depth 1 "https://github.com/trevorotts1/openclaw-onboarding-vps.git" "$TEMP_EXTRACT" 2>/dev/null; then
+      # HARD verify the remote is exactly the intended repo (no leftover-clone mix-up)
+      _origin="$(git -C "$TEMP_EXTRACT" remote get-url origin 2>/dev/null)"
+      case "$_origin" in
+        https://github.com/trevorotts1/openclaw-onboarding-vps.git|https://github.com/trevorotts1/openclaw-onboarding-vps)
+          EXTRACTED_DIR="$TEMP_EXTRACT" ;;
+        *)
+          echo "ERROR: cloned remote ($_origin) is NOT trevorotts1/openclaw-onboarding-vps — refusing to use it."
+          rm -rf "$TEMP_EXTRACT"; EXTRACTED_DIR="" ;;
+      esac
+    fi
+  fi
+
+  # Fallback ONLY if git is unavailable or the clone failed: zip + python3
+  # zipfile (handles UTF-8 filenames correctly; Hostinger containers may lack
+  # both git and a UTF-8-safe unzip). Plain `unzip` is the last resort.
+  if [ -z "$EXTRACTED_DIR" ]; then
+    echo "  (git clone unavailable/failed — falling back to zip extraction)"
+    curl -fSL --progress-bar "https://github.com/trevorotts1/openclaw-onboarding-vps/archive/refs/heads/main.zip" -o "$TEMP_ZIP"
+    rm -rf "$TEMP_EXTRACT"; mkdir -p "$TEMP_EXTRACT"
+    if command -v python3 >/dev/null 2>&1; then
+      python3 -c "import zipfile,sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "$TEMP_ZIP" "$TEMP_EXTRACT" 2>/dev/null || true
+    else
+      unzip -qo "$TEMP_ZIP" -d "$TEMP_EXTRACT" 2>/dev/null || true
+    fi
+    if [ -d "$TEMP_EXTRACT/openclaw-onboarding-vps-main" ]; then
+      EXTRACTED_DIR="$TEMP_EXTRACT/openclaw-onboarding-vps-main"
+    else
+      EXTRACTED_DIR=$(find "$TEMP_EXTRACT" -maxdepth 1 -mindepth 1 -type d | head -1)
+    fi
   fi
 
   if [ -z "$EXTRACTED_DIR" ] || [ ! -d "$EXTRACTED_DIR" ]; then
-    echo "ERROR: Could not find extracted folder"
+    echo "ERROR: Could not obtain the latest skills (git clone + zip fallback both failed)"
     rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
     exit 1
   fi
