@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.31"
+ONBOARDING_VERSION="v10.16.32"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -4048,4 +4048,16 @@ HARD RULES (v10.14.4+):
 ═══════════════════════════════════════════════════════════════════════
 TERMEOF
 }
+
+# Apply fleet standards (sub-agents fully permitted + Telegram media limit 50MB)
+echo ""
+note "Applying fleet standards (sub-agents fully permitted, Telegram media 50MB)..."
+if [ -f "$ONBOARDING_DIR/scripts/apply-fleet-standards.sh" ]; then
+    bash "$ONBOARDING_DIR/scripts/apply-fleet-standards.sh" || warn "Fleet standards application reported errors (install continues)"
+    success "Fleet standards applied"
+else
+    warn "Fleet standards script not found at $ONBOARDING_DIR/scripts/apply-fleet-standards.sh"
+fi
+echo ""
+
 fire_install_kickoff_triplet

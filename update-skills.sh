@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.31"
+ONBOARDING_VERSION="v10.16.32"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -728,6 +728,18 @@ except: pass
         echo "  ⚠ No telegram target configured — skipping cron install. Configure Telegram first then re-run."
       fi
     fi
+  fi
+
+  # ----------------------------------------------------------
+  # Fleet standards: ensure sub-agents fully permitted + Telegram media 50MB
+  # (idempotent — applied on every update, no-op if already canonical)
+  # ----------------------------------------------------------
+  echo ""
+  echo "  Applying fleet standards (sub-agents fully permitted, Telegram media 50MB)..."
+  if [ -f "$ONBOARDING_DIR/scripts/apply-fleet-standards.sh" ]; then
+    bash "$ONBOARDING_DIR/scripts/apply-fleet-standards.sh" >/dev/null 2>&1 && echo "  ✓ Fleet standards applied" || echo "  ⚠ Fleet standards application reported errors (update continues)"
+  else
+    echo "  ⚠ Fleet standards script not found"
   fi
 
   # ----------------------------------------------------------
