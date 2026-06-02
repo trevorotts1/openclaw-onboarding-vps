@@ -294,7 +294,7 @@ If at any point during Phase 0-3 the owner says they don't have a business yet (
 - **Software stack** — pivots to *"what tools do you already use in your personal life or current job?"*
 - **Department customization** — collected as "what KIND of work would you want help with" not "what you currently do."
 
-The final output is still a 16-department AI workforce — sized and shaped for a pre-revenue founder.
+The final output is still a 23-department AI workforce (16 mandatory + 7 universal-primary vertical-pack departments) — sized and shaped for a pre-revenue founder.
 
 ---
 
@@ -542,9 +542,9 @@ Owner sees real-time progress at `/onboarding/building` in the Command Center. T
 
 ---
 
-## Post-Interview Handoff Protocol (BINDING — added 2026-05-23 for v10.14.16)
+## Post-Interview Handoff Protocol (BINDING — added 2026-05-23 for v10.13.15)
 
-**Why this exists:** Before v10.14.16, an interrupted post-interview build had no autonomous recovery. If the agent session ended after writing 5 of 6 departments (token limit, tool error, network blip, decided "good enough"), the remaining departments sat un-built forever. There was no cron, no state tracker, no resume invocation. The owner had to manually nudge the agent — which they shouldn't have to do. This protocol fixes that.
+**Why this exists:** Before v10.13.15, an interrupted post-interview build had no autonomous recovery. If the agent session ended after writing 5 of 6 departments (token limit, tool error, network blip, decided "good enough"), the remaining departments sat un-built forever. There was no cron, no state tracker, no resume invocation. The owner had to manually nudge the agent — which they shouldn't have to do. This protocol fixes that.
 
 **The protocol — REQUIRED at three moments:**
 
@@ -552,20 +552,20 @@ Owner sees real-time progress at `/onboarding/building` in the Command Center. T
 
 Before responding to the owner with "build my company" confirmation, the master orchestrator MUST:
 
-1. Write `/data/.openclaw/workspace/.workforce-build-state.json` (Mac: `~/.openclaw/workspace/.workforce-build-state.json`) per `build-state-schema.json`. Required fields: `version: 1`, `interviewComplete: true`, `interviewCompletedAt`, `interviewVersion`, `ownerChat`, `ownerName`, `agentName`, and a `departments` array with EVERY planned department in `status: "pending"`.
+1. Write `~/.openclaw/workspace/.workforce-build-state.json` (VPS: `/data/.openclaw/workspace/.workforce-build-state.json`) per `build-state-schema.json`. Required fields: `version: 1`, `interviewComplete: true`, `interviewCompletedAt`, `interviewVersion`, `ownerChat`, `ownerName`, `agentName`, and a `departments` array with EVERY planned department in `status: "pending"`. **Also seed `roleLibraryStatus: "pending"` and `sopLibraryStatus: "pending"`** (v10.15.8) so the library gate (Moment 3.6) is enforced from the outset — the resume cron treats unset/non-`done` as not-yet-done.
 
    **Then call the interview-complete hook (added v10.15.1 / v10.14.1):**
 
    ```bash
-   # VPS:
-   bash /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/update-interview-state.sh --complete
    # Mac:
    bash ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/update-interview-state.sh --complete
+   # VPS:
+   bash /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/update-interview-state.sh --complete
    ```
 
    This sets `interviewComplete: true` and stamps `interviewCompletedAt`. It is idempotent: safe to re-run.
 
-2. Verify the resume cron job is registered: `openclaw cron list | grep workforce-resume`. If missing (older install), install it inline via `openclaw cron create --schedule "*/15 * * * *" --name workforce-resume --prompt-file /data/.openclaw/skills/23-ai-workforce-blueprint/resume-prompt.txt`.
+2. Verify the resume cron job is registered: `openclaw cron list | grep workforce-resume`. If missing (older install), install it inline via `openclaw cron create --schedule "*/15 * * * *" --name workforce-resume --prompt-file ~/.openclaw/skills/23-ai-workforce-blueprint/resume-prompt.txt`.
 
 3. ONLY THEN start Stage 1 of Generation Orchestration.
 
@@ -586,7 +586,7 @@ The sub-agent (or master orchestrator on the sub-agent's behalf) MUST:
 
 This is non-negotiable. The state file is the contract between Skill 23 and the resume layer.
 
-### Moment 3.5 — Materialize the dept as a real agent (BINDING — added v10.14.19)
+### Moment 3.5 — Materialize the dept as a real agent (BINDING — added v10.13.18)
 
 A department's `status: "done"` is **NOT sufficient on its own**. The dept is only TRULY done when an entry exists in `openclaw.json`'s `agents.list[]` with `id = "dept-<slug>"`. Until that entry exists, the OpenClaw runtime, gateway, and dashboard see exactly **zero** real department agents — only the default `main` agent. Skill 23's role-definition markdown files are NOT runtime agents on their own; they need to be registered.
 
@@ -602,54 +602,39 @@ bash /data/.openclaw/skills/32-command-center-setup/scripts/materialize-dept-age
 The script is idempotent — it can be run after EVERY dept flips to `done`, OR once at the end of the build. Either pattern is correct.
 
 **Failure handling:**
-- If the materialize script is missing (older onboarding bundle without v10.14.19 / Mac v10.13.18): set the dept to `"failed"` with `failureReason: "agents.list materialize blocked — Skill 32 materialize script not installed"`. Do NOT mark `"done"`.
+- If the materialize script is missing (older onboarding bundle without v10.13.18 / VPS v10.14.19): set the dept to `"failed"` with `failureReason: "agents.list materialize blocked — Skill 32 materialize script not installed"`. Do NOT mark `"done"`.
 - If the materialize script returns non-zero: set the dept to `"failed"` with the script's stderr captured in `failureReason`.
 
-**Why this is binding:** Pre-v10.14.19, Skill 23 marked depts `"done"` purely on file presence, then Skill 37 sent a celebration to the client claiming an N-dept M-role workforce was "LIVE" — when in reality `agents.list[]` contained one entry (`main`). The materialize step is the contract that makes the celebration honest.
+**Why this is binding:** Pre-v10.13.18, Skill 23 marked depts `"done"` purely on file presence, then Skill 37 sent a celebration to the client claiming an N-dept M-role workforce was "LIVE" — when in reality `agents.list[]` contained one entry (`main`). The materialize step is the contract that makes the celebration honest.
 
-### Moment 3.7 — Role library + SOP library AUTO-PULL (ENFORCED — added v10.16.8)
+### Moment 3.6 — ROLE LIBRARY + SOP LIBRARY auto-pull gate (BINDING — added v10.15.8)
 
-A department's `status: "done"` and its materialized agent are **still NOT enough**. The ZHC workforce
-build MUST ALWAYS pull in the **role library** AND author/pull the **SOP library** as part of creation.
-**A workforce is NOT complete until both libraries are populated.**
+**Why this exists:** last night (Kofi / Teresa / Evelyn / Maria / Lyric) several workforces were *scaffolded* — department folders and role folders existed, the depts even flipped to `status: "done"` — but the **role library was never pulled into the `how-to.md` files** AND the **SOP placeholders were never authored**. The build still "looked done." A `status: "done"` department with empty role-library `how-to.md` files and unfilled SOP stubs is INCOMPLETE.
 
-> **Why this exists.** On 2026-05-28 several clients (Kofi, Teresa, Evelyn, Maria, Lyric) had workforces
-> scaffolded — departments + role folders existed — but the **role library was never connected/pulled**
-> and the **SOPs were never populated**. Prose like "AUTOMATIC NEXT STEP" in INSTRUCTIONS is NOT
-> enforcement. Enforcement = a **state field + a verify/resume gate** (same shape as the v10.14.16
-> build-resume fix and the Moment 3.5 materialize gate).
+**Prose is not enforcement.** A line that says "AUTOMATIC NEXT STEP: also pull the role library" does NOT enforce anything (same lesson as the v10.14.16 build-resume fix). Enforcement = a **state field** + a **verify/resume gate**. v10.15.8 adds both:
 
-**Two state fields (in `.workforce-build-state.json`, schema v10.16.8):**
-- `roleLibraryStatus`: `pending → pulling → done` (or `failed`).
-- `sopLibraryStatus`: `pending → populating → done` (or `failed`).
-- `librariesVerifiedAt`: ISO timestamp, set ONLY when BOTH are `done`.
+- **State fields** (`build-state-schema.json`): `roleLibraryStatus` (`pending`→`pulling`→`done`/`failed`), `sopLibraryStatus` (`pending`→`authoring`→`done`/`failed`), `libraryFailureReason`, and per-department `roleLibraryFilled` / `sopLibraryFilled` booleans.
+- **Verify gate** (`scripts/verify-library-gate.sh`): runs `qc-completeness.sh` (read-only), then writes the gate fields and exits non-zero unless **every** dept has `library_pct == 100` (role library pulled into every `how-to.md`) AND `sop_stubs_remaining == 0` with `avg_sop_per_role > 0` (SOPs authored). `build-workforce.py` invokes it automatically at the end of the build.
+- **Resume gate** (`scripts/resume-workforce-build.sh`): once all depts are `done` but `roleLibraryStatus != done` OR `sopLibraryStatus != done`, the 15-min cron fires a `[LIBRARY-RESUME]` self-ping (BEFORE the closeout gate) so the agent re-pulls.
 
-**The master orchestrator MUST, once all departments are `done`, BEFORE setting `buildCompletedAt`:**
+**The master orchestrator MUST, after all departments are `done` and BEFORE writing `buildCompletedAt`:**
 
-1. **Pull the role library.** Every role folder's `how-to.md` must be filled from
-   `templates/role-library/` — the `<!-- Filled from role-library v... -->` marker present — NOT left
-   as a `STUB`. `create_role_workspaces.py` does this via `try_library_fill` during the build; if any
-   `how-to.md` is still a STUB, re-run it for that role. Set `roleLibraryStatus = "pulling"` while
-   working.
-2. **Author/pull the SOP library.** Run `scripts/populate-sops-from-manifest.py` so the per-role SOP
-   files (`01-*.md`..`09-*.md`) are filled and the `[Step X — to be personalized]` DMAIC stubs are
-   replaced. Set `sopLibraryStatus = "populating"` while working.
-3. **Verify with `scripts/qc-completeness.sh`.** It must report, for EVERY department:
-   `library_pct >= 95` AND `sop_stubs_remaining == 0` (with `avg_sop_per_role > 0`). Only on PASS:
-   - set `roleLibraryStatus = "done"`, `sopLibraryStatus = "done"`, `librariesVerifiedAt = <now>`
-     (atomic write), THEN proceed to set `buildCompletedAt` + `closeoutStatus = "pending"`.
-   - On non-PASS: set the offending field to `"failed"` and DO NOT set `buildCompletedAt`. The resume
-     cron will fire a `[LIBRARIES-RESUME]` self-ping (see below) and you re-run steps 1-3.
+1. Confirm the role library was pulled into every role's `how-to.md`. If not, re-run `scripts/post-build-role-workspaces.py` (it fills `how-to.md` from `templates/role-library/`).
+2. Confirm SOPs were authored for every role (no `to be personalized` stubs). If not, re-run `scripts/populate-sops-from-manifest.py`.
+3. Run the gate and require a clean pass:
+   ```bash
+   # Mac:
+   bash ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/verify-library-gate.sh
+   # VPS:
+   bash /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/verify-library-gate.sh
+   ```
+   Exit `0` = both libraries `done` (gate PASSES). Exit `2` = role library not done, `3` = SOP library not done, `4` = both not done, `5` = no workforce / qc could not run. Re-pull and re-run until it exits `0`.
 
-**The verify/resume gate (binding).** `scripts/resume-workforce-build.sh` treats the build as **dirty**
-when all departments are `done` but `roleLibraryStatus != "done"` OR `sopLibraryStatus != "done"`. In
-that state it dispatches a `[LIBRARIES-RESUME]` self-ping (which fires BEFORE any `[CLOSEOUT-RESUME]`,
-because closeout must NOT run on an incomplete library). This is the contract that makes "workforce
-complete" honest — a scaffold with no role docs and no SOPs can never reach closeout.
+**A workforce is NOT complete — and `buildCompletedAt` / `closeoutStatus=pending` MUST NOT be written — until `roleLibraryStatus == done` AND `sopLibraryStatus == done`.** This gate runs BEFORE the closeout gate. Skill 37 must never fire a celebration for a workforce whose roles have empty `how-to.md` files or stub SOPs.
 
-### Moment 3.7b — SOP-Writer role + self-building-SOP trigger (BINDING — added this release)
+### Moment 3.7 — SOP-Writer role + self-building-SOP trigger (BINDING — added this release)
 
-**Why this exists:** an agent must NEVER be unable to do a task because there is no SOP. The build pre-fills every role's `how-to.md` from the role-library (Moment 3.7), but live work eventually surfaces a task the library never anticipated. When that happens the answer is NOT "guess", NOT "skip", and NOT "make every agent re-derive a procedure from scratch and burn the owner's tokens." The answer is a dedicated **SOP-Writer** that researches the task (including pulling real API documentation/structure when the task needs an API), authors a DMAIC `how-to.md`, QC-gates it, and files it into **this company's own** SOP library.
+**Why this exists:** an agent must NEVER be unable to do a task because there is no SOP. The build pre-fills every role's `how-to.md` from the role-library (Moment 3.6), but live work eventually surfaces a task the library never anticipated. When that happens the answer is NOT "guess", NOT "skip", and NOT "make every agent re-derive a procedure from scratch and burn the owner's tokens." The answer is a dedicated **SOP-Writer** that researches the task (including pulling real API documentation/structure when the task needs an API), authors a DMAIC `how-to.md`, QC-gates it, and files it into **this company's own** SOP library.
 
 **Decision — universal role, instantiated per department (NOT one global writer):** the SOP-Writer is defined ONCE as a single canonical template (`templates/role-library/_sop-writer.md`) and registered against **every** department in `_index.json` (slug `sop-writer`, `role_type: on-call`). The build instantiates one SOP-Writer **into each department** so each company owns its own per-department writers. Rationale: a per-department writer inherits that department's domain context + `governing-personas.md` and writes into the right role folder, while still being a single template to maintain (no duplication, no drift). A single global writer would lack department context and become a serial bottleneck; defining N separate templates would drift. One template → N instances is the lean win.
 
@@ -664,25 +649,25 @@ complete" honest — a scaffold with no role docs and no SOPs can never reach cl
 
 This is the role-based, QC-gated successor to the inline "ESCALATION + RESEARCH RULE" that is still pasted into every SOP and to the Master Orchestrator's "create the missing knowledge base file" duty — those remain valid as the always-on safety net; the SOP-Writer is the dedicated specialist that does it well, with API research and a substance gate. (Full role spec: `templates/role-library/_sop-writer.md`.)
 
-### Moment 3.8 — Comms-automation handoff to Skill 38 (ENFORCED cross-skill chain — added v10.16.9)
+### Moment 3.8 — Comms-automation handoff to Skill 38 (ENFORCED cross-skill chain — added v10.15.9)
 
 If the built workforce includes a **Communications**, **Sales**, or **Customer-Support** department,
 the build is **still not fully delivered** until **Skill 38 (Conversational AI System)** has scaffolded
 the matching **comms automations**. A Sales/Support workforce with no conversational automations wired
-is a half-delivered company. This is enforced the SAME way as the role/SOP library gate — a **state
-field + a verify/resume self-ping**, NOT prose.
+is a half-delivered company. This is enforced the SAME way as the role/SOP library gate (Moment 3.6) — a
+**state field + a verify/resume self-ping**, NOT prose.
 
 > **Why this exists.** Skill 23 and Skill 38 are siblings that historically had **zero cross-references**:
 > Skill 23 could build a Sales department and Skill 38 could build comms automations, but nothing made
 > the build hand off. Prose like "remember to also do Skill 38" is NOT enforcement (same lesson as the
-> v10.16.8 library gate and v10.14.16 build-resume). Enforcement = the `commsAutomationStatus` state field
-> + the `[COMMS-AUTOMATION-RESUME]` gate in `resume-workforce-build.sh`.
+> Moment 3.6 library gate and the v10.14.16 build-resume). Enforcement = the `commsAutomationStatus` state
+> field + the `[COMMS-AUTOMATION-RESUME]` gate in `resume-workforce-build.sh`.
 
-**One state field (in `.workforce-build-state.json`, schema v10.16.9):** `commsAutomationStatus`:
+**One state field (in `.workforce-build-state.json`, schema v10.15.9):** `commsAutomationStatus`:
 `not-applicable | pending → scaffolding → done | failed`, plus `commsAutomationDepartments` (the slugs
 that triggered it) and `commsAutomationVerifiedAt`.
 
-**The master orchestrator MUST, once all departments are `done` AND Moment 3.7 has set both libraries to
+**The master orchestrator MUST, once all departments are `done` AND Moment 3.6 has set both libraries to
 `done`:**
 
 1. **Decide applicability.** If NONE of Communications / Sales / Customer-Support was built, set
@@ -702,20 +687,19 @@ that triggered it) and `commsAutomationVerifiedAt`.
 
 **The verify/resume gate (binding).** `resume-workforce-build.sh` treats the build as **dirty** when all
 departments + libraries are `done` but `commsAutomationStatus NOT IN {done, not-applicable}`, and
-dispatches a `[COMMS-AUTOMATION-RESUME]` self-ping (after `[LIBRARIES-RESUME]`, alongside/with closeout).
+dispatches a `[COMMS-AUTOMATION-RESUME]` self-ping (after `[LIBRARY-RESUME]`, alongside/before closeout).
 See Skill 38 `references/communications-playbook-standard.md` + `templates/journey-templates/` for the
 vertical journey that tells you WHICH playbooks a given business needs.
 
-### When ALL departments are `done`
+### When ALL departments are `done` AND the library gate passes
 
-The master orchestrator (ONLY after Moment 3.7 has set BOTH `roleLibraryStatus` and `sopLibraryStatus`
-to `"done"` and stamped `librariesVerifiedAt`):
+The master orchestrator (ONLY after Moment 3.6's `verify-library-gate.sh` exits 0):
 1. Sets `buildCompletedAt` in the state file.
-2. Sets `closeoutStatus = "pending"` in the state file (atomic write). **This is the v10.14.17 contract** — Skill 37 ZHC Closeout reads this field and picks up the celebration handoff.
+2. Sets `closeoutStatus = "pending"` in the state file (atomic write). **This is the v10.13.16 contract** — Skill 37 ZHC Closeout reads this field and picks up the celebration handoff.
 3. Either invokes `~/.openclaw/skills/37-zhc-closeout/scripts/run-closeout.sh` inline (preferred — owner gets the celebration faster) OR exits and lets the resume cron fire a `[CLOSEOUT-RESUME]` self-ping on its next 15-minute cycle (safer if you're near a token limit).
 4. **Does NOT message the owner directly about build completion.** The owner has been silent since the interview ended. They stay silent until Skill 37 Step 6 fires the actual celebration delivery. This is intentional — silence is what makes the closeout feel like a moment, not a status update.
 
-### Moment 4 — Closeout Pipeline (BINDING — added v10.14.17)
+### Moment 4 — Closeout Pipeline (BINDING — added v10.13.16)
 
 Once `buildCompletedAt` is set + `closeoutStatus = "pending"` is written, the closeout pipeline owns the rest. See `~/.openclaw/skills/37-zhc-closeout/INSTRUCTIONS.md` for the full state machine.
 
@@ -726,7 +710,7 @@ Summary of what Skill 37 does:
 4. Builds a 9-section Notion page tree in the client's own workspace — writes `notionRootPageUrl`.
 5. Sends a paced 6-message Telegram delivery sequence to the owner — tracks via `messagesDelivered: [1..6]`.
 
-All steps are idempotent. The resume cron (this same `resume-workforce-build.sh`) picks up the closeout if any step dies, via the v10.14.17 dirty-state extension: `buildCompletedAt` set AND `closeoutStatus NOT IN {done, sent}` triggers a `[CLOSEOUT-RESUME]` self-ping.
+All steps are idempotent. The resume cron (this same `resume-workforce-build.sh`) picks up the closeout if any step dies, via the v10.13.16 dirty-state extension: `buildCompletedAt` set AND `closeoutStatus NOT IN {done, sent}` triggers a `[CLOSEOUT-RESUME]` self-ping.
 
 **Cost cap:** ~$0.60 / client in KIE credits worst-case.
 
@@ -736,12 +720,12 @@ All steps are idempotent. The resume cron (this same `resume-workforce-build.sh`
 - Reads `.workforce-build-state.json`.
 - Fires if ANY of:
   - `interviewComplete: true` AND ANY department is `pending` / `failed` / stale `building` (>15 min since `lastAttemptAt`), OR
-  - all departments are `done` AND (`roleLibraryStatus NOT = done` OR `sopLibraryStatus NOT = done`) (v10.16.8 libraries-dirty gate), OR
-  - all departments + libraries are `done` AND `commsAutomationStatus NOT IN {done, not-applicable}` (v10.16.9 comms-automation cross-skill gate to Skill 38), OR
-  - `buildCompletedAt` is set AND `closeoutStatus NOT IN {done, sent}` (v10.14.17 closeout-dirty extension).
-- Dispatches a `[WORKFORCE-RESUME]`, `[LIBRARIES-RESUME]`, `[COMMS-AUTOMATION-RESUME]`, or `[CLOSEOUT-RESUME]` Telegram self-message to a paired chat (owner first, Trevor fallback). Order: `[LIBRARIES-RESUME]` fires before `[COMMS-AUTOMATION-RESUME]` fires before `[CLOSEOUT-RESUME]` — closeout must not run on an incomplete library, and comms automations sit on top of a complete workforce. That message invokes the agent, who reads `resume-prompt.txt` and continues building, pulling the libraries, scaffolding the Skill 38 comms automations, OR closing out.
-- v10.16.9: when the libraries stay dirty into the last 2 resume attempts, it ALSO emits a one-line OPERATOR-FACING status (a persistently-failing library pull is surfaced before the cap, throttled via `librariesNearCapNotified`).
-- Caps at `maxResumeAttempts` (default 12) to prevent infinite loops. After cap, pings Trevor's chat directly with an escalation instead of continuing to self-ping.
+  - all departments `done` AND (`roleLibraryStatus NOT IN {done}` OR `sopLibraryStatus NOT IN {done}`) (v10.15.8 library-dirty extension — fires BEFORE closeout), OR
+  - all departments + libraries `done` AND `commsAutomationStatus NOT IN {done, not-applicable}` (v10.15.9 comms-automation cross-skill gate to Skill 38), OR
+  - `buildCompletedAt` is set AND `closeoutStatus NOT IN {done, sent}` (v10.13.16 closeout-dirty extension).
+- Dispatches a `[WORKFORCE-RESUME]`, `[LIBRARY-RESUME]`, `[COMMS-AUTOMATION-RESUME]`, or `[CLOSEOUT-RESUME]` Telegram self-message to a paired chat (owner first, Trevor fallback). Order: `[LIBRARY-RESUME]` fires before `[COMMS-AUTOMATION-RESUME]` fires before `[CLOSEOUT-RESUME]` — closeout must not run on an incomplete library, and comms automations sit on top of a complete workforce. That message invokes the agent, who reads `resume-prompt.txt` and continues building, re-pulls the role/SOP libraries, scaffolds the Skill 38 comms automations, OR closes out.
+- v10.15.9: when the libraries stay dirty into the last 2 resume attempts, it ALSO emits a one-line OPERATOR-FACING status (a persistently-failing library pull is surfaced before the cap, throttled via `librariesNearCapNotified`).
+- Caps at `maxResumeAttempts` (default 12) to prevent infinite loops. After cap, pings Trevor's chat directly with an escalation that names the library status instead of continuing to self-ping.
 - Holds a 10-minute lockfile so concurrent cron firings don't double-dispatch.
 
 **TL;DR for the agent:** write state after every step. Never assume "I'll finish this in the same session." If your session ends mid-build, the cron will wake you back up and you'll pick up exactly where you left off because the state file knows.
@@ -810,7 +794,7 @@ This ensures no progress is ever lost. If session dies, resume via Option C.
 ## What Gets Built After the Interview
 
 ### Department Workspaces
-For each of the 16 mandatory departments + vertical pack departments, `create_department_workspace()` creates:
+For each of the 23 departments (16 mandatory + 7 universal-primary vertical-pack depts) + any keyword-matched extras, `create_department_workspace()` creates:
 - SOUL.md (generated from interview, NOT a template — includes the deferral clause)
 - MEMORY.md (empty)
 - HEARTBEAT.md (department priorities)
