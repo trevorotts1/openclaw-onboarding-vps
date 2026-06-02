@@ -1,3 +1,39 @@
+## [v10.16.30]  -  2026-06-02  -  fix(update-skills): Bug A — wrong-repo URL + Mac label in VPS script; Bug B — version marker path mismatch
+
+### Why
+Two confirmed-in-field bugs in `update-skills.sh`:
+
+**Bug A (Corey + Angeleen VPS):** `DIRECT-TO-AGENT-UPDATE-MESSAGE.md` pointed agents at
+`https://github.com/trevorotts1/openclaw-onboarding` (the **Mac** repo) instead of
+`openclaw-onboarding-vps`. Agents following the link would download the Mac repo and install
+Mac-version skills onto VPS boxes — confirmed to have pulled v10.15.30 (Mac tag) instead of
+v10.16.29 (VPS tag) on Corey's box. The `update-skills.sh` clone/verify logic itself was already
+correct (always used the `-vps` URL); the DIRECT-TO-AGENT template was the stray cross-repo link.
+Also fixed: the script banner read "Skills Updater (Mac)" in the VPS repo — copy-paste drift.
+
+**Bug B (Cassandra's Mac — same root cause applies to VPS legacy-marker edge case):**
+`get_current_version()` read from `$HOME/Downloads/openclaw-master-files/.onboarding-version`
+(legacy path) first, while the marker WRITE went to the active dir. On boxes with a legacy marker
+the script saw the old version on every subsequent invocation, creating a perpetual false "needs
+update" loop. Fixed by reordering `get_current_version()` to match `discover_skills_dir()` priority
+(active dir first) and adding a legacy-marker sync step after the canonical write.
+
+### What changed (VPS repo)
+- `DIRECT-TO-AGENT-UPDATE-MESSAGE.md` — repo URL corrected from `openclaw-onboarding` → `openclaw-onboarding-vps`.
+- `update-skills.sh` — `get_current_version()` path order reversed: active dir first, legacy Downloads second.
+  Matches `discover_skills_dir()` priority so READ/WRITE locations agree.
+- `update-skills.sh` — after writing marker to active dir, sync to any existing legacy marker paths
+  so stale legacy markers never diverge again.
+- `update-skills.sh` — banner corrected from "Skills Updater (Mac)" → "Skills Updater (VPS)".
+
+### Verification
+- `bash -n update-skills.sh` syntax check passes.
+- Simulated install: 38 numbered skill dirs installed, zero loose root files, marker correctly written.
+- `git clone` hard-verify block already correct (openclaw-onboarding-vps only) — unchanged.
+- Second-run simulation: get_current_version returns new version → "already up to date" branch correct.
+
+---
+
 ## [v10.16.29]  -  2026-06-02  -  ZHC wiring: read-the-SOP protocol + machine-readable ROSTER/ROUTING + PENDING-SOPS manifest + buildout doc
 
 ### Why

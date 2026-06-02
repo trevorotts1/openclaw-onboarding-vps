@@ -6,11 +6,11 @@
 
 ---
 
-There is a major update available for your OpenClaw / BlackCEO system. The latest version is **v10.16.29**. Follow these instructions carefully.
+There is a major update available for your OpenClaw / BlackCEO system. The latest version is **v10.16.30**. Follow these instructions carefully.
 
 **FIRST: Check your current version.** Look at the "version" file in your onboarding installation. This tells you how far behind you are.
 
-**SECOND: Go to https://github.com/trevorotts1/openclaw-onboarding and download the full repo.**
+**SECOND: Go to https://github.com/trevorotts1/openclaw-onboarding-vps and download the full repo.**
 
 **THIRD: Open UPDATE-PLAYBOOK.md and follow every step exactly. Do not skip steps.**
 

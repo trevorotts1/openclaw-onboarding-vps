@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.16.29
+#  v10.16.30
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.29"
+ONBOARDING_VERSION="v10.16.30"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -291,11 +291,23 @@ check_update_pending() {
 
 # ----------------------------------------------------------
 # Check .onboarding-version — search multiple paths
+# Priority MUST match discover_skills_dir() (active dir first, legacy second)
+# so the version we READ is the same location we WRITE to. If the legacy
+# Downloads path is checked first the script sees the old stale marker even
+# after a successful update → perpetual "needs update" false-positive (Bug B).
 # ----------------------------------------------------------
 get_current_version() {
+  # Detect platform: VPS has /data, Mac does not.
+  if [ -d /data ]; then
+    local ACTIVE_VERSION_FILE="/data/.openclaw/skills/.onboarding-version"
+  else
+    local ACTIVE_VERSION_FILE="$HOME/.openclaw/skills/.onboarding-version"
+  fi
+
+  # Active dir first (mirrors discover_skills_dir priority)
   local VERSION_PATHS=(
+    "$ACTIVE_VERSION_FILE"
     "$HOME/Downloads/openclaw-master-files/.onboarding-version"
-    "$HOME/.openclaw/skills/.onboarding-version"
     "$HOME/.openclaw/onboarding/.onboarding-version"
   )
 
@@ -340,7 +352,7 @@ main() {
   done
 
   echo "============================================"
-  echo "   OpenClaw Skills Updater (Mac)"
+  echo "   OpenClaw Skills Updater (VPS)"
   echo "   Version: ${ONBOARDING_VERSION}"
   if [ -n "$ONLY_SKILLS" ]; then
     echo "   Mode: SELECTIVE — only [$ONLY_SKILLS]"
@@ -561,8 +573,19 @@ main() {
     echo "    Updated: $SKILL_NAME"
   done
 
-  # Write version file
+  # Write version file to active dir (the canonical location)
   echo "$ONBOARDING_VERSION" > "$SKILLS_DIR/.onboarding-version"
+
+  # Sync version marker to legacy locations if they exist, so get_current_version
+  # always reads the same value regardless of which path it finds first.
+  # This prevents the stale-legacy-marker false-positive on re-runs (Bug B).
+  for _LEGACY_MARKER in \
+      "$HOME/Downloads/openclaw-master-files/.onboarding-version" \
+      "$HOME/.openclaw/onboarding/.onboarding-version"; do
+    if [ -f "$_LEGACY_MARKER" ]; then
+      echo "$ONBOARDING_VERSION" > "$_LEGACY_MARKER" 2>/dev/null || true
+    fi
+  done
 
   # ----------------------------------------------------------
   # VERIFICATION: confirm the active dir was actually updated.
