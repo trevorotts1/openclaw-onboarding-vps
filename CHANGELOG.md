@@ -1,3 +1,18 @@
+## [v10.16.38]  -  2026-06-03  -  Propagate Skill 41 Build-With-AI Playbook v1.3.0 (MiniMax executor preflight, Agent Browser preflight, L1-L5 live harness, f52 qc_result event)
+
+### Why
+Skill 41 (`41-build-with-ai-playbook`) was advanced to v1.3.0 on `main` (PR #99 + the two follow-up commits) — MiniMax executor preflight, Agent Browser preflight, the L1-L5 live browser harness, and the `f52` `qc_result` event contract. Its per-skill `skill-version.txt` already reads `1.3.0`, but the repo-level version markers were still pinned at v10.16.37. The fleet's update detection is repo-version-driven: `check-updates.sh` compares the remote `/version` against each client's installed `.onboarding-version`, and the weekly `update-skills.sh` cron compares its hard-coded `ONBOARDING_VERSION` against the same marker. Until the repo-level version advances, the fleet does not surface "update available" and does not re-pull, so the already-merged Skill 41 v1.3.0 never reaches client machines. This release bumps the repo-level version so the fleet detects + pulls v1.3.0.
+
+### What changed
+- All 9 version markers → v10.16.38 via `scripts/bump-version.sh`: `version`, `install.sh` ONBOARDING_VERSION, `update-skills.sh` ONBOARDING_VERSION (+ top-of-file comment header), `23-ai-workforce-blueprint/skill-version.txt`, `templates/role-library/_index.json`, `templates/role-library/_qc-summary.md`, `README.md` ("this repo at" + "Current Version: currently"), `DIRECT-TO-AGENT-UPDATE-MESSAGE.md`.
+- `README.md` skill-table parenthetical version refs for skills 39/40/41 advanced to v10.16.38.
+- No skill content changed in this release — Skill 41 v1.3.0 was already merged; this is purely the repo-level version-surface roll that makes the fleet detect and pull it.
+
+### Verification
+- `bash scripts/bump-version.sh --check` passes: all 9 markers agree at v10.16.38.
+- `grep -rIn "10.16.37"` (repo, excluding `.git`) returns only the two historical `[v10.16.37]` CHANGELOG entries — every live/detection marker reads v10.16.38.
+- Version-consistency CI (`version-consistency.yml`) proves all 9 markers agree.
+
 ## [v10.16.37]  -  2026-06-03  -  Preventive safety rule N28: no destructive teardown or kill scripts
 
 ### Why
