@@ -1,3 +1,28 @@
+## [v10.16.46]  -  2026-06-06  -  Fix: durably re-apply Calibre apt-get install fix (ebook-convert fleet-wide regression)
+
+### Why
+The `/usr/bin/apt-get`-based Calibre install fix (first written in v10.14.11, restored in v10.14.15) has never durably landed on main. Both previous attempts were overwritten by subsequent branches cut from an older base before the fix was merged. Current main (v10.16.45) still has the broken official Linux installer (`curl … calibre-ebook.com/linux-installer.sh`) in the Calibre block — empirically confirmed to silently fail on every client VPS, leaving Skill 22 degraded to PDF/EPUB-only on any fresh install.
+
+PR #7 (`v10.14.11-calibre-apt-fix`) was open for 14 days to address this but could not be merged — it was 170 commits behind main and a direct merge would have clobbered all subsequent work. PR #7 was closed with explanation and this fresh branch re-applies only the calibre fix onto current main.
+
+### What changed (install.sh only — calibre block, lines ~1814–1875)
+
+- Replaced the curl-based official Calibre Linux installer block with `/usr/bin/apt-get install -y --no-install-recommends calibre`
+- Uses **absolute path `/usr/bin/apt-get`** to bypass Hostinger's `/usr/local/bin/apt[-get]` shim that prints "apt is not available, please use brew instead." The real apt-get is intact at `/usr/bin/apt-get`
+- Elevation resolved: runs apt-get directly if `EUID=0`, falls back to `sudo -n` if available, warns with exact `docker exec -u root` recovery command otherwise
+- `--no-install-recommends` skips ~200-300 MB of Qt/X11 GUI deps (headless container)
+- Post-install validation: if apt reports success but `ebook-convert` still not on PATH, logs and warns explicitly (no silent failure)
+- Preserves v10.16.16 `$EBOOK_TIMEOUT` wrapper already in surrounding code
+- Mac Homebrew path preserved (inert on VPS; non-fatal)
+
+### Fleet note
+All 8 existing client VPS were hot-patched on 2026-05-23 via `docker exec -u root <container> /usr/bin/apt-get install -y --no-install-recommends calibre` — calibre 8.5.0 confirmed on all 8 boxes. This release ensures any NEW install or RE-INSTALL gets the same fix automatically via the `command -v ebook-convert` short-circuit at the top of the block.
+
+### Risk: low
+Single-block replacement in install.sh. No other files changed. Degrades gracefully (warn + continue) if apt-get is unavailable or elevation fails. All 9 version markers rolled atomically to v10.16.46 via `scripts/bump-version.sh`.
+
+---
+
 ## [v10.16.45]  -  2026-06-06  -  Tiered local faster-whisper STT + Skill 43 (Graphify Knowledge Graph) + hyper-explicit no-comingling rule (N29)
 
 ### Why
