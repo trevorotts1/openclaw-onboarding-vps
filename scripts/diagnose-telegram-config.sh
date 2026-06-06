@@ -113,6 +113,34 @@ if agent_hits:
 else:
     print(f"    ✗ no agents.list[].bindings.telegram blocks found")
 
+# v10.16.48 — FIX 2: assert the OPERATOR account + binding exist (channel
+# separation). Operator/rescue traffic must route to a SEPARATE telegram account
+# bound to agent main, not bleed into the owner's personal chat.
+print()
+print("=== Operator channel separation (FIX 2) ===")
+tg = cfg.get("channels", {}).get("telegram", {})
+accts = tg.get("accounts", {}) if isinstance(tg.get("accounts"), dict) else {}
+has_default = "default" in accts
+op = accts.get("operator", {}) if isinstance(accts.get("operator"), dict) else {}
+has_operator = bool(op)
+print(f"  {'✓' if has_default else '✗'} channels.telegram.accounts.default present")
+print(f"  {'✓' if has_operator else '✗'} channels.telegram.accounts.operator present")
+if has_operator:
+    print(f"      dmPolicy = {op.get('dmPolicy')!r}  (expected 'allowlist')")
+    print(f"      allowFrom = {op.get('allowFrom')!r}  (operator IDs ONLY — no client id)")
+    print(f"      botToken = {'set' if op.get('botToken') else 'MISSING — provision via BotFather'}")
+print(f"  defaultAccount = {tg.get('defaultAccount')!r}  (expected 'default')")
+bindings = cfg.get("bindings", [])
+op_binding = [b for b in bindings if isinstance(b, dict)
+              and b.get("channel") == "telegram" and b.get("accountId") == "operator"]
+print(f"  {'✓' if op_binding else '✗'} binding telegram/operator -> agent: "
+      f"{op_binding[0].get('agentId') if op_binding else 'NONE — operator traffic not routed'}")
+print(f"  env.vars.OPERATOR_HELP_CHAT_ID = {cfg.get('env',{}).get('vars',{}).get('OPERATOR_HELP_CHAT_ID')!r}")
+if not (has_operator and op_binding):
+    print("  ⚠ Operator channel separation NOT fully configured — operator/rescue")
+    print("    maintenance can bleed into the owner's chat. Re-run install.sh (Step 10a)")
+    print("    and provision an operator bot token (BotFather) on existing boxes.")
+
 # Also dump any 'telegram' block at unknown nesting
 print()
 print("=== Full channels.telegram block ===")

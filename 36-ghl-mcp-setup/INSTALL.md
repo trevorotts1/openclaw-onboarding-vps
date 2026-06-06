@@ -395,35 +395,31 @@ EOF
 fi
 ```
 
-#### 5.6 Install service — Linux/VPS (systemd)
+#### 5.6 Start + supervise the server — Hostinger Docker VPS (v10.16.48 — FIX 3)
+
+**Hostinger Docker has NO systemd and NO launchd.** Do NOT write a systemd unit
+on the VPS — it will never run, and the registered `ghl-community-mcp` will sit
+with the local :8765 server DOWN (resolving zero tools). The canonical VPS
+supervision is **container nohup + a healthcheck/restart cron**, shipped as
+`scripts/start-ghl-mcp-server.sh`:
 
 ```bash
-if [ "$PLATFORM" = "vps" ]; then
-  mkdir -p /data/logs
-  NODE_PATH=$(which node)
-  sudo tee /etc/systemd/system/ghl-mcp.service > /dev/null <<EOF
-[Unit]
-Description=GHL Community MCP Server
-After=network.target
+# Idempotent start (no-op if :8765 already healthy). Container nohup, no systemd.
+bash ~/.openclaw/skills/36-ghl-mcp-setup/scripts/start-ghl-mcp-server.sh
 
-[Service]
-Type=simple
-User=$(whoami)
-WorkingDirectory=${MCP_DIR}
-ExecStart=${NODE_PATH} ${MCP_DIR}/dist/main.js
-Restart=on-failure
-RestartSec=10
-EnvironmentFile=${MCP_DIR}/.env
-StandardOutput=append:/data/logs/ghl-mcp.log
-StandardError=append:/data/logs/ghl-mcp.err.log
-
-[Install]
-WantedBy=multi-user.target
-EOF
-  sudo systemctl daemon-reload
-  sudo systemctl enable --now ghl-mcp
-fi
+# Healthcheck only (exit 0 iff :8765 is serving the GHL community MCP):
+bash ~/.openclaw/skills/36-ghl-mcp-setup/scripts/start-ghl-mcp-server.sh --health
 ```
+
+`install.sh` (Step 5.2) and `update-skills.sh` (`wire_ghl_mcp`) BOTH register the
+MCP **and** run this start script, then install a `ghl-mcp-autostart` cron
+(`*/15`, operator-routed) that re-runs the start script if :8765 ever goes
+unhealthy. The start script is idempotent — it never double-starts a healthy
+server. You do not need to write any service unit on the VPS.
+
+> Mac (desktop) only: the launchd plist in 5.5 is still the right supervisor.
+> The systemd path was removed for the VPS because Hostinger containers can't
+> run it.
 
 #### 5.7 Register with OpenClaw
 
