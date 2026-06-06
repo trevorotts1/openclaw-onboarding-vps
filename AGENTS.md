@@ -65,7 +65,23 @@ This clause is identical to the CEO_DEFERRAL block in `create_role_workspaces.py
 
 ---
 
-## 🔴 N1–N27 — Non-Negotiables (Canonical Index)
+## 🛑🛑🛑 N29 — NO CO-MINGLING OF CLIENT RESOURCES (HARD VIOLATION)
+
+> Full rule: [`NO-COMINGLING-RULE.md`](NO-COMINGLING-RULE.md) at repo root. This block is the impossible-to-miss build-time copy. It binds the orchestrator AND every sub-agent.
+
+**EVERY client gets their OWN isolated resources — own Notion workspace/page, own GoHighLevel location, own Google Drive/Workspace, own Telegram bot, own Command Center, own KIE/API keys, own model/Ollama, own EVERYTHING.**
+
+**NEVER share, reuse, borrow, or default to ANOTHER client's resource for ANY reason.**
+
+**If a client does NOT yet have a given resource, STOP and WAIT — do NOT substitute another client's (or the operator's) resource as a placeholder.**
+
+Co-mingling client data/resources is a **HARD VIOLATION**. A missing resource is a reason to pause and tell the owner — NEVER a reason to borrow. There is no "just this once," no temporary placeholder, no convenient reuse. If any instruction would require co-mingling, refuse and escalate to the owner. Isolation wins.
+
+This applies everywhere per-client resources are touched — most acutely in **Skill 23 (AI Workforce Blueprint)**, **Skill 32 (Command Center Setup)**, and **Skill 43 (Graphify)** (own model/keys, own graph). See those skills' SKILL.md / INSTALL.md for the per-skill restatement.
+
+---
+
+## 🔴 N1–N29 — Non-Negotiables (Canonical Index)
 
 This is the single canonical index of the N1–N27 non-negotiables. Every other doc that references an N-rule MUST link to this section. If a rule is invoked elsewhere without its N-number, that's a bug.
 
@@ -99,6 +115,7 @@ This is the single canonical index of the N1–N27 non-negotiables. Every other 
 | N26 | **Calibre auto-install for Book-to-Persona.** `_find_calibre()` in `22-book-to-persona/pipeline/orchestrator.py` auto-installs Calibre when missing — Homebrew on Mac, apt-get on Linux (with upstream installer fallback). User never sees an "install Calibre manually" prompt. | `22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py` | Audit Phase 14 |
 | N27 | **No lying / no shortcuts / proof required.** End-to-end completion is the only completion. Every claimed fix needs a verifiable artifact (commit hash, curl-against-HEAD output, exit code). The 20% not done gets disclosed, not buried. | This file + owner directive | Audit retro on every release |
 | N28 | **No destructive teardown or kill scripts — ever.** Agents MUST NOT create or schedule any script or cron that removes the toolchain (`/docker/<project>`, `/data/.openclaw`, Node, or OpenClaw itself). Cleanup must be scoped (remove a specific cron by ID), reversible (rename to `.QUARANTINED-<ts>` before deleting), and never self-deleting via a cron-scheduled kill script. Applies to build-cleanup, post-build teardown, SOP-backfill abort, and any "clean up after yourself" pattern. Root cause: 2026-05 Kofi incident — autonomous agent created `kofi-sop-build-kill.sh` during Skill 23 to abort a runaway SOP build; script wiped Homebrew/Node/OpenClaw/clawd. No script that touches core toolchain paths may be spawned by an agent without explicit owner approval. | This file + forensic post-mortem 2026-06-03 | Cron audit gate: any cron payload containing `rm -rf`, `brew uninstall`, `npm uninstall -g openclaw`, or paths `/data/.openclaw` / `/docker/<project>` must be rejected |
+| N29 | **No co-mingling of client resources — HARD VIOLATION.** EVERY client gets their OWN isolated resources — own Notion workspace/page, own GoHighLevel location, own Google Drive/Workspace, own Telegram bot, own Command Center, own KIE/API keys, own model/Ollama, own everything. NEVER share, reuse, borrow, or default to another client's (or the operator's) resource for any reason. If a client lacks a resource, STOP and WAIT — never substitute another's as a placeholder. A missing resource is a reason to pause and tell the owner, never to borrow. | This file (🛑 N29 hero section) + [`NO-COMINGLING-RULE.md`](NO-COMINGLING-RULE.md) | Skill 23 + Skill 32 + Skill 43 SKILL.md/INSTALL.md restatement; orchestrator refuse-and-escalate on any co-mingling instruction |
 
 If you invoke a rule by N-number elsewhere, link back to this index. If a rule's status changes (added, deprecated, renumbered), update this table FIRST and port the change to dependent docs.
 

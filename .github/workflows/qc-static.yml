@@ -928,3 +928,20 @@ jobs:
             exit 1
           fi
           echo "✓ All 162 Skill 42 SOPs follow PA-NN-NN-slug.md"
+
+      - name: Skill 43 Graphify Knowledge Graph install QC (simulated install)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # qc-graphify-knowledge-graph.sh checks the skill folder is complete and that
+          # the load-bearing facts are present in the docs: installs graphifyy[all],
+          # registers the OpenClaw skill (graphify install --platform claw), wires
+          # AGENTS.md (graphify claw install), installs the FREE AST hook (graphify hook
+          # install), maps on the CLIENT'S OWN model (--backend ollama), states the
+          # on-demand-vs-free split, routes questions through `graphify query`, references
+          # the no-comingling guardrail (N29), and carries the VPS no-apt warning. The
+          # graphify binary + Skill 23 checks are WARN-only (no live install in CI).
+          mkdir -p "$HOME/.openclaw/skills"
+          ln -snf "$GITHUB_WORKSPACE/43-graphify-knowledge-graph" "$HOME/.openclaw/skills/43-graphify-knowledge-graph"
+          bash 43-graphify-knowledge-graph/qc-graphify-knowledge-graph.sh
+          echo "✓ Skill 43 install QC green (folder complete / commands verified / N29 referenced / no apt)"

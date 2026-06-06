@@ -36,6 +36,19 @@ Do NOT claim the skill is installed until CORE_UPDATES.md has been applied.
 
 ---
 
+## 🛑 NO CO-MINGLING (AGENTS.md N29 — HARD VIOLATION)
+
+This skill provisions per-client resources (departments, workspaces, agents, and the
+Notion / GHL / Drive / Telegram / Command Center surfaces they hook into). **EVERY client
+gets their OWN isolated resources — own Notion workspace, own GoHighLevel location, own
+Google Drive, own Telegram bot, own Command Center, own KIE/API keys, own everything.**
+NEVER share, reuse, borrow, or default to another client's (or the operator's) resource.
+**If a client does not yet have a given resource, STOP and WAIT — do NOT substitute another
+client's as a placeholder.** Co-mingling client data/resources is a hard violation. Full
+rule: [`../NO-COMINGLING-RULE.md`](../NO-COMINGLING-RULE.md) / AGENTS.md N29.
+
+---
+
 # AI Workforce Blueprint
 
 ## The Philosophy
