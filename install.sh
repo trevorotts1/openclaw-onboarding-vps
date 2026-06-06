@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.44"
+ONBOARDING_VERSION="v10.16.45"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1978,6 +1978,72 @@ install_media_tools() {
 install_media_tools
 
 # ----------------------------------------------------------
+# v10.16.45: Install faster-whisper (LOCAL STT, model "medium") for voice notes
+# ----------------------------------------------------------
+# VPS clients transcribe inbound voice messages LOCALLY with faster-whisper on
+# the "medium" model — free + private, uniform with Mac clients. VPS boxes are
+# capable (verified 2-4 cores / 8-15GB RAM, mostly idle): CPU transcription of a
+# single voice note is ~10-40s, which is fine for async voice messages.
+#
+# We deliberately do NOT use large-v3 on the VPS (too heavy for CPU). The
+# medium model is the sweet spot for accuracy vs CPU cost on these boxes.
+#
+# Install runs INSIDE the Hostinger Docker container. IMPORTANT: on Hostinger
+# containers `apt`/`apt-get` is a brew shim and brew is OFF PATH — do NOT use
+# apt here. Install order (container-correct):
+#   1. uv tool install faster-whisper           (preferred — clean, isolated)
+#   2. pip3 install --user faster-whisper        (--break-system-packages fallback)
+#   3. /data/linuxbrew/.linuxbrew/bin/brew       (last resort, explicit path)
+#
+# Groq whisper-large-v3 (~$0.111/hr, GROQ_API_KEY) is an OPTIONAL fallback only,
+# and OpenAI is the final cloud fallback. NO Groq key is required for the
+# default path — the VPS default is LOCAL faster-whisper medium.
+install_faster_whisper() {
+    step "Step 6.6: Installing faster-whisper (LOCAL STT, model 'medium') for voice notes"
+
+    local LBREW="/data/linuxbrew/.linuxbrew/bin/brew"
+
+    # Already importable? (uv, pip --user, or brew python all land on sys.path)
+    if command -v faster-whisper >/dev/null 2>&1 \
+       || python3 -c "import faster_whisper" >/dev/null 2>&1; then
+        success "faster-whisper already installed — skipping"
+        return 0
+    fi
+
+    # ── Attempt 1: uv tool (preferred, isolated) ──
+    if command -v uv >/dev/null 2>&1; then
+        note "Installing faster-whisper via uv tool..."
+        uv tool install faster-whisper >> "$LOG_FILE" 2>&1 || true
+    fi
+
+    # ── Attempt 2: pip3 --user (NOT apt — apt is a brew shim on Hostinger) ──
+    if ! command -v faster-whisper >/dev/null 2>&1 \
+       && ! python3 -c "import faster_whisper" >/dev/null 2>&1; then
+        note "Falling back to pip3 install --user faster-whisper..."
+        pip3 install --user faster-whisper --break-system-packages >> "$LOG_FILE" 2>&1 \
+          || pip3 install --user faster-whisper >> "$LOG_FILE" 2>&1 || true
+    fi
+
+    # ── Attempt 3: Linuxbrew python explicit path (last resort) ──
+    if ! command -v faster-whisper >/dev/null 2>&1 \
+       && ! python3 -c "import faster_whisper" >/dev/null 2>&1 \
+       && [ -x "$LBREW" ]; then
+        note "Falling back to Linuxbrew python3 -m pip install faster-whisper..."
+        "$LBREW" --prefix >/dev/null 2>&1 && \
+          "/data/linuxbrew/.linuxbrew/bin/python3" -m pip install faster-whisper >> "$LOG_FILE" 2>&1 || true
+    fi
+
+    if command -v faster-whisper >/dev/null 2>&1 \
+       || python3 -c "import faster_whisper" >/dev/null 2>&1; then
+        success "faster-whisper available — VPS default voice-note transcription is LOCAL (model: medium, free + private)"
+    else
+        warn "faster-whisper not installed after all attempts — voice-note transcription will fall back to Groq/OpenAI (cloud) if keys are present. Install manually with: pip3 install --user faster-whisper"
+    fi
+}
+
+install_faster_whisper
+
+# ----------------------------------------------------------
 # Step 7: Configure Concurrency
 # ----------------------------------------------------------
 # NOTE (v9.7.8): canonical sub-agent + bootstrap config is now applied in
@@ -2147,6 +2213,86 @@ if os.path.exists(path):
 PYEOF
 fi
 
+# ----------------------------------------------------------
+# Step 8.5: Audio / Speech-to-Text (STT) tier  — v10.16.45
+# ----------------------------------------------------------
+# VPS clients transcribe inbound voice messages LOCALLY with faster-whisper on
+# the "medium" model (free + private, uniform with Mac clients). VPS boxes are
+# capable enough for CPU transcription of a single async voice note (~10-40s).
+#
+# Tiered fallback chain (local → cloud, in order):
+#   1. LOCAL faster-whisper  (model "medium")  — DEFAULT. free + private. NO key.
+#   2. Groq whisper-large-v3 (GROQ_API_KEY)     — OPTIONAL fallback (~$0.111/hr).
+#                                                 Used ONLY if local fails AND a
+#                                                 Groq key is present.
+#   3. OpenAI whisper-1      (OPENAI_API_KEY)    — FINAL cloud fallback.
+#
+# We deliberately do NOT use large-v3 LOCALLY on the VPS (too heavy for CPU);
+# large-v3 only appears in the Groq cloud tier. The block is written so the
+# default path needs no API key at all.
+step "Step 8.5: Configuring audio/STT tier (local faster-whisper medium → Groq → OpenAI)"
+
+OPENCLAW_JSON="$OC_JSON"
+if [ -f "$OPENCLAW_JSON" ]; then
+    backup_config_file "$OPENCLAW_JSON"
+
+    OPENCLAW_JSON="$OPENCLAW_JSON" python3 << 'PYEOF'
+import json, os
+path = os.environ['OPENCLAW_JSON']
+with open(path) as f:
+    cfg = json.load(f)
+
+media = cfg.setdefault('tools', {}).setdefault('media', {})
+# Tiered audio transcription. order = first provider that succeeds wins.
+# VPS default = LOCAL faster-whisper "medium" (free + private, no key).
+media['audio'] = {
+    "transcription": {
+        "default": "local-faster-whisper",
+        # Provider chain — tried in array order; fall through on failure.
+        "order": ["local-faster-whisper", "groq", "openai"],
+        "providers": {
+            # 1. LOCAL — the VPS default. Runs faster-whisper inside the
+            #    container on the "medium" model. No API key. Free + private.
+            "local-faster-whisper": {
+                "type": "local",
+                "command": "faster-whisper",
+                "model": "medium",
+                # Fallback CLI form if the `faster-whisper` entrypoint is absent
+                # but the python module is importable.
+                "fallbackCommand": "python3 -m faster_whisper",
+                "language": "auto",
+                "private": True,
+                "cost": "free"
+            },
+            # 2. OPTIONAL cloud fallback — Groq whisper-large-v3 (~$0.111/hr).
+            #    Referenced by env var NAME only; NO key is baked in or required
+            #    for the default local path. Used only if local fails AND the
+            #    key is present.
+            "groq": {
+                "type": "cloud",
+                "provider": "groq",
+                "model": "whisper-large-v3",
+                "apiKeyEnv": "GROQ_API_KEY",
+                "optional": True
+            },
+            # 3. FINAL cloud fallback — OpenAI.
+            "openai": {
+                "type": "cloud",
+                "provider": "openai",
+                "model": "whisper-1",
+                "apiKeyEnv": "OPENAI_API_KEY",
+                "optional": True
+            }
+        }
+    }
+}
+
+with open(path, 'w') as f:
+    json.dump(cfg, f, indent=2)
+print("  ✓ tools.media.audio: local faster-whisper 'medium' (default) → Groq (optional) → OpenAI (final)")
+PYEOF
+fi
+
 EXEC_APPROVALS="$OC_CONFIG/exec-approvals.json"
 if [ -f "$EXEC_APPROVALS" ]; then
     backup_config_file "$EXEC_APPROVALS"
@@ -2300,7 +2446,7 @@ When the owner says any of these names, they mean the same system. The same Priv
 
 **Phase A: Parallel Install — dependency-aware waves (Timeout: 1800s / 30 minutes per wave)**
 
-The 39 active skills install in 5 dependency-aware waves, not by number order.
+The 40 active skills install in 5 dependency-aware waves, not by number order.
 Sub-agents within a wave run in parallel (up to maxConcurrent in openclaw.json).
 A wave cannot start until the previous wave's QC has all skills at 8.5+.
 
@@ -3796,7 +3942,7 @@ PHASE 2 — Install skills in waves, with PROGRESS UPDATES to __OWNER_NAME__:
 Before each wave, send __OWNER_NAME__ a Telegram message in PLAIN ENGLISH (no jargon): Starting Wave 2 of 5 — about to set up X skills, ~Y minutes.
 After each wave: Wave 2 done. X skills working. Now starting Wave 3.
 Gate each wave: bash __OC_CONFIG__/scripts/check-wave-concurrency.sh --proposed N --reason wave-N
-Skill folders live at __OC_CONFIG__/skills/01-... through __OC_CONFIG__/skills/42-... (39 active + 3 archived).
+Skill folders live at __OC_CONFIG__/skills/01-... through __OC_CONFIG__/skills/43-... (40 active + 3 archived).
 Per skill: read all .md + scripts, execute INSTALL.md in order, score >= 8.5/10, up to 5 retry loops.
 
 PHASE 3 — Verify:

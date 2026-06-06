@@ -13,6 +13,18 @@ Required read order:
 
 Per N3 ("read before act"), do not skip any of the above. Per N4, follow steps in declared order. Per N5, QC runs in a different sub-agent than the installer.
 
+## 🛑 NO CO-MINGLING (AGENTS.md N29 — HARD VIOLATION)
+
+This skill deploys a per-client **Command Center** (its own dashboard URL, its own
+Telegram control room, its own DB) and wires it to the client's own departments. **EVERY
+client gets their OWN isolated resources — own Command Center, own Telegram bot, own Notion
+workspace, own GoHighLevel location, own Google Drive, own KIE/API keys, own everything.**
+NEVER share, reuse, borrow, or default to another client's (or the operator's) Command
+Center, bot, database, or any other resource. **If a client does not yet have a given
+resource, STOP and WAIT — do NOT substitute another client's as a placeholder.** Co-mingling
+client data/resources is a hard violation. Full rule:
+[`../NO-COMINGLING-RULE.md`](../NO-COMINGLING-RULE.md) / AGENTS.md N29.
+
 ## What This Skill Is About
 
 The Command Center Setup activates your AI workforce as a live, operational system. It takes the department structure you created in Skill 23 (AI Workforce Blueprint) and makes it real with persistent department agents, a Telegram control room with organized topics, and a visual Kanban dashboard for task management.

@@ -1,3 +1,21 @@
+## [v10.16.45]  -  2026-06-06  -  Tiered local faster-whisper STT + Skill 43 (Graphify Knowledge Graph) + hyper-explicit no-comingling rule (N29)
+
+### Why
+Three cohesive additions:
+1. **Voice-note transcription was undefined for VPS clients.** There was no `tools.media.audio` STT tier baked into the install — only Skill 22's batch video pipeline. VPS boxes are capable enough (2–4 cores / 8–15 GB RAM, mostly idle) to transcribe a single async voice note locally in ~10–40s, so the right default is LOCAL + free + private, uniform with the Mac fleet.
+2. **No way for a client's agent to SEE how its own workforce connects.** Skill 23 builds the departments; nothing mapped the relationships/gaps. Graphify turns the client's own workforce/codebase into a queryable knowledge graph — but the heavy semantic pass must run on the CLIENT'S OWN model, never operator keys.
+3. **The no-comingling rule was scattered, not binding-at-build-time.** It existed as practice/memory but was not an impossible-to-miss top-level rule an agent reads before touching per-client resources.
+
+### What
+- **Tiered faster-whisper STT (VPS = LOCAL default).** `install.sh` now (a) installs `faster-whisper` inside the Docker container via `uv tool install` → `pip3 --user --break-system-packages` → Linuxbrew python (Step 6.6 — **never `apt`**, it's a brew shim on Hostinger); and (b) writes a tiered `tools.media.audio.transcription` block to `openclaw.json` (Step 8.5): **1. local faster-whisper `medium`** (DEFAULT, free, private, no key) → **2. Groq `whisper-large-v3`** (`GROQ_API_KEY`, ~$0.111/hr, OPTIONAL fallback) → **3. OpenAI `whisper-1`** (`OPENAI_API_KEY`, final cloud fallback). `large-v3` is deliberately NOT run locally on the VPS (too heavy for CPU); it only appears in the Groq cloud tier. No Groq key is required for the default path. New doc [`STT-TRANSCRIPTION.md`](STT-TRANSCRIPTION.md) + README "Voice notes / Speech-to-Text" section.
+- **Skill 43 — Graphify Knowledge Graph** (`43-graphify-knowledge-graph/`, mirrors Skill 42's structure). Installs graphify (`uv tool install "graphifyy[all]"`), registers the OpenClaw skill (`graphify install --platform claw`), wires `/graphify` into AGENTS.md (`graphify claw install`), installs the FREE AST auto-rebuild git hook (`graphify hook install`), and maps the client's OWN workforce ONCE on the CLIENT'S OWN model (`graphify . --backend ollama --model deepseek-v4-pro:cloud`). Two-speed model: AST = free + automatic; semantic = on-demand, owner-triggered ONLY. `skill-version.txt` = 1.0.0. Added to the README inventory + prose counts, and to Start Here.md Wave 6. (`skill-version.txt` 1.0.0 is on an independent track — NOT one of the 9 repo-version locations.)
+- **NO-COMINGLING-RULE.md** (top-level, hyper-explicit) + new **AGENTS.md N29** hero block + index row. Restated in Skill 23, Skill 32, and Skill 43 SKILL.md. Every client gets their OWN of everything; if a resource is missing, STOP and WAIT — never substitute another client's as a placeholder. Co-mingling is a hard violation.
+- **Active-skill counts corrected.** Stale "39 active" prose (never bumped when Skill 42 landed) → "40 active" across `install.sh` + `Start Here.md`; README inventory total → 43 folders (40 active + 3 archived). Skill-folder range reference updated to `43-`.
+- All 9 version markers rolled atomically to v10.16.45 via `scripts/bump-version.sh`.
+
+### Risk
+Low. Additive. The STT config injection is `setdefault`-based and preserves the existing `tools.exec` block (smoke-tested). Skills are glob-discovered (`[0-9][0-9]-*`), so Skill 43 ships via the existing copy loop with no installer wiring change. The no-comingling rule and STT doc are new files / new sections — no existing logic changed. `bump-version.sh --check` passes (all 9 agree).
+
 ## [v10.16.44]  -  2026-06-05  -  Add personal-assistant suggested-roles manifest to satisfy mandatory-floor QC (WS-4)
 
 ### Why
