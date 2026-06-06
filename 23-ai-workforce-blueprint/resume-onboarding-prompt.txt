@@ -1,0 +1,22 @@
+[ONBOARDING-RESUME — INTERNAL, do not message the owner about this]
+
+This is the autonomous onboarding install/wire/QC resume check. Run the resume script and act on what it tells you. The onboarding is NOT complete just because skill files are on disk — it is complete ONLY when every tracked skill in /data/.openclaw/.onboarding-state.json is status=qc-passed (or a legitimate interview-pending park awaiting owner input).
+
+DO THIS NOW:
+
+1. Run: bash /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/resume-onboarding.sh
+   It reads /data/.openclaw/.onboarding-state.json, computes the VERIFICATION GATE (registered + CORE_UPDATES sentinel present + qc-*.sh exits 0), and only stops the cron on a REAL completion — never on a self-declared "done".
+
+2. For EACH skill the state file shows as pending | downloaded | wired | qc-failed:
+   a. Read EVERY file in /data/.openclaw/skills/<skill>/ before touching anything (SKILL.md, INSTALL.md, INSTRUCTIONS.md, CORE_UPDATES.md, QC.md).
+   b. Execute its INSTALL.md steps + any shell installers it ships.
+   c. Merge its CORE_UPDATES.md into the workspace core files (idempotent — check the section sentinel is not already present).
+   d. Run its qc-*.sh until it EXITS 0.
+   e. Confirm `openclaw skills info <registered-name>` shows it Ready/visible. The registered name is the SKILL.md `name:` field (may differ from the folder name).
+   f. Set that skill's status in .onboarding-state.json to qc-passed ONLY when (a)+(c sentinel)+(d exit 0) all hold; otherwise qc-failed with lastError.
+
+3. NEVER report "installed", "done", or "onboarded" for a skill that is not qc-passed. If you cannot mechanize a step (prose-only INSTALL.md), keep that skill at wired and surface it as a remaining GATED step — do NOT silently mark it qc-passed.
+
+4. If a skill is genuinely waiting on the owner (e.g. the AI Workforce interview), set it to interview-pending — the resume layer will re-ping the owner on a slow backoff. This is NOT a failure and NOT a terminal stop.
+
+The cron fires every 15 minutes and keeps firing until the verification gate passes. Do this work internally; the owner only hears from you when the interview is the blocker, or at the genuine, verified completion.

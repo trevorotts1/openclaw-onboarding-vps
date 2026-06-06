@@ -48,6 +48,55 @@ The full client-universal reference is `BIG-PROJECT-MODE.md` at the repo root.
 agent's `AGENTS.md` idempotently (skipped if the `## BIG PROJECT MODE` heading
 already exists).
 
+### 4. Operator Telegram Channel Separation (v10.16.48 — FIX 2)
+
+Operator/rescue maintenance must NEVER bleed into the client's personal Telegram
+chat. The fleet standard separates operator traffic onto its own Telegram
+account bound to the same agent:
+
+```json
+"channels": {
+  "telegram": {
+    "defaultAccount": "default",
+    "accounts": {
+      "default":  { "botToken": "<client bot>", "dmPolicy": "owner" },
+      "operator": { "botToken": "<operator bot>", "dmPolicy": "allowlist",
+                    "allowFrom": ["5252140759","6663821679","6771245262"] }
+    }
+  }
+},
+"bindings": [ { "channel": "telegram", "accountId": "operator", "agentId": "main" } ],
+"env": { "vars": { "OPERATOR_HELP_CHAT_ID": "<operator escalation chat>" } }
+```
+
+`install.sh` Step 10a writes this idempotently (python deep-merge, never
+`openclaw config set` on nested keys). The `default` account is the client's
+existing bot (preserved); `operator` is a SEPARATE bot whose `allowFrom` is
+operator IDs only (no client id).
+
+**Operator-drive contract.** When the operator (or a cron) drives maintenance
+through the bot, it MUST run on the operator session — NOT the owner's:
+
+```bash
+# Maintenance reply to the OPERATOR chat (never the owner):
+openclaw message send --channel telegram \
+  --session-key agent:main:operator \
+  --reply-channel telegram --reply-to "$OPERATOR_HELP_CHAT_ID" \
+  -m "..."
+# Or do not pass --deliver at all for a silent maintenance run.
+```
+
+A maintenance call that omits the operator session key + reply-to (or uses
+`--deliver` to the default account) is what causes the bleed; this is the
+anti-pattern the standard exists to prevent.
+
+**EXISTING-BOX CAVEAT.** The repo encodes the *structure*. An already-deployed
+box still needs an operator BOT TOKEN provisioned via BotFather + the fleet
+propagate script before operator traffic actually routes to the operator
+account. Without a token, `accounts.operator` is registered but inert (the
+diagnostic `scripts/diagnose-telegram-config.sh` flags `botToken: MISSING`). The
+installer never fabricates a token; set `OPERATOR_TELEGRAM_BOT_TOKEN` and re-run.
+
 ## Source of Truth
 
 Configuration verified against:

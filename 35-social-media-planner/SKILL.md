@@ -1,5 +1,5 @@
 ---
-name: content-publishing-engine
+name: social-media-planner
 description: >
   Multi-agent content publishing pipeline across 8 platforms (WordPress, Medium, Substack, LinkedIn, GHL blog, YouTube, X/Twitter, Facebook) — research, create, produce, schedule, publish.
 ---

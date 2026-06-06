@@ -1,3 +1,37 @@
+## [v10.16.48]  -  2026-06-06  -  Systemic fix: onboarding honesty state-machine + verification gate, operator channel separation, GHL-MCP autostart, skill-35 name reconcile
+
+### Why
+Four systemic gaps, consolidated:
+1. **Onboarding honesty (#1 concern: "downloaded but reported installed/done" + waves stall).** install.sh copied files + pasted 5-Phase/Wave PROSE into AGENTS.md (never executed); the only gate was "files on disk"; the "✅ complete" Telegram fired unconditionally; there was no per-skill state, no install-resume cron, and the AGENTS.md flag dedupe was line-based so re-runs STACKED duplicate flag bodies. A skill could be DOWNLOADED but never registered/wired/QC'd and still be reported "done."
+2. **Operator Telegram channel bleed.** One bot + one shared `agent:main:main` session resolves operator/rescue maintenance delivery to the OWNER's personal chat.
+3. **GHL MCP never starts.** Skill 36 registers `ghl-community-mcp` in `mcp.servers` but nothing STARTS the local :8765 server (and INSTALL.md used systemd, which Hostinger Docker has not) → tools don't resolve.
+4. **Skill 35 name divergence.** Mac=`social-media-planner`, VPS=`content-publishing-engine`.
+
+### What changed
+
+**FIX 1 — Onboarding honesty (state-machine + verification gate):**
+- New `lib-onboarding-state.sh` — real STATE FILE `/data/.openclaw/.onboarding-state.json` (every non-archived skill seeded `pending`→`downloaded`), per-skill ladder `pending→downloaded→wired→qc-passed|qc-failed` (+`interview-pending`), and a VERIFICATION GATE `oc_gate_skill` used everywhere "done" is claimed: a skill counts INSTALLED only if (a) `openclaw skills info <registered-name>` Ready/visible, (b) its CORE_UPDATES sentinel is present in the workspace files (if it ships CORE_UPDATES), (c) its `qc-*.sh` exits 0 (if it ships one). `oc_onboarding_complete` is the completion gate (all `qc-passed` or `interview-pending`).
+- install.sh: sources the lib (no-op fallbacks), seeds the state at Step 5, persists `ownerChat`, FULL-SECTION flag dedupe (strips prior flag heading→`<!-- /UPDATE-PENDING-FLAG -->` marker; legacy fallback strips markerless stacked flags), flag text rewritten to point at `.onboarding-state.json` + the gate (HONESTY CONTRACT + STEP 8 Honest Reporting Contract), and the "complete" message reworded to HONEST "files DOWNLOADED — agent verifies next" (no installed/done/onboarded claim).
+- update-skills.sh: sources the lib, marks each wired skill `wired`, re-seeds + reports `N/M verified-installed`, HONORS `qc-completeness.sh`'s exit code (was discarded with `|| true`), and the completion banner + Telegram are CONDITIONAL on the gate (no "✅ complete" unless verified). Same FULL-SECTION flag dedupe + end-marker.
+- New `onboarding-resume` cron (install.sh Step 13b, modeled on the workforce-build-resume cron) running `23-ai-workforce-blueprint/scripts/resume-onboarding.sh` + `resume-onboarding-prompt.txt`: re-fires install/wire/QC for any skill in `pending|downloaded|wired|qc-failed` until ALL pass, NEVER stops on a self-declared "done" (only on the gate), reuses max-runs + Rescue-Rangers escalation + 2h backoff, and re-pings the owner for a legitimate `interview-pending` park.
+
+**FIX 2 — Operator Telegram channel separation:**
+- install.sh Step 10a `configure_operator_channel_separation` (python deep-merge, schema-safe): writes `channels.telegram.accounts.{default,operator}` (default = existing client bot preserved; operator = `dmPolicy:allowlist`, `allowFrom`=5252140759/6663821679/6771245262, NO client id), `defaultAccount:"default"`, a `bindings` route `{telegram,operator}→main`, and `env.vars.OPERATOR_HELP_CHAT_ID`. Validates config; backs up first.
+- `scripts/diagnose-telegram-config.sh` asserts the operator account + binding exist. FLEET-STANDARDS.md §4 documents the operator-drive contract (`--session-key agent:main:operator --reply-to OPERATOR_HELP_CHAT_ID`, or no `--deliver`).
+
+**FIX 3 — GHL MCP autostart:**
+- New `36-ghl-mcp-setup/scripts/start-ghl-mcp-server.sh` (container nohup, NOT systemd/launchd; idempotent no-op when :8765 already healthy; `--health`/`--restart` modes; rejects Cognee on the port). install.sh Step 5.2 + update-skills.sh `wire_ghl_mcp` BOTH register AND start the server, plus a `ghl-mcp-autostart` supervisor cron (`*/15`, operator-routed via the proven agent-message form — no unverified `--exec` flag). Skill 36 INSTALL.md 5.6 rewritten for Hostinger Docker.
+
+**FIX 4 — Skill 35 name reconcile:**
+- `35-social-media-planner/SKILL.md` `name:` changed `content-publishing-engine` → `social-media-planner` (matches the Mac repo + the folder; description preserved).
+
+**Docs/index:** QC-PROTOCOL.md PART 6 (Rules 16–17), ONBOARDING-TRIGGERS.md "Download ≠ Install" gate, AGENTS.md canonical index N30 (onboarding honesty) + N31 (operator channel separation).
+
+### Risk: medium (additive)
+All changes are additive + idempotent. New library has no-op fallbacks so older bundles never abort. State file + flag dedupe are non-destructive (real AGENTS.md content preserved; verified). Config writes use python deep-merge + `openclaw config validate` + backups, never `openclaw config set` on nested keys. The autostart cron uses the verified agent-message form (no invented flags). CAVEATS: (1) EXISTING boxes need an operator BOT TOKEN provisioned via BotFather + the propagate script before operator traffic actually routes — the repo encodes only the structure (flagged loudly). (2) Truly prose-only INSTALL.md steps remain GATED at `wired`, surfaced as remaining steps, never silently `qc-passed`. All 9 version markers bumped via bump-version.sh.
+
+---
+
 ## [v10.16.47]  -  2026-06-06  -  Skill frontmatter + wired update-skills.sh (CORE_UPDATES merge, shell installers, GHL MCP, ImageMagick, skills loader-source)
 
 ### Why

@@ -23,6 +23,20 @@ If you see a kickoff where only one of three fired and no `reason` was logged in
 
 ---
 
+## 🔴 Download ≠ Install — the verification gate (v10.16.48 — FIX 1)
+
+The installer DOWNLOADS skill files; it does NOT install them. After download, your agent reads the AGENTS.md UPDATE PENDING flag and INSTALLS + WIRES + QCs each skill. A skill is "installed" ONLY when the **verification gate** passes:
+
+1. `openclaw skills info <registered-name>` shows it Ready/visible (the registered name is the SKILL.md `name:` field — it can differ from the folder);
+2. its CORE_UPDATES sentinel is present in your workspace core files (if it ships CORE_UPDATES);
+3. its `qc-*.sh` exits 0 (if it ships one).
+
+Per-skill status is tracked honestly in `/data/.openclaw/.onboarding-state.json` (`pending → downloaded → wired → qc-passed | qc-failed`, plus `interview-pending`). Your agent reports **N/M verified-installed** — it will NOT tell you a skill is "done" unless its state is `qc-passed`. The `onboarding-resume` cron re-fires this work every 15 minutes and only stops when the gate passes — a half-finished install can no longer silently report success.
+
+**Honest "success looks like this":** a completion message that says "verified complete — N/N skills verified-installed" (or names the few still in progress / awaiting your interview). A message that says "complete" while skills are still `pending`/`qc-failed` is a bug — file it.
+
+---
+
 Pick the one block below that matches your exact situation. Each block is self-contained — you don't need to read the others.
 
 ---

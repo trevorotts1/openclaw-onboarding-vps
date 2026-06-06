@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.16.47
+#  v10.16.48
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,9 +69,29 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.47"
+ONBOARDING_VERSION="v10.16.48"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
+
+# v10.16.48 — FIX 1 (ONBOARDING HONESTY): source the state-machine + gate so the
+# "Skills updated successfully!" banner + completion Telegram are CONDITIONAL on
+# the verification gate, not on a file copy. lib-onboarding-state.sh is pulled
+# fresh with the repo zip; the helpers fall back to no-ops if it isn't present.
+OC_CONFIG="${OC_CONFIG:-/data/.openclaw}"
+[ -d "$OC_CONFIG" ] || OC_CONFIG="$HOME/.openclaw"
+OC_SKILLS_DIR="${OC_SKILLS_DIR:-$OC_CONFIG/skills}"
+OC_WORKSPACE_DEFAULT="${OC_WORKSPACE_DEFAULT:-$OC_CONFIG/workspace}"
+ONBOARDING_STATE_FILE="${ONBOARDING_STATE_FILE:-$OC_CONFIG/.onboarding-state.json}"
+_us_lib_state="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/lib-onboarding-state.sh"
+[ -f "$_us_lib_state" ] || _us_lib_state="$OC_CONFIG/onboarding/lib-onboarding-state.sh"
+if [ -f "$_us_lib_state" ]; then
+  # shellcheck source=/dev/null
+  source "$_us_lib_state"
+fi
+command -v oc_state_seed          >/dev/null 2>&1 || oc_state_seed()          { :; }
+command -v oc_state_set           >/dev/null 2>&1 || oc_state_set()           { :; }
+command -v oc_onboarding_complete >/dev/null 2>&1 || oc_onboarding_complete() { return 1; }
+command -v oc_state_summary       >/dev/null 2>&1 || oc_state_summary()       { OC_VERIFIED=0; OC_TOTAL=0; OC_FAILED_LIST=""; OC_PENDING_LIST=""; OC_INTERVIEW_LIST=""; }
 
 # ----------------------------------------------------------
 # Telegram Progress Notification (mirrors install.sh)
@@ -124,8 +144,24 @@ write_update_pending_flag() {
   local AGENTS_FILE="$WORKSPACE_DIR/AGENTS.md"
 
   touch "$AGENTS_FILE"
-  grep -v "UPDATE PENDING\|ONBOARDING PENDING" "$AGENTS_FILE" > "$AGENTS_FILE.tmp" 2>/dev/null || true
-  mv "$AGENTS_FILE.tmp" "$AGENTS_FILE" 2>/dev/null || true
+  # v10.16.48 — FIX 1 (ONBOARDING HONESTY): FULL-SECTION dedupe (was a
+  # line-based grep -v that left prior flag bodies behind → stacked duplicates).
+  # Strip every prior "## …UPDATE PENDING…" section from its heading through the
+  # "<!-- /UPDATE-PENDING-FLAG -->" end-marker (inclusive); fallback to
+  # heading→next-H1/H2 for legacy markerless flags.
+  AGENTS_FILE="$AGENTS_FILE" python3 - <<'PYEOF' 2>/dev/null || true
+import re, os
+p=os.environ["AGENTS_FILE"]
+try: txt=open(p,errors="ignore").read()
+except Exception: raise SystemExit
+pat=re.compile(r'\n*##\s*🔴🔴🔴\s*UPDATE PENDING.*?<!--\s*/UPDATE-PENDING-FLAG\s*-->\n*',re.DOTALL)
+new=pat.sub('\n',txt)
+if new==txt:
+    pat2=re.compile(r'\n*##\s*🔴🔴🔴\s*UPDATE PENDING.*?(?=\n##\s|\n#\s|\Z)',re.DOTALL)
+    new=pat2.sub('\n',txt)
+new=re.sub(r'\n{3,}','\n\n',new)
+open(p,"w").write(new)
+PYEOF
 
   local DATE_STAMP
   DATE_STAMP=$(date +%Y-%m-%d)
@@ -150,19 +186,22 @@ For each new skill folder under \`~/.openclaw/skills/\`:
 3. EXECUTE the activation steps in INSTALL.md (read ≠ execute)
 4. APPLY CORE_UPDATES.md surgically — add to AGENTS.md / TOOLS.md / MEMORY.md / SOUL.md only the sections explicitly labeled in that file
 5. RUN the bundled QC checks; do not declare done until QC reaches a pass score (skills with a \`qc-*.sh\` script must exit 0)
-6. REPORT to owner what was activated and any items pending owner input
+6. SET this skill's status in \`/data/.openclaw/.onboarding-state.json\` to \`qc-passed\` ONLY when the VERIFICATION GATE holds: (a) \`openclaw skills info <registered-name>\` Ready/visible, (b) its CORE_UPDATES sentinel is present in the workspace files (if it ships CORE_UPDATES), (c) its \`qc-*.sh\` exits 0. Otherwise \`qc-failed\`. Owner-input-blocked → \`interview-pending\`.
+7. REPORT to owner HONESTLY from the state file: "N/M verified-installed" — NEVER say installed/done/onboarded for a skill that is not \`qc-passed\`.
 
 ### Discipline (binding)
 - Skills 22-23: MAIN ORCHESTRATOR ONLY, never delegate
 - Tier order in any tiered skill (e.g. skill 36 GHL MCP): try Tier N before Tier N+1, no skipping
 - Disclosure headers (e.g. \`[GHL tier used: N — tool_name]\`) required per any skill's SOUL-level rules
 - No destructive shortcuts: no \`--force\`, no \`--no-verify\`, no \`--break-system-packages\` unless explicitly instructed
+- The \`onboarding-resume\` cron re-fires this work every 15 min and only stops when the verification gate passes — a self-declared "done" will not stop it.
 
-### When activation is complete
-- Remove this entire UPDATE PENDING section from AGENTS.md
+### When activation is complete (verification gate, not a feeling)
+- Remove this entire UPDATE PENDING section from AGENTS.md ONLY after every skill in \`.onboarding-state.json\` is \`qc-passed\` or \`interview-pending\`. Prose-only steps you cannot mechanize stay at \`wired\` and are surfaced as a remaining GATED step — do NOT mark them \`qc-passed\`.
 - Add to MEMORY.md under "## System Updates":
-  "${version} update applied on ${DATE_STAMP}. New skills activated: ${new_skills:-none}."
+  "${version} update applied on ${DATE_STAMP}. [VERIFIED]/[TOTAL] skills verified-installed (per .onboarding-state.json). New skills: ${new_skills:-none}."
 
+<!-- /UPDATE-PENDING-FLAG -->
 FLAGCONTENT
   echo "  ✓ UPDATE PENDING flag written to $AGENTS_FILE"
 
@@ -427,6 +466,77 @@ wire_ghl_mcp() {
     echo "  [36-ghl-mcp-setup] ghl-community-mcp registered under mcp.servers"
   else
     echo "  [36-ghl-mcp-setup] ghl-community-mcp registration returned non-zero (may already be set — see $LOG_FILE)"
+  fi
+
+  # v10.16.48 — FIX 3 (GHL MCP AUTOSTART): registration alone leaves the local
+  # :8765 server DOWN, so the registered MCP resolves no tools. START it now
+  # (idempotent — no double-start: start-ghl-mcp-server.sh no-ops if already
+  # healthy). Container nohup supervision, NOT systemd/launchd. A :8765
+  # healthcheck + auto-restart cron is installed by ensure_ghl_mcp_autostart_cron.
+  local START_SCRIPT="$SKILL36_DIR/scripts/start-ghl-mcp-server.sh"
+  if [ -f "$START_SCRIPT" ]; then
+    chmod +x "$START_SCRIPT" 2>/dev/null || true
+    echo "  [36-ghl-mcp-setup] Starting GHL Community MCP on :8765 (idempotent)..."
+    if bash "$START_SCRIPT" >> "$LOG_FILE" 2>&1; then
+      echo "  [36-ghl-mcp-setup] GHL Community MCP healthy on :8765"
+    else
+      echo "  [36-ghl-mcp-setup] GHL Community MCP not healthy yet (see $LOG_FILE) — auto-restart cron will retry"
+    fi
+    ensure_ghl_mcp_autostart_cron "$START_SCRIPT"
+  else
+    echo "  [36-ghl-mcp-setup] start-ghl-mcp-server.sh not present — server start deferred (older bundle)"
+  fi
+}
+
+# ----------------------------------------------------------
+# v10.16.48 — ensure_ghl_mcp_autostart_cron (FIX 3)
+# Supervise the GHL Community MCP on :8765 so it auto-restarts if it dies.
+# OpenClaw's cron model is agent-turn based (kind agentTurn / systemEvent via
+# `openclaw cron create` with a --message) — there is NO verified shell-exec
+# cron flag, so we do NOT invent one. We use the proven agent-message form,
+# routed to the OPERATOR account/chat (FIX 2 — never the owner's chat), every
+# 15 min: the agent runs the idempotent start/healthcheck script (no-op when
+# :8765 is already healthy). Idempotent — never installs twice. The PRIMARY
+# start is the synchronous call at wire-time; this cron is the supervisor.
+# ----------------------------------------------------------
+ensure_ghl_mcp_autostart_cron() {
+  local START_SCRIPT="$1"
+  command -v openclaw >/dev/null 2>&1 || return 0
+  if openclaw cron list 2>/dev/null | grep -qi "ghl-mcp-autostart"; then
+    echo "  [36-ghl-mcp-setup] ghl-mcp-autostart cron already installed (idempotent)"
+    return 0
+  fi
+
+  # Operator escalation chat (FIX 2): keep this maintenance OFF the owner's chat.
+  local OP_CHAT
+  OP_CHAT="$(openclaw config get env.vars.OPERATOR_HELP_CHAT_ID 2>/dev/null | tail -1 | tr -d '[:space:]')"
+  case "$OP_CHAT" in ""|*"not found"*|*"Error"*) OP_CHAT="${OPERATOR_HELP_CHAT_ID:-${OPERATOR_TELEGRAM_CHAT_ID:-5252140759}}" ;; esac
+
+  local MSG="[GHL-MCP-SUPERVISOR — internal, operator-only] Run: bash $START_SCRIPT — it is idempotent and a no-op if :8765 is already healthy. If it reports NOT healthy, the GHL Community MCP died; this restarts it so the registered ghl-community-mcp tools resolve. Do NOT message the owner about this."
+
+  local OK=0
+  if openclaw cron create \
+      --name "ghl-mcp-autostart" \
+      --cron "*/15 * * * *" \
+      --tz "America/New_York" \
+      --channel telegram \
+      --to "$OP_CHAT" \
+      --account operator \
+      --message "$MSG" >> "$LOG_FILE" 2>&1; then
+    OK=1
+  elif openclaw cron create \
+      --name "ghl-mcp-autostart" \
+      --cron "*/15 * * * *" \
+      --tz "America/New_York" \
+      --channel telegram \
+      --to "$OP_CHAT" \
+      --message "$MSG" >> "$LOG_FILE" 2>&1; then
+    OK=1
+  fi
+  if [ "$OK" -eq 1 ]; then
+    echo "  [36-ghl-mcp-setup] ghl-mcp-autostart cron installed (*/15 healthcheck + restart, operator-routed)"
+  else
+    echo "  [36-ghl-mcp-setup] ghl-mcp-autostart cron creation returned non-zero (see $LOG_FILE) — server still started this run"
   fi
 }
 
@@ -854,6 +964,11 @@ main() {
     echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) wired $SKILL_NAME by update-skills.sh $ONBOARDING_VERSION" \
       >> "$SKILLS_DIR/.skill-wire-state" 2>/dev/null || true
 
+    # v10.16.48 — FIX 1: record CORE_UPDATES-merged + installers-run as 'wired'
+    # in .onboarding-state.json. NOT 'qc-passed' — registration + QC are the
+    # agent's verification step (the gate), surfaced via the resume cron.
+    case "$SKILL_NAME" in *ARCHIVED*) : ;; *) oc_state_set "$SKILL_NAME" wired ;; esac
+
     echo "    Wired: $SKILL_NAME"
   done
 
@@ -950,12 +1065,29 @@ main() {
   # Cleanup
   rm -rf "$TEMP_EXTRACT" "$TEMP_ZIP"
 
+  # v10.16.48 — FIX 1 (ONBOARDING HONESTY): re-seed the state file so every
+  # newly-pulled skill is tracked, then report HONESTLY. "Skills pulled +
+  # wired" is true (files copied, CORE_UPDATES merged, installers run). But
+  # "verified-installed" is the verification gate (registration + sentinel +
+  # qc-*.sh exit 0), which is the agent's step — so the banner does NOT claim
+  # "updated successfully" as a completion; it reports the gate state.
+  oc_state_seed "$SKILLS_DIR" "$ONBOARDING_VERSION"
+  oc_state_summary
+
   echo ""
   echo "============================================"
-  echo "   Skills updated successfully!"
+  echo "   Skills pulled + wired (CORE_UPDATES merged, installers run)"
   echo "   Version: $ONBOARDING_VERSION"
   echo "   Location: $SKILLS_DIR"
-  echo "   Verified: $VERIFY_SKILL_COUNT skill folders confirmed in active dir"
+  echo "   On disk: $VERIFY_SKILL_COUNT skill folders confirmed in active dir"
+  echo "   Verified-installed (gate passed): ${OC_VERIFIED:-0}/${OC_TOTAL:-0}"
+  if [ -n "${OC_FAILED_LIST:-}" ]; then
+    echo "   ⚠ qc-failed (need re-run): ${OC_FAILED_LIST}"
+  fi
+  if [ -n "${OC_PENDING_LIST:-}" ]; then
+    echo "   ⏳ awaiting agent verify (pending/wired): ${OC_PENDING_LIST}"
+  fi
+  echo "   (A skill is 'installed' only when registered + CORE_UPDATES sentinel + qc-*.sh exit 0.)"
   if [ -n "$ONLY_SKILLS" ]; then
     echo "   Mode: SELECTIVE — only [$ONLY_SKILLS]"
     echo "   Skipped: $SKIPPED_COUNT other skills (not in --only list)"
@@ -1084,12 +1216,17 @@ except: pass
   # ----------------------------------------------------------
   QC_COMPLETENESS_SCRIPT="$SKILLS_DIR/23-ai-workforce-blueprint/scripts/qc-completeness.sh"
   QC_STATUS_LINE=""
+  QC_COMPLETENESS_RC=0
   if [ -x "$QC_COMPLETENESS_SCRIPT" ]; then
     echo ""
     echo "  Running qc-completeness.sh against live workforce..."
-    QC_OUTPUT="$(bash "$QC_COMPLETENESS_SCRIPT" 2>&1 || true)"
+    # v10.16.48 — FIX 1: HONOR the exit code (it was discarded with `|| true`).
+    QC_OUTPUT="$(bash "$QC_COMPLETENESS_SCRIPT" 2>&1)" || QC_COMPLETENESS_RC=$?
     QC_STATUS_LINE="$(printf '%s\n' "$QC_OUTPUT" | grep -E '^STATUS:' | tail -1)"
-    echo "  ${QC_STATUS_LINE:-qc-completeness ran (no STATUS line captured)}"
+    echo "  ${QC_STATUS_LINE:-qc-completeness ran (no STATUS line captured)} (exit=$QC_COMPLETENESS_RC)"
+    if [ "$QC_COMPLETENESS_RC" -ne 0 ]; then
+      echo "  ⚠ qc-completeness reported a NON-PASS state (exit $QC_COMPLETENESS_RC) — the workforce is NOT fully built; this is reflected in the report below (not hidden)."
+    fi
   fi
 
   # ----------------------------------------------------------
@@ -1099,20 +1236,37 @@ except: pass
   echo "  Writing UPDATE PENDING flag for agent activation..."
   write_update_pending_flag "$ONBOARDING_VERSION" "$NEW_SKILLS_CSV"
 
+  # v10.16.48 — FIX 1 (HONEST REPORTING CONTRACT): the completion headline is
+  # CONDITIONAL on the verification gate AND the qc-completeness exit code. We do
+  # NOT lead with "✅ complete" unless every tracked skill is verified-installed
+  # (or interview-pending) and qc-completeness passed. Otherwise we report the
+  # truth: how many are verified, which still need work.
+  oc_state_summary
+  UPDATE_HEADLINE=""
+  UPDATE_VERIFY_LINE=""
+  if oc_onboarding_complete && [ "${QC_COMPLETENESS_RC:-0}" -eq 0 ]; then
+    UPDATE_HEADLINE="✅ OpenClaw skill update ${ONBOARDING_VERSION}: verified complete."
+    UPDATE_VERIFY_LINE="Verified-installed: ${OC_VERIFIED:-0}/${OC_TOTAL:-0} skills (gate passed).${OC_INTERVIEW_LIST:+ Awaiting your interview: ${OC_INTERVIEW_LIST}.}"
+  else
+    UPDATE_HEADLINE="🛠 OpenClaw skill update ${ONBOARDING_VERSION}: files pulled + wired — verification still in progress (NOT complete)."
+    UPDATE_VERIFY_LINE="Verified-installed: ${OC_VERIFIED:-0}/${OC_TOTAL:-0}. Still need install/wire/QC: ${OC_FAILED_LIST:-}${OC_FAILED_LIST:+, }${OC_PENDING_LIST:-none}.${OC_INTERVIEW_LIST:+ Awaiting your interview: ${OC_INTERVIEW_LIST}.}"
+  fi
+
   echo "  Sending Telegram notification..."
-  send_telegram_progress "✅ OpenClaw skill update ${ONBOARDING_VERSION} complete.
+  send_telegram_progress "${UPDATE_HEADLINE}
 
 New skills (need activation): ${NEW_SKILLS_CSV:-none — updates only}.
-Skills wired (CORE_UPDATES merged + shell installers run): all installed skills.
-GHL MCP (skill 36): registered under mcp.servers.
+Skills pulled + wired (CORE_UPDATES merged + shell installers run): all pulled skills.
+GHL MCP (skill 36): registered under mcp.servers + local server started.
 ImageMagick: checked/installed.
 Skills loader-source: registered in openclaw.json.
 
-Workforce QC: ${QC_STATUS_LINE:-not run}
+${UPDATE_VERIFY_LINE}
+Workforce QC: ${QC_STATUS_LINE:-not run} (exit ${QC_COMPLETENESS_RC:-0}).
 
-Paste this to your agent:
+A skill counts INSTALLED only when registered + CORE_UPDATES sentinel present + qc-*.sh exit 0. Paste this to your agent:
 
-▶ \"I just ran update-skills.sh. There is an UPDATE PENDING flag at the top of my AGENTS.md describing what changed. CORE_UPDATES.md has been merged and shell installers have run. Please execute remaining INSTALL.md prose steps for any new skills listed. Run QC after each one. Send me a summary when complete.\"
+▶ \"I just ran update-skills.sh. There is an UPDATE PENDING flag at the top of my AGENTS.md. CORE_UPDATES.md has been merged and shell installers have run. Install + wire + QC any skill still pending in /data/.openclaw/.onboarding-state.json. Mark each qc-passed ONLY when the gate holds. Report N/M verified-installed — never say done for un-verified skills. Send me a summary when the verification gate passes.\"
 
 (If you didn't get THIS Telegram note, the same instructions are also printed in your Terminal.)"
 

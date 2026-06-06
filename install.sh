@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.47"
+ONBOARDING_VERSION="v10.16.48"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -277,6 +277,21 @@ if [ -f "$_lib_shared_self" ]; then
   source "$_lib_shared_self"
   export OPENCLAW_LIB_SHARED_SOURCED=1
 fi
+
+# v10.16.48 — FIX 1 (ONBOARDING HONESTY): the state-machine + verification gate.
+# Provides oc_state_seed / oc_state_set / oc_gate_skill / oc_state_summary /
+# oc_onboarding_complete. Best-effort source; install proceeds with no-op
+# fallbacks if the file isn't present (very old bundle).
+_lib_onboarding_state_self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-onboarding-state.sh"
+if [ -f "$_lib_onboarding_state_self" ]; then
+  # shellcheck source=/dev/null
+  source "$_lib_onboarding_state_self"
+  export OPENCLAW_LIB_ONBOARDING_STATE_SOURCED=1
+fi
+# No-op fallbacks so the rest of install.sh never aborts if the lib is missing.
+command -v oc_state_seed        >/dev/null 2>&1 || oc_state_seed()        { :; }
+command -v oc_onboarding_complete >/dev/null 2>&1 || oc_onboarding_complete() { return 1; }
+command -v oc_state_summary     >/dev/null 2>&1 || oc_state_summary()     { OC_VERIFIED=0; OC_TOTAL=0; OC_FAILED_LIST=""; OC_PENDING_LIST=""; OC_INTERVIEW_LIST=""; }
 
 # ----------------------------------------------------------
 # VPS canonical paths (hardcoded — no platform detect)
@@ -1755,6 +1770,26 @@ done
 success "$SKILL_COUNT skills installed"
 
 # ----------------------------------------------------------
+# v10.16.48 — FIX 1 (ONBOARDING HONESTY): seed .onboarding-state.json.
+# Every non-archived skill now on disk starts at status=pending, then is
+# advanced to 'downloaded' (files copied — NOT yet wired/registered/QC'd).
+# This is the spine the verification gate + onboarding-resume cron read.
+# "downloaded" is explicitly NOT "installed": install.sh copying files is a
+# DOWNLOAD, not an install. Only the gate (oc_gate_skill) can advance a skill
+# to qc-passed; the resume cron + the AGENTS.md flag drive the rest.
+# ----------------------------------------------------------
+oc_state_seed "$SKILLS_DIR" "$ONBOARDING_VERSION"
+if command -v oc_state_set >/dev/null 2>&1; then
+    for _seeded in "$SKILLS_DIR"/[0-9]*/; do
+        [ -d "$_seeded" ] || continue
+        _seeded_name=$(basename "$_seeded")
+        case "$_seeded_name" in *ARCHIVED*) continue ;; esac
+        oc_state_set "$_seeded_name" downloaded
+    done
+    success "Onboarding state seeded → $ONBOARDING_STATE_FILE (all skills at 'downloaded'; gate advances them to qc-passed)"
+fi
+
+# ----------------------------------------------------------
 # v10.16.47: Register skills loader source in openclaw.json so
 # `openclaw skills list` surfaces numbered skills from SKILLS_DIR.
 # Deep-merge (not openclaw config set) avoids Invalid-input on nested keys.
@@ -1790,6 +1825,55 @@ PYEOF_LOADER
 else
     warn "openclaw.json or python3 not available — skills loader-source registration skipped"
 fi
+
+# ----------------------------------------------------------
+# Step 5.2: GHL MCP register + START + autostart cron (v10.16.48 — FIX 3)
+# ----------------------------------------------------------
+# Skill 36 registers ghl-community-mcp under mcp.servers but nothing STARTS the
+# local :8765 server — so the registered MCP resolves no tools. Start it here at
+# install time (idempotent — no double-start) and install a healthcheck/restart
+# supervisor cron. Container nohup supervision, NOT systemd/launchd.
+step "Step 5.2: GHL MCP — register + start :8765 server + autostart supervisor"
+
+configure_ghl_mcp_autostart() {
+    local SKILL36_DIR="$SKILLS_DIR/36-ghl-mcp-setup"
+    [ -d "$SKILL36_DIR" ] || { note "Skill 36 not present — GHL MCP autostart skipped"; return 0; }
+    if command -v openclaw >/dev/null 2>&1; then
+        openclaw mcp set ghl-community-mcp \
+            '{"type":"streamable-http","url":"http://localhost:8765/mcp"}' \
+            >> "$LOG_FILE" 2>&1 \
+            && success "ghl-community-mcp registered under mcp.servers" \
+            || note "ghl-community-mcp registration returned non-zero (may already be set)"
+    fi
+    local START_SCRIPT="$SKILL36_DIR/scripts/start-ghl-mcp-server.sh"
+    if [ -f "$START_SCRIPT" ]; then
+        chmod +x "$START_SCRIPT" 2>/dev/null || true
+        if bash "$START_SCRIPT" >> "$LOG_FILE" 2>&1; then
+            success "GHL Community MCP healthy on :8765"
+        else
+            note "GHL Community MCP not healthy yet — autostart cron will retry (needs PIT/Location creds for tools to resolve)"
+        fi
+        # Install the */15 healthcheck+restart cron (operator-routed; FIX 2). Idempotent.
+        if command -v openclaw >/dev/null 2>&1 && ! openclaw cron list 2>/dev/null | grep -qi "ghl-mcp-autostart"; then
+            local OP_CHAT
+            OP_CHAT="$(openclaw config get env.vars.OPERATOR_HELP_CHAT_ID 2>/dev/null | tail -1 | tr -d '[:space:]')"
+            case "$OP_CHAT" in ""|*"not found"*|*"Error"*) OP_CHAT="${OPERATOR_HELP_CHAT_ID:-5252140759}" ;; esac
+            local MSG="[GHL-MCP-SUPERVISOR — internal, operator-only] Run: bash $START_SCRIPT — idempotent no-op if :8765 healthy; restarts the GHL Community MCP if it died. Do NOT message the owner."
+            openclaw cron create --name "ghl-mcp-autostart" --cron "*/15 * * * *" --tz "America/New_York" \
+                --channel telegram --to "$OP_CHAT" --account operator --message "$MSG" >> "$LOG_FILE" 2>&1 \
+              || openclaw cron create --name "ghl-mcp-autostart" --cron "*/15 * * * *" --tz "America/New_York" \
+                --channel telegram --to "$OP_CHAT" --message "$MSG" >> "$LOG_FILE" 2>&1 \
+              || note "ghl-mcp-autostart cron creation returned non-zero (server still started this run)"
+            success "ghl-mcp-autostart supervisor cron ensured (*/15)"
+        else
+            note "ghl-mcp-autostart cron already present (idempotent) or CLI unavailable"
+        fi
+    else
+        note "start-ghl-mcp-server.sh not present in skill 36 bundle — GHL MCP server start deferred to agent"
+    fi
+}
+
+configure_ghl_mcp_autostart
 
 # Copy root files (v10.13.0: added AGENTS.md, INSTALL-CONTRACT.md,
 # ONBOARDING-TRIGGERS.md, direct-to-agent-install.md so the workspace
@@ -2446,10 +2530,36 @@ mkdir -p "$WORKSPACE_DIR"
 AGENTS_FILE="$WORKSPACE_DIR/AGENTS.md"
 note "Agent workspace resolved: $WORKSPACE_DIR (UPDATE PENDING flag goes into $AGENTS_FILE)"
 
-# Remove existing flags
+# v10.16.48 — FIX 1 (ONBOARDING HONESTY): FULL-SECTION flag dedupe.
+# PRIOR BUG: the line-based `grep -v "UPDATE PENDING\|…"` only deleted the
+# HEADING lines and left every prior flag's BODY behind — re-running install.sh
+# STACKED duplicate multi-hundred-line flags into AGENTS.md. We now strip the
+# ENTIRE prior section(s): from the "## …UPDATE PENDING - EXECUTE IMMEDIATELY"
+# heading through the unique end-marker "<!-- /UPDATE-PENDING-FLAG -->" (the
+# flag's terminator), inclusive. Idempotent: any number of stacked flags are
+# removed cleanly before the single fresh flag is appended. Falls back to a
+# heading-to-next-H1/H2 strip if the marker is absent (older AGENTS.md).
 touch "$AGENTS_FILE"
-grep -v "UPDATE PENDING\|ONBOARDING PENDING\|ONBOARDING COMPLETE" "$AGENTS_FILE" > "$AGENTS_FILE.tmp" 2>/dev/null || true
-mv "$AGENTS_FILE.tmp" "$AGENTS_FILE" 2>/dev/null || true
+AGENTS_FILE="$AGENTS_FILE" python3 - <<'PYEOF' 2>/dev/null || true
+import re, os
+p = os.environ["AGENTS_FILE"]
+try: txt = open(p, errors="ignore").read()
+except Exception: raise SystemExit
+# Primary: heading … end-marker (inclusive), all occurrences.
+pat = re.compile(
+    r'\n*##\s*🔴🔴🔴\s*UPDATE PENDING - EXECUTE IMMEDIATELY.*?<!--\s*/UPDATE-PENDING-FLAG\s*-->\n*',
+    re.DOTALL)
+new = pat.sub('\n', txt)
+if new == txt:
+    # Fallback for legacy flags with no end-marker: strip from the heading to
+    # the next top-level heading or EOF (covers the old stacked-body case too).
+    pat2 = re.compile(
+        r'\n*##\s*🔴🔴🔴\s*UPDATE PENDING - EXECUTE IMMEDIATELY.*?(?=\n##\s|\n#\s|\Z)',
+        re.DOTALL)
+    new = pat2.sub('\n', txt)
+new = re.sub(r'\n{3,}', '\n\n', new)
+open(p, "w").write(new)
+PYEOF
 
 # v10.5.4 Tier-3 fallback: also write the payload to a standalone file so the
 # operator can recover with `cat`+paste even if both Telegram fails AND the
@@ -2464,6 +2574,14 @@ cat << 'FLAGCONTENT' | tee "$UPDATE_PENDING_FILE" >> "$AGENTS_FILE"
 **EXECUTION MODE: DO NOT ASK PERMISSION. EXECUTE IMMEDIATELY.**
 
 A system update was installed. Do NOT ask the owner "would you like me to proceed?" - just execute.
+
+---
+
+### 🔴 HONESTY CONTRACT (READ FIRST — BINDING)
+
+The installer DOWNLOADED skill files to `/data/.openclaw/skills/`. Files on disk is NOT an install. Your job is to install + wire + QC each skill and to track honest per-skill status in `/data/.openclaw/.onboarding-state.json` (every skill is seeded there at `downloaded`).
+
+A skill is INSTALLED only when the VERIFICATION GATE passes: (a) `openclaw skills info <registered-name>` Ready/visible, (b) its CORE_UPDATES sentinel is present in the workspace files (if it has CORE_UPDATES), (c) its `qc-*.sh` exits 0 (if it ships one). Mark a skill `qc-passed` ONLY then; otherwise `qc-failed`. Owner-input-blocked skills → `interview-pending`. NEVER tell the owner a skill is installed/done/onboarded unless its state is `qc-passed`. See STEP 8 (Honest Reporting Contract) below. The `onboarding-resume` cron keeps re-firing this until the gate passes — a self-declared "done" does not end it.
 
 ---
 
@@ -2746,16 +2864,29 @@ For each skill's CORE_UPDATES.md:
 - Do NOT touch personal content
 - Use skill headers: "### [Skill Name] (Skill [Number])"
 
-**STEP 8: REPORT TO OWNER**
-Send summary:
-"Update complete. [X] skills activated. Memory: 8 layers verified. Personas: [N] available. Interview state: [A/B/C]."
+**STEP 8: VERIFY BEFORE YOU CLAIM ANYTHING (HONEST REPORTING CONTRACT)**
 
-**STEP 9: CLEAN UP**
-- Remove this entire UPDATE PENDING section from AGENTS.md
+A skill is NOT "installed", "activated", "done", or "onboarded" because its files are on disk. It counts INSTALLED only when ALL of the following hold (this is the VERIFICATION GATE):
+  (a) `openclaw skills info <registered-name>` shows it Ready/visible (the registered name is the skill's SKILL.md `name:` field — it MAY differ from the folder, e.g. `35-social-media-planner` registers as `social-media-planner`);
+  (b) its CORE_UPDATES.md sentinel is actually present in your workspace core files (if it ships CORE_UPDATES.md);
+  (c) its `qc-*.sh` exits 0 (if it ships one).
+
+The machine-readable state of every skill lives at `/data/.openclaw/.onboarding-state.json`. As you finish each skill, set its `status` there to `qc-passed` ONLY when (a)+(b)+(c) all hold — otherwise `qc-failed` with a `lastError`. If a skill is genuinely waiting on owner input (the AI Workforce interview), set it to `interview-pending` — that is a legitimate park, not a failure.
+
+When you report to the owner, report TRUTHFULLY from the state file:
+  - If every tracked skill is `qc-passed` (or `interview-pending`): "Setup verified complete — N/N skills verified-installed." (plus the interview note if any).
+  - Otherwise: "N/M skills verified-installed; still working: <list of pending/qc-failed>." NEVER say installed/done/onboarded for a skill that is not `qc-passed`.
+
+You do NOT decide "done" by feeling finished. The `onboarding-resume` cron re-fires this work every 15 minutes and only stops when the verification gate passes — a self-declared "done" will not stop it.
+
+**STEP 9: CLEAN UP (only after the gate passes for everything you can mechanize)**
+- Remove this entire UPDATE PENDING section from AGENTS.md ONLY after every skill in `.onboarding-state.json` is `qc-passed` or `interview-pending`. Prose-only INSTALL.md steps you cannot mechanize must stay at `wired` and be surfaced as a remaining GATED step — do NOT mark them `qc-passed` and do NOT remove this flag while any skill is still `pending`/`downloaded`/`wired`/`qc-failed`.
 - Add to MEMORY.md under "## System Updates":
-  "[DATE]: Install ${ONBOARDING_VERSION}. [X] skills activated. All 8 memory layers verified."
+  "[DATE]: Install ${ONBOARDING_VERSION}. [VERIFIED]/[TOTAL] skills verified-installed (per .onboarding-state.json). All 8 memory layers verified."
 
 ---
+
+<!-- /UPDATE-PENDING-FLAG -->
 
 ## 🛠️ If This Install Had Errors — Self-Healing Guide
 
@@ -2814,6 +2945,137 @@ else
     error "  Or send via gateway: openclaw message send --channel telegram --message \"\$(cat \"$UPDATE_PENDING_FILE\")\""
     error "Please report with this log: $LOG_FILE"
 fi
+
+# v10.16.48 — FIX 1: persist ownerChat into .onboarding-state.json so the
+# onboarding-resume cron prefers the owner's already-paired chat for self-pings
+# (operator chat is the fallback). Best-effort.
+if [ "$TELEGRAM_RESOLVED" != "true" ]; then resolve_telegram_target_universal; fi
+if [ -n "${TELEGRAM_TARGET_CACHED:-}" ] && [ -f "$ONBOARDING_STATE_FILE" ]; then
+    OWNER="$TELEGRAM_TARGET_CACHED" STATE_FILE="$ONBOARDING_STATE_FILE" python3 - <<'PYEOF' 2>/dev/null || true
+import json, os
+sf=os.environ["STATE_FILE"]
+try: s=json.load(open(sf))
+except Exception: raise SystemExit
+s["ownerChat"]=os.environ["OWNER"]
+json.dump(s,open(sf,"w"),indent=2)
+PYEOF
+fi
+
+# ----------------------------------------------------------
+# Step 10a: Operator Telegram channel separation (v10.16.48 — FIX 2)
+# ----------------------------------------------------------
+# WHY: one bot + one shared agent:main:main session means operator/rescue
+# maintenance pings resolve "from the last session" = the OWNER's personal chat,
+# so operator chatter bleeds into the client's private conversation. The proven
+# fix (already on Trevor's Mac) is a SECOND, separate Telegram account routed to
+# the same agent via a binding, so operator traffic lands on the operator
+# session key (agent:main:operator), never the owner's.
+#
+# This step writes (idempotent, additive, schema-safe via python deep-merge —
+# NOT `openclaw config set`, which Invalid-inputs on nested keys):
+#   channels.telegram.accounts.default   = the EXISTING client bot (preserved)
+#   channels.telegram.accounts.operator  = a SEPARATE operator bot, dmPolicy
+#                                           allowlist, allowFrom = operator IDs
+#                                           (5252140759 / 6663821679 / 6771245262),
+#                                           NO client ID
+#   channels.telegram.defaultAccount     = "default"
+#   bindings += { channel:telegram, accountId:operator } -> agentId main
+#   env.vars.OPERATOR_HELP_CHAT_ID       = operator escalation chat id
+#
+# CAVEAT (surfaced to operator): the repo encodes the STRUCTURE. An EXISTING
+# box still needs an operator BOT TOKEN provisioned via BotFather + the
+# propagate script — without a token the operator account is registered but
+# inert. We never invent a token; we write the structure + flag the need.
+step "Step 10a: Operator Telegram channel separation (operator account + binding)"
+
+configure_operator_channel_separation() {
+    [ -f "$OC_JSON" ] || { warn "openclaw.json not present — operator channel separation skipped"; return 0; }
+    command -v python3 >/dev/null 2>&1 || { warn "python3 not available — operator channel separation skipped"; return 0; }
+
+    backup_config_file "$OC_JSON"
+
+    # Operator escalation chat: prefer an explicitly-provided OPERATOR_HELP_CHAT_ID,
+    # else the existing OPERATOR_TELEGRAM_CHAT_ID / RESCUE_RANGERS_HELP_CHAT_ID,
+    # else Trevor's default. Operator bot token is OPTIONAL here (see CAVEAT).
+    local OP_HELP_CHAT="${OPERATOR_HELP_CHAT_ID:-${OPERATOR_TELEGRAM_CHAT_ID:-${RESCUE_RANGERS_HELP_CHAT_ID:-5252140759}}}"
+    local OP_BOT_TOKEN="${OPERATOR_TELEGRAM_BOT_TOKEN:-${OPENCLAW_OPERATOR_BOT_TOKEN:-}}"
+
+    OC_JSON="$OC_JSON" OP_HELP_CHAT="$OP_HELP_CHAT" OP_BOT_TOKEN="$OP_BOT_TOKEN" \
+    python3 - <<'PYEOF'
+import json, os, sys
+p=os.environ["OC_JSON"]; help_chat=os.environ["OP_HELP_CHAT"]; op_token=os.environ.get("OP_BOT_TOKEN","")
+try: cfg=json.load(open(p))
+except Exception as e:
+    print(f"  (could not read openclaw.json: {e} — skipping)"); sys.exit(0)
+
+OPERATOR_IDS=["5252140759","6663821679","6771245262"]
+
+channels=cfg.setdefault("channels",{})
+tg=channels.setdefault("telegram",{})
+
+# 1. accounts.default = the EXISTING client bot (preserve botToken + policies).
+accounts=tg.setdefault("accounts",{})
+default=accounts.setdefault("default",{})
+# Migrate the legacy single-bot fields into accounts.default WITHOUT clobbering.
+for k in ("botToken","dmPolicy","groupPolicy","streaming","enabled"):
+    if k in tg and k not in default:
+        default[k]=tg[k]
+if "dmPolicy" not in default:
+    default["dmPolicy"]=tg.get("dmPolicy","owner")
+
+# 2. accounts.operator = a SEPARATE operator bot. dmPolicy=allowlist; allowFrom =
+#    operator IDs ONLY (never the client). Token only if the operator supplied one
+#    (we NEVER fabricate a token — see CAVEAT).
+op=accounts.setdefault("operator",{})
+op["dmPolicy"]="allowlist"
+# never include a client id; merge-in operator ids without dropping any existing
+existing=[str(x) for x in op.get("allowFrom",[]) if str(x)]
+for oid in OPERATOR_IDS:
+    if oid not in existing: existing.append(oid)
+op["allowFrom"]=existing
+op.setdefault("enabled", True)
+if op_token and not op.get("botToken"):
+    op["botToken"]=op_token
+
+# 3. defaultAccount = "default" (client bot keeps the default route).
+tg["defaultAccount"]="default"
+
+# 4. bindings: route the operator account -> agent main. Idempotent (no dup).
+bindings=cfg.setdefault("bindings",[])
+if not isinstance(bindings,list):
+    bindings=[]; cfg["bindings"]=bindings
+want={"channel":"telegram","accountId":"operator","agentId":"main"}
+def same(b):
+    return isinstance(b,dict) and b.get("channel")=="telegram" and b.get("accountId")=="operator"
+if not any(same(b) for b in bindings):
+    bindings.append(want)
+
+# 5. env.vars.OPERATOR_HELP_CHAT_ID
+cfg.setdefault("env",{}).setdefault("vars",{})["OPERATOR_HELP_CHAT_ID"]=help_chat
+
+tmp=p+".tmp"
+json.dump(cfg,open(tmp,"w"),indent=2)
+os.replace(tmp,p)
+has_token = bool(op.get("botToken"))
+print(f"  channels.telegram.accounts.default preserved; .accounts.operator written (allowFrom={op['allowFrom']}, dmPolicy=allowlist, botToken={'set' if has_token else 'MISSING — provision via BotFather'})")
+print(f"  defaultAccount=default; binding telegram/operator->main ensured; env.vars.OPERATOR_HELP_CHAT_ID={help_chat}")
+PYEOF
+
+    # Validate; if invalid, the schema rejected something — restore from backup.
+    if command -v openclaw >/dev/null 2>&1; then
+        if openclaw config validate >/dev/null 2>&1; then
+            success "Operator channel separation written + config validates"
+        else
+            warn "openclaw config validate FAILED after operator-account write — review $OC_JSON (a backup was taken). The default client bot is unaffected by the read path."
+        fi
+    fi
+
+    if [ -z "$OP_BOT_TOKEN" ]; then
+        warn "OPERATOR provisioning CAVEAT: no operator bot token supplied (OPERATOR_TELEGRAM_BOT_TOKEN). The operator ACCOUNT + binding are encoded, but an EXISTING box needs a real operator bot created via BotFather + propagated before operator traffic actually routes to the operator account. Set OPERATOR_TELEGRAM_BOT_TOKEN and re-run, or use the fleet propagate script."
+    fi
+}
+
+configure_operator_channel_separation
 
 # ----------------------------------------------------------
 # Step 10b: Seed Core.md Terminology into MEMORY.md (idempotent)
@@ -2896,12 +3158,21 @@ print(f'  ✓ Manifest: {len(manifest[\"skills\"])} skills recorded')
 # ----------------------------------------------------------
 # Completion
 # ----------------------------------------------------------
-step "Installation Complete"
+# v10.16.48 — FIX 1 (ONBOARDING HONESTY): this is the FILE-DOWNLOAD stage, not
+# the install. At this point skills are on disk at status=downloaded. The agent
+# installs + wires + QCs them from the AGENTS.md flag, and only the verification
+# gate (oc_onboarding_complete) can call onboarding "complete". So the install.sh
+# completion message is honest about that distinction — it reports skills
+# DOWNLOADED and that verification is the agent's next, gated step. It does NOT
+# claim skills are installed/activated/onboarded.
+step "Skill Download Complete — agent will now install + verify"
 
 count_installed=$(count_list "$SKILLS_INSTALLED")
+oc_state_summary
 
-success "OpenClaw Onboarding ${ONBOARDING_VERSION} installed"
-success "$count_installed skills processed"
+success "OpenClaw Onboarding ${ONBOARDING_VERSION} files downloaded"
+success "$count_installed skills downloaded to $SKILLS_DIR (status=downloaded — NOT yet verified-installed)"
+note "Per-skill verification state: $ONBOARDING_STATE_FILE (${OC_VERIFIED:-0}/${OC_TOTAL:-0} verified so far)"
 success "Log saved to: $LOG_FILE"
 
 echo ""
@@ -2911,23 +3182,26 @@ echo "╚═══════════════════════�
 echo ""
 echo "  1. Gateway restart will now begin..."
 echo "  2. Wait for gateway to come back online"
-echo "  3. Process the UPDATE PENDING section"
-echo "     in your AGENTS.md file"
-echo "  4. Follow the 5-Phase Processing Order"
+echo "  3. The agent reads the UPDATE PENDING flag in AGENTS.md and"
+echo "     INSTALLS + WIRES + QCs each downloaded skill"
+echo "  4. A skill is 'installed' ONLY when the verification gate passes"
+echo "     (registered + CORE_UPDATES sentinel + qc-*.sh exit 0)"
+echo "  5. The onboarding-resume cron re-fires this until the gate passes"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Send completion notification BEFORE gateway restart (so the gateway is still up to deliver it).
-# The body contains paste-ready instructions in case the agent's session loses context during restart.
-send_telegram_progress "✅ OpenClaw Onboarding ${ONBOARDING_VERSION} install complete.
+# Send notification BEFORE gateway restart (so the gateway is still up to deliver
+# it). HONEST wording: files were downloaded; the agent now installs + verifies.
+# This message NEVER claims skills are installed/done/onboarded.
+send_telegram_progress "📦 OpenClaw Onboarding ${ONBOARDING_VERSION}: skill files DOWNLOADED.
 
-📦 ${count_installed} skills processed.
+${count_installed} skills downloaded (not yet verified-installed). Verification state lives at .onboarding-state.json.
 ⏳ Gateway restart starting now — agent will be unavailable for ~30 seconds.
 
 When the gateway is back, paste this to your agent:
 
-▶ \"I just ran the OpenClaw onboarding install. There is an UPDATE PENDING flag at the top of my AGENTS.md. Please follow the 5-Phase Processing Order in that flag to activate all skills. Start with Phase A (parallel install in waves). Do not skip any phase. Run QC after each skill. Send me a summary when complete.\"
+▶ \"I just ran the OpenClaw onboarding install. There is an UPDATE PENDING flag at the top of my AGENTS.md. Follow the HONESTY CONTRACT + 5-Phase Processing Order: install + wire + QC each downloaded skill and mark its status in /data/.openclaw/.onboarding-state.json. A skill is qc-passed ONLY when registration + CORE_UPDATES sentinel + qc-*.sh(exit 0) all hold. Report N/M verified-installed — never say done for un-verified skills. Send me a summary when the verification gate passes.\"
 
 (If you did not receive THIS Telegram note, see the same instructions printed in your Terminal where you ran the install command.)"
 
@@ -3285,6 +3559,92 @@ install_workforce_resume_cron() {
 }
 
 install_workforce_resume_cron
+
+# ----------------------------------------------------------
+# Step 13b: Install onboarding-resume cron (v10.16.48 — FIX 1)
+# ----------------------------------------------------------
+# Why: the install DOWNLOADS skill files + writes the AGENTS.md flag, but the
+# agent does the actual install/wire/QC. If that work dies mid-way (token limit,
+# tool error, or the agent self-declaring "done" without verifying), the
+# half-installed onboarding sits forever and the owner is told it succeeded.
+# This cron fires every 15 minutes, reads .onboarding-state.json, and self-pings
+# the agent to install/wire/QC any skill that is NOT yet qc-passed. It only
+# stops on the VERIFICATION GATE (all skills qc-passed or interview-pending) —
+# NEVER on a self-declared "done". Modeled on Step 13's workforce-build-resume.
+step "Step 13b: Installing onboarding-resume cron (15-min check, fires until the verification gate passes)"
+
+install_onboarding_resume_cron() {
+    if ! command -v openclaw >/dev/null 2>&1; then
+        warn "openclaw CLI not on PATH — skipping onboarding-resume cron. Re-run update-skills.sh later."
+        return 0
+    fi
+
+    # Idempotent — skip if already installed (do NOT double-start)
+    if openclaw cron list 2>/dev/null | grep -qi "onboarding-resume"; then
+        success "Onboarding-resume cron already installed"
+        return 0
+    fi
+
+    local RESUME_SCRIPT="$SKILLS_DIR/23-ai-workforce-blueprint/scripts/resume-onboarding.sh"
+    local RESUME_PROMPT_FILE="$SKILLS_DIR/23-ai-workforce-blueprint/resume-onboarding-prompt.txt"
+
+    if [ ! -f "$RESUME_PROMPT_FILE" ]; then
+        warn "resume-onboarding-prompt.txt not found at $RESUME_PROMPT_FILE — onboarding-resume cron skipped (older bundle?)"
+        return 0
+    fi
+    [ -f "$RESUME_SCRIPT" ] && chmod +x "$RESUME_SCRIPT" 2>/dev/null || true
+
+    if [ "$TELEGRAM_RESOLVED" != "true" ]; then resolve_telegram_target_universal; fi
+    local TG_TARGET="$TELEGRAM_TARGET_CACHED"
+    if [ -z "$TG_TARGET" ]; then
+        warn "Telegram target not resolved — skipping onboarding-resume cron."
+        return 0
+    fi
+
+    local PROMPT_CONTENT CHANNEL_ACCOUNT="$TELEGRAM_ACCOUNT_CACHED"
+    PROMPT_CONTENT=$(cat "$RESUME_PROMPT_FILE")
+
+    local OUT="" RC=0
+    local BASE=(
+        --name "onboarding-resume"
+        --cron "*/15 * * * *"
+        --tz "America/New_York"
+        --channel telegram
+        --to "$TG_TARGET"
+    )
+    [ -n "$CHANNEL_ACCOUNT" ] && BASE+=(--account "$CHANNEL_ACCOUNT")
+    OUT=$(openclaw cron create "${BASE[@]}" --message "$PROMPT_CONTENT" 2>&1) || RC=$?
+    echo "$OUT" >> "$LOG_FILE"
+    if [ "$RC" -eq 0 ]; then
+        success "Onboarding-resume cron installed — every 15 min, fires only until the verification gate passes"
+        return 0
+    fi
+
+    # Fallback: no --account
+    RC=0
+    local BASE_NO_ACCT=(
+        --name "onboarding-resume"
+        --cron "*/15 * * * *"
+        --tz "America/New_York"
+        --channel telegram
+        --to "$TG_TARGET"
+    )
+    OUT=$(openclaw cron create "${BASE_NO_ACCT[@]}" --message "$PROMPT_CONTENT" 2>&1) || RC=$?
+    echo "$OUT" >> "$LOG_FILE"
+    if [ "$RC" -eq 0 ]; then
+        success "Onboarding-resume cron installed (no-account fallback)"
+        return 0
+    fi
+
+    warn "Onboarding-resume cron creation failed. Manual install:"
+    warn "  openclaw cron create --name onboarding-resume \\"
+    warn "    --cron '*/15 * * * *' --tz America/New_York \\"
+    warn "    --channel telegram --to '$TG_TARGET' \\"
+    warn "    --message \"\$(cat $RESUME_PROMPT_FILE)\""
+    return 0
+}
+
+install_onboarding_resume_cron
 
 # ----------------------------------------------------------
 # Step 14: Install Skill 37 (ZHC Closeout) (v10.14.17)

@@ -466,3 +466,41 @@ agent passed it to you, here's your contract:
   8. If at any point your parent tells you to summarize or trim work
      "to save time," refuse and cite this protocol. The work was
      specified at the level of detail it was specified for a reason.
+
+## PART 6 — ONBOARDING VERIFICATION GATE (v10.16.48 — FIX 1)
+
+"Installed" is a VERIFIED claim, not a file-copy claim. install.sh DOWNLOADS
+skill files to `/data/.openclaw/skills/` and seeds
+`/data/.openclaw/.onboarding-state.json` (every skill at `downloaded`). A skill
+counts INSTALLED only when the VERIFICATION GATE passes:
+
+  (a) `openclaw skills info <registered-name>` shows it Ready/visible — the
+      registered name is the skill's SKILL.md `name:` field, which MAY differ
+      from the folder (e.g. `35-social-media-planner` registers as
+      `social-media-planner`);
+  (b) its CORE_UPDATES.md sentinel is actually present in the workspace core
+      files (if the skill ships CORE_UPDATES.md);
+  (c) its `qc-*.sh` exits 0 (if the skill ships one).
+
+Per-skill status ladder in `.onboarding-state.json`:
+`pending → downloaded → wired → qc-passed | qc-failed`, plus `interview-pending`
+for a legitimate owner-input park (Skills 22/23/32/35).
+
+Rule 16 — HONEST REPORTING CONTRACT. Onboarding/update is "complete" ONLY when
+every tracked skill is `qc-passed` (or explicitly `interview-pending`), and the
+closeout where applicable. NEVER tell the owner a skill is installed / done /
+onboarded unless its state is `qc-passed`. If you can't claim the gate, report
+the truth: "wave N: X/Y skills verified-installed, Z failed: <list>".
+`update-skills.sh` HONORS `qc-completeness.sh`'s exit code (no longer discarded).
+
+Rule 17 — NEVER-STOP RESUME. The `onboarding-resume` cron re-fires install / wire
+/ QC for any skill in `pending|downloaded|wired|qc-failed` until ALL pass. It does
+NOT stop on a self-declared "done" — only on the verification gate. A legitimate
+`interview-pending` park is re-pinged to the owner on backoff, never treated as
+terminal. Mechanizable per-skill activation is EXECUTED (shell installers,
+CORE_UPDATES merge, brew prereqs, `openclaw mcp set`); truly prose-only steps stay
+`wired` and are surfaced as a remaining GATED step — never silently `qc-passed`.
+
+The helpers live in `lib-onboarding-state.sh` (oc_state_seed / oc_state_set /
+oc_gate_skill / oc_state_summary / oc_onboarding_complete) and the resume layer
+in `23-ai-workforce-blueprint/scripts/resume-onboarding.sh`.
