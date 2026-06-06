@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.16.46
+#  v10.16.47
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.46"
+ONBOARDING_VERSION="v10.16.47"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -195,6 +195,262 @@ Never interpret "Core.md" as a literal filename.
 
 COREMDEOF
     echo "  ✓ Core.md terminology seeded into MEMORY.md"
+  fi
+}
+
+# ----------------------------------------------------------
+# v10.16.47 — ensure_skills_loader_source
+# VPS: OpenClaw reads skills from /data/.openclaw/skills/ when the
+# directory is the configured loader source. Write the pointer
+# idempotently so `openclaw skills list` surfaces numbered skills.
+# Uses openclaw config deep-merge (not `openclaw config set`) to
+# avoid the Invalid-input error on nested keys (MEMORY.md:
+# openclaw-mcp-schema-drift.md). Falls through silently if the CLI
+# is not available (fresh install — install.sh will finish the job).
+# ----------------------------------------------------------
+ensure_skills_loader_source() {
+  local SKILLS_DIR="$1"
+  local OCJSON
+  if [ -d /data/.openclaw ]; then
+    OCJSON="/data/.openclaw/openclaw.json"
+  else
+    OCJSON="$HOME/.openclaw/openclaw.json"
+  fi
+
+  if [ ! -f "$OCJSON" ]; then
+    echo "  (openclaw.json not found — skipping skills loader-source registration)"
+    return 0
+  fi
+
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "  (python3 not available — skipping skills loader-source registration)"
+    return 0
+  fi
+
+  # Deep-merge skills.path into openclaw.json idempotently.
+  # This writes the nested key without touching any sibling keys,
+  # which avoids the schema-rejection that `openclaw config set`
+  # triggers on nested paths.
+  python3 - "$OCJSON" "$SKILLS_DIR" <<'PYEOF'
+import json, sys, os
+
+config_path = sys.argv[1]
+skills_dir  = sys.argv[2]
+
+try:
+    with open(config_path, 'r') as f:
+        cfg = json.load(f)
+except Exception as e:
+    print(f"  (could not read openclaw.json: {e} — skipping)", flush=True)
+    sys.exit(0)
+
+# Build nested path: cfg["skills"]["path"] = skills_dir
+skills_block = cfg.setdefault("skills", {})
+current = skills_block.get("path", "")
+
+if current == skills_dir:
+    print(f"  (skills.path already set to {skills_dir} — no change)", flush=True)
+    sys.exit(0)
+
+skills_block["path"] = skills_dir
+
+try:
+    tmp = config_path + ".tmp"
+    with open(tmp, 'w') as f:
+        json.dump(cfg, f, indent=2)
+    os.replace(tmp, config_path)
+    print(f"  Skills loader-source registered: skills.path = {skills_dir}", flush=True)
+except Exception as e:
+    print(f"  (could not write openclaw.json: {e} — skipping)", flush=True)
+PYEOF
+}
+
+# ----------------------------------------------------------
+# v10.16.47 — wire_skill_core_updates
+# Idempotently merge CORE_UPDATES.md sections into workspace
+# AGENTS.md / TOOLS.md / MEMORY.md / SOUL.md.
+# Guards: each section uses the first heading line as a sentinel
+# so re-running never double-appends.
+# ----------------------------------------------------------
+merge_core_updates() {
+  local SKILL_DIR="$1"   # absolute path to the installed skill folder
+  local SKILL_NAME="$2"  # e.g. "36-ghl-mcp-setup"
+
+  local CORE_FILE="$SKILL_DIR/CORE_UPDATES.md"
+  [ -f "$CORE_FILE" ] || return 0
+
+  local WORKSPACE_DIR="$HOME/clawd"
+  [ ! -d "$WORKSPACE_DIR" ] && WORKSPACE_DIR="$HOME/.openclaw/workspace"
+  mkdir -p "$WORKSPACE_DIR"
+
+  # Extract and append labeled sections via python3 — handles multi-line blocks
+  python3 - "$CORE_FILE" "$WORKSPACE_DIR" "$SKILL_NAME" <<'PYEOF'
+import re, sys, os
+
+core_path   = sys.argv[1]
+workspace   = sys.argv[2]
+skill_name  = sys.argv[3]
+
+try:
+    content = open(core_path).read()
+except Exception:
+    sys.exit(0)
+
+# Map target-file keywords to filenames
+target_map = {
+    "AGENTS.md":  "AGENTS.md",
+    "TOOLS.md":   "TOOLS.md",
+    "MEMORY.md":  "MEMORY.md",
+    "SOUL.md":    "SOUL.md",
+}
+
+# Split on section headers like:
+#   ## AGENTS.md — UPDATE REQUIRED
+#   ## TOOLS.md — UPDATE REQUIRED
+#   ## MEMORY.md — NO UPDATE NEEDED
+# Capture everything after the header until the next ## section or EOF.
+sections = re.split(r'\n(?=## )', content)
+
+for section in sections:
+    header_match = re.match(r'## (AGENTS|TOOLS|MEMORY|SOUL)\.md', section)
+    if not header_match:
+        continue
+
+    target_key = header_match.group(0).split('—')[0].strip().replace('## ', '')
+    # e.g. "AGENTS.md", "MEMORY.md"
+
+    # Skip NO UPDATE NEEDED sections
+    if 'NO UPDATE NEEDED' in section.split('\n')[0]:
+        continue
+
+    target_file = os.path.join(workspace, target_key)
+
+    # Extract the body (everything after the header line)
+    body_lines = section.split('\n', 1)
+    if len(body_lines) < 2:
+        continue
+    body = body_lines[1].strip()
+    if not body:
+        continue
+
+    # Find a stable sentinel: the first ## heading inside the body,
+    # or the first non-empty line if no heading exists.
+    sentinel_match = re.search(r'^##\s+.+', body, re.MULTILINE)
+    if sentinel_match:
+        sentinel = sentinel_match.group(0).strip()
+    else:
+        sentinel = body.split('\n')[0].strip()
+
+    if not sentinel:
+        continue
+
+    # Check if sentinel already present in the target file
+    try:
+        existing = open(target_file).read() if os.path.exists(target_file) else ""
+    except Exception:
+        existing = ""
+
+    if sentinel in existing:
+        print(f"  [{skill_name}] {target_key}: sentinel already present — skip", flush=True)
+        continue
+
+    # Append with a skill guard comment
+    guard = f"\n<!-- skill:{skill_name} core-update -->\n"
+    try:
+        with open(target_file, 'a') as f:
+            f.write(guard + body + "\n")
+        print(f"  [{skill_name}] {target_key}: merged ({len(body)} chars)", flush=True)
+    except Exception as e:
+        print(f"  [{skill_name}] {target_key}: merge failed: {e}", flush=True)
+PYEOF
+}
+
+# ----------------------------------------------------------
+# v10.16.47 — wire_skill_shell_installers
+# Run any idempotent *.sh installer the skill ships
+# (install-*.sh / setup-*.sh / wire.sh in the skill root).
+# Skips INSTALL.md (prose — agent reads it; script cannot).
+# VPS path: /data/linuxbrew/.linuxbrew/bin/brew, never apt.
+# ----------------------------------------------------------
+wire_skill_shell_installers() {
+  local SKILL_DIR="$1"
+  local SKILL_NAME="$2"
+
+  local FOUND_ANY="false"
+  for installer in \
+      "$SKILL_DIR/wire.sh" \
+      "$SKILL_DIR/install.sh" \
+      "$SKILL_DIR/setup.sh" \
+      "$SKILL_DIR"/install-*.sh \
+      "$SKILL_DIR"/setup-*.sh \
+      "$SKILL_DIR"/qc-ghl-mcp-setup.sh; do
+    # Glob may produce no match — guard with -f
+    [ -f "$installer" ] || continue
+    FOUND_ANY="true"
+    local ins_name
+    ins_name=$(basename "$installer")
+    echo "  [$SKILL_NAME] Running $ins_name..."
+    if bash "$installer" >> "$LOG_FILE" 2>&1; then
+      echo "  [$SKILL_NAME] $ins_name: OK"
+    else
+      local rc=$?
+      echo "  [$SKILL_NAME] $ins_name: exited $rc (see $LOG_FILE) — continuing"
+    fi
+  done
+
+  if [ "$FOUND_ANY" = "false" ]; then
+    echo "  [$SKILL_NAME] No shell installer found — CORE_UPDATES merge only"
+  fi
+}
+
+# ----------------------------------------------------------
+# v10.16.47 — wire_ghl_mcp
+# Register GHL MCP under nested mcp.servers using openclaw mcp set
+# (the canonical CLI that writes the nested form per MEMORY.md
+# openclaw-mcp-schema-drift.md). Idempotent: `openclaw mcp set`
+# is safe to re-run. Fires only if skill 36 is present.
+# ----------------------------------------------------------
+wire_ghl_mcp() {
+  local SKILLS_DIR="$1"
+  local SKILL36_DIR="$SKILLS_DIR/36-ghl-mcp-setup"
+
+  [ -d "$SKILL36_DIR" ] || return 0
+  command -v openclaw >/dev/null 2>&1 || { echo "  [36-ghl-mcp-setup] openclaw CLI not on PATH — MCP wiring deferred to agent"; return 0; }
+
+  echo "  [36-ghl-mcp-setup] Registering GHL MCP under mcp.servers (idempotent)..."
+
+  # Tier 2 Community MCP — local streamable-http server on :8765
+  # (the canonical port per GHL MCP memory entry)
+  if openclaw mcp set ghl-community-mcp \
+      '{"type":"streamable-http","url":"http://localhost:8765/mcp"}' \
+      >> "$LOG_FILE" 2>&1; then
+    echo "  [36-ghl-mcp-setup] ghl-community-mcp registered under mcp.servers"
+  else
+    echo "  [36-ghl-mcp-setup] ghl-community-mcp registration returned non-zero (may already be set — see $LOG_FILE)"
+  fi
+}
+
+# ----------------------------------------------------------
+# v10.16.47 — install_imagemagick_vps
+# VPS skill 25/28 require ImageMagick. On Hostinger containers
+# apt is a brew shim NOT on PATH — always use linuxbrew directly.
+# Idempotent: skips if ImageMagick already installed.
+# ----------------------------------------------------------
+install_imagemagick_vps() {
+  local UPD_LBREW="/data/linuxbrew/.linuxbrew/bin/brew"
+
+  if command -v convert >/dev/null 2>&1 || [ -x "/data/linuxbrew/.linuxbrew/bin/convert" ]; then
+    echo "  ImageMagick: already installed"
+    return 0
+  fi
+
+  echo "  ImageMagick: missing — installing via linuxbrew..."
+  if [ -x "$UPD_LBREW" ]; then
+    "$UPD_LBREW" install imagemagick >> "$LOG_FILE" 2>&1 \
+      && echo "  ImageMagick: installed OK" \
+      || echo "  ImageMagick: brew install returned non-zero (see $LOG_FILE) — continuing"
+  else
+    echo "  ImageMagick: linuxbrew not found at $UPD_LBREW — skipping (install manually)"
   fi
 }
 
@@ -486,10 +742,19 @@ main() {
   # Ensure skills directory exists
   mkdir -p "$SKILLS_DIR"
 
-  # Copy new skills
-  echo "  Installing skills to $SKILLS_DIR..."
+  # ----------------------------------------------------------
+  # v10.16.47 — WIRED skill loop:
+  # 1. COPY (same as before — idempotent, byte-for-byte)
+  # 2. MERGE CORE_UPDATES.md into workspace files (idempotent sentinel)
+  # 3. RUN per-skill shell installers (wire.sh / install-*.sh / setup-*.sh)
+  # The printed activation recipe is KEPT for new skills so the agent
+  # knows which skills still require INSTALL.md prose steps it must
+  # execute (the script cannot run INSTALL.md — that remains agent-prose).
+  # ----------------------------------------------------------
+  echo "  Installing and wiring skills to $SKILLS_DIR..."
   NEW_SKILLS_CSV=""
   SKIPPED_COUNT=0
+  WIRED_SKILLS_CSV=""
   for SKILL_DIR in "$EXTRACTED_DIR"/[0-9]*/; do
     [ -d "$SKILL_DIR" ] || continue
     SKILL_NAME=$(basename "$SKILL_DIR")
@@ -516,8 +781,10 @@ main() {
       fi
     fi
 
+    IS_NEW="false"
     # Check if this is a NEW skill (doesn't exist in current install)
     if [ ! -d "$SKILLS_DIR/$SKILL_NAME" ]; then
+      IS_NEW="true"
       # Track for flag + Telegram
       if [ -z "$NEW_SKILLS_CSV" ]; then
         NEW_SKILLS_CSV="$SKILL_NAME"
@@ -525,35 +792,33 @@ main() {
         NEW_SKILLS_CSV="$NEW_SKILLS_CSV, $SKILL_NAME"
       fi
       echo ""
-      echo "  🆕 NEW SKILL DETECTED: $SKILL_NAME"
+      echo "  NEW SKILL DETECTED: $SKILL_NAME"
       echo "  ============================================"
       echo "  This skill requires ACTIVATION after install."
-      echo "  The agent MUST follow these steps:"
+      echo "  Script has: copied files + merged CORE_UPDATES.md + run shell installers."
+      echo "  The agent MUST ALSO do these remaining steps (script cannot run prose):"
       echo ""
       echo "  a. READ all files (Teach Yourself Protocol)"
-      echo "     → SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md"
-      echo "     → Plus any references/*.md files"
+      echo "     -> SKILL.md, INSTALL.md, CORE_UPDATES.md, QC.md"
+      echo "     -> Plus any references/*.md files"
       echo ""
       echo "  b. CHECK prerequisites, search .env files"
-      echo "     → Verify API keys, credentials, software"
-      echo "     → Check ~/.openclaw/skills/ for dependencies"
+      echo "     -> Verify API keys, credentials, software"
+      echo "     -> Check /data/.openclaw/skills/ for dependencies"
       echo ""
-      echo "  c. EXECUTE setup (different from reading!)"
-      echo "     → Follow INSTALL.md activation steps"
-      echo "     → Copy scripts, create files, run commands"
-      echo "     → 'Teach Yourself' means READ. 'Activate' means EXECUTE."
+      echo "  c. EXECUTE any INSTALL.md prose steps not covered by a shell installer"
+      echo "     -> 'Teach Yourself' means READ. 'Activate' means EXECUTE."
       echo ""
-      echo "  d. APPLY CORE_UPDATES.md surgically"
-      echo "     → Add to AGENTS.md, TOOLS.md, MEMORY.md"
-      echo "     → Update HEARTBEAT.md if needed"
+      echo "  d. VERIFY CORE_UPDATES.md merge was complete (check sentinel lines)"
+      echo "     -> Script merged what it could; agent verifies correctness"
       echo ""
       echo "  e. RUN QC.md checks"
-      echo "     → Verify all components work"
-      echo "     → Test API connections"
+      echo "     -> Verify all components work"
+      echo "     -> Test API connections"
       echo ""
       echo "  f. TELL client what was set up"
-      echo "     → List activated features"
-      echo "     → Note any pending items"
+      echo "     -> List activated features"
+      echo "     -> Note any pending items"
       echo ""
       echo "  ============================================"
     fi
@@ -561,7 +826,7 @@ main() {
     # Remove old version if exists
     rm -rf "$SKILLS_DIR/$SKILL_NAME"
 
-    # Copy new version.
+    # STEP 1: COPY
     # IMPORTANT: strip the trailing slash from SKILL_DIR before passing to cp.
     # The glob pattern [0-9]*/ always appends a trailing slash.
     # `cp -r "path/01-skill/" dest/` copies the CONTENTS of 01-skill/ flat
@@ -570,8 +835,53 @@ main() {
     # `cp -r "path/01-skill" dest/` (no trailing slash) copies the dir as a
     # named subdirectory, producing dest/01-skill/ as intended.
     cp -r "${SKILL_DIR%/}" "$SKILLS_DIR/"
-    echo "    Updated: $SKILL_NAME"
+    echo "    Copied: $SKILL_NAME"
+
+    # STEP 2: MERGE CORE_UPDATES.md into workspace (idempotent)
+    merge_core_updates "$SKILLS_DIR/$SKILL_NAME" "$SKILL_NAME"
+
+    # STEP 3: RUN per-skill shell installers (wire.sh / install-*.sh / setup-*.sh)
+    wire_skill_shell_installers "$SKILLS_DIR/$SKILL_NAME" "$SKILL_NAME"
+
+    # Track wired skills for summary
+    if [ -z "$WIRED_SKILLS_CSV" ]; then
+      WIRED_SKILLS_CSV="$SKILL_NAME"
+    else
+      WIRED_SKILLS_CSV="$WIRED_SKILLS_CSV, $SKILL_NAME"
+    fi
+
+    # Write per-skill wire state file (idempotent state machine)
+    echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) wired $SKILL_NAME by update-skills.sh $ONBOARDING_VERSION" \
+      >> "$SKILLS_DIR/.skill-wire-state" 2>/dev/null || true
+
+    echo "    Wired: $SKILL_NAME"
   done
+
+  # ----------------------------------------------------------
+  # v10.16.47: Register skills loader source so `openclaw skills list`
+  # surfaces numbered skills. Idempotent deep-merge into openclaw.json.
+  # ----------------------------------------------------------
+  echo ""
+  echo "  Registering skills loader source..."
+  ensure_skills_loader_source "$SKILLS_DIR"
+
+  # ----------------------------------------------------------
+  # v10.16.47: Install ImageMagick via linuxbrew (required by skills
+  # 25-video-creator and 28-cinematic-forge). Never via apt — on
+  # Hostinger containers apt is a brew shim not on PATH.
+  # ----------------------------------------------------------
+  echo ""
+  echo "  Checking ImageMagick (required by skills 25 + 28)..."
+  install_imagemagick_vps
+
+  # ----------------------------------------------------------
+  # v10.16.47: Wire GHL MCP (skill 36) under nested mcp.servers.
+  # Uses openclaw mcp set which writes the nested form per
+  # MEMORY.md openclaw-mcp-schema-drift.md. Idempotent.
+  # ----------------------------------------------------------
+  echo ""
+  echo "  Wiring GHL MCP (skill 36) under mcp.servers..."
+  wire_ghl_mcp "$SKILLS_DIR"
 
   # ----------------------------------------------------------
   # v10.16.41: Run migrate-existing-workforce.sh so copied skills
@@ -752,13 +1062,18 @@ except: pass
   # ----------------------------------------------------------
   # Fleet standards: ensure sub-agents fully permitted + Telegram media 50MB
   # (idempotent — applied on every update, no-op if already canonical)
+  # v10.16.47 fix: ONBOARDING_DIR is not defined in update-skills.sh;
+  # use SKILLS_DIR (the installed skills root) which contains scripts/.
   # ----------------------------------------------------------
   echo ""
   echo "  Applying fleet standards (sub-agents fully permitted, Telegram media 50MB)..."
-  if [ -f "$ONBOARDING_DIR/scripts/apply-fleet-standards.sh" ]; then
-    bash "$ONBOARDING_DIR/scripts/apply-fleet-standards.sh" >/dev/null 2>&1 && echo "  ✓ Fleet standards applied" || echo "  ⚠ Fleet standards application reported errors (update continues)"
+  FLEET_STANDARDS_SCRIPT="$SKILLS_DIR/scripts/apply-fleet-standards.sh"
+  # Also check the skills root one level up (where scripts/ lives in the repo)
+  [ -f "$FLEET_STANDARDS_SCRIPT" ] || FLEET_STANDARDS_SCRIPT="$(dirname "$SKILLS_DIR")/scripts/apply-fleet-standards.sh"
+  if [ -f "$FLEET_STANDARDS_SCRIPT" ]; then
+    bash "$FLEET_STANDARDS_SCRIPT" >/dev/null 2>&1 && echo "  Fleet standards applied" || echo "  Fleet standards application reported errors (update continues)"
   else
-    echo "  ⚠ Fleet standards script not found"
+    echo "  Fleet standards script not found at $FLEET_STANDARDS_SCRIPT — skipping"
   fi
 
   # ----------------------------------------------------------
@@ -788,12 +1103,16 @@ except: pass
   send_telegram_progress "✅ OpenClaw skill update ${ONBOARDING_VERSION} complete.
 
 New skills (need activation): ${NEW_SKILLS_CSV:-none — updates only}.
+Skills wired (CORE_UPDATES merged + shell installers run): all installed skills.
+GHL MCP (skill 36): registered under mcp.servers.
+ImageMagick: checked/installed.
+Skills loader-source: registered in openclaw.json.
 
 Workforce QC: ${QC_STATUS_LINE:-not run}
 
 Paste this to your agent:
 
-▶ \"I just ran update-skills.sh. There is an UPDATE PENDING flag at the top of my AGENTS.md describing what changed. Please follow the activation steps for any new skills listed. Run QC after each one. Send me a summary when complete.\"
+▶ \"I just ran update-skills.sh. There is an UPDATE PENDING flag at the top of my AGENTS.md describing what changed. CORE_UPDATES.md has been merged and shell installers have run. Please execute remaining INSTALL.md prose steps for any new skills listed. Run QC after each one. Send me a summary when complete.\"
 
 (If you didn't get THIS Telegram note, the same instructions are also printed in your Terminal.)"
 

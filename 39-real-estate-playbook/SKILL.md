@@ -1,3 +1,9 @@
+---
+name: real-estate-playbook
+description: >
+  Real estate property intelligence and playbook — provider configuration, property brain wiring, honest-gap discipline, F52 event log, and public-records-driven lead research.
+---
+
 # Skill 39: Real Estate Playbook & Property Intelligence
 
 ## MANDATORY — Teach Yourself Protocol (TYP)

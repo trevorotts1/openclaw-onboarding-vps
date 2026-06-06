@@ -1,3 +1,9 @@
+---
+name: openrouter-setup
+description: >
+  Configure OpenRouter as the AI model broker — one API key for Claude, GPT, Gemini, DeepSeek and others. Must run LAST in onboarding sequence after all other skills.
+---
+
 
 ## 🔴 ORDER LOCK (SOVEREIGN)
 - OpenRouter setup must run LAST in onboarding sequence.

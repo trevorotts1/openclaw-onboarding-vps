@@ -1,3 +1,9 @@
+---
+name: video-editor
+description: >
+  Edit existing videos locally — download, clip by timestamp, cut silence, add B-roll, merge, add text overlays — using FFmpeg, yt-dlp, Whisper, and PySceneDetect scripts.
+---
+
 # Video Editor (Local Opus Clip Alternative)
 
 Edit existing videos locally using simple, predictable scripts.

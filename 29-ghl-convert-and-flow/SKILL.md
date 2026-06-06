@@ -1,3 +1,9 @@
+---
+name: ghl-convert-and-flow
+description: >
+  Complete GoHighLevel / Convert and Flow REST API v2 reference (Tier 3 fallback). Use only when Tier 1 Official MCP and Tier 2 Community MCP lack the needed tool.
+---
+
 # GHL API Skill - GoHighLevel / Convert and Flow API v2
 
 > **TYP Note:** This skill pack replaces direct use of the 430K master reference.

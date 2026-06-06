@@ -1,3 +1,9 @@
+---
+name: proactive-agent
+description: >
+  Imported upstream skill: proactive behavior patterns that enable the agent to anticipate owner needs, surface timely reminders, and act without waiting to be asked.
+---
+
 # Proactive Agent (Imported)
 
 ## Purpose

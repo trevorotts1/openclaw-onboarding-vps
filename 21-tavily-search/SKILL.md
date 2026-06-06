@@ -1,3 +1,9 @@
+---
+name: tavily-search
+description: >
+  Imported upstream skill: real-time web search via Tavily API for research tasks, fact-checking, and current-events queries that exceed the model's knowledge cutoff.
+---
+
 # tavily-search (Imported)
 
 ## Purpose

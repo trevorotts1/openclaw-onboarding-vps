@@ -1,3 +1,9 @@
+---
+name: humanizer
+description: >
+  Imported upstream skill: post-processing layer that rewrites AI-generated text to sound natural, conversational, and human — removes telltale AI patterns.
+---
+
 # Humanizer (Imported)
 
 ## Purpose

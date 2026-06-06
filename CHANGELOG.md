@@ -1,3 +1,32 @@
+## [v10.16.47]  -  2026-06-06  -  Skill frontmatter + wired update-skills.sh (CORE_UPDATES merge, shell installers, GHL MCP, ImageMagick, skills loader-source)
+
+### Why
+27 of 40 active SKILL.md files lacked YAML `name:` + `description:` frontmatter, causing `openclaw skills list` to surface no numbered skills on VPS. The update-skills.sh loop was copy-only: it printed a 6-step activation recipe but never executed any of the mechanizable steps — CORE_UPDATES.md merges, per-skill shell installers, GHL MCP registration, and ImageMagick install remained as manual agent-prose only. The `apply-fleet-standards.sh` call referenced `$ONBOARDING_DIR` which is never set in update-skills.sh (only in install.sh), silently no-oping every run. The skills loader source (`skills.path` in openclaw.json) was never written, leaving numbered skills invisible to the OpenClaw CLI.
+
+### What changed
+
+**27 SKILL.md files fixed (frontmatter prepended or replaced):**
+01-teach-yourself-protocol, 02-back-yourself-up-protocol, 04-superpowers, 05-ghl-setup, 12-openrouter-setup, 14-google-workspace-integration, 15-blackceo-team-management, 17-self-improving-agent, 18-proactive-agent, 19-humanizer, 20-youtube-watcher, 21-tavily-search, 25-video-creator, 26-caption-creator, 27-video-editor, 28-cinematic-forge, 29-ghl-convert-and-flow, 30-fish-audio-api-reference, 31-upgraded-memory-system, 32-command-center-setup, 35-social-media-planner (skill_name -> name/description), 36-ghl-mcp-setup, 37-zhc-closeout, 38-conversational-ai-system, 39-real-estate-playbook, 40-zhc-public-records-scraper, 41-build-with-ai-playbook.
+
+**update-skills.sh wiring additions (v10.16.47):**
+- `ensure_skills_loader_source()`: idempotent deep-merge of `skills.path` into openclaw.json so `openclaw skills list` works. Avoids `openclaw config set` (triggers Invalid-input on nested keys per MEMORY.md openclaw-mcp-schema-drift.md).
+- `merge_core_updates()`: per-skill idempotent CORE_UPDATES.md merger into workspace AGENTS/TOOLS/MEMORY/SOUL.md. Sentinel = first `##` heading in each section; guards re-runs.
+- `wire_skill_shell_installers()`: runs wire.sh / install-*.sh / setup-*.sh per skill if present. Non-zero exits logged and continue (non-fatal). Prose INSTALL.md still deferred to agent.
+- `wire_ghl_mcp()`: registers GHL community MCP under `mcp.servers` via `openclaw mcp set` (canonical nested-key writer). Only fires if skill 36 installed and openclaw CLI on PATH.
+- `install_imagemagick_vps()`: installs ImageMagick via `/data/linuxbrew/.linuxbrew/bin/brew` (never apt — Hostinger shim). Required by skills 25 + 28.
+- **Bug fix**: `apply-fleet-standards.sh` path corrected — was `$ONBOARDING_DIR/scripts/…` (undefined variable) now resolves via `SKILLS_DIR` parent.
+- Per-skill `.skill-wire-state` log written for idempotent state tracking.
+- Telegram summary updated to include wiring status.
+
+**install.sh additions:**
+- Step 5.1: `skills.path` loader-source registration (same deep-merge logic as update-skills.sh) fires on every fresh install.
+- ONBOARDING_VERSION bumped to v10.16.47.
+
+### Risk: low
+CORE_UPDATES merge is append-only with sentinel guard — never overwrites existing content. Shell installer runs are best-effort (non-zero exits continue). Skills loader-source write uses tmp + atomic rename. All 9 version markers bumped via bump-version.sh.
+
+---
+
 ## [v10.16.46]  -  2026-06-06  -  Fix: durably re-apply Calibre apt-get install fix (ebook-convert fleet-wide regression)
 
 ### Why

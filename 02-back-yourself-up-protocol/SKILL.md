@@ -1,3 +1,9 @@
+---
+name: back-yourself-up-protocol
+description: >
+  Mandatory safety procedure requiring config backup before every openclaw.json edit, plus full system backup protocol to protect against config corruption and total system loss.
+---
+
 # Back Yourself Up Protocol (BYUP)
 
 ## What This Skill Is About

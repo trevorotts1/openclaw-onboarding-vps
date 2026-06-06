@@ -1,3 +1,9 @@
+---
+name: teach-yourself-protocol
+description: >
+  Foundation protocol for how every OpenClaw agent learns new skills, APIs, and business knowledge. Must be completed before activating any other skill.
+---
+
 # Teach Yourself Protocol (TYP)
 
 ## What This Skill Is About

@@ -1,3 +1,9 @@
+---
+name: build-with-ai-playbook
+description: >
+  GHL Build-with-AI workflow generator — dependency-first protocol, standardized output template, brainstorm flow, and verification checklist for building GHL automation nodes via AI.
+---
+
 # Skill 41: Build With AI Playbook Generator
 
 ## MANDATORY - Teach Yourself Protocol (TYP)

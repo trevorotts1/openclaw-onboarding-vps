@@ -1,3 +1,9 @@
+---
+name: superpowers
+description: >
+  Thinking discipline for AI agents — 14 habits covering brainstorming, planning, coding, debugging, and proof-of-work that prevent common agent mistakes before they happen.
+---
+
 # Superpowers - Thinking Discipline for AI Agents
 
 ## What This Is
