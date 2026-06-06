@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.48"
+ONBOARDING_VERSION="v10.16.49"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -238,70 +238,79 @@ COREMDEOF
 }
 
 # ----------------------------------------------------------
-# v10.16.47 — ensure_skills_loader_source
-# VPS: OpenClaw reads skills from /data/.openclaw/skills/ when the
-# directory is the configured loader source. Write the pointer
-# idempotently so `openclaw skills list` surfaces numbered skills.
-# Uses openclaw config deep-merge (not `openclaw config set`) to
-# avoid the Invalid-input error on nested keys (MEMORY.md:
-# openclaw-mcp-schema-drift.md). Falls through silently if the CLI
-# is not available (fresh install — install.sh will finish the job).
+# v10.16.49 — ensure_skills_loader_source (REMOVED / NO-OP)
+# The previous implementation wrote skills.path into openclaw.json,
+# but skills.path is NOT a valid key on OpenClaw 2026.5.x — the
+# gateway rejects it with "skills Unrecognized key path / skills
+# Invalid input" and, under set -euo pipefail, this aborted the
+# ENTIRE updater BEFORE writing .onboarding-version / running
+# migrate / qc / cron-create (root cause of Corey + Maria
+# deploy-breaking update failures, 2026-06-06).
+#
+# Numbered skills auto-discover from the default ~/.openclaw/skills
+# root on 2026.5.x — no skills.path or skills.load.extraDirs
+# registration is required. This function is kept as an explicit
+# no-op so existing callers continue to compile under set -euo.
 # ----------------------------------------------------------
 ensure_skills_loader_source() {
   local SKILLS_DIR="$1"
-  local OCJSON
-  if [ -d /data/.openclaw ]; then
-    OCJSON="/data/.openclaw/openclaw.json"
-  else
-    OCJSON="$HOME/.openclaw/openclaw.json"
-  fi
+  echo "  (skills loader-source: auto-discovered from ${SKILLS_DIR} — no openclaw.json write needed)"
+}
+
+# ----------------------------------------------------------
+# v10.16.49 — safe_json_edit
+# Harden any direct write to openclaw.json: back up, apply the
+# python3 transform, validate with `openclaw config validate`,
+# and ROLL BACK from the backup on failure so one bad key can
+# never abort the updater under set -euo pipefail.
+#
+# Usage:
+#   safe_json_edit OCJSON_PATH DESCRIPTION python3_heredoc_func
+# where python3_heredoc_func is a bash function that:
+#   - receives OCJSON_PATH as $1
+#   - edits the file in-place
+#   - exits 0 on success, non-zero on failure
+#
+# Because there are currently NO direct json.dump writes remaining
+# in this script after the skills.path removal, this helper is
+# provided for future edits and is not called inline yet.
+# ----------------------------------------------------------
+safe_json_edit() {
+  local OCJSON="$1"
+  local DESCRIPTION="${2:-openclaw.json edit}"
+  local EDIT_FUNC="$3"
 
   if [ ! -f "$OCJSON" ]; then
-    echo "  (openclaw.json not found — skipping skills loader-source registration)"
+    echo "  [safe_json_edit] $OCJSON not found — skipping $DESCRIPTION"
     return 0
   fi
 
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "  (python3 not available — skipping skills loader-source registration)"
+  local BACKUP="${OCJSON}.bak-$(date +%Y%m%d-%H%M%S)"
+  cp -f "$OCJSON" "$BACKUP" 2>/dev/null || {
+    echo "  [safe_json_edit] WARN: could not create backup — skipping $DESCRIPTION"
+    return 0
+  }
+
+  # Run the edit function
+  if ! "$EDIT_FUNC" "$OCJSON"; then
+    echo "  [safe_json_edit] WARN: edit function failed — rolling back $DESCRIPTION"
+    cp -f "$BACKUP" "$OCJSON" 2>/dev/null || true
+    rm -f "$BACKUP" 2>/dev/null || true
     return 0
   fi
 
-  # Deep-merge skills.path into openclaw.json idempotently.
-  # This writes the nested key without touching any sibling keys,
-  # which avoids the schema-rejection that `openclaw config set`
-  # triggers on nested paths.
-  python3 - "$OCJSON" "$SKILLS_DIR" <<'PYEOF'
-import json, sys, os
+  # Validate with the CLI if available
+  if command -v openclaw >/dev/null 2>&1; then
+    if ! openclaw config validate >> "$LOG_FILE" 2>&1; then
+      echo "  [safe_json_edit] WARN: openclaw config validate FAILED after $DESCRIPTION — rolling back"
+      cp -f "$BACKUP" "$OCJSON" 2>/dev/null || true
+      rm -f "$BACKUP" 2>/dev/null || true
+      return 0
+    fi
+  fi
 
-config_path = sys.argv[1]
-skills_dir  = sys.argv[2]
-
-try:
-    with open(config_path, 'r') as f:
-        cfg = json.load(f)
-except Exception as e:
-    print(f"  (could not read openclaw.json: {e} — skipping)", flush=True)
-    sys.exit(0)
-
-# Build nested path: cfg["skills"]["path"] = skills_dir
-skills_block = cfg.setdefault("skills", {})
-current = skills_block.get("path", "")
-
-if current == skills_dir:
-    print(f"  (skills.path already set to {skills_dir} — no change)", flush=True)
-    sys.exit(0)
-
-skills_block["path"] = skills_dir
-
-try:
-    tmp = config_path + ".tmp"
-    with open(tmp, 'w') as f:
-        json.dump(cfg, f, indent=2)
-    os.replace(tmp, config_path)
-    print(f"  Skills loader-source registered: skills.path = {skills_dir}", flush=True)
-except Exception as e:
-    print(f"  (could not write openclaw.json: {e} — skipping)", flush=True)
-PYEOF
+  rm -f "$BACKUP" 2>/dev/null || true
+  echo "  [safe_json_edit] $DESCRIPTION applied and validated OK"
 }
 
 # ----------------------------------------------------------
@@ -973,11 +982,11 @@ main() {
   done
 
   # ----------------------------------------------------------
-  # v10.16.47: Register skills loader source so `openclaw skills list`
-  # surfaces numbered skills. Idempotent deep-merge into openclaw.json.
+  # v10.16.49: Skills loader source — auto-discovery (no openclaw.json write).
+  # skills.path was removed because 2026.5.x rejects it as an unrecognized key;
+  # numbered skills auto-discover from ~/.openclaw/skills without any config entry.
   # ----------------------------------------------------------
   echo ""
-  echo "  Registering skills loader source..."
   ensure_skills_loader_source "$SKILLS_DIR"
 
   # ----------------------------------------------------------
@@ -1259,7 +1268,7 @@ New skills (need activation): ${NEW_SKILLS_CSV:-none — updates only}.
 Skills pulled + wired (CORE_UPDATES merged + shell installers run): all pulled skills.
 GHL MCP (skill 36): registered under mcp.servers + local server started.
 ImageMagick: checked/installed.
-Skills loader-source: registered in openclaw.json.
+Skills loader-source: auto-discovered (no openclaw.json write — 2026.5.x).
 
 ${UPDATE_VERIFY_LINE}
 Workforce QC: ${QC_STATUS_LINE:-not run} (exit ${QC_COMPLETENESS_RC:-0}).

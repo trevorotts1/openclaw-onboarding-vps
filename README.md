@@ -1,7 +1,9 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` - this repo at v10.16.48.
+> **Version:** see `/version` - this repo at v10.16.49.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
+>
+> **NOTE (v10.16.49) — fix: skills.path invalid-key removed; safe_json_edit validate/rollback guard added.** The previous `ensure_skills_loader_source()` wrote `skills.path` into `openclaw.json` — rejected by OpenClaw 2026.5.x ("skills Unrecognized key path") — which aborted the entire updater under `set -euo pipefail` before writing `.onboarding-version` / running migrate / qc / cron-create. Function converted to a no-op (numbered skills auto-discover from the default `~/.openclaw/skills` root). `safe_json_edit()` added for future-proof validate + rollback. See [CHANGELOG.md](CHANGELOG.md).
 >
 > **NOTE (v10.16.48) — TYP hardening: explicit storage path, pointer format, mandatory no-paste rule.** `01-teach-yourself-protocol` INSTRUCTIONS.md and the full doc (Section 13 + Section 17) now specify the canonical VPS storage path (`/data/.openclaw/master-files/<subfolder>/`), mandatory pointer format (full path + "when to go deeper"), and a non-negotiable no-paste rule: long docs are NEVER pasted into bootstrap files. `AGENTS.md` carries a short mandatory TYP rule so every agent reads it on session start. TYP skill-version.txt → v6.5.7. Per-release version history lives in [CHANGELOG.md](CHANGELOG.md). CI (`version-consistency.yml`) proves all nine version markers agree.
 >
@@ -17,7 +19,7 @@
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.48)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.49)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 
@@ -86,7 +88,7 @@ docker stop <openclaw-container> && docker rm <openclaw-container>
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent on Hostinger's hvps-openclaw Docker container.**
 
-**Current Version:** see `/version` (currently **v10.16.48**) — see [CHANGELOG.md](CHANGELOG.md) for the full release history.
+**Current Version:** see `/version` (currently **v10.16.49**) — see [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 This repo is **Hostinger Docker VPS-only**. The Mac mini installer lives at https://github.com/trevorotts1/openclaw-onboarding.
 
