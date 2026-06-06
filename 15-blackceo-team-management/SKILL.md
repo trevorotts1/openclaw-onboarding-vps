@@ -1,3 +1,9 @@
+---
+name: blackceo-team-management
+description: >
+  Multi-person Telegram routing system — dispatcher routes each team member to their own dedicated sub-agent worker so conversations never bleed into each other.
+---
+
 # Skill 15: BlackCEO Team Management
 
 ## What This Skill Is About

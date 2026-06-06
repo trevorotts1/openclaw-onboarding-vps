@@ -1,3 +1,9 @@
+---
+name: google-workspace-integration
+description: >
+  Connect the agent to Google Workspace via the gws CLI — Gmail, Calendar, Drive, Docs, Sheets, Chat, Tasks, Keep, Forms, and YouTube in one tool (OAuth + service account DWD).
+---
+
 # Skill 14: Google Workspace Integration
 
 ## What This Skill Is About

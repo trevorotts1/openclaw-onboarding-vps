@@ -1,3 +1,9 @@
+---
+name: conversational-ai-system
+description: >
+  Conversational AI funnel system v6.0 — GHL Workflow AI-powered appointment booking and sales playbooks with phase-based conversation flows, brainstorm trigger, and cross-playbook transitions.
+---
+
 # Skill 38: Conversational AI System (packages playbook v6.0)
 
 ## MANDATORY - Teach Yourself Protocol (TYP)

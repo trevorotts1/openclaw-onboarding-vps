@@ -1,3 +1,9 @@
+---
+name: self-improving-agent
+description: >
+  Imported upstream skill: self-improvement protocol that lets the agent detect its own gaps, propose fixes, and apply lessons learned across sessions.
+---
+
 # Self-Improving Agent (Imported)
 
 ## Purpose

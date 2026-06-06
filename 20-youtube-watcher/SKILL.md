@@ -1,3 +1,9 @@
+---
+name: youtube-watcher
+description: >
+  Imported upstream skill: monitors YouTube channels for new uploads, extracts transcripts, and surfaces summaries and action items to the owner.
+---
+
 # YouTube Watcher (Imported)
 
 ## Purpose

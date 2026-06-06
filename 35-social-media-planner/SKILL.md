@@ -1,8 +1,7 @@
 ---
-skill_name: content-publishing-engine
-version: v1.4.0
-author: Stefanie
-created_date: 2026-04-14
+name: content-publishing-engine
+description: >
+  Multi-agent content publishing pipeline across 8 platforms (WordPress, Medium, Substack, LinkedIn, GHL blog, YouTube, X/Twitter, Facebook) — research, create, produce, schedule, publish.
 ---
 
 # Content Publishing Engine Skill

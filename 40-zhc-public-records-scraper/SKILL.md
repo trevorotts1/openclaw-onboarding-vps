@@ -1,3 +1,9 @@
+---
+name: zhc-public-records-scraper
+description: >
+  4-tier public records research system — auto-detect routing, cost/rate caps, compliance guardrails, and jsonl-schema output for enriching ZHC client profiles without fabrication.
+---
+
 # Skill 40: ZHC Public Records Scraper
 
 ## MANDATORY - Teach Yourself Protocol (TYP)

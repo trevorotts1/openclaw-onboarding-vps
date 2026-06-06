@@ -1,3 +1,9 @@
+---
+name: ghl-mcp-setup
+description: >
+  Install and configure GHL MCP access layers — 5-tier chain: Official MCP (36 tools), Community MCP (586 tools), direct REST, browser automation, manual fallback. Registers under nested mcp.servers.
+---
+
 # GHL MCP Setup — Multi-Tier Access for GoHighLevel
 
 ## What This Is

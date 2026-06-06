@@ -1,3 +1,9 @@
+---
+name: zhc-closeout
+description: >
+  Complete Zero Human Company closeout pipeline — 2 KIE.ai infographics, Veo celebration video, 9-section Notion page tree, 6-message Telegram sequence, Skill 32 Command Center fire, n8n wire-up.
+---
+
 # Skill 37: ZHC Closeout
 
 ## MANDATORY - Teach Yourself Protocol (TYP)

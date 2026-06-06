@@ -1,3 +1,9 @@
+---
+name: video-creator
+description: >
+  Create videos from text prompts, scripts, images, and existing clips using Python scripts and ffmpeg. Supports AI-generated video (Veo, Sora), audio, and local assembly.
+---
+
 # Video Creator (Skill 25)
 
 Create videos from text prompts, simple scripts, images, and existing clips.

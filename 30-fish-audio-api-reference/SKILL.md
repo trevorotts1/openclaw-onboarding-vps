@@ -1,3 +1,9 @@
+---
+name: fish-audio-api-reference
+description: >
+  Full Fish Audio TTS API reference — endpoints, parameters, voice cloning, streaming, and curl examples indexed for agent lookup at query time without guessing.
+---
+
 # Fish Audio API Reference - Skill 31
 
 > **TYP Required:** Read this entire SKILL.md before executing any install steps or making any Fish Audio API calls.

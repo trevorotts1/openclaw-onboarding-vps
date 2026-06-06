@@ -262,7 +262,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.46"
+ONBOARDING_VERSION="v10.16.47"
 
 # ----------------------------------------------------------
 # Shared library — source if available (best-effort, never required).
@@ -1753,6 +1753,43 @@ for SKILL_DIR in "$ONBOARDING_DIR"/[0-9]*/; do
 done
 
 success "$SKILL_COUNT skills installed"
+
+# ----------------------------------------------------------
+# v10.16.47: Register skills loader source in openclaw.json so
+# `openclaw skills list` surfaces numbered skills from SKILLS_DIR.
+# Deep-merge (not openclaw config set) avoids Invalid-input on nested keys.
+# ----------------------------------------------------------
+step "Step 5.1: Registering skills loader source"
+OC_CFG_JSON="$OC_CONFIG/openclaw.json"
+if [ -f "$OC_CFG_JSON" ] && command -v python3 >/dev/null 2>&1; then
+    python3 - "$OC_CFG_JSON" "$SKILLS_DIR" <<'PYEOF_LOADER'
+import json, sys, os
+config_path = sys.argv[1]
+skills_dir  = sys.argv[2]
+try:
+    with open(config_path, 'r') as f:
+        cfg = json.load(f)
+except Exception as e:
+    print(f"  (could not read openclaw.json: {e} — skipping)", flush=True)
+    sys.exit(0)
+skills_block = cfg.setdefault("skills", {})
+current = skills_block.get("path", "")
+if current == skills_dir:
+    print(f"  skills.path already set to {skills_dir}", flush=True)
+    sys.exit(0)
+skills_block["path"] = skills_dir
+try:
+    tmp = config_path + ".tmp"
+    with open(tmp, 'w') as f:
+        json.dump(cfg, f, indent=2)
+    os.replace(tmp, config_path)
+    print(f"  Skills loader-source registered: skills.path = {skills_dir}", flush=True)
+except Exception as e:
+    print(f"  (could not write openclaw.json: {e} — skipping)", flush=True)
+PYEOF_LOADER
+else
+    warn "openclaw.json or python3 not available — skills loader-source registration skipped"
+fi
 
 # Copy root files (v10.13.0: added AGENTS.md, INSTALL-CONTRACT.md,
 # ONBOARDING-TRIGGERS.md, direct-to-agent-install.md so the workspace

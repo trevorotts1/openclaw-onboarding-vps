@@ -1,3 +1,9 @@
+---
+name: cinematic-forge
+description: >
+  End-to-end AI video production from concept to uploaded video — intake, VEO 3.1 Fast video generation, ElevenLabs + Suno audio, Nano Banana Pro images, FFmpeg assembly via KIE.ai.
+---
+
 # Cinematic Forge
 
 > **Skill Name:** cinematic-forge

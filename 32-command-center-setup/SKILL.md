@@ -1,3 +1,9 @@
+---
+name: command-center-setup
+description: >
+  Deploy and configure the BlackCEO Command Center dashboard for a client — Vercel deployment, CF Access, skill integration, live agent status, and Skill 32 closeout fire.
+---
+
 # Skill 32: Command Center Setup
 
 ## MANDATORY - Teach Yourself Protocol (TYP)
