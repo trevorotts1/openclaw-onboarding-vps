@@ -1,3 +1,16 @@
+## [v10.16.49]  -  2026-06-06  -  fix: remove skills.path invalid key + add validate/rollback guard on openclaw.json edits
+
+### Why
+`ensure_skills_loader_source()` wrote `skills.path` into `openclaw.json`, but OpenClaw 2026.5.x rejects this key with "skills Unrecognized key path / skills Invalid input". Under `set -euo pipefail` this aborted the entire updater **before** writing `.onboarding-version` / running `migrate-existing-workforce.sh` / `qc-completeness.sh` / cron-create — silently breaking the update on Corey + Maria (hand-fixed per-box) and every future client running the updater.
+
+### What changed
+- `ensure_skills_loader_source()` converted to an explicit no-op with a clear comment: numbered skills auto-discover from the `~/.openclaw/skills` default root on 2026.5.x — no `skills.path` or `skills.load.extraDirs` entry is required or valid.
+- New `safe_json_edit()` helper added: backs up `openclaw.json`, runs the transform, calls `openclaw config validate`, and rolls back on failure — so one bad key can never abort the updater under `set -e` again.
+- Telegram completion message updated to reflect "auto-discovered" instead of "registered in openclaw.json".
+
+### Risk
+Low — fixes a deploy-breaking bug. The no-op replaces a write that was already rejected at runtime; `safe_json_edit()` is additive (no current callers, forward-defense only).
+
 ## [v10.16.48]  -  2026-06-06  -  Systemic fix: onboarding honesty state-machine + verification gate, operator channel separation, GHL-MCP autostart, skill-35 name reconcile
 
 ### Why
