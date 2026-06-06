@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.16.40
+#  v10.16.41
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.40"
+ONBOARDING_VERSION="v10.16.41"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -572,6 +572,25 @@ main() {
     cp -r "${SKILL_DIR%/}" "$SKILLS_DIR/"
     echo "    Updated: $SKILL_NAME"
   done
+
+  # ----------------------------------------------------------
+  # v10.16.41: Run migrate-existing-workforce.sh so copied skills
+  # actually install into the client's live department tree.
+  # This script is idempotent and additive — it never deletes or
+  # overwrites existing departments, only fills gaps.
+  # ----------------------------------------------------------
+  MIGRATE_SCRIPT="$SKILLS_DIR/23-ai-workforce-blueprint/scripts/migrate-existing-workforce.sh"
+  if [ -x "$MIGRATE_SCRIPT" ]; then
+    echo ""
+    echo "  Running workforce migration (installs copied skills into department tree)..."
+    if bash "$MIGRATE_SCRIPT" "$(hostname)" --apply >> "$LOG_FILE" 2>&1; then
+      echo "  migrate-existing-workforce.sh: OK"
+    else
+      echo "  migrate-existing-workforce.sh: completed with warnings (see $LOG_FILE)"
+    fi
+  else
+    echo "  (migrate-existing-workforce.sh not found or not executable — skipping)"
+  fi
 
   # Write version file to active dir (the canonical location)
   echo "$ONBOARDING_VERSION" > "$SKILLS_DIR/.onboarding-version"
