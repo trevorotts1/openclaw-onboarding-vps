@@ -145,10 +145,14 @@ if (( _run_count > MAX_RUNS_BEFORE_BACKOFF )); then
   log "NEVER-STOP: run #$_run_count past cap — slow-retry fire; escalating to Rescue Rangers (once)."
   _already=$(STATE_FILE="$STATE_FILE" python3 -c "import json,os;print(json.load(open(os.environ['STATE_FILE'])).get('rescueRangersEscalated',False))" 2>/dev/null)
   if [[ "$_already" != "True" ]]; then
-    _rr="${RESCUE_RANGERS_HELP_CHAT_ID:-}"
-    if [[ -n "$_rr" ]]; then
-      openclaw message send --channel telegram -t "$_rr" \
-        -m "🆘 [Rescue Rangers] onboarding-resume on $(hostname) ran $_run_count times without all skills verified-installed. Verified $VERIFIED/$TOTAL. Failed: ${FAILED_CSV:-none}. Pending: ${PENDING_CSV:-none}. Now in 2h-backoff slow-retry (NOT stopped — Rule 8). State: $STATE_FILE" 2>>"$LOG_FILE" || true
+    # Escalate via the n8n Rescue Rangers webhook (NOT bot-to-bot Telegram —
+    # bots can't read other bots, so the old group post never reached the rescue agent).
+    _rr_webhook="${RESCUE_RANGERS_WEBHOOK_URL:-https://main.blackceoautomations.com/webhook/rescue-rangers}"
+    if [[ -n "$_rr_webhook" ]] && command -v curl >/dev/null 2>&1; then
+      _rr_msg="onboarding-resume on $(hostname) ran $_run_count times without all skills verified-installed. Verified $VERIFIED/$TOTAL. Failed: ${FAILED_CSV:-none}. Pending: ${PENDING_CSV:-none}. Now in 2h-backoff slow-retry (NOT stopped — Rule 8). State: $STATE_FILE. OpenClaw version: $(openclaw --version 2>/dev/null | head -1)"
+      # JSON-encode via python (this script does not assume jq is present).
+      _rr_payload=$(RR_HOST="$(hostname)" RR_MSG="$_rr_msg" python3 -c 'import json,os;print(json.dumps({"action":"escalate","client":os.environ["RR_HOST"],"agent":"main","message":os.environ["RR_MSG"]}))' 2>/dev/null)
+      curl -s -X POST "$_rr_webhook" -H "Content-Type: application/json" -d "$_rr_payload" >>"$LOG_FILE" 2>&1 || true
     fi
     _op="$(resolve_operator_chat_id)"
     [[ -n "$_op" ]] && openclaw message send --channel telegram -t "$_op" \
