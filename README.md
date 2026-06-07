@@ -1,13 +1,13 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` - this repo at v10.16.50.
+> **Version:** see `/version` - this repo at v10.16.51.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
 >
-> **NOTE (v10.16.50) — Shared core files (Zero-Human-Workforce file model).** On every box, ALL of an account's agents + sub-agents now SHARE that box's ONE canonical `AGENTS.md` / `TOOLS.md` / `USER.md` via **symlinks** (not copies) → `CANON_DIR` = the LOCAL box's `agents.defaults.workspace`. Per-agent `IDENTITY.md` / `SOUL.md` / `MEMORY.md` / `HEARTBEAT.md` stay each agent's OWN files. New `link_shared_core_files()` (in `install.sh` + `update-skills.sh`) is idempotent + non-destructive — real files are backed up to `<file>.bak-unify-<ts>` and unique content is preserved into the agent's own `IDENTITY.md` under a guarded marker. **Co-mingling guard:** the symlink target is ALWAYS the local box's own canonical workspace, NEVER a cross-box path. **Ant Farm exemption:** `*/workflows/*/agents/*` micro-agents are never touched. Asserted by `scripts/qc-system-integrity.sh` check 9.9; full rule in [`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md) + `AGENTS.md` N32. See [CHANGELOG.md](CHANGELOG.md).
+> **NOTE (v10.16.51) — Shared core files (Zero-Human-Workforce file model).** On every box, ALL of an account's agents + sub-agents now SHARE that box's ONE canonical `AGENTS.md` / `TOOLS.md` / `USER.md` via **symlinks** (not copies) → `CANON_DIR` = the LOCAL box's `agents.defaults.workspace`. Per-agent `IDENTITY.md` / `SOUL.md` / `MEMORY.md` / `HEARTBEAT.md` stay each agent's OWN files. New `link_shared_core_files()` (in `install.sh` + `update-skills.sh`) is idempotent + non-destructive — real files are backed up to `<file>.bak-unify-<ts>` and unique content is preserved into the agent's own `IDENTITY.md` under a guarded marker. **Co-mingling guard:** the symlink target is ALWAYS the local box's own canonical workspace, NEVER a cross-box path. **Ant Farm exemption:** `*/workflows/*/agents/*` micro-agents are never touched. Asserted by `scripts/qc-system-integrity.sh` check 9.9; full rule in [`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md) + `AGENTS.md` N32. See [CHANGELOG.md](CHANGELOG.md).
 >
-> **NOTE (v10.16.49) — fix: skills.path invalid-key removed; safe_json_edit validate/rollback guard added.** The previous `ensure_skills_loader_source()` wrote `skills.path` into `openclaw.json` — rejected by OpenClaw 2026.5.x ("skills Unrecognized key path") — which aborted the entire updater under `set -euo pipefail` before writing `.onboarding-version` / running migrate / qc / cron-create. Function converted to a no-op (numbered skills auto-discover from the default `~/.openclaw/skills` root). `safe_json_edit()` added for future-proof validate + rollback. See [CHANGELOG.md](CHANGELOG.md).
+> **NOTE (v10.16.51) — fix: skills.path invalid-key removed; safe_json_edit validate/rollback guard added.** The previous `ensure_skills_loader_source()` wrote `skills.path` into `openclaw.json` — rejected by OpenClaw 2026.5.x ("skills Unrecognized key path") — which aborted the entire updater under `set -euo pipefail` before writing `.onboarding-version` / running migrate / qc / cron-create. Function converted to a no-op (numbered skills auto-discover from the default `~/.openclaw/skills` root). `safe_json_edit()` added for future-proof validate + rollback. See [CHANGELOG.md](CHANGELOG.md).
 >
-> **NOTE (v10.16.48) — TYP hardening: explicit storage path, pointer format, mandatory no-paste rule.** `01-teach-yourself-protocol` INSTRUCTIONS.md and the full doc (Section 13 + Section 17) now specify the canonical VPS storage path (`/data/.openclaw/master-files/<subfolder>/`), mandatory pointer format (full path + "when to go deeper"), and a non-negotiable no-paste rule: long docs are NEVER pasted into bootstrap files. `AGENTS.md` carries a short mandatory TYP rule so every agent reads it on session start. TYP skill-version.txt → v6.5.7. Per-release version history lives in [CHANGELOG.md](CHANGELOG.md). CI (`version-consistency.yml`) proves all nine version markers agree.
+> **NOTE (v10.16.51) — TYP hardening: explicit storage path, pointer format, mandatory no-paste rule.** `01-teach-yourself-protocol` INSTRUCTIONS.md and the full doc (Section 13 + Section 17) now specify the canonical VPS storage path (`/data/.openclaw/master-files/<subfolder>/`), mandatory pointer format (full path + "when to go deeper"), and a non-negotiable no-paste rule: long docs are NEVER pasted into bootstrap files. `AGENTS.md` carries a short mandatory TYP rule so every agent reads it on session start. TYP skill-version.txt → v6.5.7. Per-release version history lives in [CHANGELOG.md](CHANGELOG.md). CI (`version-consistency.yml`) proves all nine version markers agree.
 >
 > **What is actually shipped on `main` right now:**
 > - **Skill 38 (Conversational AI System) → v1.5.12** (its own `skill-version.txt` is on an independent track and is NOT one of the eight repo-version locations). Live `SKILL.md` self-counts: **protocols/=45, scripts/=68, references/=20, journey templates=8**. The **Round-2 backlog (v1.5.7 → v1.5.12)** added six features, all **default-OFF** (opt-in; the installer never flips them ON): **F21 Multi-Tenant Agent Isolation** (Step 9.44 / AGENTS Step 0.8), **F17 Customer Segmentation Awareness** (Step 9.45 / AGENTS Step 1.85), **F15 Proactive Outreach Campaigns** (Step 9.46 / cron+event-driven, no AGENTS step), **F16 A/B Testing of Reply Variants** (Step 9.47 / AGENTS Step 1.87), **F14 Voice/Phone Integration** (Step 9.48 / `VOICE_PHONE_PIPELINE` marker + setup wizard), and **F18 Webhook Chaining** (Step 9.49 / AGENTS Step 2.9). Each ships its protocol + a `qc-*.sh` gate + a `qc-*.test.sh` negative test. The earlier v1.5.4 → v1.5.6 wave (F47 Smart FAQ + F45 Geo-Qualification deep-fix, F46 Conversational CRM Field Write reconcile, ZHC Tag-Prefix Rule QC fix) remains shipped.
@@ -21,7 +21,7 @@
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.50)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.51)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 
@@ -90,7 +90,7 @@ docker stop <openclaw-container> && docker rm <openclaw-container>
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent on Hostinger's hvps-openclaw Docker container.**
 
-**Current Version:** see `/version` (currently **v10.16.50**) — see [CHANGELOG.md](CHANGELOG.md) for the full release history.
+**Current Version:** see `/version` (currently **v10.16.51**) — see [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 This repo is **Hostinger Docker VPS-only**. The Mac mini installer lives at https://github.com/trevorotts1/openclaw-onboarding.
 
