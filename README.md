@@ -1,7 +1,9 @@
 # OpenClaw Onboarding — Hostinger Docker VPS
 
-> **Version:** see `/version` - this repo at v10.16.49.
+> **Version:** see `/version` - this repo at v10.16.50.
 > Every release MUST agree across the version-tracked files; run `./scripts/bump-version.sh vX.Y.Z` to update them atomically. Drift is caught in CI (`.github/workflows/version-consistency.yml`).
+>
+> **NOTE (v10.16.50) — Shared core files (Zero-Human-Workforce file model).** On every box, ALL of an account's agents + sub-agents now SHARE that box's ONE canonical `AGENTS.md` / `TOOLS.md` / `USER.md` via **symlinks** (not copies) → `CANON_DIR` = the LOCAL box's `agents.defaults.workspace`. Per-agent `IDENTITY.md` / `SOUL.md` / `MEMORY.md` / `HEARTBEAT.md` stay each agent's OWN files. New `link_shared_core_files()` (in `install.sh` + `update-skills.sh`) is idempotent + non-destructive — real files are backed up to `<file>.bak-unify-<ts>` and unique content is preserved into the agent's own `IDENTITY.md` under a guarded marker. **Co-mingling guard:** the symlink target is ALWAYS the local box's own canonical workspace, NEVER a cross-box path. **Ant Farm exemption:** `*/workflows/*/agents/*` micro-agents are never touched. Asserted by `scripts/qc-system-integrity.sh` check 9.9; full rule in [`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md) + `AGENTS.md` N32. See [CHANGELOG.md](CHANGELOG.md).
 >
 > **NOTE (v10.16.49) — fix: skills.path invalid-key removed; safe_json_edit validate/rollback guard added.** The previous `ensure_skills_loader_source()` wrote `skills.path` into `openclaw.json` — rejected by OpenClaw 2026.5.x ("skills Unrecognized key path") — which aborted the entire updater under `set -euo pipefail` before writing `.onboarding-version` / running migrate / qc / cron-create. Function converted to a no-op (numbered skills auto-discover from the default `~/.openclaw/skills` root). `safe_json_edit()` added for future-proof validate + rollback. See [CHANGELOG.md](CHANGELOG.md).
 >
@@ -19,7 +21,7 @@
 
 ---
 
-## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.49)
+## 🔴 READ THIS FIRST — Deployment Models & Install Path (v10.16.50)
 
 OpenClaw on a Hostinger VPS ships in **two deployment models**. The install path is different for each. The installer auto-detects which one you have, but you should know the difference.
 
@@ -88,7 +90,7 @@ docker stop <openclaw-container> && docker rm <openclaw-container>
 
 **A complete onboarding package for setting up a fully operational OpenClaw agent on Hostinger's hvps-openclaw Docker container.**
 
-**Current Version:** see `/version` (currently **v10.16.49**) — see [CHANGELOG.md](CHANGELOG.md) for the full release history.
+**Current Version:** see `/version` (currently **v10.16.50**) — see [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 This repo is **Hostinger Docker VPS-only**. The Mac mini installer lives at https://github.com/trevorotts1/openclaw-onboarding.
 

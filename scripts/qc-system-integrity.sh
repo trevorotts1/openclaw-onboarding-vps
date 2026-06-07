@@ -430,6 +430,70 @@ check "9.8" "Master AGENTS.md / TOOLS.md / USER.md exist at workspace root" \
   "[ -f \"$WORKSPACE/AGENTS.md\" ] && [ -f \"$WORKSPACE/TOOLS.md\" ] && [ -f \"$WORKSPACE/USER.md\" ]" \
   "Bootstrap missing — re-run install.sh"
 
+# 9.9 — Shared-core-file unification (v10.16.50). Every NON-Ant-Farm agent
+# workspace must have AGENTS.md / TOOLS.md / USER.md as SYMLINKS resolving to
+# the box's canonical workspace (CANON_DIR = agents.defaults.workspace). Ant
+# Farm internal micro-agents (*/workflows/*/agents/*) are EXEMPT and skipped.
+# A bad row (a real file where a symlink is required, or a symlink that resolves
+# anywhere other than CANON_DIR — the co-mingling guard) is a FAILURE.
+SHARED_CORE_BAD=$(python3 - "$OCJSON" "$WORKSPACE" <<'PYEOF' 2>/dev/null
+import json, os, sys
+ocjson = sys.argv[1]; ws_fallback = sys.argv[2]
+try:
+    cfg = json.load(open(ocjson))
+except Exception:
+    cfg = {}
+ag = cfg.get("agents", {}) or {}
+canon = (ag.get("defaults", {}) or {}).get("workspace", "") or ws_fallback
+def real(p):
+    try: return os.path.realpath(p)
+    except Exception: return p
+canon_real = real(canon)
+
+workspaces = set()
+for key in ("list", "agents"):
+    for a in (ag.get(key) or []):
+        if isinstance(a, dict) and a.get("workspace"):
+            workspaces.add(a["workspace"])
+for root in ("/data/.openclaw/agents", os.path.expanduser("~/.openclaw/agents"),
+             os.path.join(canon, "agents")):
+    if os.path.isdir(root):
+        for name in os.listdir(root):
+            d = os.path.join(root, name)
+            if os.path.isdir(d):
+                workspaces.add(d)
+
+SHARED = ("AGENTS.md", "TOOLS.md", "USER.md")
+bad = []
+for w in workspaces:
+    if not os.path.isdir(w):
+        continue
+    w_real = real(w)
+    if w_real == canon_real:
+        continue                      # the canonical workspace owns the real files
+    if "/workflows/" in w_real and "/agents/" in w_real:
+        continue                      # ANT FARM EXEMPTION
+    for f in SHARED:
+        link = os.path.join(w, f)
+        if not os.path.lexists(link):
+            continue                  # absent is allowed (agent never had it)
+        if not os.path.islink(link):
+            bad.append(f"{w}/{f}:not-a-symlink"); continue
+        if real(link) != os.path.join(canon_real, f):
+            bad.append(f"{w}/{f}:wrong-target->{real(link)}")
+print(len(bad))
+for b in bad[:20]:
+    sys.stderr.write(b + "\n")
+PYEOF
+)
+SHARED_CORE_BAD="${SHARED_CORE_BAD:-0}"
+if [ "$SHARED_CORE_BAD" = "0" ]; then
+  green "  ✓ 9.9  All non-Ant-Farm agent workspaces share canonical AGENTS/TOOLS/USER via symlink"; PASS=$((PASS+1))
+else
+  red "  ✗ 9.9  $SHARED_CORE_BAD agent core file(s) are not symlinks to CANON_DIR (shared-core-file unification)"; FAIL=$((FAIL+1))
+  FAILURES+=("9.9|Shared-core-file unification incomplete|Run link_shared_core_files (re-run update-skills.sh or install.sh); see docs/SHARED-CORE-FILES.md")
+fi
+
 # ─── CROSS-CUTTING ───────────────────────────────────────────────────────────
 echo
 blue "── CROSS-CUTTING ──"
