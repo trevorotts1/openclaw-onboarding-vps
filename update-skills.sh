@@ -2,7 +2,7 @@
 
 # ============================================================
 #  OpenClaw Skills Updater — VPS (Hostinger Docker) Version
-#  v10.16.48
+#  v10.16.50
 #  Updates skills from GitHub. Inside the OpenClaw container, $HOME=/data
 #  so $HOME/.openclaw resolves to /data/.openclaw correctly.
 # ============================================================
@@ -69,7 +69,7 @@ fi
 
 set -euo pipefail
 
-ONBOARDING_VERSION="v10.16.49"
+ONBOARDING_VERSION="v10.16.50"
 
 LOG_FILE="/tmp/openclaw-update-$(date +%Y%m%d-%H%M%S).log"
 
@@ -311,6 +311,197 @@ safe_json_edit() {
 
   rm -f "$BACKUP" 2>/dev/null || true
   echo "  [safe_json_edit] $DESCRIPTION applied and validated OK"
+}
+
+# ----------------------------------------------------------
+# v10.16.50 — link_shared_core_files (Zero-Human-Workforce file model)
+# On every box, ALL of an account's agents + sub-agents SHARE that box's ONE
+# canonical AGENTS.md / TOOLS.md / USER.md (symlinked, NOT duplicated). The
+# per-agent files (IDENTITY.md / SOUL.md / MEMORY.md / HEARTBEAT.md) stay each
+# agent's OWN real files and are never touched (except the additive content
+# preservation into IDENTITY.md described below).
+#
+# CO-MINGLING GUARD (N29): the symlink target is ALWAYS the LOCAL box's own
+# canonical workspace (agents.defaults.workspace). It is NEVER a hardcoded or
+# cross-box path. A client box links to the CLIENT's own files (the client is
+# the USER) — never to the operator's or another account's files.
+#
+# ANT FARM EXEMPTION: any workspace path matching */workflows/*/agents/*
+# (internal workflow micro-agents, e.g. workflows/bug-fix/agents/triager) is
+# EXEMPT — its core files are NEVER modified.
+#
+# IDEMPOTENT: a second run makes no new backups and no churn. NON-DESTRUCTIVE:
+# a real file is backed up to <file>.bak-unify-<ts> (never deleted) and any of
+# its content not already present in the canonical file is APPENDED to the
+# agent's own IDENTITY.md under a guarded marker before it is replaced by a
+# symlink. Full rule: docs/SHARED-CORE-FILES.md + AGENTS.md N32.
+#
+# Optional $1 = explicit CANON_DIR (the install path passes the resolved
+# workspace). If empty, resolve from openclaw.json agents.defaults.workspace.
+# ----------------------------------------------------------
+link_shared_core_files() {
+  local CANON_OVERRIDE="${1:-}"
+  local TS; TS="$(date +%Y%m%d-%H%M%S)"
+  local LP="  [shared-core]"
+
+  local OCJSON=""
+  for cand in "${OC_JSON:-}" "/data/.openclaw/openclaw.json" "$HOME/.openclaw/openclaw.json"; do
+    [ -n "$cand" ] && [ -f "$cand" ] && { OCJSON="$cand"; break; }
+  done
+
+  # CO-MINGLING GUARD: CANON_DIR is ALWAYS the LOCAL box's own default agent
+  # workspace (agents.defaults.workspace). NEVER a hardcoded or cross-box path.
+  local CANON_DIR="$CANON_OVERRIDE"
+  if [ -z "$CANON_DIR" ] && [ -n "$OCJSON" ] && command -v python3 >/dev/null 2>&1; then
+    CANON_DIR="$(python3 -c "
+import json
+try:
+    cfg=json.load(open('$OCJSON'))
+    print((cfg.get('agents',{}).get('defaults',{}) or {}).get('workspace','') or '')
+except Exception:
+    print('')
+" 2>/dev/null)"
+  fi
+  [ -z "$CANON_DIR" ] && CANON_DIR="$HOME/clawd"
+
+  if [ ! -d "$CANON_DIR" ]; then
+    echo "$LP CANON_DIR '$CANON_DIR' does not exist — skipping (nothing to share against)."
+    return 0
+  fi
+  local CANON_REAL; CANON_REAL="$(cd "$CANON_DIR" 2>/dev/null && pwd -P || echo "$CANON_DIR")"
+  echo "$LP canonical workspace (CANON_DIR) = $CANON_DIR"
+  local SHARED_FILES="AGENTS.md TOOLS.md USER.md"
+
+  # --- Enumerate candidate agent workspaces (local box only) ---
+  local WS_LIST=""
+  if [ -n "$OCJSON" ] && command -v python3 >/dev/null 2>&1; then
+    WS_LIST="$(python3 -c "
+import json
+try:
+    cfg=json.load(open('$OCJSON'))
+except Exception:
+    cfg={}
+seen=set()
+def emit(w):
+    if w and w not in seen:
+        seen.add(w); print(w)
+ag=cfg.get('agents',{}) or {}
+for key in ('list','agents'):
+    for a in (ag.get(key) or []):
+        if isinstance(a,dict):
+            emit(a.get('workspace',''))
+" 2>/dev/null)"
+  fi
+  # On-disk scan of known agent-workspace roots + any */workflows/*/agents/*.
+  # The workflow dirs are scanned ONLY so the Ant Farm guard can positively
+  # EXEMPT them (they are never modified).
+  local SCAN_ROOTS="/data/.openclaw/agents $HOME/.openclaw/agents $CANON_DIR/agents"
+  for root in $SCAN_ROOTS; do
+    [ -d "$root" ] || continue
+    for d in "$root"/*/; do
+      [ -d "$d" ] && WS_LIST="$WS_LIST
+${d%/}"
+    done
+  done
+  for wfagent in "$CANON_DIR"/workflows/*/agents/*/ /data/.openclaw/workspace/workflows/*/agents/*/; do
+    [ -d "$wfagent" ] && WS_LIST="$WS_LIST
+${wfagent%/}"
+  done
+  WS_LIST="$(printf '%s\n' "$WS_LIST" | awk 'NF' | sort -u)"
+
+  local linked=0 repointed=0 backed_up=0 preserved=0 skipped_canon=0 skipped_antfarm=0 noop=0
+  local W
+  while IFS= read -r W; do
+    [ -n "$W" ] && [ -d "$W" ] || continue
+    local W_REAL; W_REAL="$(cd "$W" 2>/dev/null && pwd -P || echo "$W")"
+
+    # The canonical workspace OWNS the real files — never link it to itself.
+    if [ "$W_REAL" = "$CANON_REAL" ]; then
+      skipped_canon=$((skipped_canon+1)); continue
+    fi
+    # ANT FARM EXEMPTION: */workflows/*/agents/* internal micro-agents — NEVER touch.
+    case "$W_REAL" in
+      */workflows/*/agents/*)
+        echo "$LP Ant Farm micro-agent EXEMPT (untouched): $W_REAL"
+        skipped_antfarm=$((skipped_antfarm+1)); continue ;;
+    esac
+
+    local agent_name; agent_name="$(basename "$W_REAL")"
+    local f
+    for f in $SHARED_FILES; do
+      local target="$CANON_DIR/$f"
+      local link="$W/$f"
+      [ -e "$target" ] || continue   # canonical source must exist to link against
+
+      if [ -L "$link" ]; then
+        # Already a symlink — repoint ONLY if it points somewhere wrong.
+        local cur; cur="$(readlink "$link" 2>/dev/null || echo "")"
+        local cur_real; cur_real="$(cd "$W" 2>/dev/null && cd "$(dirname "$cur")" 2>/dev/null && pwd -P)/$(basename "$cur")"
+        local want_real="$CANON_REAL/$f"
+        if [ "$cur" = "$target" ] || [ "$cur_real" = "$want_real" ]; then
+          noop=$((noop+1))
+        else
+          ln -sfn "$target" "$link"
+          echo "$LP repointed symlink: $link -> $target (was -> $cur)"
+          repointed=$((repointed+1))
+        fi
+        continue
+      fi
+
+      if [ -e "$link" ]; then
+        # A REAL file. Back it up (NEVER delete), preserve unique content into
+        # the agent's own IDENTITY.md additively, then replace with a symlink.
+        local bak="$link.bak-unify-$TS"
+        if [ -e "$bak" ]; then noop=$((noop+1)); continue; fi
+        cp -p "$link" "$bak" 2>/dev/null || cp "$link" "$bak" 2>/dev/null || true
+        echo "$LP backed up real $f -> $bak"
+        backed_up=$((backed_up+1))
+
+        if command -v python3 >/dev/null 2>&1; then
+          local pres_rc
+          pres_rc="$(IDENTITY="$W/IDENTITY.md" SRCFILE="$link" CANONFILE="$target" \
+                     AGENT="$agent_name" FNAME="$f" TS="$TS" \
+                     python3 - <<'PYEOF'
+import os
+identity=os.environ["IDENTITY"]; src=os.environ["SRCFILE"]; canon=os.environ["CANONFILE"]
+agent=os.environ["AGENT"]; fname=os.environ["FNAME"]; ts=os.environ["TS"]
+def rd(p):
+    try: return open(p,errors="ignore").read().splitlines()
+    except Exception: return []
+src_lines=rd(src); canon_set=set(l.strip() for l in rd(canon))
+# Unique = non-blank lines in the per-agent file NOT already in the canonical
+# file. ADD only — never remove. Preserve original order.
+unique=[l for l in src_lines if l.strip() and l.strip() not in canon_set]
+if not unique: print("NONE"); raise SystemExit(0)
+try: existing=open(identity,errors="ignore").read()
+except Exception: existing=""
+# Idempotency: never re-append if a marker for THIS agent+file already exists.
+if f"PRESERVED FROM {agent} {fname} (unification" in existing:
+    print("ALREADY"); raise SystemExit(0)
+marker=f"<!-- PRESERVED FROM {agent} {fname} (unification {ts}) -->"
+block="\n\n"+marker+"\n"+"\n".join(unique)+"\n<!-- /PRESERVED -->\n"
+with open(identity,"a") as fh: fh.write(block)  # creates IDENTITY.md if absent
+print("WROTE")
+PYEOF
+          )"
+          if [ "$pres_rc" = "WROTE" ]; then
+            echo "$LP preserved unique $f content -> $W/IDENTITY.md (guarded marker)"
+            preserved=$((preserved+1))
+          fi
+        fi
+
+        rm -f "$link"
+        ln -sfn "$target" "$link"
+        echo "$LP linked (was real file): $link -> $target"
+        linked=$((linked+1))
+        continue
+      fi
+      # Absent → leave absent (do NOT create a stray symlink the agent never had).
+      noop=$((noop+1))
+    done
+  done <<< "$WS_LIST"
+
+  echo "$LP done: linked=$linked repointed=$repointed backed_up=$backed_up preserved=$preserved canon-skipped=$skipped_canon antfarm-exempt=$skipped_antfarm noop=$noop"
 }
 
 # ----------------------------------------------------------
@@ -1006,6 +1197,18 @@ main() {
   echo ""
   echo "  Wiring GHL MCP (skill 36) under mcp.servers..."
   wire_ghl_mcp "$SKILLS_DIR"
+
+  # ----------------------------------------------------------
+  # v10.16.50: Shared-core-file unification (Zero-Human-Workforce model).
+  # AFTER skills + workspaces are set up, share the box's ONE canonical
+  # AGENTS.md / TOOLS.md / USER.md across every NON-Ant-Farm agent workspace
+  # via symlinks. Idempotent + non-destructive (real files backed up, unique
+  # content preserved into per-agent IDENTITY.md). CANON_DIR is resolved from
+  # the LOCAL box's agents.defaults.workspace (co-mingling guard).
+  # ----------------------------------------------------------
+  echo ""
+  echo "  Unifying shared core files (AGENTS/TOOLS/USER) across agent workspaces..."
+  link_shared_core_files
 
   # ----------------------------------------------------------
   # v10.16.41: Run migrate-existing-workforce.sh so copied skills
