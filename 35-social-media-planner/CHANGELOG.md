@@ -1,5 +1,26 @@
 # Changelog - Social Media Planner (Skill 35)
 
+## v2.2.0 - June 8, 2026 (Fix #1 + Fix #2 — connection-status truth + cron enforcement)
+
+follow-up: fixed QC accounts-grep false positive + added --announce delivery to weekly cron
+
+### Why
+Two runtime bugs caused direct client harm:
+1. **Connection-status hallucination** — the agent reported "nothing is connected" (or named specific platforms as connected/disconnected) based on vault contents or memory instead of running a live GHL Social Planner query. A client had channels live in GHL but was told they were disconnected.
+2. **Weekly theme question silently skipped** — the Saturday 8 AM theme request was driven solely by HEARTBEAT.md prose. Heartbeat timing drifts; the prompt silently never fired for at least one client.
+
+### What
+- **INSTRUCTIONS.md** — Added two new enforcement sections:
+  - `## Reporting connection status — LIVE GHL CHECK ONLY (no guessing)` — bans assumptions; mandates a live GHL Social Planner API call via `check-social-connections` step before any connection-status statement. Clarifies that GHL is the PRIMARY publishing path, and that direct-platform tokens / Fish Audio / Skill 30 are all OPTIONAL and never block Skill 35.
+  - `## Weekly trigger — CRON, not heartbeat (enforcement)` — mandates the weekly content-theme question and plan run are driven by `openclaw cron add` (gateway cron store), not heartbeat checklist. Documents the `skill35-weekly-theme` cron (Saturday 8:00 AM, `0 8 * * 6`), VPS-safe cron registration pattern (matching Skill 38's `04-register-crons.sh`), and state/marker file for idempotency. Supersedes INSTALL.md Step 9 (HEARTBEAT.md entry) as the timing authority.
+- **scripts/register-weekly-cron.sh** (new) — idempotent shell script that registers the `skill35-weekly-theme` cron via `openclaw cron add` and validates config afterward. Exits 0 if already registered.
+- **qc-skill35.sh + qc-social-media-planner.sh** — new Section I with 3 assertions: (1) live-GHL connection-status rule present in INSTRUCTIONS.md, (2) cron enforcement text present in INSTRUCTIONS.md, (3) `register-weekly-cron.sh` exists.
+
+### Risk
+Low. Changes are additive (new sections in INSTRUCTIONS.md, new script, new QC assertions). No existing behavior removed. The HEARTBEAT.md Saturday entry installed by INSTALL.md Step 9 remains as a fallback acknowledgement — only the timing authority is transferred to the cron.
+
+---
+
 ## v2.1.0 - May 24, 2026 (Track M — closes v10.14.33 gap)
 
 ### Added — the three trigger paths INSTRUCTIONS.md has always referenced

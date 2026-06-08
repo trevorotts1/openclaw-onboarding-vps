@@ -112,7 +112,7 @@ if [ -n "$MCP_URL" ] && curl -sS -m 5 "$MCP_URL/health" 2>/dev/null | grep -q "h
   TEST=$(curl -sS -m 10 -X POST "$MCP_URL/execute" -H "Content-Type: application/json" \
     -d '{"name":"get_platform_accounts","arguments":{"limit":1}}' 2>/dev/null)
   warn_only "MCP get_platform_accounts returns data (any platform connected in GHL Social Planner)" \
-    "echo \"$TEST\" | grep -qE '\"success\":\\s*true|\"result\"|accounts'"
+    "echo \"$TEST\" | grep -qE '\"success\":\\s*true|\"accounts\":\\s*\\['"
 else
   RESP=$(curl -sS -m 10 \
     -H "Authorization: Bearer ${GOHIGHLEVEL_API_KEY:-}" \
@@ -150,6 +150,19 @@ warn_only "HEARTBEAT.md has Saturday theme request"    "grep -qiE 'Saturday.*the
 echo ""
 echo "── Section H: Security ──"
 assert "PIT not present in any workspace .md file" "! grep -rE 'pit-[a-f0-9]{8}-[a-f0-9]{4}' \"$WORKSPACE\"/*.md 2>/dev/null | grep -v 'pit-XXX\\|pit-xxx\\|pit-x'"
+
+echo ""
+echo "── Section I: Fix assertions (v2.2.0) ──"
+SKILL35_DIR="$(dirname "$0")/.."
+INSTRUCTIONS_FILE="$SKILL35_DIR/INSTRUCTIONS.md"
+assert "FIX-1: LIVE GHL connection-status rule present in INSTRUCTIONS.md" \
+  "grep -qiE 'LIVE GHL CHECK ONLY|check-social-connections|BANNED failure' \"$INSTRUCTIONS_FILE\" 2>/dev/null"
+assert "FIX-2: Weekly trigger is a cron (not solely heartbeat) — cron enforcement text present in INSTRUCTIONS.md" \
+  "grep -qiE 'CRON.*not heartbeat|not.*heartbeat.*cron|skill35-weekly-theme|register-weekly-cron' \"$INSTRUCTIONS_FILE\" 2>/dev/null"
+assert "FIX-2: register-weekly-cron.sh script exists in scripts/" \
+  "[ -f \"$SKILL35_DIR/scripts/register-weekly-cron.sh\" ]"
+assert "FIX-2: skill35-weekly-theme cron uses --announce delivery (ensures delivery fires, not just best-effort)" \
+  "grep -A5 'skill35-weekly-theme' \"$INSTRUCTIONS_FILE\" 2>/dev/null | grep -q -- '--announce'"
 
 echo ""
 echo "═══════════════════════════════════════════════"

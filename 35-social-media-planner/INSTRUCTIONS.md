@@ -159,6 +159,75 @@ The Marketing department in the dashboard has a "Publish" button on each campaig
 
 ---
 
+## Reporting connection status — LIVE GHL CHECK ONLY (no guessing)
+Before you tell the owner which platforms are or are not connected, you MUST run a LIVE query of their GHL Social Planner connected accounts (via the GHL API for the client's location). You may NOT say "connected" or "not connected" for any channel without that live result. Reporting connection status from an assumption, from the absence of a direct-platform token in the vault, or from memory is a BANNED failure (it is exactly the mistake that told a client "nothing is connected" when their GHL Social Planner had channels live).
+- GHL Social Planner is the PRIMARY publishing path. The client connects their social accounts inside GHL, and you publish through GHL. ONE connected channel is enough to start. The client does NOT need all platforms.
+- The direct-publish destinations (WordPress, Medium, Substack, LinkedIn, YouTube, X/Twitter, Facebook, email newsletter) are OPTIONAL add-ons for posting outside GHL. They are NEVER requirements, and their absence NEVER blocks Skill 35.
+- Fish Audio / podcast (Skill 30) is OPTIONAL too. Skill 35 runs fully without it, it just skips podcast production.
+- Run the check-social-connections step (the live GHL query) at status time, every time, and report only what it returns.
+
+### check-social-connections step (live GHL query)
+
+Every time you report on connection status, run this step first. Choose the path that matches your routing mode (detected in INSTALL.md Step 4):
+
+**MCP-first (Skill 36 installed):**
+```bash
+# Tier 2 community MCP — get_platform_accounts returns all connected channels
+curl -sS -m 10 -X POST "$GHL_COMMUNITY_MCP_URL/execute" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"get_platform_accounts","arguments":{}}' | python3 -m json.tool
+```
+
+**Direct API (Skill 36 NOT installed):**
+```bash
+# GHL Social Planner OAuth accounts — one call per platform you want to check
+for platform in facebook instagram linkedin twitter google youtube tiktok; do
+  printf "\n── $platform ──\n"
+  curl -sS -m 10 \
+    -H "Authorization: Bearer $GOHIGHLEVEL_API_KEY" \
+    -H "Version: 2021-07-28" \
+    "https://services.leadconnectorhq.com/social-media-posting/oauth/$GOHIGHLEVEL_LOCATION_ID/${platform}/accounts"
+done
+```
+
+Report ONLY what these live calls return. If the API is unreachable, say "GHL Social Planner API unreachable — cannot determine connection status" and surface the error. Never substitute a guess.
+
+---
+
+## Weekly trigger — CRON, not heartbeat (enforcement)
+The weekly content-theme question and the weekly social-planning run MUST be driven by a hard cron, NOT the heartbeat checklist. Heartbeat timing drifts and silently skips the weekly prompt (this is exactly why a client's Saturday theme question never fired). At activation, install a weekly cron (default Saturday 8:00 AM client-local time) that (a) asks the owner the content-theme question and (b) runs the weekly social plan, backed by a state field so it is idempotent and catches up if a fire is missed. Do NOT rely on heartbeat prose for any weekly trigger.
+
+The HEARTBEAT.md Saturday theme-request entry (installed in INSTALL.md Step 9) is superseded by this cron for timing enforcement. Heartbeat remains as a fallback acknowledgement only.
+
+### Cron registration (VPS — Hostinger Docker container context)
+
+VPS OpenClaw runs in Docker. Crons MUST be registered via `openclaw cron add` (the gateway cron store). Writing to `.cron.jobs` JSON config does NOT validate on 2026.5.27+. Use the same pattern as Skill 38's `04-register-crons.sh`.
+
+Run `scripts/register-weekly-cron.sh` during activation, OR register manually:
+
+```bash
+# Idempotent — check first, then register
+openclaw cron list 2>/dev/null | grep -q "skill35-weekly-theme" || \
+  openclaw cron add \
+    --name "skill35-weekly-theme" \
+    --cron "0 8 * * 6" \
+    --agent main \
+    --message "Skill 35 weekly trigger: Ask the owner what content theme they want for the coming week. After they reply (or after 1 hour with no reply, use 'evergreen'), run the weekly social media planning cycle: read ~/.openclaw/config/content-calendar.json, fire run-publishing-cycle.sh for all topics due this week. Check state marker /tmp/skill35-weekly-theme-$(date +%Y%U).done before acting — if it exists, the week's theme request already fired; skip gracefully. After completing, write that marker file." \
+    --light-context \
+    --announce \
+    --channel last \
+    --best-effort-deliver
+```
+
+**State/marker file:** `/tmp/skill35-weekly-theme-<YEAR><WEEK>.done` (e.g., `/tmp/skill35-weekly-theme-202624.done`). The cron message instructs the agent to check and write this file so the trigger is idempotent even if OpenClaw fires the cron more than once in a week.
+
+**Validate config is still clean after registering:**
+```bash
+openclaw config validate
+```
+
+---
+
 ## When to invoke this skill
 
 **Always:**
