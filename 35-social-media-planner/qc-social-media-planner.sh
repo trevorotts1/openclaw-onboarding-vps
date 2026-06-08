@@ -150,6 +150,17 @@ echo "── Section H: Security ──"
 assert "PIT not present in any workspace .md file" "! grep -rE 'pit-[a-f0-9]{8}-[a-f0-9]{4}' \"$WORKSPACE\"/*.md 2>/dev/null | grep -v 'pit-XXX\\|pit-xxx\\|pit-x'"
 
 echo ""
+echo "── Section I: Fix assertions (v2.2.0) ──"
+SKILL35_DIR="$(dirname "$0")/.."
+INSTRUCTIONS_FILE="$SKILL35_DIR/INSTRUCTIONS.md"
+assert "FIX-1: LIVE GHL connection-status rule present in INSTRUCTIONS.md" \
+  "grep -qiE 'LIVE GHL CHECK ONLY|check-social-connections|BANNED failure' \"$INSTRUCTIONS_FILE\" 2>/dev/null"
+assert "FIX-2: Weekly trigger is a cron (not solely heartbeat) — cron enforcement text present in INSTRUCTIONS.md" \
+  "grep -qiE 'CRON.*not heartbeat|not.*heartbeat.*cron|skill35-weekly-theme|register-weekly-cron' \"$INSTRUCTIONS_FILE\" 2>/dev/null"
+assert "FIX-2: register-weekly-cron.sh script exists in scripts/" \
+  "[ -f \"$SKILL35_DIR/scripts/register-weekly-cron.sh\" ]"
+
+echo ""
 echo "═══════════════════════════════════════════════"
 echo "  Result: $PASS passed | $FAIL failed | $WARN warnings"
 echo "═══════════════════════════════════════════════"
