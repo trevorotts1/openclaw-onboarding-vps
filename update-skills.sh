@@ -673,15 +673,14 @@ wire_ghl_mcp() {
   # (idempotent — no double-start: start-ghl-mcp-server.sh no-ops if already
   # healthy). Container nohup supervision, NOT systemd/launchd. A :8765
   # healthcheck + auto-restart cron is installed by ensure_ghl_mcp_autostart_cron.
+  # BUG FIX (v10.16.49): run NON-BLOCKING so the wiring loop + .onboarding-version
+  # stamp always complete. Backgrounding is the safe cross-platform fix (no timeout
+  # dependency). The MCP still starts; the updater no longer waits on it.
   local START_SCRIPT="$SKILL36_DIR/scripts/start-ghl-mcp-server.sh"
   if [ -f "$START_SCRIPT" ]; then
     chmod +x "$START_SCRIPT" 2>/dev/null || true
-    echo "  [36-ghl-mcp-setup] Starting GHL Community MCP on :8765 (idempotent)..."
-    if bash "$START_SCRIPT" >> "$LOG_FILE" 2>&1; then
-      echo "  [36-ghl-mcp-setup] GHL Community MCP healthy on :8765"
-    else
-      echo "  [36-ghl-mcp-setup] GHL Community MCP not healthy yet (see $LOG_FILE) — auto-restart cron will retry"
-    fi
+    echo "  [36-ghl-mcp-setup] Starting GHL Community MCP on :8765 in background (log: $LOG_FILE)..."
+    ( bash "$START_SCRIPT" >> "$LOG_FILE" 2>&1 & )
     ensure_ghl_mcp_autostart_cron "$START_SCRIPT"
   else
     echo "  [36-ghl-mcp-setup] start-ghl-mcp-server.sh not present — server start deferred (older bundle)"
