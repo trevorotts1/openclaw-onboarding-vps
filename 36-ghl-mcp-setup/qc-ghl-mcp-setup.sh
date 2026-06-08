@@ -59,6 +59,8 @@ if [ -f "$SECRETS_ENV" ]; then
 fi
 : "${GOHIGHLEVEL_API_KEY:=}"
 : "${GOHIGHLEVEL_LOCATION_ID:=}"
+# Derive platform if unset — prevents 'OPENCLAW_PLATFORM: unbound variable' crash under set -u
+: "${OPENCLAW_PLATFORM:=$([ "$(uname -s)" = "Darwin" ] && echo mac || echo linux)}"
 
 echo ""
 echo "═══════════════════════════════════════════════"
@@ -146,7 +148,7 @@ echo ""
 echo "── Section D: Tier 2 (Community MCP) ──"
 assert "ghl-community-mcp registered" "command -v openclaw && openclaw mcp list 2>/dev/null | grep -q 'ghl-community-mcp'"
 URL=$(command -v openclaw && openclaw config get env.vars.GHL_COMMUNITY_MCP_URL 2>/dev/null | tr -d '\n' | sed 's|/$||')
-if [ "$OPENCLAW_PLATFORM" = "mac" ]; then
+if [ "${OPENCLAW_PLATFORM:-}" = "mac" ]; then
   assert "launchd service is running" "systemctl --user print gui/$(id -u)/com.clawd.ghl-mcp 2>/dev/null | grep -q 'state = running'"
 else
   assert "systemd service is running" "systemctl is-active ghl-mcp 2>/dev/null | grep -q '^active$'"
