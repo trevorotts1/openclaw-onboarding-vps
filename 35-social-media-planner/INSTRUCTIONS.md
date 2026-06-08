@@ -214,6 +214,8 @@ openclaw cron list 2>/dev/null | grep -q "skill35-weekly-theme" || \
     --agent main \
     --message "Skill 35 weekly trigger: Ask the owner what content theme they want for the coming week. After they reply (or after 1 hour with no reply, use 'evergreen'), run the weekly social media planning cycle: read ~/.openclaw/config/content-calendar.json, fire run-publishing-cycle.sh for all topics due this week. Check state marker /tmp/skill35-weekly-theme-$(date +%Y%U).done before acting — if it exists, the week's theme request already fired; skip gracefully. After completing, write that marker file." \
     --light-context \
+    --announce \
+    --channel last \
     --best-effort-deliver
 ```
 

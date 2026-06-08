@@ -41,6 +41,8 @@ if openclaw cron add \
      --agent "$AGENT_ID" \
      --message "$CRON_MESSAGE" \
      --light-context \
+     --announce \
+     --channel last \
      --best-effort-deliver; then
   echo "OK: cron '$CRON_NAME' registered ($CRON_EXPR — Saturday 8:00 AM weekly)." >&2
 else

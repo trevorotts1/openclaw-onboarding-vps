@@ -2,6 +2,8 @@
 
 ## v2.2.0 - June 8, 2026 (Fix #1 + Fix #2 — connection-status truth + cron enforcement)
 
+follow-up: fixed QC accounts-grep false positive + added --announce delivery to weekly cron
+
 ### Why
 Two runtime bugs caused direct client harm:
 1. **Connection-status hallucination** — the agent reported "nothing is connected" (or named specific platforms as connected/disconnected) based on vault contents or memory instead of running a live GHL Social Planner query. A client had channels live in GHL but was told they were disconnected.
