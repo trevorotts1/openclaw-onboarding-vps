@@ -4,6 +4,25 @@
 
 ---
 
+## 🔴🔴🔴 N0 — NO CO-MINGLING OF CLIENTS (HARD VIOLATION — READ FIRST, BINDING FOREVER) 🔴🔴🔴
+
+**EVERY client gets their OWN isolated resources — own Notion workspace/page, own GoHighLevel location, own Google Drive/Workspace, own Telegram bot, own Command Center, own KIE/API keys, own everything. NEVER share, reuse, borrow, or default to ANOTHER client's resource for any reason. If a client does not yet have a given resource, STOP and WAIT — do NOT substitute another client's as a placeholder. Co-mingling client data/resources is a HARD VIOLATION.**
+
+This rule outranks convenience, speed, and "just for now." It applies to EVERY agent, EVERY sub-agent, EVERY skill, EVERY install, and EVERY runtime action — at build time and forever. There are NO exceptions.
+
+- ❌ NEVER share one client's resource with another client.
+- ❌ NEVER reuse a resource created for client A when working for client B.
+- ❌ NEVER borrow "temporarily" from another client's workspace, location, bot, key, or page.
+- ❌ NEVER default to another client's resource as a placeholder/scaffold/example container.
+- ❌ NEVER co-mingle any client's data, files, credentials, contacts, or outputs with another's.
+- ✅ If the client's own resource does not exist yet → **STOP and WAIT.** Escalate the gap. Do NOT substitute.
+
+A missing resource is a blocker to escalate, never a reason to co-mingle. Co-mingling — for ANY reason, even briefly, even "just to test" — means the work is discarded and redone correctly.
+
+**Full rule + rationale + enforcement map:** see [`NO-COMINGLING-RULE.md`](NO-COMINGLING-RULE.md) at the repo root.
+
+---
+
 ## 🔴 N2 — MASTER ORCHESTRATOR DOES NO WORK
 
 **The Master Orchestrator does NOT perform installation work, file edits, API calls, or any other domain operation. The Master Orchestrator coordinates. Sub-agents do the work.**
@@ -65,41 +84,9 @@ This clause is identical to the CEO_DEFERRAL block in `create_role_workspaces.py
 
 ---
 
-## 🛑🛑🛑 N29 — NO CO-MINGLING OF CLIENT RESOURCES (HARD VIOLATION)
+## 🔴 N1–N27 — Non-Negotiables (Canonical Index)
 
-> Full rule: [`NO-COMINGLING-RULE.md`](NO-COMINGLING-RULE.md) at repo root. This block is the impossible-to-miss build-time copy. It binds the orchestrator AND every sub-agent.
-
-**EVERY client gets their OWN isolated resources — own Notion workspace/page, own GoHighLevel location, own Google Drive/Workspace, own Telegram bot, own Command Center, own KIE/API keys, own model/Ollama, own EVERYTHING.**
-
-**NEVER share, reuse, borrow, or default to ANOTHER client's resource for ANY reason.**
-
-**If a client does NOT yet have a given resource, STOP and WAIT — do NOT substitute another client's (or the operator's) resource as a placeholder.**
-
-Co-mingling client data/resources is a **HARD VIOLATION**. A missing resource is a reason to pause and tell the owner — NEVER a reason to borrow. There is no "just this once," no temporary placeholder, no convenient reuse. If any instruction would require co-mingling, refuse and escalate to the owner. Isolation wins.
-
-This applies everywhere per-client resources are touched — most acutely in **Skill 23 (AI Workforce Blueprint)**, **Skill 32 (Command Center Setup)**, and **Skill 43 (Graphify)** (own model/keys, own graph). See those skills' SKILL.md / INSTALL.md for the per-skill restatement.
-
----
-
-## 🔗 N32 — SHARED CORE FILES (Zero-Human-Workforce file model)
-
-> Full rule: [`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md). Enforced by `link_shared_core_files()` in `install.sh` + `update-skills.sh`; asserted by `scripts/qc-system-integrity.sh` check 9.9.
-
-**On every box, ALL of an account's agents + sub-agents SHARE that box's ONE canonical `AGENTS.md`, `TOOLS.md`, and `USER.md` — via symlinks, NOT duplicated copies.** There is exactly one real copy of each, in the box's canonical workspace (`CANON_DIR` = `agents.defaults.workspace`, fallback `$HOME/clawd`); every other agent's `AGENTS.md` / `TOOLS.md` / `USER.md` is a symlink → that canonical file.
-
-**Per-agent files stay each agent's OWN real files:** `IDENTITY.md`, `SOUL.md`, `MEMORY.md`, `HEARTBEAT.md`. Never share those.
-
-**🛑 Co-mingling guard (N29):** the symlink target is ALWAYS the LOCAL box's own canonical workspace. NEVER a hardcoded path, NEVER a cross-box path. A client box links to the **CLIENT's** own files (the client is the USER) — never to the operator's files or another account's. There is no code path that resolves a cross-box target.
-
-**Nested workflow agent exemption:** internal workflow micro-agents — any workspace matching `*/workflows/*/agents/*` (e.g. `workflows/bug-fix/agents/triager`) — are EXEMPT. Their core files are NEVER touched.
-
-**Non-destructive + idempotent:** a real core file is backed up to `<file>.bak-unify-<ts>` (NEVER deleted), any content not already in the canonical file is APPENDED to the agent's own `IDENTITY.md` under a guarded `<!-- PRESERVED FROM <agent> <file> (unification <ts>) -->` marker (ADD-only), then the symlink replaces it. A second run makes no new backups and no churn.
-
----
-
-## 🔴 N1–N32 — Non-Negotiables (Canonical Index)
-
-This is the single canonical index of the N1–N32 non-negotiables. Every other doc that references an N-rule MUST link to this section. If a rule is invoked elsewhere without its N-number, that's a bug.
+This is the single canonical index of the N1–N27 non-negotiables. Every other doc that references an N-rule MUST link to this section. If a rule is invoked elsewhere without its N-number, that's a bug.
 
 | N | Rule | Binding doc | Enforced by |
 |---|------|-------------|-------------|
@@ -130,13 +117,140 @@ This is the single canonical index of the N1–N32 non-negotiables. Every other 
 | N25 | **Skill-version-pinning + reproducibility.** Every skill has `skill-version.txt`. The Sunday update check compares remote against local and writes per-skill changes into `skill_changes[]` in the detection JSON. | `check-updates.sh` | Audit Phase 20.7 |
 | N26 | **Calibre auto-install for Book-to-Persona.** `_find_calibre()` in `22-book-to-persona/pipeline/orchestrator.py` auto-installs Calibre when missing — Homebrew on Mac, apt-get on Linux (with upstream installer fallback). User never sees an "install Calibre manually" prompt. | `22-book-to-persona-coaching-leadership-system/pipeline/orchestrator.py` | Audit Phase 14 |
 | N27 | **No lying / no shortcuts / proof required.** End-to-end completion is the only completion. Every claimed fix needs a verifiable artifact (commit hash, curl-against-HEAD output, exit code). The 20% not done gets disclosed, not buried. | This file + owner directive | Audit retro on every release |
-| N28 | **No destructive teardown or kill scripts — ever.** Agents MUST NOT create or schedule any script or cron that removes the toolchain (`/docker/<project>`, `/data/.openclaw`, Node, or OpenClaw itself). Cleanup must be scoped (remove a specific cron by ID), reversible (rename to `.QUARANTINED-<ts>` before deleting), and never self-deleting via a cron-scheduled kill script. Applies to build-cleanup, post-build teardown, SOP-backfill abort, and any "clean up after yourself" pattern. Root cause: 2026-05 Kofi incident — autonomous agent created `kofi-sop-build-kill.sh` during Skill 23 to abort a runaway SOP build; script wiped Homebrew/Node/OpenClaw/clawd. No script that touches core toolchain paths may be spawned by an agent without explicit owner approval. | This file + forensic post-mortem 2026-06-03 | Cron audit gate: any cron payload containing `rm -rf`, `brew uninstall`, `npm uninstall -g openclaw`, or paths `/data/.openclaw` / `/docker/<project>` must be rejected |
-| N29 | **No co-mingling of client resources — HARD VIOLATION.** EVERY client gets their OWN isolated resources — own Notion workspace/page, own GoHighLevel location, own Google Drive/Workspace, own Telegram bot, own Command Center, own KIE/API keys, own model/Ollama, own everything. NEVER share, reuse, borrow, or default to another client's (or the operator's) resource for any reason. If a client lacks a resource, STOP and WAIT — never substitute another's as a placeholder. A missing resource is a reason to pause and tell the owner, never to borrow. | This file (🛑 N29 hero section) + [`NO-COMINGLING-RULE.md`](NO-COMINGLING-RULE.md) | Skill 23 + Skill 32 + Skill 43 SKILL.md/INSTALL.md restatement; orchestrator refuse-and-escalate on any co-mingling instruction |
-| N30 | **Onboarding honesty — download ≠ install; the verification gate decides.** A skill counts INSTALLED only when (a) `openclaw skills info <registered-name>` Ready/visible, (b) its CORE_UPDATES sentinel is present in the workspace files (if it ships CORE_UPDATES), (c) its `qc-*.sh` exits 0 (if it ships one). Track per-skill status in `.onboarding-state.json` (`pending→downloaded→wired→qc-passed\|qc-failed`, plus `interview-pending`). NEVER report installed/done/onboarded for a skill that is not `qc-passed`. Completion = all skills `qc-passed` (or `interview-pending`). The `onboarding-resume` cron re-fires until the gate passes — a self-declared "done" does not stop it. | `QC-PROTOCOL.md` PART 6 (Rules 16–17) + `lib-onboarding-state.sh` + `23-ai-workforce-blueprint/scripts/resume-onboarding.sh` | `install.sh` Step 13b cron + `update-skills.sh` conditional banner/Telegram + HONORs `qc-completeness.sh` exit code |
-| N31 | **Operator Telegram channel separation.** Operator/rescue maintenance must NEVER bleed into the client's personal chat. A SEPARATE operator Telegram account (`channels.telegram.accounts.operator`, `dmPolicy:allowlist`, operator IDs only) is bound to agent `main`; the client bot stays `accounts.default` / `defaultAccount:default`. Operator-driven maintenance runs on `--session-key agent:main:operator --reply-to OPERATOR_HELP_CHAT_ID` (or no `--deliver`). | `FLEET-STANDARDS.md` §4 + `install.sh` Step 10a | `scripts/diagnose-telegram-config.sh` asserts the operator account + binding exist. EXISTING boxes also need an operator bot TOKEN provisioned (BotFather) + propagate |
-| N32 | **Shared core files (Zero-Human-Workforce file model).** On every box, ALL of an account's agents + sub-agents SHARE that box's ONE canonical `AGENTS.md` / `TOOLS.md` / `USER.md` via **symlinks** (not copies) → `CANON_DIR` = the LOCAL box's `agents.defaults.workspace` (fallback `$HOME/clawd`). Per-agent `IDENTITY.md` / `SOUL.md` / `MEMORY.md` / `HEARTBEAT.md` stay each agent's OWN real files. **Co-mingling guard:** the symlink target is ALWAYS the local box's own canonical workspace — NEVER a hardcoded or cross-box path (a client box links to the CLIENT's own files, never the operator's or another account's). **Nested workflow agent exemption:** any workspace matching `*/workflows/*/agents/*` is EXEMPT — never touched. Real files are backed up to `<file>.bak-unify-<ts>` (never deleted) and unique content is preserved into the agent's own `IDENTITY.md` under a guarded marker before the symlink replaces them. Idempotent. | This file (🔗 N32 section) + [`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md) | `link_shared_core_files()` in `install.sh` (Step 10) + `update-skills.sh` (post-skills); `scripts/qc-system-integrity.sh` check 9.9 |
+| N28 | **No destructive teardown or kill scripts — ever.** Agents MUST NOT create or schedule any script or cron that removes the toolchain (`~/clawd`, `~/.openclaw`, Homebrew, Node, or OpenClaw itself). Cleanup must be scoped (remove a specific cron by ID), reversible (rename to `.QUARANTINED-<ts>` before deleting), and never self-deleting via a cron-scheduled kill script. Applies to build-cleanup, post-build teardown, SOP-backfill abort, and any "clean up after yourself" pattern. Root cause: 2026-05 Kofi incident — autonomous agent created `kofi-sop-build-kill.sh` during Skill 23 to abort a runaway SOP build; script wiped Homebrew/Node/OpenClaw/clawd. No script that touches core toolchain paths may be spawned by an agent without explicit owner approval. | This file + forensic post-mortem 2026-06-03 | Cron audit gate: any cron payload containing `rm -rf`, `brew uninstall`, `npm uninstall -g openclaw`, or paths `~/clawd` / `~/.openclaw` must be rejected |
+| N29 | **Shared core files (Zero-Human-Workforce file model).** On every box, ALL of that account's agents + sub-agents SHARE the box's ONE canonical `AGENTS.md` / `TOOLS.md` / `USER.md` via **symlink** (not duplicated). Per-agent `IDENTITY.md` / `SOUL.md` / `MEMORY.md` / `HEARTBEAT.md` stay each agent's OWN real files. The symlink target is ALWAYS the LOCAL box's own canonical (the default agent workspace resolved from THIS box's `openclaw.json`) — NEVER a hardcoded or cross-box/cross-account path (co-mingling guard, N0). Nested workflow agents (`*/workflows/*/agents/*`) are EXEMPT. Real files are backed up (`*.bak-unify-<ts>`, never deleted) + unique content preserved additively into the agent's own `IDENTITY.md` before linking. Idempotent. | This file (Shared Core Files section) + [`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md) | `link_shared_core_files()` in `install.sh` (Step 10a) + `update-skills.sh`; QC check 9.9 in `scripts/qc-system-integrity.sh` |
+| N30 | **Ollama Cloud HARD RULE: `OLLAMA_BASE_URL` MUST be `https://ollama.com` for `:cloud` models. NEVER `http://127.0.0.1` or `http://localhost:11434`.** `:cloud`-tagged models (e.g. `deepseek-v4-pro:cloud`, `kimi-k2.6:cloud`) are routed through the Ollama Cloud API, NOT a local daemon. Setting `OLLAMA_BASE_URL` to a loopback address → immediate ECONNREFUSED on every client box (no local Ollama daemon runs there). Any script, config, or install step that writes or defaults `OLLAMA_BASE_URL` to `127.0.0.1` or `localhost` for a cloud model is a HARD VIOLATION. Local Ollama probes (health-checks, model-list queries against a local daemon) are exempt — they must NEVER be confused with the model-routing URL used for actual inference. | This file (N30 section) | `build-workforce.py` provider setup; `install.sh` model config step; `scripts/qc-system-integrity.sh` Ollama-URL check |
+| N31 | **Agent model field MUST be an object `{primary, fallbacks:[...]}`, NEVER a bare string.** Writing `"model": "ollama/deepseek-v4-pro:cloud"` in `agents.list[]` bypasses all fallback chains — if Ollama Cloud is over-capacity the agent dies silently. Every agent entry written by `build-workforce.py` or any install script MUST use the canonical object form: `{"primary": "ollama/deepseek-v4-pro:cloud", "fallbacks": ["openrouter/deepseek/deepseek-v4-pro", ...]}`. Bare strings are only permissible in temporary draft states during development; NEVER in production `openclaw.json`. | This file (N31 section) + `build-workforce.py add_agent_to_config()` | `scripts/qc-system-integrity.sh` model-object check |
 
 If you invoke a rule by N-number elsewhere, link back to this index. If a rule's status changes (added, deprecated, renumbered), update this table FIRST and port the change to dependent docs.
+
+---
+
+## 🔴 N29 — Shared Core Files (Zero-Human-Workforce File Model)
+
+On **every box**, **all** of that account's agents and sub-agents **SHARE the
+box's ONE canonical `AGENTS.md`, `TOOLS.md`, and `USER.md`** — via **symlink**,
+not by duplicating the files. Each agent keeps its **own** `IDENTITY.md`,
+`SOUL.md`, `MEMORY.md`, and `HEARTBEAT.md` (its real, per-agent files).
+
+| File | Scope |
+|------|-------|
+| `AGENTS.md`, `TOOLS.md`, `USER.md` | **SHARED** — one canonical per box; each agent workspace symlinks to it |
+| `IDENTITY.md`, `SOUL.md`, `MEMORY.md`, `HEARTBEAT.md` | **per-agent** — each agent's own real files (never replaced) |
+
+**CANON_DIR** (the symlink target) = the box's **default agent workspace**,
+resolved with the standard precedence (per-agent `main` override →
+`agents.defaults.workspace` → `~/.openclaw/workspace`).
+
+- 🔴 **Co-mingling guard (N0):** the symlink target is **ALWAYS the LOCAL box's
+  own canonical**, resolved from **THIS box's own `openclaw.json`** — NEVER a
+  hardcoded path and NEVER a cross-box / cross-account path. A client box links
+  to the **client's own** files. The client is the USER. Never link a client
+  agent to Trevor's or another account's files.
+- **Nested workflow agent exemption:** internal workflow micro-agents — any workspace path
+  matching `*/workflows/*/agents/*` — are **EXEMPT** and **never touched**.
+- 💾 **Non-destructive:** a real file is backed up to `<file>.bak-unify-<ts>`
+  (never deleted), its unique content is appended (additive only) to that
+  agent's own `IDENTITY.md` under a guarded marker, then it is replaced with the
+  symlink. Absent files are left absent.
+- 🔁 **Idempotent:** correct symlinks are no-ops; a second run makes no new
+  backups and no churn.
+
+Runs at install (`install.sh` Step 10a) and update (`update-skills.sh`).
+Enforced by QC check **9.9** in `scripts/qc-system-integrity.sh`. Full rule:
+[`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md). This is the box-wide
+generalization of **N19** (the ZHC `agents/` layout).
+
+---
+
+## 🔴 N30 — Ollama Cloud HARD RULE: `OLLAMA_BASE_URL` = `https://ollama.com` for `:cloud` models
+
+**`OLLAMA_BASE_URL` MUST be `https://ollama.com` for `:cloud`-tagged models. NEVER `http://127.0.0.1` or `http://localhost:11434`.**
+
+Client boxes do NOT run a local Ollama daemon. Setting `OLLAMA_BASE_URL` to a loopback address → immediate `ECONNREFUSED` on every client box. This is a silent model failure, not a retried error.
+
+### What applies vs what is exempt
+
+| Situation | Rule |
+|-----------|------|
+| Inference call to `:cloud` model (deepseek-v4-pro:cloud, kimi-k2.6:cloud, etc.) | MUST use `https://ollama.com` as base URL |
+| Local daemon health-check (`/api/tags`, `/api/version`, etc.) | May use `127.0.0.1:11434` — it's a probe, not inference routing |
+| Graphify (Skill 43) running on operator's own Mac with local daemon | Exempt — graphify uses local Ollama by design |
+| `generate-role-library.py` pre-flight model availability probe | Exempt — line 183 is a probe, not a routing URL |
+
+### HARD VIOLATIONS (any of these = reject the commit)
+
+- `OLLAMA_BASE_URL=http://127.0.0.1:11434` in any `.env`, config block, or script that feeds into inference routing
+- `OLLAMA_BASE_URL=http://localhost:11434` in any inference routing path
+- Any `openclaw config set` writing `models.providers.ollama.baseUrl` to a loopback address
+- Any install script that copies a loopback `OLLAMA_BASE_URL` into a client box's env
+
+### Correct form
+
+```bash
+# In any env file or config block that routes :cloud model calls
+OLLAMA_BASE_URL="https://ollama.com"
+```
+
+```json
+// In openclaw.json providers block
+{
+  "models": {
+    "providers": {
+      "ollama": {
+        "baseUrl": "https://ollama.com",
+        "apiKey": "{{OLLAMA_API_KEY}}"
+      }
+    }
+  }
+}
+```
+
+Enforced by `scripts/qc-system-integrity.sh` Ollama-URL check. Added v11.1.0.
+
+---
+
+## 🔴 N31 — Agent Model Field MUST Be an Object, NEVER a Bare String
+
+**Every `"model"` field in `agents.list[]` entries written to `openclaw.json` MUST use the full object form with `primary` and `fallbacks`. A bare string bypasses all fallback chains.**
+
+### HARD VIOLATION
+
+```json
+// WRONG — bare string, no fallbacks
+{ "id": "dept-marketing", "model": "ollama/deepseek-v4-pro:cloud" }
+```
+
+### Correct form
+
+```json
+// CORRECT — object with primary + fallbacks
+{
+  "id": "dept-marketing",
+  "model": {
+    "primary": "ollama/deepseek-v4-pro:cloud",
+    "fallbacks": [
+      "openrouter/deepseek/deepseek-v4-pro",
+      "ollama/kimi-k2.6:cloud",
+      "openrouter/moonshotai/kimi-k2.6"
+    ]
+  }
+}
+```
+
+### Why this matters
+
+- Ollama Cloud may be over-capacity for a specific model — fallback to OpenRouter keeps the agent alive
+- A bare string on an agent that serves a client's Telegram messages → total silence on Ollama outage
+- The subagents block already uses the object form (`canonical_subagents` in `build-workforce.py`) — the top-level model must match
+
+### Enforcement
+
+- `build-workforce.py add_agent_to_config()` MUST produce the object form (N31 fix applied v11.1.0)
+- `scripts/qc-system-integrity.sh` model-object check validates every entry in `agents.list[]`
+- Any PR that writes bare-string model fields to `openclaw.json` is blocked
+
+Added v11.1.0.
 
 ---
 
@@ -337,10 +451,10 @@ You wake up fresh each session. These files are your continuity:
 **Never implement security changes without explicit approval.** Propose, explain, wait for green light.
 
 #### No Destructive Teardown or Kill Scripts (N28)
-**Agents MUST NOT create or schedule any script or cron that removes the toolchain** (`/docker/<project>`, `/data/.openclaw`, Node, or OpenClaw itself). This includes build-cleanup, post-build teardown, SOP-backfill abort, or any "clean up after yourself" pattern.
+**Agents MUST NOT create or schedule any script or cron that removes the toolchain** (`~/clawd`, `~/.openclaw`, Homebrew, Node, or OpenClaw itself). This includes build-cleanup, post-build teardown, SOP-backfill abort, or any "clean up after yourself" pattern.
 - Cleanup must be **scoped**: remove a specific cron by ID only
 - Cleanup must be **reversible**: rename files to `.QUARANTINED-<ts>` — never `rm`
-- **Never** schedule a cron whose payload contains `rm -rf`, `brew uninstall`, `npm uninstall -g openclaw`, or any path under `/data/.openclaw` / `/docker/<project>`
+- **Never** schedule a cron whose payload contains `rm -rf`, `brew uninstall`, `npm uninstall -g openclaw`, or any path under `~/clawd` / `~/.openclaw`
 - Any script touching core toolchain paths requires explicit owner approval before creation
 See N28 in the rules index above.
 
