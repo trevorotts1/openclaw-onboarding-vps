@@ -2136,6 +2136,146 @@ else
 fi
 
 # ----------------------------------------------------------
+# v6.6.0 / Step 6.4: Skill 22 Python pipeline dependencies
+# ----------------------------------------------------------
+# Install pdfplumber, pypdf, ebooklib, mobi, beautifulsoup4, aiohttp, numpy
+# for the book-to-persona pipeline. Each package is verified individually
+# with python3 -c "import X"; failures LOUDLY warn (not silently swallowed).
+#
+# Install order (container-correct for Hostinger Docker VPS):
+#   1. uv tool install (isolated, clean, preferred)
+#   2. pip3 install --user --break-system-packages (standard path)
+#   3. pip3 install --user (without --break-system-packages, older pip)
+#   4. Linuxbrew python3 -m pip (last resort if base python3 is locked)
+#
+# NOTE: this block runs as the container's `node` user. Calibre + media
+# tools (apt installs that need root) are handled in their own blocks below.
+# ────────────────────────────────────────────────────────────────────────────
+
+step "Step 6.4: Installing Skill 22 Python pipeline dependencies"
+
+# ── installer helper — try uv → pip --break-system-packages → pip → linuxbrew ──
+_install_py_pkg() {
+    local pkg="$1"       # pip install name (e.g. "pdfplumber")
+    local import="$2"    # python import name (e.g. "pdfplumber")
+    local display="${3:-$pkg}"
+
+    if python3 -c "import $import" 2>/dev/null; then
+        success "$display already installed"
+        return 0
+    fi
+
+    note "Installing $display..."
+
+    # Attempt 1: uv pip install (isolated, avoids OS package conflicts)
+    if command -v uv >/dev/null 2>&1; then
+        if uv pip install "$pkg" >> "$LOG_FILE" 2>&1; then
+            if python3 -c "import $import" 2>/dev/null; then
+                success "$display installed via uv"
+                return 0
+            fi
+        fi
+    fi
+
+    # Attempt 2: pip3 --break-system-packages (Debian/Ubuntu with externally-managed python)
+    if pip3 install --user "$pkg" --break-system-packages >> "$LOG_FILE" 2>&1; then
+        if python3 -c "import $import" 2>/dev/null; then
+            success "$display installed via pip3 --break-system-packages"
+            return 0
+        fi
+    fi
+
+    # Attempt 3: pip3 without the flag (older pip versions that don't support it)
+    if pip3 install --user "$pkg" >> "$LOG_FILE" 2>&1; then
+        if python3 -c "import $import" 2>/dev/null; then
+            success "$display installed via pip3"
+            return 0
+        fi
+    fi
+
+    # Attempt 4: Linuxbrew python3 (last resort — sometimes the base python3 is fully locked)
+    local LBREW_PY="/data/linuxbrew/.linuxbrew/bin/python3"
+    if [ -x "$LBREW_PY" ]; then
+        if "$LBREW_PY" -m pip install "$pkg" >> "$LOG_FILE" 2>&1; then
+            if python3 -c "import $import" 2>/dev/null; then
+                success "$display installed via Linuxbrew python3"
+                return 0
+            fi
+        fi
+    fi
+
+    # All attempts failed — LOUD warning (Skill 22 pipeline will partially fail)
+    warn "WARN: $display installation failed after all attempts."
+    warn "      Skill 22 book extraction may fail for formats requiring $display."
+    warn "      Manual fix: pip3 install --user $pkg --break-system-packages"
+    return 1
+}
+
+# Core PDF extraction (always needed)
+_install_py_pkg "pdfplumber"          "pdfplumber"    "pdfplumber (PDF extraction primary)"
+_install_py_pkg "pypdf"               "pypdf"         "pypdf (PDF extraction fallback)"
+
+# EPUB extraction (pure-Python — DEFAULT path for EPUB, no Calibre needed)
+_install_py_pkg "ebooklib"            "ebooklib"      "ebooklib (EPUB extraction)"
+_install_py_pkg "lxml"                "lxml"          "lxml (XML/HTML parser, used by ebooklib)"
+
+# MOBI extraction (Python path, avoids Calibre for simple MOBI files)
+_install_py_pkg "mobi"                "mobi"          "mobi (MOBI Python extractor)"
+
+# HTML parsing used by MOBI python path + VTT-to-text
+_install_py_pkg "beautifulsoup4"      "bs4"           "beautifulsoup4 (HTML parser)"
+
+# Async HTTP for orchestrator API calls
+_install_py_pkg "aiohttp"             "aiohttp"       "aiohttp (async HTTP client)"
+
+# Numpy for Gemini embeddings (gemini-indexer.py)
+_install_py_pkg "numpy"               "numpy"         "numpy (embeddings math)"
+
+# Report final status for all Skill 22 deps
+_s22_deps_ok=true
+for _dep_check in "pdfplumber" "pypdf" "ebooklib" "bs4" "aiohttp" "numpy"; do
+    if ! python3 -c "import $_dep_check" 2>/dev/null; then
+        warn "  MISSING after install attempts: $_dep_check"
+        _s22_deps_ok=false
+    fi
+done
+if [ "$_s22_deps_ok" = "true" ]; then
+    success "All Skill 22 Python deps verified (pdfplumber, pypdf, ebooklib, mobi, bs4, aiohttp, numpy)"
+else
+    warn "One or more Skill 22 Python deps are missing. PDF and EPUB extraction may work;"
+    warn "MOBI/AZW3/YouTube extraction may fail. See $LOG_FILE for install errors."
+fi
+
+# ----------------------------------------------------------
+# v6.6.0: Calibre upstream isolated installer (fallback for VPS boxes where
+# apt fails or produces a broken headless install).
+# Uses the official download.calibre-ebook.com/linux-installer.sh with
+# isolated=y so Calibre lands in /opt/calibre (no system-level write needed).
+# Only called when apt-get fails or ebook-convert isn't usable after apt.
+# ────────────────────────────────────────────────────────────────────────────
+_calibre_upstream_install() {
+    note "Attempting Calibre upstream isolated installer (download.calibre-ebook.com)..."
+    local _cal_upstream_log="$OC_INSTALL_LOG_DIR/calibre-upstream-$(date +%Y%m%d-%H%M%S).log"
+    local _installer_cmd='wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin install_dir=/opt/calibre isolated=y'
+    if command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+        _installer_cmd='curl -fsSL https://download.calibre-ebook.com/linux-installer.sh | sh /dev/stdin install_dir=/opt/calibre isolated=y'
+    fi
+    if (eval "$_installer_cmd") >> "$_cal_upstream_log" 2>&1; then
+        # The isolated installer puts ebook-convert at /opt/calibre/ebook-convert
+        if [ -x /opt/calibre/ebook-convert ]; then
+            ln -sf /opt/calibre/ebook-convert /usr/local/bin/ebook-convert 2>/dev/null || true
+            success "Calibre upstream installer succeeded: $($EBOOK_TIMEOUT ebook-convert --version 2>&1 | head -1 || true)"
+        else
+            warn "Calibre upstream installer ran but ebook-convert not found. See $_cal_upstream_log"
+            warn "Skill 22 MOBI/AZW3 extraction disabled; PDF/EPUB (Python) still works."
+        fi
+    else
+        warn "Calibre upstream installer FAILED. See $_cal_upstream_log"
+        warn "Skill 22 MOBI/AZW3/KFX extraction disabled; PDF/EPUB (ebooklib) still works."
+    fi
+}
+
+# ----------------------------------------------------------
 # v10.3.0:   Install Calibre (ebook-convert) for Skill 22 book extraction
 # v10.14.11: Switched from official Calibre Linux installer to apt-get.
 #   The official installer claimed success on ghcr.io/hostinger/hvps-openclaw:latest
@@ -2196,18 +2336,33 @@ else
 
             if [ -z "$APT_CMD" ]; then
                 warn "Non-root and no passwordless sudo — cannot install Calibre."
-                warn "Recovery: docker exec -u root <container> /usr/bin/apt-get install -y --no-install-recommends calibre"
+                warn "Recovery: docker exec -u root <container> /usr/bin/apt-get install -y calibre libegl1 libopengl0 libxcb-cursor0 xvfb"
             else
-                note "Installing calibre via apt-get (log: $CAL_LOG)..."
+                # v6.6.0: drop --no-install-recommends (it stripped headless Qt deps that
+                # Calibre needs on VPS — ebook-convert crashed with Qt display errors).
+                # Also install xvfb + headless GL/EGL libs explicitly so ebook-convert
+                # can start under Xvfb on a display-less container.
+                note "Installing calibre + headless deps via apt-get (log: $CAL_LOG)..."
                 if (DEBIAN_FRONTEND=noninteractive $APT_CMD update -qq && \
-                    DEBIAN_FRONTEND=noninteractive $APT_CMD install -y --no-install-recommends calibre) >> "$CAL_LOG" 2>&1; then
+                    DEBIAN_FRONTEND=noninteractive $APT_CMD install -y \
+                        calibre libegl1 libopengl0 libxcb-cursor0 xvfb) >> "$CAL_LOG" 2>&1; then
+                    # Validate: ebook-convert must actually run under xvfb-run
                     if command -v ebook-convert >/dev/null 2>&1; then
-                        success "Calibre installed via apt: $($EBOOK_TIMEOUT ebook-convert --version 2>&1 | head -1 || true)"
+                        _cal_ver=""
+                        if command -v xvfb-run >/dev/null 2>&1; then
+                            _cal_ver=$(timeout 30 xvfb-run -a ebook-convert --version 2>&1 | head -1 || true)
+                        else
+                            _cal_ver=$($EBOOK_TIMEOUT ebook-convert --version 2>&1 | head -1 || true)
+                        fi
+                        success "Calibre installed via apt: $_cal_ver"
                     else
-                        warn "apt reported success but ebook-convert still not on PATH. See $CAL_LOG."
+                        warn "apt reported success but ebook-convert still not on PATH."
+                        warn "Attempting upstream isolated installer as fallback..."
+                        _calibre_upstream_install
                     fi
                 else
-                    warn "apt-get install calibre failed. See $CAL_LOG. Skill 22 limited to PDF/EPUB."
+                    warn "apt-get install calibre failed. Trying upstream isolated installer..."
+                    _calibre_upstream_install
                 fi
             fi
         fi
@@ -2316,6 +2471,57 @@ install_media_tools() {
 }
 
 install_media_tools
+
+# ----------------------------------------------------------
+# v6.6.0 / Step 6.7: Install Skill 22 persona-inbox-watcher cron
+# ----------------------------------------------------------
+# Installs a */10 cron job that monitors the coaching-personas/inbox/ folder
+# and auto-converts new PDF/EPUB/MOBI/video/text files into personas.
+#
+# GUARDRAILS (TOKEN-SAFE):
+#   - cron fires at most every 10 min (not a daemon)
+#   - the watcher script itself caps at MAX_PER_RUN=5 sources/run
+#   - stale lock reaping prevents infinite stuck state
+#   - self-disables if orchestrator/add-persona-from-source.sh missing
+#   - dedupe guard: only installs if NOT already in crontab
+# ────────────────────────────────────────────────────────────────────────────
+step "Step 6.7: Installing persona-inbox-watcher cron (Skill 22 auto-processing)"
+
+_INBOX_WATCHER_SCRIPT="$OC_SKILLS_DIR/22-book-to-persona-coaching-leadership-system/scripts/persona-inbox-watcher.sh"
+
+if [ -f "$_INBOX_WATCHER_SCRIPT" ]; then
+    chmod +x "$_INBOX_WATCHER_SCRIPT" 2>/dev/null || true
+
+    # Resolve canonical log path
+    _WATCHER_LOG="$OC_LOGS/persona-inbox-watcher.log"
+    _CRON_LINE="*/10 * * * * bash $_INBOX_WATCHER_SCRIPT >> $_WATCHER_LOG 2>&1"
+
+    # Dedupe guard: only add if not already present
+    if crontab -l 2>/dev/null | grep -qF "persona-inbox-watcher.sh"; then
+        success "persona-inbox-watcher cron already installed — skipping"
+    else
+        # Install: append to existing crontab (if any), or create fresh
+        ( crontab -l 2>/dev/null | grep -v "persona-inbox-watcher"; echo "$_CRON_LINE" ) | crontab - 2>/dev/null \
+            && success "persona-inbox-watcher cron installed (*/10 min)" \
+            || warn "crontab install failed — cron may not be available on this container. Run manually: $CRON_LINE"
+    fi
+
+    # Create inbox dir so it's ready to accept drops immediately
+    _INBOX_DIR=""
+    if [ -d /data/.openclaw/master-files ]; then
+        _INBOX_DIR="/data/.openclaw/master-files/coaching-personas/inbox"
+    elif [ -d "$HOME/.openclaw/workspace/data" ]; then
+        _INBOX_DIR="$HOME/.openclaw/workspace/data/coaching-personas/inbox"
+    fi
+    if [ -n "$_INBOX_DIR" ]; then
+        mkdir -p "$_INBOX_DIR" "$_INBOX_DIR/processed" "$_INBOX_DIR/.locks"
+        success "Persona inbox ready: $_INBOX_DIR"
+        note "Drop PDF/EPUB/video/text files here and the watcher will auto-convert them to personas."
+    fi
+else
+    warn "persona-inbox-watcher.sh not found at $_INBOX_WATCHER_SCRIPT — cron NOT installed."
+    warn "This means Skill 22 was not yet cloned to $OC_SKILLS_DIR. Cron will be installed on next re-run."
+fi
 
 # ----------------------------------------------------------
 # v10.16.45: Install faster-whisper (LOCAL STT, model "medium") for voice notes
