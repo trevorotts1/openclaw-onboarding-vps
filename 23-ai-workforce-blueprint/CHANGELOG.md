@@ -1,7 +1,63 @@
-## [v10.16.34] — 2026-06-09 — CEO = orchestrator-only: production tool lock + canonical SOP-00 Owner Task Routing
+## [v11.1.0-step2] — 2026-06-09 — General Task + Project Architecture Office departments (v11.1.0 pre-bump)
 
 ### Why
-Two gaps remained after v10.16.33's behavioral SOP addition: (1) the CEO/Master Orchestrator
+Two mandatory departments were missing from the 26-department floor: (1) General Task — a
+zero-drop catch-all for tasks that fail keyword + semantic routing; (2) Project Architecture
+Office (PAO) — a bounded execution department that governs any project from PRD to verifiable
+completion. Without General Task, low-confidence fallback tasks vanish silently. Without PAO,
+there is no canonical loop-engineering harness (max 12 loops, 72h deadline, ≥8.5 gate) for
+cross-department projects.
+
+### Changed
+
+#### New department: General Task (`general-task`)
+- **5 roles** added to `templates/role-library/general-task/`:
+  - `head-of-general-task.md` — leadership/triage; SOP-03 recurrence detection with ≥4/month dept recommendation trigger
+  - `generalist-operator.md` — on-call execution with QC gate
+  - `triage-classifier.md` — on-call re-classifier returning `{task_id, dept_slug, confidence, reason}`
+  - `qc-specialist-general-task.md` — dedicated QC (Rule 6: different model from writer)
+  - `sop-writer.md` — SOP codification for recurring novel task types
+- **Routing priority: 1** (lowest); intentionally no keywords — reached only via explicit fallback path
+- `suggested-roles/general-task-suggested-roles.md` — NEW
+
+#### New department: Project Architecture Office (`project-architecture-office`)
+- **6 roles** added to `templates/role-library/project-architecture-office/`:
+  - `chief-project-architect.md` — leadership/orchestrator with 8 SOPs; owns PRD folder lifecycle, loop-state.json, pao-reaper cron
+  - `research-agent.md` — deep-research; Context7 primary; mandatory source citations
+  - `code-monitor.md` — CI/build watcher; NEVER edits code; short-lived
+  - `code-editor.md` — implementation agent; elevated reasoning; no self-approval
+  - `qc-agent.md` — QC gatekeeper; `{task_id, round, score, dimension_scores, pass, fix_directives, model_used, writer_model}`; max 3 rounds
+  - `sop-writer.md` — SOP authoring for reusable project patterns
+- **PRD folder template** added at `templates/prd-folder/`:
+  - `PRD.md`, `checklist.md`, `CHANGELOG.md`, `todo.md`, `QC.md`, `loop-state.json`
+  - `loop-state.json` schema: `{project, goal_ref, loop, max_loops:12, deadline_iso, last_qc_score, gate:8.5, cron_id, status, started_iso, active_agents[]}`
+- **Routing priority: 7**; keywords: `prd`, `project requirements`, `spec`, `scope`, `milestone`, `project plan`, `architecture`, `build plan`, `requirements doc`, `project architecture`
+- `suggested-roles/project-architecture-office-suggested-roles.md` — NEW
+
+#### Config updates
+- `department-naming-map.json` — version 2.3.0 → 2.4.0; both departments added to `mandatory` block; description updated to "26-department standard" (floor 17+7+2=26)
+- `scripts/department-floor.py` — `HARDCODED_MANDATORY` + `evaluate_floor()` updated to include `general-task` and `project-architecture-office`; all "23-department standard" refs updated to "26-department standard"; floor math 23→26
+- `templates/role-library/_index.json` — total_roles 233→244, total_departments 17→19; 11 new role entries + 2 new department blocks
+- `templates/role-library/_qc-summary.md` — heading updated to v11.1.0, total 233/233→244/244, rows added for both new departments
+
+### Files touched
+- `23-ai-workforce-blueprint/templates/role-library/general-task/` — 5 NEW files
+- `23-ai-workforce-blueprint/templates/role-library/project-architecture-office/` — 6 NEW files
+- `23-ai-workforce-blueprint/templates/prd-folder/` — 6 NEW files
+- `23-ai-workforce-blueprint/suggested-roles/general-task-suggested-roles.md` — NEW
+- `23-ai-workforce-blueprint/suggested-roles/project-architecture-office-suggested-roles.md` — NEW
+- `23-ai-workforce-blueprint/department-naming-map.json`
+- `23-ai-workforce-blueprint/scripts/department-floor.py`
+- `23-ai-workforce-blueprint/templates/role-library/_index.json`
+- `23-ai-workforce-blueprint/templates/role-library/_qc-summary.md`
+- `23-ai-workforce-blueprint/CHANGELOG.md`
+
+Note: umbrella version bump deferred to Step 4 (bump-version.sh --tag with all 9 markers).
+
+## [v10.15.35] — 2026-06-09 — CEO = orchestrator-only: production tool lock + canonical SOP-00 Owner Task Routing
+
+### Why
+Two gaps remained after v10.15.34's behavioral SOP addition: (1) the CEO/Master Orchestrator
 agent entry in `openclaw.json` had no runtime enforcement — an agent could still invoke
 production skills. (2) The canonical fleet-wide SOP-00 routing procedure (classify → POST
 /api/tasks/ingest → notify owner → NEVER execute) had no permanent home in the
@@ -11,25 +67,31 @@ production skills. (2) The canonical fleet-wide SOP-00 routing procedure (classi
 - **`23-ai-workforce-blueprint/scripts/build-workforce.py` — `add_agent_to_config()`**
   - CEO/master-orchestrator agents now get `"skills": []` in their `agents.list[]` entry
   - OpenClaw `skills` at agent level REPLACES defaults (per docs.openclaw.ai/tools/skills-config)
-  - Result: `dept-ceo` / `dept-master-orchestrator` cannot invoke any installed skill
-  - Other department agents (graphics, video, audio, etc.) are unaffected
+  - Result: `dept-ceo` / `dept-master-orchestrator` cannot invoke image_generate, tts,
+    video_generate, coding-agent, browser-automation, or any other installed skill
+  - Other department agents (graphics, video, audio, etc.) are unaffected — no `skills` key
+    = unrestricted (inherits platform default)
   - Applies to both Mac (`openclaw-onboarding`) and VPS (`openclaw-onboarding-vps`) repos
 
 - **`23-ai-workforce-blueprint/master-orchestrator-dept/SOP-00-Owner-Task-Routing.md` — NEW**
   - Canonical fleet-wide Owner Task Routing SOP (6-step protocol)
-  - POST to `/api/tasks/ingest` with idempotency_key, CC-unreachable escalation path
-  - Binding rules table, tool-lock enforcement explanation
-  - Verified canonical graphics dept head: Chief Design Officer (role #0 in
-    suggested-roles/graphics-suggested-roles.md)
+  - Covers: classify task, POST to `/api/tasks/ingest` with idempotency_key, acknowledge owner,
+    escalation path when CC is unreachable, tool-lock enforcement explanation
+  - Binding rules table: what the orchestrator can and cannot do
+  - Verified canonical graphics dept head name: Chief Design Officer (role #0 in
+    suggested-roles/graphics-suggested-roles.md — "Imani"/"Amani" do not exist in the library)
+  - Cross-platform: identical file in both Mac and VPS repos
 
 ### Files touched (merge coordination)
 - `23-ai-workforce-blueprint/scripts/build-workforce.py` — ONLY `add_agent_to_config()` function
+  (the `agent_entry` dict + the `is_ceo_agent` guard that follows it). Skill-22 branch touches
+  `create_role_workspaces.py` and `install.sh` — zero overlap.
 - `23-ai-workforce-blueprint/master-orchestrator-dept/SOP-00-Owner-Task-Routing.md` — NEW FILE
 - `23-ai-workforce-blueprint/CHANGELOG.md`
 
 Note: umbrella version bump deferred to Step 4 (bump-version.sh --tag with all 9 markers).
 
-## [v10.16.33] — 2026-06-09 — master-orchestrator: hard owner-task routing protocol (SOP-00)
+## [v10.15.34] — 2026-06-09 — master-orchestrator: hard owner-task routing protocol (SOP-00)
 
 ### Why
 The master-orchestrator (CEO) template lacked an explicit, binding rule preventing it from
@@ -47,7 +109,7 @@ coverage, and breaking the AI-workforce model entirely.
     - Failure-mode handling: one clarifying question OR sub-route to dept director for sub-classification (never self-execute)
   - This is a behavioral document update — **umbrella version NOT bumped** (cut separately per standing policy)
 
-## [v10.16.32] — 2026-06-09 — command-center pipeline fixes: 9 RC repairs to persona selection, governing-personas gate, slug hygiene, build-state backfill, and role-library path
+## [v10.15.33] — 2026-06-09 — command-center pipeline fixes: 9 RC repairs to persona selection, governing-personas gate, slug hygiene, build-state backfill, and role-library path
 
 ### Why
 Live builds exposed 9 pipeline failures in the AI-Workforce → Command Center flow: the
@@ -70,7 +132,7 @@ importer had no env-var escape hatch when the default path yielded an empty temp
 - **`scripts/generate-governing-personas.sh` — NEW (Fix 2 / build RC-1)**
   New script that writes stub `governing-personas.md` files for any department missing one,
   then exits 0 only when every department has a valid file. Exit 1 = hard fail; exit 2 =
-  departments dir unresolvable. Auto-detects ZHC tree (canonical → VPS fallback → Mac
+  departments dir unresolvable. Auto-detects ZHC tree (canonical → Mac fallback → VPS
   fallback). Supports `--dry-run`.
 - **`INSTALL.md` — Phase 0a HARD STOP + Phase 5-PERSONA HARD gate (Fix 8 / RC-2, Fix 2)**
   - Phase 0a: changed from soft warning to HARD exit 1 when `coaching-personas` Gemini
@@ -123,7 +185,7 @@ best-practice — hard-failing only helps operators catch gaps earlier.
 
 ---
 
-## [v10.16.31] — 2026-06-02 — 23-department standard (N23): universal vertical-pack primaries
+## [v10.15.32] — 2026-06-02 — 23-department standard (N23): universal vertical-pack primaries
 
 ### Why
 Clients were shipping with 17 departments (Sheila: 16 mandatory + CEO counted as custom = 17) instead
@@ -155,13 +217,13 @@ flavor departments on top of the 23 — it no longer acts as a gate reducer.
 - `INSTRUCTIONS.md`: "I Don't Have a Business" pivot and "What Gets Built" section updated to 23-dept.
 
 ### Repo
-- Repo version bumped to `v10.16.31`.
+- Repo version bumped to `v10.15.32`.
 
 ---
 
-## [v10.16.9] — 2026-05-29 — Cross-skill chain to Skill 38 (ENFORCED) + library-gate status surfacing
+## [v10.15.9] — 2026-05-29 — Cross-skill chain to Skill 38 (ENFORCED) + library-gate status surfacing
 
-Part of repo `v10.16.9` (the 8 rated improvements). Two improvements land here:
+Part of repo `v10.15.9` (the 8 rated improvements, port of VPS #47). Two improvements land here:
 
 ### Added
 - **commsAutomationStatus** state field (+ `commsAutomationDepartments`, `commsAutomationVerifiedAt`,
@@ -175,12 +237,54 @@ Part of repo `v10.16.9` (the 8 rated improvements). Two improvements land here:
 - `scripts/resume-workforce-build.sh`:
   - Treats the build as dirty (and dispatches a `[COMMS-AUTOMATION-RESUME]` self-ping) when all
     departments + libraries are done but `commsAutomationStatus NOT IN {done, not-applicable}`. The
-    self-ping points at Skill 38 + `qc-trinity-registry.sh`. Fires after `[LIBRARIES-RESUME]`.
+    self-ping points at Skill 38 + `qc-trinity-registry.sh`. Fires after `[LIBRARY-RESUME]`.
   - **Library-gate status surfacing:** emits a one-line OPERATOR-FACING status when libraries stay dirty
     into the last 2 resume attempts (throttled via `librariesNearCapNotified`), and names the library
     status in the hard-cap escalation — a persistently-failing library pull is now visible instead of
     silently retrying to the cap.
-- Repo version bumped to `v10.16.9` via `bump-version.sh` (skill-version.txt + the other 7 locations).
+- Repo version bumped to `v10.15.9` via `bump-version.sh` (skill-version.txt + the other 7 locations).
+
+---
+
+## [v10.15.8] — 2026-05-29 — ENFORCED Role Library + SOP Library auto-pull gate
+
+### Why
+Last night several clients (Kofi / Teresa / Evelyn / Maria / Lyric) had workforces *scaffolded* —
+department + role folders existed, depts even flipped to `status: "done"` — but the **role library was
+never pulled into the `how-to.md` files** AND the **SOP placeholders were never authored**. Nothing GATED
+on those two libraries being populated, so the build "looked done." Prose like "AUTOMATIC NEXT STEP: also
+pull the role library" is NOT enforcement (same lesson as the v10.14.16 build-resume fix). Enforcement =
+a STATE FIELD + a VERIFY/RESUME GATE. This release adds both. A workforce is now NOT complete (no
+`buildCompletedAt`, no closeout) until both libraries are populated.
+
+### Added
+- `scripts/verify-library-gate.sh` — the verify gate. Runs `qc-completeness.sh` (read-only), then writes
+  `roleLibraryStatus` / `sopLibraryStatus` + per-dept `roleLibraryFilled` / `sopLibraryFilled` +
+  `libraryFailureReason` into `.workforce-build-state.json` and exits non-zero unless every dept has the
+  role library pulled into every `how-to.md` (library_pct == 100) AND SOPs authored (sop_stubs_remaining
+  == 0, avg_sop_per_role > 0). Exit codes: 0 = both done, 2 = role library not done, 3 = SOP library not
+  done, 4 = both not done, 5 = no workforce / qc could not run.
+
+### Changed
+- `build-state-schema.json` — new enforced gate fields: top-level `roleLibraryStatus`
+  (`pending`→`pulling`→`done`/`failed`), `sopLibraryStatus` (`pending`→`authoring`→`done`/`failed`),
+  `libraryFailureReason`; per-department `roleLibraryFilled` / `sopLibraryFilled` booleans. `closeoutStatus`
+  description updated: the library gate runs BEFORE the closeout gate.
+- `scripts/build-workforce.py` — after `qc-completeness.sh`, the build now invokes `verify-library-gate.sh`
+  and logs LIBRARY GATE PASS/FAIL; on FAIL it instructs to re-pull and re-run before writing
+  `buildCompletedAt` / `closeoutStatus=pending`.
+- `scripts/resume-workforce-build.sh` — the 15-min resume cron now computes `library_dirty` (all depts done
+  but `roleLibraryStatus != done` OR `sopLibraryStatus != done`) and fires a `[LIBRARY-RESUME]` self-ping
+  (BEFORE the closeout gate) instructing the agent to re-run `post-build-role-workspaces.py` /
+  `populate-sops-from-manifest.py` then re-run the gate until it passes.
+- `resume-prompt.txt` — added a LIBRARY FLOW + decision-tree branch A2 + a gate step in BUILD FLOW step 5.
+- `INSTRUCTIONS.md` — new "Moment 3.6 — ROLE LIBRARY + SOP LIBRARY auto-pull gate (BINDING)"; Moment 1 now
+  seeds `roleLibraryStatus`/`sopLibraryStatus = pending`; resume-layer section lists the library-dirty
+  trigger; "When ALL departments are done" renamed to require the gate first.
+- `SKILL.md` — item 10 documents the enforced role/SOP library gate.
+
+### Version
+- Repo-wide bump v10.15.7 → v10.15.8 via `scripts/bump-version.sh` (all 8 version locations agree).
 
 ---
 
