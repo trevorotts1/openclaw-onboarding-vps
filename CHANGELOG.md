@@ -1,3 +1,47 @@
+## [v11.0.0]  -  2026-06-09  -  milestone: command-center pipeline repair, Skill 01 v6.5.9, Skill 35 v2.5.0, antfarm purge, graphify-out removed
+
+### Why
+Trevor approved v11.0.0 as a shared milestone major across both onboarding repos, consolidating a set of foundational repairs and housekeeping changes that collectively make the command-center pipeline deterministic, keep private tooling names out of the codebase, and ensure build artifacts are never accidentally committed.
+
+### What changed
+
+**Command-center pipeline repair (Skill 23 / Skill 32 — shipped across v10.16.32–v10.16.53):**
+- Canonical dept-slug routing: Skill 23's department pipeline now resolves slugs deterministically from the role-library `_index.json`, eliminating the "wrong dept" dispatch failures seen in RC builds.
+- Master-agent wiring: the master orchestrator is explicitly registered before any dept-level agent handoffs so the SOP chain never drops into an unrouted state.
+- SOP-into-dispatch: SOP-00 hard owner-task routing protocol (`feat(master-orchestrator): add SOP-00`) added; prevents client tasks from being silently swallowed by sub-agents that lack dispatch authority.
+- Persona null-guard + governing-personas + company-config v2: the persona-selector crash (null dereference when no governing persona is set) is patched; governing-personas is now a hard gate before any persona is assigned; company-config schema bumped to v2 with backward-compatible defaults.
+- Build-state backfill: `resume-workforce-build.sh` now seeds missing build-state entries before resuming, so an interrupted Skill 23 build doesn't skip departments it completed in a prior session.
+- `ROLE_LIBRARY_PATH` env resolution: role-library path is now read from the `ROLE_LIBRARY_PATH` env var (with fallback to the default install location) so non-standard install roots work correctly.
+
+**Skill 01 Teach-Yourself-Protocol v6.5.9:**
+- Versioned independently; umbrella bump does NOT touch `01-teach-yourself-protocol/skill-version.txt`.
+
+**Skill 35 Social Media Planner v2.5.0:**
+- Autonomous video multi-clip + ffmpeg pipeline: the skill now orchestrates multi-segment video stitching via `ffmpeg` without requiring the private CLI.
+- Podcast Fish Audio Season 2: Fish Audio TTS updated to S2 voice API.
+- Webhook content-sheet: all scheduled posts now record their metadata to the GHL content sheet via the existing webhook rather than requiring a manual step.
+- GHL link delivery: final asset URL delivered to GHL contact record automatically on completion.
+- Private "Ant Farm" CLI removed: skill no longer depends on the private operator tool. Skill versioned independently; umbrella bump does NOT touch `35-social-media-planner/skill-version.txt`.
+
+**Antfarm purge (v10.16.53):**
+- Every reference to the private "Ant Farm" tool name removed from all code, comments, docs, and changelogs (except the Skill 35 CHANGELOG which retains historical context).
+- The exemption concept ("Ant Farm exemption") renamed to "nested workflow agent exemption" throughout — the `*/workflows/*/agents/*` glob logic and behavior are UNCHANGED.
+- Shell variable `skipped_antfarm` → `skipped_workflow_agent`; tally log line `antfarm-exempt` → `workflow-agent-exempt`.
+- Files touched: `.gitignore`, `install.sh`, `update-skills.sh`, `AGENTS.md`, `CHANGELOG.md`, `README.md`, `docs/SHARED-CORE-FILES.md`, `scripts/qc-system-integrity.sh`, `scripts/gemini-indexer.py`, `22-*/pipeline/gemini-indexer.py`, `23-*/scripts/gemini-indexer.py`.
+
+**graphify-out removed + gitignored (v10.16.53):**
+- Generated knowledge-graph artifacts (`graphify-out/`) deleted from the repo tree.
+- `graphify-out/` added to `.gitignore` with an explicit comment: "generated output, never committed".
+
+**Version bump:**
+- All 9 umbrella version locations bumped v10.16.53 → v11.0.0 via `scripts/bump-version.sh`.
+- Per-skill `skill-version.txt` files (Skill 01 v6.5.9, Skill 35 v2.5.0, all others) are NOT touched by the umbrella bump — they version independently.
+
+### Risk
+Low. The command-center repairs are additive (new guards, env-var fallbacks, build-state seeds — no existing data paths removed). The antfarm purge is a pure rename/delete with no behavioral change (the underlying `*/workflows/*/agents/*` skip logic is identical). The graphify-out gitignore is additive. Per-skill version files are untouched.
+
+---
+
 ## [v10.16.52]  -  2026-06-07  -  feat: client agents escalate via the n8n webhook, not the broken bot-to-bot Telegram group post
 
 ### Why
