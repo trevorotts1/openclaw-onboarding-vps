@@ -1,5 +1,28 @@
 # Changelog - Social Media Planner (Skill 35)
 
+## v2.3.0 - June 9, 2026 (multi-clip storyboard + FFmpeg merge; removes false client-record punt)
+
+### Why
+An agent told clients "the AI video tools have a hard limit of 8-12 seconds per clip, so a 55-60 second Reel can't be generated in one pass — you should record the video yourself." This is wrong. The agent is capable of building the full Reel autonomously using a storyboard, sequential clip generation, and FFmpeg merge. The old instructions were ambiguous enough to trigger the punt.
+
+### What
+- **references/playbook.md Section 16** — Full rewrite with an explicit agent-followable pipeline:
+  - **Step A: Storyboard** — `scene_count = ceil(target_seconds / clip_limit_seconds)` (e.g. ceil(60/8) = 8); write per-scene visual prompts with continuity cues (subject, wardrobe, setting, color grade, camera style); mark each scene's incoming transition as `cut` or `crossfade`.
+  - **Step B: Generate clips** — one clip per scene via kie.ai Veo 3.1 Lite; retry any failed clip up to 3 times.
+  - **Step C: Voiceover** — ONE continuous VO from the full script via Fish Audio S2 (natural delivery).
+  - **Step D: Normalize (mandatory)** — `scale=1080:1920, fps=30, libx264, yuv420p, aac 48kHz` on every raw clip before any concat.
+  - **Step E: Merge** — Recipe 2a (jump cuts via concat demuxer) or Recipe 2b (crossfades via xfade filter with `offset = clip_duration - xfade_duration`).
+  - **Step F: VO overlay** — `ffmpeg -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -shortest`.
+  - **Step G: QC** — ffprobe checks duration (55-60s), resolution (1080x1920), codec (h264).
+  - Client self-recording moved to an explicit last-resort fallback (after all retries exhausted) with a specific message to send.
+- **CORE_UPDATES.md — Video Production Process** — Rewrote the step list to match the new pipeline with inline FFmpeg commands and reference to `merge_reel.sh`.
+- **scripts/merge_reel.sh** (new, chmod +x) — Parameterized helper implementing Steps D-G. Usage: `bash merge_reel.sh clips_list.txt voiceover.mp3 final_reel.mp4 [cut|crossfade]`.
+
+### Risk
+Low. Additive documentation and new helper script. No scheduling, posting, or API logic altered.
+
+---
+
 ## v2.2.0 - June 8, 2026 (Fix #1 + Fix #2 — connection-status truth + cron enforcement)
 
 follow-up: fixed QC accounts-grep false positive + added --announce delivery to weekly cron
