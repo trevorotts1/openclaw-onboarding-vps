@@ -22,13 +22,12 @@ production skills. (2) The canonical fleet-wide SOP-00 routing procedure (classi
   - Verified canonical graphics dept head: Chief Design Officer (role #0 in
     suggested-roles/graphics-suggested-roles.md)
 
-- **Skill 23 VPS version: 11.0.1 → 11.0.2** (skill-version.txt)
-
 ### Files touched (merge coordination)
 - `23-ai-workforce-blueprint/scripts/build-workforce.py` — ONLY `add_agent_to_config()` function
 - `23-ai-workforce-blueprint/master-orchestrator-dept/SOP-00-Owner-Task-Routing.md` — NEW FILE
 - `23-ai-workforce-blueprint/CHANGELOG.md`
-- `23-ai-workforce-blueprint/skill-version.txt`
+
+Note: umbrella version bump deferred to Step 4 (bump-version.sh --tag with all 9 markers).
 
 ## [v10.16.33] — 2026-06-09 — master-orchestrator: hard owner-task routing protocol (SOP-00)
 
