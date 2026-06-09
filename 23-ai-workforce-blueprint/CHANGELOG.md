@@ -1,3 +1,34 @@
+## [v10.16.34] — 2026-06-09 — CEO = orchestrator-only: production tool lock + canonical SOP-00 Owner Task Routing
+
+### Why
+Two gaps remained after v10.16.33's behavioral SOP addition: (1) the CEO/Master Orchestrator
+agent entry in `openclaw.json` had no runtime enforcement — an agent could still invoke
+production skills. (2) The canonical fleet-wide SOP-00 routing procedure (classify → POST
+/api/tasks/ingest → notify owner → NEVER execute) had no permanent home in the
+`master-orchestrator-dept/` folder that every install loads.
+
+### Changed
+- **`23-ai-workforce-blueprint/scripts/build-workforce.py` — `add_agent_to_config()`**
+  - CEO/master-orchestrator agents now get `"skills": []` in their `agents.list[]` entry
+  - OpenClaw `skills` at agent level REPLACES defaults (per docs.openclaw.ai/tools/skills-config)
+  - Result: `dept-ceo` / `dept-master-orchestrator` cannot invoke any installed skill
+  - Other department agents (graphics, video, audio, etc.) are unaffected
+  - Applies to both Mac (`openclaw-onboarding`) and VPS (`openclaw-onboarding-vps`) repos
+
+- **`23-ai-workforce-blueprint/master-orchestrator-dept/SOP-00-Owner-Task-Routing.md` — NEW**
+  - Canonical fleet-wide Owner Task Routing SOP (6-step protocol)
+  - POST to `/api/tasks/ingest` with idempotency_key, CC-unreachable escalation path
+  - Binding rules table, tool-lock enforcement explanation
+  - Verified canonical graphics dept head: Chief Design Officer (role #0 in
+    suggested-roles/graphics-suggested-roles.md)
+
+### Files touched (merge coordination)
+- `23-ai-workforce-blueprint/scripts/build-workforce.py` — ONLY `add_agent_to_config()` function
+- `23-ai-workforce-blueprint/master-orchestrator-dept/SOP-00-Owner-Task-Routing.md` — NEW FILE
+- `23-ai-workforce-blueprint/CHANGELOG.md`
+
+Note: umbrella version bump deferred to Step 4 (bump-version.sh --tag with all 9 markers).
+
 ## [v10.16.33] — 2026-06-09 — master-orchestrator: hard owner-task routing protocol (SOP-00)
 
 ### Why
