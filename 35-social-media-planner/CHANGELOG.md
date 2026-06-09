@@ -1,5 +1,49 @@
 # Changelog - Social Media Planner (Skill 35)
 
+## v2.4.0 - June 9, 2026 (autonomous podcast audio via Fish Audio S2-Pro; removes self-record punt)
+
+### Why
+The same "punt" pattern that v2.3.0 fixed for video existed in podcast audio. An agent would tell clients: "Podcast Audio — Script is complete but audio generation didn't produce a file. I can retry the TTS generation or you can record it yourself using the script." This is the wrong behavior. The podcast audio pipeline had no autonomous generation instructions — only a vague "Synthesize MP3 via Fish Audio (192kbps)" step with no API call, no verification, and no retry logic. Agents interpreted the gap as a signal to ask the client to handle it themselves.
+
+### What
+
+- **references/playbook.md Section 15** — Added a new "Autonomous Audio Generation Pipeline" subsection replacing the vague synthesis instruction:
+  - **Verified Fish Audio API facts** (confirmed from docs.fish.audio OpenAPI spec + docs, June 2026):
+    - Endpoint: `POST https://api.fish.audio/v1/tts`
+    - Auth: `Authorization: Bearer <FISH_AUDIO_API_KEY>`
+    - Model selection: via HTTP header `model: s2-pro` (not in request body)
+    - Current recommended model: `s2-pro` (S2-Pro, natural language expression control, [square bracket] tag syntax, 80+ languages, 100ms TTFA)
+    - Previous model: `s1` (uses `(parenthesis)` syntax — never mix with s2-pro)
+    - Response: synchronous binary audio stream (Transfer-Encoding: chunked) — no polling step
+    - Request body fields: `text`, `reference_id` (voice ID), `format` (mp3/wav/opus/pcm), `latency` (low/normal/balanced), `normalize` (bool), `chunk_length` (100-300), optional `prosody` object
+  - **S2-Pro emotion tag syntax** — confirmed 64+ categories: [square brackets], basic emotions (happy/sad/excited/calm etc.), advanced emotions (empathetic/determined/nostalgic etc.), delivery styles (whispering/shouting/soft tone), audio effects (laughing/sighing/gasping), pacing ([break]/[long-break]), and free-form natural language descriptions (15,000+ variations supported)
+  - **Step-by-step pipeline:**
+    - Step 1: Write script → `podcast_script_draft.txt`
+    - Step 2: Tag script heavily (min one tag per paragraph, goal is director's script density) → `podcast_script_tagged.txt`; 4 concrete tagged-line examples included
+    - Step 3: Select model (default s2-pro; check docs.fish.audio before run to confirm no newer model)
+    - Step 4: Generate via `generate_podcast_audio.sh` helper (3 retries, per-failure diagnosis)
+    - Step 5: ffprobe verify (file exists, non-zero, duration 600-900s, no errors)
+    - Step 6: On failure — diagnose (API key, voice ID, network, rate limit, model availability); notify operator via Telegram; only then offer last-resort self-record fallback
+    - Step 7: Feed verified MP3 into the publish flow
+  - **Last-resort fallback message** (only after 3 retries + operator notified) — exact text specified; not a default path
+
+- **CORE_UPDATES.md — Podcast Publishing Process** — Rewrote the 14-step step list into a 16-step fully autonomous pipeline: write script → tag heavily → select model → generate (with API reference inline) → verify → retry/diagnose → cover image → GHL upload → webhook → verify → log → notify → ffprobe → dashboard check.
+
+- **scripts/generate_podcast_audio.sh** (new, chmod +x) — Parameterized helper:
+  - Usage: `bash generate_podcast_audio.sh <script_file> <voice_id> [model] [output_mp3]`
+  - Sources `secrets/.env` from canonical locations if `FISH_AUDIO_API_KEY` not already in env
+  - Builds JSON payload via python3 (safe string escaping)
+  - Calls `POST https://api.fish.audio/v1/tts` with correct headers; streams response to MP3 with `-o`
+  - Per-attempt: verifies file exists, non-zero, ffprobe duration ≥ 30s (caller confirms 600-900s)
+  - Per-failure diagnosis with HTTP code matching (401/403/404/422/429/503-504/network-000)
+  - Up to 3 retries with 5s wait between attempts; 15s wait on 429
+  - Exit codes: 0=success, 1=all retries failed (with full diagnostic checklist on stderr), 2=bad args/missing key
+
+### Risk
+Low. Additive documentation and new helper script. No scheduling, posting, publish-webhook, or GHL logic altered.
+
+---
+
 ## v2.3.0 - June 9, 2026 (multi-clip storyboard + FFmpeg merge; removes false client-record punt)
 
 ### Why
