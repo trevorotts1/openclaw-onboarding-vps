@@ -47,7 +47,7 @@ import json
 import re
 import argparse
 import shutil
-import subprocess  # v10.16.24: module-level so bare subprocess.run / subprocess.TimeoutExpired
+import subprocess  # v10.15.25: module-level so bare subprocess.run / subprocess.TimeoutExpired
                    # in build_from_config (SOP-populate step) resolve. Previously the only
                    # `import subprocess` statements were function-local in OTHER functions, so the
                    # bare references crashed the build with NameError: name 'subprocess' is not defined.
@@ -354,34 +354,6 @@ def _write_canonical_reconciliation(record):
         print(f"[CANONICAL] Wrote canonicalReconciliation to {path}", file=sys.stderr)
     except OSError as e:
         print(f"[CANONICAL WARNING] Could not write reconciliation to {path}: {e}", file=sys.stderr)
-
-
-def _write_library_status(role_status, sop_status, verified=False):
-    """
-    Merge roleLibraryStatus + sopLibraryStatus into build-state (v10.16.8).
-
-    ENFORCED build step: a workforce is NOT complete until BOTH libraries are
-    populated. This stamps the two state fields so the verify/resume gate in
-    resume-workforce-build.sh can detect a libraries-dirty build (all depts
-    done but a library not pulled/populated) and re-fire a [LIBRARIES-RESUME].
-
-    Idempotent + non-destructive. Never raises.
-    """
-    path = _build_state_path()
-    try:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        state = _load_build_state()
-        state["roleLibraryStatus"] = role_status
-        state["sopLibraryStatus"] = sop_status
-        if verified and role_status == "done" and sop_status == "done":
-            state["librariesVerifiedAt"] = datetime.now().isoformat()
-        with open(path, "w") as f:
-            json.dump(state, f, indent=2)
-        print(f"[LIBRARIES] Wrote roleLibraryStatus={role_status} "
-              f"sopLibraryStatus={sop_status} to {path}", file=sys.stderr)
-    except OSError as e:
-        print(f"[LIBRARIES WARNING] Could not write library status to {path}: {e}",
-              file=sys.stderr)
 
 
 def reconcile_canonical_floor(selected_departments, core_answers, departments_config):
@@ -865,7 +837,7 @@ def build_from_config(config):
 
     print(f"[NON-INTERACTIVE] Departments: {', '.join(selected_departments.keys())}", file=sys.stderr)
 
-    # v10.16.17: HARD-FAIL the build if ANY selected department does not resolve
+    # v10.15.18: HARD-FAIL the build if ANY selected department does not resolve
     # to an existing suggested-roles file. This makes the "zero-role department"
     # variance bug impossible — no department can silently ship with 0 roles/SOPs.
     assert_dept_map_resolves(list(selected_departments.keys()))
@@ -966,7 +938,7 @@ def build_from_config(config):
         # Runs in the background (sub-agents are spawned in parallel internally),
         # exit code 0 = all populated, 2 = some failed, 3 = no model available.
         #
-        # v10.16.4: Stream stdout/stderr live (do NOT capture_output) so the
+        # v10.15.4: Stream stdout/stderr live (do NOT capture_output) so the
         # operator sees progress in real time. Record the return code on
         # _BUILD_RESULT for the [BUILD-RESULT] line at the end of build.
         populate_script = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -990,7 +962,7 @@ def build_from_config(config):
                           f"SOPs not populated. The AI agent must ask the owner which model "
                           f"to use, then rerun: python3 {populate_script}", file=sys.stderr)
                 elif rc == 4:
-                    # v10.16.17: inline-queue mode wrote work files but did NOT
+                    # v10.15.18: inline-queue mode wrote work files but did NOT
                     # author the SOPs. This is NOT done. The library gate must
                     # stay failed and the resume cron must re-fire until the
                     # substance gate confirms real DMAIC SOPs on disk.
@@ -1081,7 +1053,7 @@ def build_from_config(config):
     # AGENTS/TOOLS/USER symlinks to every role folder created above. Master
     # Orchestrator (CEO) gets the CEO variant of the deferral clause. Idempotent.
     #
-    # v10.16.4: Stream stdout/stderr live (no capture_output). Record return
+    # v10.15.4: Stream stdout/stderr live (no capture_output). Record return
     # code for the [BUILD-RESULT] line. On non-zero rc, chain into
     # qc-completeness.sh at the end so the operator sees the failure surface
     # AND the per-dept impact, not just a silent WARN line.
@@ -1107,7 +1079,7 @@ def build_from_config(config):
         print(f"[v2.1 ERROR] post-build-role-workspaces.py not found at {_script}", file=sys.stderr)
         _post_build_rc = 127
 
-    # v10.16.4: Emit a single, easy-to-grep BUILD-RESULT line summarising
+    # v10.15.4: Emit a single, easy-to-grep BUILD-RESULT line summarising
     # the two post-build pipelines so silent failures are no longer possible.
     _sop_rc = globals().get("_BUILD_SOP_POPULATE_RC", -1)
     print(
@@ -1116,38 +1088,12 @@ def build_from_config(config):
         file=sys.stderr,
     )
 
-    # v10.16.8: ENFORCED libraries gate — stamp roleLibraryStatus + sopLibraryStatus
-    # so the verify/resume gate can detect a libraries-dirty build. The role
-    # library is pulled by create_role_workspaces.try_library_fill (during build)
-    # + post-build-role-workspaces.py; the SOP library is populated by
-    # populate-sops-from-manifest.py. These rc-derived values are PROVISIONAL —
-    # qc-completeness.sh is the final authority and the resume gate re-fires a
-    # [LIBRARIES-RESUME] until both reach "done" (library_pct>=95, sop stubs==0).
-    # v10.16.17: these rc-derived statuses are a PROVISIONAL HINT ONLY. They are
-    # NOT the source of truth and they must NEVER be the value that lets closeout
-    # proceed. The DISK-QC gate (verify-library-gate.sh, invoked below) is the
-    # AUTHORITATIVE writer of roleLibraryStatus / sopLibraryStatus — it measures
-    # real, substantive SOPs on disk (>=7KB + DMAIC headers + no placeholder,
-    # every role >= its floor) and OVERWRITES these provisional values. So even
-    # if a subprocess exits 0, an empty/thin library can never report "done".
-    _role_status = "pulling" if _post_build_rc == 0 else "failed"
-    # _sop_rc: 0 = all populated (still PROVISIONAL -> "authoring" until disk-QC);
-    #          -1 = no manifest/not run; 4 = inline-queue (work files only, NOT
-    #          authored); other = failed.
-    if _sop_rc == 0:
-        _sop_status = "authoring"   # NOT "done" — only the disk-QC gate may say done
-    elif _sop_rc == -1:
-        _sop_status = "pending"
-    else:
-        _sop_status = "authoring"   # 4 = queued-not-authored, 2/3 = failed; all need re-fire
-    _write_library_status(_role_status, _sop_status, verified=False)
-
     print(f"\n[NON-INTERACTIVE] Build complete!", file=sys.stderr)
     print(f"[NON-INTERACTIVE] Company: {company_name}", file=sys.stderr)
     print(f"[NON-INTERACTIVE] Departments: {len(selected_departments)}", file=sys.stderr)
     print(f"[NON-INTERACTIVE] Workspace: {DEPARTMENTS_DIR}", file=sys.stderr)
 
-    # v10.16.4: On ANY non-zero rc, invoke qc-completeness.sh so the operator
+    # v10.15.4: On ANY non-zero rc, invoke qc-completeness.sh so the operator
     # gets a per-dept breakdown (and a Telegram alert if != PASS). On zero rc
     # we still invoke qc-completeness.sh but in --quiet mode (PASS = no
     # Telegram, log-only). Idempotent and read-only.
@@ -1163,30 +1109,29 @@ def build_from_config(config):
     else:
         print(f"[v2.1 WARN] qc-completeness.sh not present at {_qc_script}", file=sys.stderr)
 
-    # v10.16.17: ENFORCED ROLE + SOP LIBRARY gate (DISK-QC = source of truth).
-    # Runs verify-library-gate.sh, which measures real substantive coverage and
-    # OVERWRITES roleLibraryStatus / sopLibraryStatus with the disk verdict (the
-    # provisional rc-statuses above are discarded if the disk says otherwise).
-    # A workforce is NOT complete until this gate exits 0. The master orchestrator
-    # MUST NOT write buildCompletedAt / closeoutStatus=pending while it fails;
+    # v10.15.8: ENFORCED ROLE LIBRARY + SOP LIBRARY gate. Runs verify-library-gate.sh,
+    # which measures coverage and writes roleLibraryStatus / sopLibraryStatus +
+    # per-dept roleLibraryFilled / sopLibraryFilled into the build-state file. A
+    # workforce is NOT complete until both are 'done'. The master orchestrator MUST
+    # NOT write buildCompletedAt / closeoutStatus=pending while this gate fails (rc != 0);
     # the resume cron fires a [LIBRARY-RESUME] self-ping until it passes.
     _gate_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "verify-library-gate.sh")
     if os.path.isfile(_gate_script):
         try:
             _gate_rc = _subprocess.run(["bash", _gate_script], timeout=240).returncode
             if _gate_rc == 0:
-                print("[v10.16.17] LIBRARY GATE PASS — roleLibraryStatus=done AND sopLibraryStatus=done "
-                      "(verified on disk). Workforce may proceed to closeout.", file=sys.stderr)
+                print("[v10.15.8] LIBRARY GATE PASS — roleLibraryStatus=done AND sopLibraryStatus=done. "
+                      "Workforce may proceed to closeout.", file=sys.stderr)
             else:
-                print(f"[v10.16.17] LIBRARY GATE FAIL (rc={_gate_rc}) — role library and/or SOP library "
-                      f"NOT substantive on disk. Do NOT write buildCompletedAt / closeoutStatus=pending. "
-                      f"Re-run post-build-role-workspaces.py and/or populate-sops-from-manifest.py, then "
-                      f"re-run verify-library-gate.sh until it exits 0. The resume cron will fire "
-                      f"[LIBRARY-RESUME] until both libraries are done.", file=sys.stderr)
+                print(f"[v10.15.8] LIBRARY GATE FAIL (rc={_gate_rc}) — role library and/or SOP library "
+                      f"NOT populated. Do NOT write buildCompletedAt / closeoutStatus=pending. Re-run "
+                      f"post-build-role-workspaces.py and/or populate-sops-from-manifest.py, then re-run "
+                      f"verify-library-gate.sh until it exits 0. The resume cron will fire [LIBRARY-RESUME] "
+                      f"until both libraries are done.", file=sys.stderr)
         except Exception as _e:
-            print(f"[v10.16.17 WARN] verify-library-gate.sh invocation failed: {_e}", file=sys.stderr)
+            print(f"[v10.15.8 WARN] verify-library-gate.sh invocation failed: {_e}", file=sys.stderr)
     else:
-        print(f"[v10.16.17 WARN] verify-library-gate.sh not present at {_gate_script}", file=sys.stderr)
+        print(f"[v10.15.8 WARN] verify-library-gate.sh not present at {_gate_script}", file=sys.stderr)
 
 
 # ============================================================
@@ -1953,7 +1898,7 @@ def generate_devils_advocate_sop_md(dept_id, dept_info, interview_answers):
 # ============================================================
 # DEPT -> SUGGESTED-ROLES FILE MAP (canonical, single-source-of-truth)
 # ============================================================
-# v10.16.17 BUG FIX (zero-role-department): the previous hardcoded map keyed
+# v10.15.18 BUG FIX (zero-role-department): the previous hardcoded map keyed
 # on LEGACY ids (support/operations/creative/hr/it) that DO NOT match the
 # canonical 16-dept folder ids (customer-support/crm/graphics/openclaw-
 # maintenance/...), and several of its files (operations-/creative-/hr-people-/
@@ -2047,7 +1992,7 @@ DEPT_TO_SUGGESTED_ROLES = build_dept_to_suggested_roles()
 
 def assert_dept_map_resolves(dept_ids):
     """
-    BUILD-TIME HARD ASSERTION (v10.16.17): every dept id we are about to build
+    BUILD-TIME HARD ASSERTION (v10.15.18): every dept id we are about to build
     MUST resolve to a suggested-roles file that ACTUALLY EXISTS on disk.
     Previously a missing/mismatched entry produced a silent WARNING and a
     zero-role department. Now the build HARD-FAILS so the gap is impossible to
@@ -3269,8 +3214,14 @@ def generate_departments_json(departments):
         # the CEO is already the prepended top column.
         if dept_id in ("ceo", "master-orchestrator", "dept-ceo"):
             continue
+        # RC-3: emit explicit bare canonical slug so CC canonical-map + migration
+        # 046 can key on slug without stripping the "dept-" prefix at runtime.
+        # dept_id is always a bare canonical slug (marketing, sales, billing-finance,
+        # etc.) — never a dept-X compound.  The "id" field keeps the dept- prefix
+        # for legacy CC compatibility; "slug" is the authoritative bare form.
         entries.append({
             "id": f"dept-{dept_id}",
+            "slug": dept_id,
             "emoji": dept_info["emoji"],
             "name": dept_info["name"],
             "headTitle": dept_info["head"],
