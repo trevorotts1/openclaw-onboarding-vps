@@ -1,7 +1,19 @@
 ---
+# CANONICAL OpenClaw skill name — this is the field OpenClaw uses to register
+# the skill, derive its slash command, and key its allowlist (docs.openclaw.ai
+# /tools/skills: "The skill's name, slash command, and allowlist key all come
+# from the `name` frontmatter field"). It MUST stay identical across the Mac
+# (openclaw-onboarding) and VPS (openclaw-onboarding-vps) repos. Canonical name
+# reconciled to `social-media-planner` on BOTH repos (v10.15.48). Do NOT rename.
 name: social-media-planner
-description: >
-  Multi-agent content publishing pipeline across 8 platforms (WordPress, Medium, Substack, LinkedIn, GHL blog, YouTube, X/Twitter, Facebook) — research, create, produce, schedule, publish.
+description: Multi-agent content publishing engine that researches, creates, produces, schedules, and publishes content across 8 platforms (WordPress, Medium, Substack, LinkedIn, GHL blog, YouTube, X/Twitter, Facebook) — handles text, images, videos, podcasts, and HTML email newsletters using a 15+6 agent model.
+# `pipeline_id` is the internal identifier for the content publishing pipeline
+# run via OpenClaw subagents. It is NOT the skill name and OpenClaw never
+# registers from it.
+pipeline_id: content-publishing-engine
+version: v1.4.0
+author: Stefanie
+created_date: 2026-04-14
 ---
 
 # Content Publishing Engine Skill
@@ -136,7 +148,25 @@ All finished media (assembled Reels, podcast MP3s, image sets) MUST be delivered
    ```
    The response body contains a `url` field with a permanent public CDN link of the form `https://assets.cdn.filesafe.space/[LOCATION_ID]/media/[filename]`. This is the authoritative GHL media URL — confirmed from Skill 28 (cinematic-forge) which documents the same endpoint and CDN format.
 3. **Extract the `url` field** from the response JSON.
-4. **Log a row** in the content sheet (`content_sheet_id`) with: CDN link, title, type (video/audio/image), platform, date, status=`published`.
+4. **Log a row** in the content sheet by calling the `social-planner-row-append` webhook:
+   ```bash
+   curl -s -X POST "https://main.blackceoautomations.com/webhook/social-planner-row-append" \
+     -H "Content-Type: application/json" \
+     -d "{
+       \"sheetId\": \"[from memory.md: content_sheet_id]\",
+       \"row\": {
+         \"Week Of\": \"[current week string e.g. Week of Jun 9 - Jun 15, 2026]\",
+         \"Theme of the Week\": \"[theme]\",
+         \"Core Content\": \"[title]\",
+         \"[platform column]\": \"[status e.g. published|scheduled|draft]\",
+         \"Blog\": \"[blog status if applicable]\",
+         \"Scheduled\": \"[YYYY-MM-DD publish date]\",
+         \"Overall\": \"published\",
+         \"Notes\": \"[CDN link from step 3]\"
+       }
+     }"
+   ```
+   The webhook appends directly to the **Weekly Overview** tab of the client's Google Sheet using the operator service account (no client credentials required). If the webhook call fails: log to `~/.openclaw/data/skill35/content-log.jsonl` and retry on next cycle. **Do NOT call `social-planner-sheet-create` here** — that webhook is for first-time sheet creation only.
 5. **Reply to owner** with the CDN link only — never attach the raw file to Telegram.
 
 **Size threshold:** Any file over 10 MB MUST go through GHL CDN delivery. Files under 10 MB MAY be attached directly only if the operator explicitly configures `direct_attach_under_10mb=true` in MEMORY.md; default is always link delivery.

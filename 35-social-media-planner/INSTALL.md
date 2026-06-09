@@ -37,7 +37,7 @@ If you have not read the contract, STOP and read it now.
 ```bash
 # Required prerequisites — Skill 35 install BLOCKS if any of these are missing.
 for skill in 01-teach-yourself-protocol 02-back-yourself-up-protocol 22-book-to-persona-coaching-leadership-system 31-upgraded-memory-system; do
-  if [ -d "/data/.openclaw/skills/$skill" ]; then
+  if [ -d "$HOME/.openclaw/skills/$skill" ]; then
     echo "  ✓ $skill installed (required)"
   else
     echo "  ✗ $skill MISSING (required — install before continuing)"
@@ -46,7 +46,7 @@ done
 
 # Optional prerequisites — Skill 35 still installs without these. Missing = info, not error.
 for skill in 36-ghl-mcp-setup 30-fish-audio-api-reference; do
-  if [ -d "/data/.openclaw/skills/$skill" ]; then
+  if [ -d "$HOME/.openclaw/skills/$skill" ]; then
     echo "  ✓ $skill installed (optional — feature enabled)"
   else
     case "$skill" in
@@ -67,8 +67,8 @@ done
 ⚠️ **This skill uses the same canonical credential paths as Skill 05 and Skill 36. DO NOT invent new variable names. DO NOT use deprecated paths.**
 
 ### Canonical storage locations
-- **macOS:** `/data/.openclaw/secrets/.env`
-- **VPS:** `/data/.openclaw/secrets/.env`
+- **macOS:** `~/.openclaw/secrets/.env`
+- **VPS:** `~/.openclaw/secrets/.env`
 - **Secondary mirror:** `openclaw.json` `env.vars` (gateway reads here at runtime)
 
 ### Required env-var names (DO NOT rename — Skill 36 and Skill 05 use these)
@@ -132,37 +132,37 @@ Before any system change:
 
 Do NOT proceed until all 5 are read.
 
-### Step 1: Canonical paths (Hostinger Docker VPS)
+### Step 1: Canonical Mac paths
 
 ```bash
-SECRETS_ENV=/data/.openclaw/secrets/.env   # only if operator created it
-WORKSPACE=/data/.openclaw/workspace
+SECRETS_ENV=$HOME/.openclaw/secrets/.env
+WORKSPACE=$HOME/clawd                # most existing Mac clients
+[ ! -d "$WORKSPACE" ] && WORKSPACE=$HOME/.openclaw/workspace   # fresh OpenClaw default
 ```
 
-### Step 2: Search canonical credential sources before asking
-
-On Hostinger Docker, credentials live as container env vars FIRST, then optionally in a manually-created `.env` file. Also check `models.providers.<name>.apiKey` and `env.vars` block inside `openclaw.json`.
+### Step 2: Search ALL canonical credential locations before asking
 
 ```bash
-# Source 1: container env vars (primary on Hostinger)
-printenv | grep -E "^(GOHIGHLEVEL_API_KEY|GHL_PRIVATE_INTEGRATION_TOKEN|GHL_LOCATION_ID|KIE_API_KEY|FISH_AUDIO_API_KEY|FISH_AUDIO_VOICE_ID|PODBEAN_PODCAST_ID)="
-
-# Source 2: optional .env (only if operator created it)
-[ -f "$SECRETS_ENV" ] && grep -E "^(GOHIGHLEVEL_API_KEY|GOHIGHLEVEL_LOCATION_ID|KIE_API_KEY|FISH_AUDIO_API_KEY|FISH_AUDIO_VOICE_ID|PODBEAN_PODCAST_ID)=" "$SECRETS_ENV"
-
-# Source 3: env.vars block inside openclaw.json (Trevor's inline pattern)
+# Search canonical first, then legacy locations
+for FILE in "$SECRETS_ENV" \
+            "$HOME/.openclaw/secrets/.env" \
+            "~/.openclaw/secrets/.env" \
+            "$HOME/clawd/secrets/.env" \
+            "$HOME/.env"; do
+  [ -f "$FILE" ] && grep -E "^(GOHIGHLEVEL_API_KEY|GOHIGHLEVEL_LOCATION_ID|KIE_API_KEY|FISH_AUDIO_API_KEY|FISH_AUDIO_VOICE_ID|PODBEAN_PODCAST_ID)=" "$FILE" 2>/dev/null
 done
 
 # Also check openclaw.json env.vars
 python3 -c "
 import json
-try:
-    cfg=json.load(open('/data/.openclaw/openclaw.json'))
+for path in ['$HOME/.openclaw/openclaw.json', '~/.openclaw/openclaw.json']:
+  try:
+    cfg=json.load(open(path))
     ev=cfg.get('env',{}).get('vars',{})
     for k in ['GOHIGHLEVEL_API_KEY','GOHIGHLEVEL_LOCATION_ID','KIE_API_KEY','FISH_AUDIO_API_KEY','FISH_AUDIO_VOICE_ID','PODBEAN_PODCAST_ID']:
       v=ev.get(k,'')
       if v: print(f'  ✓ {k}=<set, prefix {v[:8]}...>')
-except: pass
+  except: pass
 "
 
 # Live env
@@ -219,7 +219,7 @@ Never echo the PIT into chat logs.
 ### Step 4: Detect Skill 36 (GHL MCPs) and configure routing
 
 ```bash
-if [ -d "/data/.openclaw/skills/36-ghl-mcp-setup" ] || [ -d "/data/.openclaw/skills/36-ghl-mcp-setup" ]; then
+if [ -d "$HOME/.openclaw/skills/36-ghl-mcp-setup" ] || [ -d "~/.openclaw/skills/36-ghl-mcp-setup" ]; then
   ROUTING_MODE="mcp-first"
   echo "  ✓ Skill 36 detected — Skill 35 will route GHL operations through MCPs first"
 else
@@ -303,15 +303,18 @@ Read brand info from core files, then ask only what's missing:
    **4e. Verify the agent knows the link:**
    After writing config, the agent MUST be able to answer "what is my social media planner link?" by reading `content_sheet_url` from MEMORY.md. Test this before proceeding.
 
-   **4f. Google Sheets write auth — how this skill reads/writes the sheet:**
-   The agent does NOT use Google Workspace OAuth or a `client_secret.json`. Sheet creation and initial writes go through the `https://main.blackceoautomations.com/webhook/social-planner-sheet-create` n8n webhook (service account on the BlackCEO Automations side). **The agent itself never calls the Google Sheets API directly** — all sheet logging goes through the same webhook or through GHL's content system as a fallback. If the agent cannot reach the webhook, it logs to a local file at `/data/.openclaw/data/skill35/content-log.jsonl` and queues the webhook call for retry. The agent NEVER responds "gws is not authenticated" or "I don't have a client_secret.json" — if the webhook is unavailable, it degrades gracefully to local logging.
+   **4f. Google Sheets write auth — TWO webhooks, TWO purposes (do NOT confuse them):**
+   - **`social-planner-sheet-create`** (`POST https://main.blackceoautomations.com/webhook/social-planner-sheet-create`): used ONCE at install time to create a new Google Sheet for the client (copies the template, sets permissions). Payload: `{brandName, clientEmail}`. Never call this for row logging.
+   - **`social-planner-row-append`** (`POST https://main.blackceoautomations.com/webhook/social-planner-row-append`): used on EVERY publish cycle to append a content row to the client's existing sheet. Payload: `{sheetId, row: {Week Of, Theme of the Week, Core Content, ..., Notes}}`. This is the row-log step in the Media Delivery Contract.
+
+   The agent does NOT use Google Workspace OAuth or a `client_secret.json`. Both webhooks run on the BlackCEO Automations operator n8n and use the operator's Google service account — clients need no Google credentials. **The agent itself never calls the Google Sheets API directly.** If either webhook is unavailable, log to `~/.openclaw/data/skill35/content-log.jsonl` and queue for retry. The agent NEVER responds "gws is not authenticated" or "I don't have a client_secret.json".
 
 5. Ask: "What action link should I include in social media comments this week?" → store as `SOCIAL_MEDIA_ACTION_LINK` in MEMORY.md.
 6. Ask: "How many videos per week — 0, 2, or 7?" → store as `VIDEO_PREFERENCE` in MEMORY.md.
 7. Ask: "Where should I send weekly notifications — Telegram, email, or text?" → store as `NOTIFICATION_CHANNEL` in MEMORY.md.
 8. Ask about podcast — but FIRST auto-detect Fish Audio availability:
    ```bash
-   if [ -d "/data/.openclaw/skills/30-fish-audio-api-reference" ] && [ -n "${FISH_AUDIO_API_KEY:-}" ] && [ -n "${FISH_AUDIO_VOICE_ID:-}" ]; then
+   if [ -d "$HOME/.openclaw/skills/30-fish-audio-api-reference" ] && [ -n "${FISH_AUDIO_API_KEY:-}" ] && [ -n "${FISH_AUDIO_VOICE_ID:-}" ]; then
      PODCAST_AVAILABLE=yes
    else
      PODCAST_AVAILABLE=no
@@ -332,9 +335,7 @@ Do NOT touch IDENTITY.md, HEARTBEAT.md, USER.md, or SOUL.md from this skill.
 
 ### Step 8.5: (v2.1.0) Set up the content calendar (optional, enables `weekly-batch.sh`)
 
-The cron line documented in `INSTRUCTIONS.md` (`0 9 * * 1 bash …/weekly-batch.sh`) reads `~/.openclaw/config/content-calendar.json` and runs `run-publishing-cycle.sh` once per scheduled topic. The file is **opt-in** — `weekly-batch.sh` exits 0 with an informational message if it's missing, so it's safe to leave un-configured.
-
-To enable weekly automation, copy the starter template and edit it:
+The cron line documented in `INSTRUCTIONS.md` (`0 9 * * 1 bash …/weekly-batch.sh`) reads `~/.openclaw/config/content-calendar.json` and runs `run-publishing-cycle.sh` once per scheduled topic. The file is **opt-in** — `weekly-batch.sh` exits 0 with an informational message if it's missing.
 
 ```bash
 mkdir -p ~/.openclaw/config
@@ -350,7 +351,7 @@ cp ~/.openclaw/skills/35-social-media-planner/scripts/content-calendar.example.j
   "entries": [
     {
       "date": "2026-05-25",
-      "topic": "How to delegate to AI without losing control",
+      "topic": "...",
       "platforms": ["linkedin", "medium", "x", "wordpress"],
       "schedule": "auto"
     }
@@ -360,16 +361,10 @@ cp ~/.openclaw/skills/35-social-media-planner/scripts/content-calendar.example.j
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `date` | yes | `YYYY-MM-DD` in the box's local timezone. The batch fires for entries whose date falls in the current Monday-Sunday window. |
-| `topic` | yes | Free-form string passed to `run-publishing-cycle.sh --topic`. |
-| `platforms` | yes | Array. Same list `run-publishing-cycle.sh --platforms` accepts (`linkedin`, `medium`, `x`, `wordpress`, `substack`, `ghl`, `youtube`, `facebook`, `instagram`, `tiktok`, `threads`, `pinterest`, `email`, `podcast`). |
-| `schedule` | no  | `"auto"` (cadence-driven, default), `"now"` (publish immediately), or an ISO 8601 timestamp. |
-
-**Cron line** (add to the container's crontab):
-
-```cron
-0 9 * * 1 bash $HOME/.openclaw/skills/35-social-media-planner/scripts/weekly-batch.sh
-```
+| `date` | yes | `YYYY-MM-DD` local timezone. |
+| `topic` | yes | Passed to `run-publishing-cycle.sh --topic`. |
+| `platforms` | yes | Same list `run-publishing-cycle.sh --platforms` accepts. |
+| `schedule` | no  | `"auto"`, `"now"`, or ISO 8601 timestamp. |
 
 ### Step 9: Add weekly theme request to HEARTBEAT.md
 
@@ -438,7 +433,7 @@ Send the client this exact summary:
 ## What v2.0.0 changed (May 13, 2026)
 
 - **Replaced `GHL_PRIVATE_TOKEN` with `GOHIGHLEVEL_API_KEY`** everywhere — eliminates the "auto-fix during install" bug where the agent had to remap names every time.
-- **Migrated all credential paths** from `/data/.openclaw/secrets/.env` (deprecated) to `/data/.openclaw/secrets/.env` (Mac) / `/data/.openclaw/secrets/.env` (VPS).
+- **Migrated all credential paths** from `~/clawd/secrets/.env` (deprecated) to `~/.openclaw/secrets/.env` (Mac) / `~/.openclaw/secrets/.env` (VPS).
 - **Expanded required PIT scope list** to match the full set Skill 36 uses, plus the two social-media-specific scopes this skill needs.
 - **Added MCP-first routing detection in Step 4** — when Skill 36 is installed, this skill prefers MCP tools. Direct API only as fallback.
 - **Made the install order explicitly numbered** with Step 0 (contract check) at the top. Steps are no longer reorderable.

@@ -1,11 +1,34 @@
 # Changelog - Social Media Planner (Skill 35)
 
+## v2.6.0 - June 9, 2026
+
+### Fix — Wire row-logging to new social-planner-row-append webhook (fleet-wide planner bug fix)
+
+**Why:** Content never landed in clients' Google Sheet planners. The only n8n webhook (`social-planner-sheet-create`) CREATES a new sheet on every call and has no row-append path. After produce → GHL upload → get CDN link, the row-log step had nowhere to write.
+
+**What:**
+- Built new n8n workflow `social-planner-row-append` (ID: `myXde6jbIIkaG5zW`) on `main.blackceoautomations.com`:
+  - `POST /webhook/social-planner-row-append` with body `{sheetId, row: {Week Of, Theme of the Week, ..., Notes}}`
+  - Code node maps `body.row.*` fields to the 20-column order of the **Weekly Overview** tab
+  - HTTP Request node calls `sheets.googleapis.com/v4/spreadsheets/{sheetId}/values/Weekly%20Overview!A:T:append` with the operator's Google Sheets OAuth2 credential (`4IoTZHAybRblm172` — management blackceo Google Sheets account)
+  - Returns `{success: true, sheetId, updatedRange}` on success
+  - Workflow is ACTIVE; webhook path is production-ready
+- **SKILL.md Media Delivery Contract step 4**: rewrote from vague "Log a row" to explicit `social-planner-row-append` curl call with full payload contract. Added clear note: `social-planner-sheet-create` is for first-time creation ONLY.
+- **INSTALL.md Step 7 section 4f**: Clarified the two-webhook architecture — `sheet-create` (once, at install) vs `row-append` (every publish cycle). Explicit payload contract for each. No client Google credentials required — both run via operator service account.
+
+**Verified:** Test row successfully appended to Angeleen's sheet `1RKgS5l-i6NBtf_vON49nBPdHe-F5W67RF9ym-S67L2c` Row 6 `'Weekly Overview'!A6:T6` — all 20 columns correctly populated.
+
+**Risk:** Low. Additive webhook + documentation change. No existing publish, schedule, or GHL logic altered.
+
+---
+
 ## v2.5.0 - June 9, 2026
 
 ### Fix 1 — Remove private operator tool reference; replace with OpenClaw subagent runtime
-**Why:** SKILL.md instructed the agent to spawn via a private operator CLI tool (`node ~/.openclaw/workspace/.../cli.js workflow run content-publishing-engine ...`) that must not appear in client-facing skill files. Both repos had the same Usage section command. The Mac repo's frontmatter also contained a `workflow_id` field with a comment explaining its origin in that private tool.
+**Why:** SKILL.md instructed the agent to spawn via a private operator CLI tool (`node ~/.openclaw/workspace/.../cli.js workflow run content-publishing-engine ...`) that must not appear in client-facing skill files. The frontmatter also contained a `workflow_id` field with a comment explaining its origin in that private tool.
 **What:**
 - Removed all references to the private operator CLI tool from SKILL.md (both repos).
+- Removed the `workflow_id: content-publishing-engine` frontmatter field and its private-tool comment. Replaced with `pipeline_id: content-publishing-engine` (neutral identifier, no private-tool language).
 - Rewrote the `## Usage` section: primary path is now `sessions_spawn task="Run Content Publishing Engine on [topic]" runtime="subagent" model="ollama/minimax-m2.7:cloud"` (OpenClaw subagent runtime). Fallback model documented. Subagent pipeline behavior described.
 
 ### Fix 2 — Content sheet: agent always knows the link; graceful-degrade on Sheets write
@@ -13,141 +36,101 @@
 **What:**
 - Added `content_sheet_id` and `content_sheet_url` fields to the skill config contract in SKILL.md. Agent reads these before every run and can answer "what's my social media planner link?" instantly.
 - INSTALL.md Step 7 rewritten: adopt-existing-sheet-first logic (check MEMORY.md → check onboarding-provided ID → create via webhook). Angeleen's existing sheet `1RKgS5l-i6NBtf_vON49nBPdHe-F5W67RF9ym-S67L2c` adopted if present, never duplicated.
-- Step 7 now records `content_sheet_id` + `content_sheet_url` in MEMORY.md and wires them into `openclaw config env.vars.SKILL35_CONTENT_SHEET_ID/URL`.
-- Added Step 7 sub-section 4f: agent does NOT call Google Sheets API directly and never needs `client_secret.json`. All sheet writes go through the n8n webhook (BlackCEO Automations service account). If webhook unavailable, degrades to local `/data/.openclaw/data/skill35/content-log.jsonl` with retry queue.
+- Step 7 now records `content_sheet_id` + `content_sheet_url` in MEMORY.md and wires them into `openclaw config env.vars.SKILL35_CONTENT_SHEET_ID/URL` so the agent has them at runtime.
+- Added Step 7 sub-section 4f documenting the auth path: the agent does NOT call Google Sheets API directly and never needs `client_secret.json`. All sheet creation goes through the `https://main.blackceoautomations.com/webhook/social-planner-sheet-create` n8n webhook (BlackCEO Automations service account). If the webhook is unavailable the agent logs to a local `.jsonl` file and queues retry — never dead-ends with "gws is not authenticated."
 - CORE_UPDATES.md MEMORY.md section: `content_sheet_id` and `content_sheet_url` fields added.
-- Completion checklist: 4 new assertions. Step 11 confirmation message updated.
+- Completion checklist: 4 new assertions covering sheet ID, sheet URL, link-answer test, and media delivery.
+- Step 11 client confirmation message: "Content calendar sheet: [link]" replaces the generic "Google Sheet created" line.
 
 ### Fix 3 — Media delivery via GHL CDN public link (eliminates Telegram size-cap failures)
-**Why:** Finished media sent as raw Telegram attachments hit the Bot API size cap, or agent said "stored locally, I don't have a URL."
+**Why:** Finished media (Reels, podcast MP3s, image sets) was being sent as raw Telegram attachments, hitting the Bot API size cap, or the agent said "stored locally, I don't have a URL." Clients received no usable media link.
 **What:**
-- Added `## Media Delivery Contract` section to SKILL.md: produce → upload to client's GHL Media Library (`POST https://services.leadconnectorhq.com/medias/upload-file`, `Version: 2021-07-28`, multipart `file` + `hosted=true` + `fileProcessingOpts`) → extract `url` from response → log to content sheet → reply to owner with CDN link.
-- CDN URL format: `https://assets.cdn.filesafe.space/[LOCATION_ID]/media/[filename]` — confirmed from Skill 28 (cinematic-forge).
-- 10 MB size threshold enforced. GHL upload failure: retry + notify, never fall back to raw attachment.
+- Added `## Media Delivery Contract` section to SKILL.md (both repos) documenting the mandatory delivery path:
+  1. Produce file locally.
+  2. Upload to client's own GHL Media Library via `POST https://services.leadconnectorhq.com/medias/upload-file` with `Authorization: Bearer [GOHIGHLEVEL_API_KEY]`, `Version: 2021-07-28`, multipart form fields `file`, `hosted=true`, `fileProcessingOpts={"forceReprocess":true}`. Response contains a `url` field.
+  3. CDN URL format: `https://assets.cdn.filesafe.space/[LOCATION_ID]/media/[filename]` — confirmed from Skill 28 (cinematic-forge) which documents the same endpoint and CDN format.
+  4. Log row in content sheet: CDN link + title + type + platform + date + status.
+  5. Reply to owner with CDN link only.
+- 10 MB size threshold: files over 10 MB MUST go through GHL CDN; smaller files may only go direct if operator explicitly sets `direct_attach_under_10mb=true` in MEMORY.md.
+- GHL upload failure handling: retry once after 30 s; if still failing, notify owner and do NOT fall back to raw attachment.
+- Variable reference updated: `GOHIGHLEVEL_API_KEY` (canonical name) + `content_sheet_id`/`content_sheet_url` added.
 
 **Risk:** Low. All changes are additive documentation + config contract. No existing publish schedule, GHL posting, or social API logic altered.
 
 ---
 
-## v2.4.0 - June 9, 2026 (autonomous podcast audio via Fish Audio S2-Pro; removes self-record punt)
+## v2.4.0 - June 9, 2026
 
-### Why
-The same "punt" pattern that v2.3.0 fixed for video existed in podcast audio. An agent would tell clients: "Podcast Audio — Script is complete but audio generation didn't produce a file. I can retry the TTS generation or you can record it yourself using the script." This is the wrong behavior. The podcast audio pipeline had no autonomous generation instructions — only a vague "Synthesize MP3 via Fish Audio (192kbps)" step with no API call, no verification, and no retry logic. Agents interpreted the gap as a signal to ask the client to handle it themselves.
+### Fix — Autonomous podcast audio generation via Fish Audio S2-Pro; removes "record yourself" punt
 
-### What
+Mirrors the same problem fixed for video in v2.3.0 — the podcast step had no autonomous audio generation pipeline, only a vague "Synthesize MP3 via Fish Audio" instruction that caused agents to punt with "audio generation didn't produce a file — you can record it yourself." Agent now executes the full pipeline end-to-end. Client self-recording is a hard last resort only.
 
-- **references/playbook.md Section 15** — Added a new "Autonomous Audio Generation Pipeline" subsection replacing the vague synthesis instruction:
-  - **Verified Fish Audio API facts** (confirmed from docs.fish.audio OpenAPI spec + docs, June 2026):
-    - Endpoint: `POST https://api.fish.audio/v1/tts`
-    - Auth: `Authorization: Bearer <FISH_AUDIO_API_KEY>`
-    - Model selection: via HTTP header `model: s2-pro` (not in request body)
-    - Current recommended model: `s2-pro` (S2-Pro, natural language expression control, [square bracket] tag syntax, 80+ languages, 100ms TTFA)
-    - Previous model: `s1` (uses `(parenthesis)` syntax — never mix with s2-pro)
-    - Response: synchronous binary audio stream (Transfer-Encoding: chunked) — no polling step
-    - Request body fields: `text`, `reference_id` (voice ID), `format` (mp3/wav/opus/pcm), `latency` (low/normal/balanced), `normalize` (bool), `chunk_length` (100-300), optional `prosody` object
-  - **S2-Pro emotion tag syntax** — confirmed 64+ categories: [square brackets], basic emotions (happy/sad/excited/calm etc.), advanced emotions (empathetic/determined/nostalgic etc.), delivery styles (whispering/shouting/soft tone), audio effects (laughing/sighing/gasping), pacing ([break]/[long-break]), and free-form natural language descriptions (15,000+ variations supported)
-  - **Step-by-step pipeline:**
-    - Step 1: Write script → `podcast_script_draft.txt`
-    - Step 2: Tag script heavily (min one tag per paragraph, goal is director's script density) → `podcast_script_tagged.txt`; 4 concrete tagged-line examples included
-    - Step 3: Select model (default s2-pro; check docs.fish.audio before run to confirm no newer model)
-    - Step 4: Generate via `generate_podcast_audio.sh` helper (3 retries, per-failure diagnosis)
-    - Step 5: ffprobe verify (file exists, non-zero, duration 600-900s, no errors)
-    - Step 6: On failure — diagnose (API key, voice ID, network, rate limit, model availability); notify operator via Telegram; only then offer last-resort self-record fallback
-    - Step 7: Feed verified MP3 into the publish flow
-  - **Last-resort fallback message** (only after 3 retries + operator notified) — exact text specified; not a default path
+**What:**
+- **references/playbook.md Section 15** — Added "Autonomous Audio Generation Pipeline" subsection with:
+  - Verified Fish Audio API facts (model `s2-pro`, endpoint `POST https://api.fish.audio/v1/tts`, auth `Authorization: Bearer`, model via header `model: s2-pro`, synchronous binary stream response — no polling).
+  - Step-by-step pipeline: write script → tag heavily with S2-Pro emotion tags → select model (default s2-pro, check for newer) → generate via helper script → ffprobe verify (duration 600-900s, non-zero size, no errors) → retry/diagnose on failure → last-resort fallback message only after 3 attempts and operator notified.
+  - Verified S2-Pro emotion tag syntax: [square brackets], 64+ categories, free-form natural language supported. S1 used parentheses — never mix syntax.
+  - 4 concrete tagged-script examples demonstrating expressive delivery.
+  - Client self-record fallback message to send only as last resort.
+- **CORE_UPDATES.md — Podcast Publishing Process** — Rewrote the 14-step list to match the full autonomous pipeline (tag → model → generate → verify → retry → diagnose) with inline API call reference.
+- **scripts/generate_podcast_audio.sh** (new, chmod +x) — Parameterized script: `bash generate_podcast_audio.sh <script_file> <voice_id> [model] [output_mp3]`. Sources `secrets/.env` if `FISH_AUDIO_API_KEY` not in env. Makes up to 3 attempts with per-failure diagnosis (401/403/404/422/429/503/network). ffprobe verifies duration (≥30s check; caller should confirm 600-900s). Exits 0 on success, 1 after 3 failures with diagnostic checklist, 2 on bad args/missing key.
 
-- **CORE_UPDATES.md — Podcast Publishing Process** — Rewrote the 14-step step list into a 16-step fully autonomous pipeline: write script → tag heavily → select model → generate (with API reference inline) → verify → retry/diagnose → cover image → GHL upload → webhook → verify → log → notify → ffprobe → dashboard check.
-
-- **scripts/generate_podcast_audio.sh** (new, chmod +x) — Parameterized helper:
-  - Usage: `bash generate_podcast_audio.sh <script_file> <voice_id> [model] [output_mp3]`
-  - Sources `secrets/.env` from canonical locations if `FISH_AUDIO_API_KEY` not already in env
-  - Builds JSON payload via python3 (safe string escaping)
-  - Calls `POST https://api.fish.audio/v1/tts` with correct headers; streams response to MP3 with `-o`
-  - Per-attempt: verifies file exists, non-zero, ffprobe duration ≥ 30s (caller confirms 600-900s)
-  - Per-failure diagnosis with HTTP code matching (401/403/404/422/429/503-504/network-000)
-  - Up to 3 retries with 5s wait between attempts; 15s wait on 429
-  - Exit codes: 0=success, 1=all retries failed (with full diagnostic checklist on stderr), 2=bad args/missing key
-
-### Risk
-Low. Additive documentation and new helper script. No scheduling, posting, publish-webhook, or GHL logic altered.
+**Risk:** Low. Additive documentation and new helper script. No scheduling, posting, or publish-webhook logic altered.
 
 ---
 
-## v2.3.0 - June 9, 2026 (multi-clip storyboard + FFmpeg merge; removes false client-record punt)
+## v2.3.0 - June 9, 2026
 
-### Why
-An agent told clients "the AI video tools have a hard limit of 8-12 seconds per clip, so a 55-60 second Reel can't be generated in one pass — you should record the video yourself." This is wrong. The agent is capable of building the full Reel autonomously using a storyboard, sequential clip generation, and FFmpeg merge. The old instructions were ambiguous enough to trigger the punt.
+### Fix — Multi-clip storyboard + FFmpeg merge for full-length Reels; removes false "record yourself" punt
 
-### What
-- **references/playbook.md Section 16** — Full rewrite with an explicit agent-followable pipeline:
-  - **Step A: Storyboard** — `scene_count = ceil(target_seconds / clip_limit_seconds)` (e.g. ceil(60/8) = 8); write per-scene visual prompts with continuity cues (subject, wardrobe, setting, color grade, camera style); mark each scene's incoming transition as `cut` or `crossfade`.
-  - **Step B: Generate clips** — one clip per scene via kie.ai Veo 3.1 Lite; retry any failed clip up to 3 times.
-  - **Step C: Voiceover** — ONE continuous VO from the full script via Fish Audio S2 (natural delivery).
-  - **Step D: Normalize (mandatory)** — `scale=1080:1920, fps=30, libx264, yuv420p, aac 48kHz` on every raw clip before any concat.
-  - **Step E: Merge** — Recipe 2a (jump cuts via concat demuxer) or Recipe 2b (crossfades via xfade filter with `offset = clip_duration - xfade_duration`).
+**Why:** The previous video pipeline was ambiguous about how to handle the fact that AI video tools generate clips of at most 8-10 seconds. An agent could (and did) tell clients "the AI video tools have a hard limit of 8-12 seconds per clip, so a 55-60 second Reel can't be generated in one pass — you should record the video yourself." This is wrong behavior. The agent is capable of handling the full pipeline end-to-end.
+
+**What:**
+
+- **references/playbook.md Section 16** — Replaced the vague "generate 7-8 segments, merge with FFmpeg" instructions with a fully explicit, agent-followable pipeline:
+  - **Step A: Storyboard** — compute `scene_count = ceil(target_seconds / clip_limit_seconds)` (e.g. ceil(60/8) = 8), write a visual prompt per scene with continuity cues (consistent subject, wardrobe, setting, color grade, camera style), and mark each scene's incoming transition as `cut` or `crossfade`.
+  - **Step B: Generate clips** — one clip per scene via kie.ai Veo 3.1 Lite, retry any failed clip up to 3 times.
+  - **Step C: Voiceover** — ONE continuous VO track from the full script via Fish Audio S2 (preferred for natural delivery).
+  - **Step D: Normalize (mandatory)** — run every raw clip through a normalize pass (`scale=1080:1920, fps=30, libx264, yuv420p, aac 48kHz`) before any concat to prevent codec/resolution mismatch failures.
+  - **Step E: Merge** — Recipe 2a (jump cuts via concat demuxer) or Recipe 2b (crossfades via xfade filter with `offset = clip_duration - xfade_duration`); storyboard declares the choice.
   - **Step F: VO overlay** — `ffmpeg -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -shortest`.
-  - **Step G: QC** — ffprobe checks duration (55-60s), resolution (1080x1920), codec (h264).
-  - Client self-recording moved to an explicit last-resort fallback (after all retries exhausted) with a specific message to send.
-- **CORE_UPDATES.md — Video Production Process** — Rewrote the step list to match the new pipeline with inline FFmpeg commands and reference to `merge_reel.sh`.
-- **scripts/merge_reel.sh** (new, chmod +x) — Parameterized helper implementing Steps D-G. Usage: `bash merge_reel.sh clips_list.txt voiceover.mp3 final_reel.mp4 [cut|crossfade]`.
+  - **Step G: QC** — ffprobe checks duration (55-60s), resolution (1080x1920), codec (h264); retry failed clips before declaring failure.
+  - Moved client self-recording to an explicit last-resort fallback (only after all clip retries exhausted), with a specific message the agent must send instead of a silent punt.
 
-### Risk
-Low. Additive documentation and new helper script. No scheduling, posting, or API logic altered.
+- **CORE_UPDATES.md — Video Production Process** — Rewrote the step list to match the new pipeline (storyboard → generate → normalize → merge → VO → QC), with inline FFmpeg commands and a reference to `merge_reel.sh`.
+
+- **scripts/merge_reel.sh** (new, chmod +x) — Parameterized shell script implementing Steps D-G: normalizes all raw clips, merges (cut or crossfade), overlays voiceover, runs ffprobe QC checks. Usage: `bash merge_reel.sh clips_list.txt voiceover.mp3 final_reel.mp4 [cut|crossfade]`.
+
+**Risk:** Low. Additive changes to documentation and a new helper script. No scheduling, posting, or API logic altered.
 
 ---
 
-## v2.2.0 - June 8, 2026 (Fix #1 + Fix #2 — connection-status truth + cron enforcement)
+## v2.2.0 - June 8, 2026
 
 follow-up: fixed QC accounts-grep false positive + added --announce delivery to weekly cron
 
-### Why
-Two runtime bugs caused direct client harm:
-1. **Connection-status hallucination** — the agent reported "nothing is connected" (or named specific platforms as connected/disconnected) based on vault contents or memory instead of running a live GHL Social Planner query. A client had channels live in GHL but was told they were disconnected.
-2. **Weekly theme question silently skipped** — the Saturday 8 AM theme request was driven solely by HEARTBEAT.md prose. Heartbeat timing drifts; the prompt silently never fired for at least one client.
+### Fix #1 — Connection status: LIVE GHL check only (no guessing)
+**Why:** An agent told a client "nothing is connected" when their GHL Social Planner had channels live. The root cause was reporting connection status from memory/vault absence rather than a live API call.
+**What:** Added a `## Reporting connection status — LIVE GHL CHECK ONLY (no guessing)` section to INSTRUCTIONS.md with (a) an explicit ban on guessing/memory-based status, (b) a `check-social-connections` query block for both MCP-first and direct-API routing modes, and (c) clear notes that GHL Social Planner is the primary path, direct-platform tokens are optional add-ons, and Fish Audio / podcast is also optional and never blocks the skill. Added QC assertion in Section I of both `qc-skill35.sh` and `qc-social-media-planner.sh` to verify the rule is present in INSTRUCTIONS.md.
+**Risk:** None — additive documentation change only. No existing publish logic altered.
 
-### What
-- **INSTRUCTIONS.md** — Added two new enforcement sections:
-  - `## Reporting connection status — LIVE GHL CHECK ONLY (no guessing)` — bans assumptions; mandates a live GHL Social Planner API call via `check-social-connections` step before any connection-status statement. Clarifies that GHL is the PRIMARY publishing path, and that direct-platform tokens / Fish Audio / Skill 30 are all OPTIONAL and never block Skill 35.
-  - `## Weekly trigger — CRON, not heartbeat (enforcement)` — mandates the weekly content-theme question and plan run are driven by `openclaw cron add` (gateway cron store), not heartbeat checklist. Documents the `skill35-weekly-theme` cron (Saturday 8:00 AM, `0 8 * * 6`), VPS-safe cron registration pattern (matching Skill 38's `04-register-crons.sh`), and state/marker file for idempotency. Supersedes INSTALL.md Step 9 (HEARTBEAT.md entry) as the timing authority.
-- **scripts/register-weekly-cron.sh** (new) — idempotent shell script that registers the `skill35-weekly-theme` cron via `openclaw cron add` and validates config afterward. Exits 0 if already registered.
-- **qc-skill35.sh + qc-social-media-planner.sh** — new Section I with 3 assertions: (1) live-GHL connection-status rule present in INSTRUCTIONS.md, (2) cron enforcement text present in INSTRUCTIONS.md, (3) `register-weekly-cron.sh` exists.
-
-### Risk
-Low. Changes are additive (new sections in INSTRUCTIONS.md, new script, new QC assertions). No existing behavior removed. The HEARTBEAT.md Saturday entry installed by INSTALL.md Step 9 remains as a fallback acknowledgement — only the timing authority is transferred to the cron.
+### Fix #2 — Weekly trigger: CRON, not heartbeat (enforcement)
+**Why:** A client's Saturday theme question never fired because the weekly trigger was implemented only as a HEARTBEAT.md prose entry. Heartbeat timing drifts and silently skips the prompt when the heartbeat cycle slips.
+**What:** Added a `## Weekly trigger — CRON, not heartbeat (enforcement)` section to INSTRUCTIONS.md with (a) an explicit rule banning heartbeat-only weekly triggers, (b) a concrete `openclaw cron add` block for cron name `skill35-weekly-theme` on `0 8 * * 6` (Saturdays 8 AM) with idempotency via `~/.openclaw/data/skill35/weekly-theme-last-run.json`, and (c) a note that the HEARTBEAT.md entry from INSTALL.md Step 9 is informational context only — the cron is the enforcement mechanism. Added QC assertions in Section I of both QC scripts to verify the cron registration block is present and confirm the heartbeat-drift warning exists.
+**Risk:** Low — the HEARTBEAT.md Step 9 entry is preserved (not deleted) and noted as informational. The cron is registered idempotently; existing installs that already have the cron name skip silently. No publishing logic altered.
 
 ---
 
-## v2.1.0 - May 24, 2026 (Track M — closes v10.14.33 gap)
+## v2.1.0 - May 24, 2026 (Track M — mirror of VPS v10.14.33)
 
 ### Added — the three trigger paths INSTRUCTIONS.md has always referenced
 - `scripts/run-publishing-cycle.sh` — single-topic orchestrator with full
   `--topic / --platforms / --schedule / --dry-run / --help` interface.
-  Validates pre-reqs (SOUL/IDENTITY/USER/secrets, Skills 22/31), detects
-  whether the 21-agent roster (15 producers + 6 QC) is configured in
-  `openclaw.json`, and either prepares the per-phase workdir +
-  `cycle-manifest.json` for the master orchestrator OR emits a clear
-  "run Skill 23 build-workforce with the social-media-planner role-bundle"
-  next-step message.
 - `scripts/weekly-batch.sh` — cron-driven (`0 9 * * 1`) batch runner.
-  Reads `~/.openclaw/config/content-calendar.json`, filters entries to
-  the current Monday-Sunday window, invokes `run-publishing-cycle.sh`
-  once per topic. Logs to `/tmp/skill-35-weekly-<date>.log`. Exits 0 with
-  an informational message if the calendar file is absent.
-- `scripts/content-calendar.example.json` — starter template documenting
-  the schema (`{version, entries: [{date, topic, platforms, schedule}]}`).
-- INSTALL.md — Step 8 new section documenting the content-calendar
-  schema and the example template.
+- `scripts/content-calendar.example.json` — schema starter.
 
-### Why
-INSTRUCTIONS.md `## How to trigger this skill` has referenced these three
-paths since v10.12.0, but the scripts themselves never existed. Skill 35
-was installed on all 8 client boxes but unusable end-to-end. This PR
-closes the gap.
-
-### Companion change
-Dashboard repo (`blackceo-command-center`) — separate PR for the
-Marketing-department "Publish" button + `/api/skill-35/publish`
-endpoint that queues a cycle and emits an SSE event.
+Mirrors the VPS-side v10.14.33 PR. See the VPS CHANGELOG entry for the
+full rationale + behavior contract.
 
 ---
 
