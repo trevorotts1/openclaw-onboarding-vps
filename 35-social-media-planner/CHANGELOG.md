@@ -1,5 +1,34 @@
 # Changelog - Social Media Planner (Skill 35)
 
+## v2.5.0 - June 9, 2026
+
+### Fix 1 — Remove private operator tool reference; replace with OpenClaw subagent runtime
+**Why:** SKILL.md instructed the agent to spawn via a private operator CLI tool (`node ~/.openclaw/workspace/.../cli.js workflow run content-publishing-engine ...`) that must not appear in client-facing skill files. Both repos had the same Usage section command. The Mac repo's frontmatter also contained a `workflow_id` field with a comment explaining its origin in that private tool.
+**What:**
+- Removed all references to the private operator CLI tool from SKILL.md (both repos).
+- Rewrote the `## Usage` section: primary path is now `sessions_spawn task="Run Content Publishing Engine on [topic]" runtime="subagent" model="ollama/minimax-m2.7:cloud"` (OpenClaw subagent runtime). Fallback model documented. Subagent pipeline behavior described.
+
+### Fix 2 — Content sheet: agent always knows the link; graceful-degrade on Sheets write
+**Why:** Agent responded "gws is not authenticated — can't create the Google Sheet content calendar" and "I don't have the social-media-planner spreadsheet link." Root cause: (a) no stored pointer to the content sheet, and (b) the skill tried to call Google Sheets API directly using an OAuth path it doesn't have credentials for.
+**What:**
+- Added `content_sheet_id` and `content_sheet_url` fields to the skill config contract in SKILL.md. Agent reads these before every run and can answer "what's my social media planner link?" instantly.
+- INSTALL.md Step 7 rewritten: adopt-existing-sheet-first logic (check MEMORY.md → check onboarding-provided ID → create via webhook). Angeleen's existing sheet `1RKgS5l-i6NBtf_vON49nBPdHe-F5W67RF9ym-S67L2c` adopted if present, never duplicated.
+- Step 7 now records `content_sheet_id` + `content_sheet_url` in MEMORY.md and wires them into `openclaw config env.vars.SKILL35_CONTENT_SHEET_ID/URL`.
+- Added Step 7 sub-section 4f: agent does NOT call Google Sheets API directly and never needs `client_secret.json`. All sheet writes go through the n8n webhook (BlackCEO Automations service account). If webhook unavailable, degrades to local `/data/.openclaw/data/skill35/content-log.jsonl` with retry queue.
+- CORE_UPDATES.md MEMORY.md section: `content_sheet_id` and `content_sheet_url` fields added.
+- Completion checklist: 4 new assertions. Step 11 confirmation message updated.
+
+### Fix 3 — Media delivery via GHL CDN public link (eliminates Telegram size-cap failures)
+**Why:** Finished media sent as raw Telegram attachments hit the Bot API size cap, or agent said "stored locally, I don't have a URL."
+**What:**
+- Added `## Media Delivery Contract` section to SKILL.md: produce → upload to client's GHL Media Library (`POST https://services.leadconnectorhq.com/medias/upload-file`, `Version: 2021-07-28`, multipart `file` + `hosted=true` + `fileProcessingOpts`) → extract `url` from response → log to content sheet → reply to owner with CDN link.
+- CDN URL format: `https://assets.cdn.filesafe.space/[LOCATION_ID]/media/[filename]` — confirmed from Skill 28 (cinematic-forge).
+- 10 MB size threshold enforced. GHL upload failure: retry + notify, never fall back to raw attachment.
+
+**Risk:** Low. All changes are additive documentation + config contract. No existing publish schedule, GHL posting, or social API logic altered.
+
+---
+
 ## v2.4.0 - June 9, 2026 (autonomous podcast audio via Fish Audio S2-Pro; removes self-record punt)
 
 ### Why
