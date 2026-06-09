@@ -32,21 +32,21 @@ None. Documentation/protocol only — adds one operating-rules section to the de
 On a Zero-Human-Workforce box, an account runs many agents + sub-agents, and they must all operate from the SAME operating guide (`AGENTS.md`), the SAME tool catalog (`TOOLS.md`), and the SAME owner/user profile (`USER.md`). Previously each agent workspace could carry its own copy, so the three box-wide truths drifted between agents and had to be maintained N times. The fix unifies them: ONE canonical copy per box, shared to every agent via symlink.
 
 ### What changed
-- **New POSIX-sh function `link_shared_core_files()`** (defined identically in `install.sh` and `update-skills.sh`). For every agent workspace that is NOT the canonical workspace and does NOT match the Ant Farm pattern `*/workflows/*/agents/*`, it makes `AGENTS.md` / `TOOLS.md` / `USER.md` symlinks → `CANON_DIR/<file>`:
+- **New POSIX-sh function `link_shared_core_files()`** (defined identically in `install.sh` and `update-skills.sh`). For every agent workspace that is NOT the canonical workspace and does NOT match the nested workflow agent pattern `*/workflows/*/agents/*`, it makes `AGENTS.md` / `TOOLS.md` / `USER.md` symlinks → `CANON_DIR/<file>`:
   - **already a symlink** → repoint to `CANON_DIR/<file>` only if it points somewhere wrong; else no-op.
   - **a real file** → backed up to `<file>.bak-unify-<ts>` (NEVER deleted); any content not already in the canonical file is APPENDED to the agent's own `IDENTITY.md` under a guarded `<!-- PRESERVED FROM <agent> <file> (unification <ts>) -->` marker (ADD-only; `IDENTITY.md` created if absent); then the file is replaced by the symlink.
   - **absent** → left absent (no stray symlink created).
   - `IDENTITY.md` / `SOUL.md` / `MEMORY.md` / `HEARTBEAT.md` stay each agent's OWN real files (untouched apart from the additive preservation).
 - **`CANON_DIR`** = the box's default agent workspace = `agents.defaults.workspace` from the LOCAL box's `openclaw.json` (fallback `$HOME/clawd`).
 - **Co-mingling guard (N29):** the symlink target is ALWAYS the local box's own canonical workspace — NEVER a hardcoded or cross-box path. A client box links to the CLIENT's own files, never the operator's or another account's.
-- **Ant Farm exemption:** internal workflow micro-agents (`*/workflows/*/agents/*`) are EXEMPT and never touched.
+- **Nested workflow agent exemption:** internal workflow micro-agents (`*/workflows/*/agents/*`) are EXEMPT and never touched.
 - **Idempotent + non-destructive:** a second run makes no new backups and no churn; correct symlinks are no-ops, existing same-ts backups are skipped, preservation blocks are never re-appended.
 - **Wired into BOTH paths:** `install.sh` calls it right after the canonical workspace is resolved (Step 10, `link_shared_core_files "$WORKSPACE_DIR"`); `update-skills.sh` calls it after skills + workspaces are set up (post GHL-MCP wiring). Re-applied on every update + by the `onboarding-resume` cron so per-dept agents created by Skill 23 are unified on the next pass.
-- **QC:** `scripts/qc-system-integrity.sh` **check 9.9** asserts every non-Ant-Farm agent workspace has `AGENTS.md` / `TOOLS.md` / `USER.md` as symlinks resolving to `CANON_DIR`; a real file where a symlink is required, or a symlink resolving outside `CANON_DIR` (co-mingling), is a FAILURE in the standard `id|desc|remedy` format.
-- **Docs:** new [`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md); `AGENTS.md` canonical index + hero section **N32** (index header now N1–N32); README note. All 9 version markers bumped via `bump-version.sh`.
+- **QC:** `scripts/qc-system-integrity.sh` **check 9.9** asserts every non-workflow-agent workspace has `AGENTS.md` / `TOOLS.md` / `USER.md` as symlinks resolving to `CANON_DIR`; a real file where a symlink is required, or a symlink resolving outside `CANON_DIR` (co-mingling), is a FAILURE in the standard `id|desc|remedy` format.
+- **Docs:** new [`docs/SHARED-CORE-FILES.md`](docs/SHARED-CORE-FILES.md); `AGENTS.md` canonical index + hero section **N32** (index header now N1–N32); README note. All 9 version markers bumped via `bump-version.sh`. Nested workflow agent exemption replaces prior name throughout.
 
 ### Risk: low (additive + idempotent)
-Only ADD-only operations. Real files are backed up (never deleted) before being replaced by symlinks, and unique content is preserved into `IDENTITY.md`. The resolver reads only the local box's config + falls back only to the local `$HOME/clawd`, so no cross-box target is possible. Verified on a fixture: clean RUN 1 (link/repoint/backup/preserve), idempotent RUN 2 (zero churn), Ant Farm micro-agent left untouched, and QC 9.9 catches both real-file and cross-box-symlink violations.
+Only ADD-only operations. Real files are backed up (never deleted) before being replaced by symlinks, and unique content is preserved into `IDENTITY.md`. The resolver reads only the local box's config + falls back only to the local `$HOME/clawd`, so no cross-box target is possible. Verified on a fixture: clean RUN 1 (link/repoint/backup/preserve), idempotent RUN 2 (zero churn), nested workflow agent left untouched, and QC 9.9 catches both real-file and cross-box-symlink violations.
 
 ## [v10.16.49]  -  2026-06-06  -  fix: remove skills.path invalid key + add validate/rollback guard on openclaw.json edits
 
@@ -4737,7 +4737,7 @@ Bumped to `10.4.1`.
 - Existing `gemini-index.sqlite` should be re-indexed at section level when v2.0 Chapter 13 ships (separate work item)
 
 ### Documentation
-- PRD v2.1 saved at user's local Downloads: `onboarding ant farm PRD v2.1.md`
+- PRD v2.1 saved at user's local Downloads: `onboarding PRD v2.1.md`
 - Supersedes PRD v1.1 (foundation) and v2.0 (intelligence layer)
 - Execution order remains: v1.1 → v2.0 → v2.1
 

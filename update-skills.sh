@@ -326,7 +326,7 @@ safe_json_edit() {
 # cross-box path. A client box links to the CLIENT's own files (the client is
 # the USER) — never to the operator's or another account's files.
 #
-# ANT FARM EXEMPTION: any workspace path matching */workflows/*/agents/*
+# NESTED WORKFLOW AGENT EXEMPTION: any workspace path matching */workflows/*/agents/*
 # (internal workflow micro-agents, e.g. workflows/bug-fix/agents/triager) is
 # EXEMPT — its core files are NEVER modified.
 #
@@ -393,7 +393,7 @@ for key in ('list','agents'):
 " 2>/dev/null)"
   fi
   # On-disk scan of known agent-workspace roots + any */workflows/*/agents/*.
-  # The workflow dirs are scanned ONLY so the Ant Farm guard can positively
+  # The workflow dirs are scanned ONLY so the nested workflow agent guard can positively
   # EXEMPT them (they are never modified).
   local SCAN_ROOTS="/data/.openclaw/agents $HOME/.openclaw/agents $CANON_DIR/agents"
   for root in $SCAN_ROOTS; do
@@ -409,7 +409,7 @@ ${wfagent%/}"
   done
   WS_LIST="$(printf '%s\n' "$WS_LIST" | awk 'NF' | sort -u)"
 
-  local linked=0 repointed=0 backed_up=0 preserved=0 skipped_canon=0 skipped_antfarm=0 noop=0
+  local linked=0 repointed=0 backed_up=0 preserved=0 skipped_canon=0 skipped_workflow_agent=0 noop=0
   local W
   while IFS= read -r W; do
     [ -n "$W" ] && [ -d "$W" ] || continue
@@ -419,11 +419,11 @@ ${wfagent%/}"
     if [ "$W_REAL" = "$CANON_REAL" ]; then
       skipped_canon=$((skipped_canon+1)); continue
     fi
-    # ANT FARM EXEMPTION: */workflows/*/agents/* internal micro-agents — NEVER touch.
+    # NESTED WORKFLOW AGENT EXEMPTION: */workflows/*/agents/* internal micro-agents — NEVER touch.
     case "$W_REAL" in
       */workflows/*/agents/*)
-        echo "$LP Ant Farm micro-agent EXEMPT (untouched): $W_REAL"
-        skipped_antfarm=$((skipped_antfarm+1)); continue ;;
+        echo "$LP nested workflow agent EXEMPT (untouched): $W_REAL"
+        skipped_workflow_agent=$((skipped_workflow_agent+1)); continue ;;
     esac
 
     local agent_name; agent_name="$(basename "$W_REAL")"
@@ -501,7 +501,7 @@ PYEOF
     done
   done <<< "$WS_LIST"
 
-  echo "$LP done: linked=$linked repointed=$repointed backed_up=$backed_up preserved=$preserved canon-skipped=$skipped_canon antfarm-exempt=$skipped_antfarm noop=$noop"
+  echo "$LP done: linked=$linked repointed=$repointed backed_up=$backed_up preserved=$preserved canon-skipped=$skipped_canon workflow-agent-exempt=$skipped_workflow_agent noop=$noop"
 }
 
 # ----------------------------------------------------------
@@ -1200,7 +1200,7 @@ main() {
   # ----------------------------------------------------------
   # v10.16.50: Shared-core-file unification (Zero-Human-Workforce model).
   # AFTER skills + workspaces are set up, share the box's ONE canonical
-  # AGENTS.md / TOOLS.md / USER.md across every NON-Ant-Farm agent workspace
+  # AGENTS.md / TOOLS.md / USER.md across every non-workflow-agent workspace
   # via symlinks. Idempotent + non-destructive (real files backed up, unique
   # content preserved into per-agent IDENTITY.md). CANON_DIR is resolved from
   # the LOCAL box's agents.defaults.workspace (co-mingling guard).

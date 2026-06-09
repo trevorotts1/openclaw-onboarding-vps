@@ -2,3 +2,6 @@
 
 __pycache__/
 *.pyc
+
+# graphify (knowledge-graph map) — generated output, never committed
+graphify-out/

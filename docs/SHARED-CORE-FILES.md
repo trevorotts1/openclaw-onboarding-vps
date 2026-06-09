@@ -51,15 +51,15 @@ files or to another account's files. The resolver reads the *local* box's
 code path that can produce a cross-box target. Check 9.9 fails loudly if any
 core-file symlink resolves outside `CANON_DIR`.
 
-## Ant Farm exemption
+## Nested workflow agent exemption
 
-Internal **Ant Farm** workflow micro-agents — any workspace path matching
+Internal workflow micro-agents — any workspace path matching
 `*/workflows/*/agents/*` (e.g. `workflows/bug-fix/agents/triager`) — are
 **EXEMPT**. Their core files are **NEVER** touched. They keep their own real
 `AGENTS.md` / `TOOLS.md` / `USER.md` because a workflow micro-agent is a
 self-contained unit, not one of the account's standing agents.
 
-## What `link_shared_core_files()` does, per non-canonical, non-Ant-Farm workspace `W`
+## What `link_shared_core_files()` does, per non-canonical, non-workflow-agent workspace `W`
 
 For each of `AGENTS.md`, `TOOLS.md`, `USER.md`:
 
@@ -95,7 +95,7 @@ A second run makes **no new backups** and produces **no churn**:
 
 The function logs every action with the `[shared-core]` prefix and prints a
 final tally (`linked` / `repointed` / `backed_up` / `preserved` /
-`canon-skipped` / `antfarm-exempt` / `noop`).
+`canon-skipped` / `workflow-agent-exempt` / `noop`).
 
 ## When it runs
 
@@ -109,8 +109,8 @@ final tally (`linked` / `repointed` / `backed_up` / `preserved` /
 
 ## QC
 
-`scripts/qc-system-integrity.sh` **check 9.9** asserts: for every non-Ant-Farm
-agent workspace, `AGENTS.md` / `TOOLS.md` / `USER.md` are symlinks resolving to
+`scripts/qc-system-integrity.sh` **check 9.9** asserts: for every non-workflow-agent
+workspace, `AGENTS.md` / `TOOLS.md` / `USER.md` are symlinks resolving to
 `CANON_DIR`. A real file where a symlink is required, or a symlink resolving
 outside `CANON_DIR` (a co-mingling violation), is reported as a FAILURE in the
 standard `id|desc|remedy` format.
