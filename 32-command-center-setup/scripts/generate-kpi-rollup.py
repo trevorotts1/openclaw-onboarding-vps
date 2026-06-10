@@ -4,14 +4,14 @@ generate-kpi-rollup.py — v9.6.5
 
 Builds the company-level KPI rollup the CEO Performance Board displays.
 Reads:
-  - /data/.openclaw/workspace/zero-human-company/<slug>/company-config.json
+  - ~/clawd/zero-human-company/<slug>/company-config.json
       → declares company-level KPIs (e.g. monthly recurring revenue, NPS,
         customer count)
-  - /data/.openclaw/workspace/zero-human-company/<slug>/departments/<dept>/department-config.json
+  - ~/clawd/zero-human-company/<slug>/departments/<dept>/department-config.json
       → declares per-dept KPIs and which company KPIs they roll up to
 
 Writes:
-  - /data/.openclaw/workspace/zero-human-company/<slug>/kpi-rollup.json
+  - ~/clawd/zero-human-company/<slug>/kpi-rollup.json
       The dashboard frontend (or any agent) reads this. Schema:
       {
         "company": "BlackCEO",
@@ -65,14 +65,27 @@ from pathlib import Path
 
 HOME = Path.home()
 
+# PRD 1.9: import get_openclaw_paths for canonical root.
+_SHARED_UTILS = Path(__file__).resolve().parent.parent.parent / "shared-utils"
+sys.path.insert(0, str(_SHARED_UTILS))
+try:
+    from detect_platform import get_openclaw_paths as _get_paths_kpi  # type: ignore
+    _PATHS_KPI = _get_paths_kpi()
+except Exception:
+    _PATHS_KPI = {}
+
 
 def find_zhc_company_dir(slug=None):
-    roots = [
+    """PRD 1.9: canonical root first, legacy roots for backward compat."""
+    roots = []
+    if _PATHS_KPI.get("company_root"):
+        roots.append(Path(_PATHS_KPI["company_root"]))
+    roots.extend([
         HOME / "clawd" / "zero-human-company",
         HOME / "clawd" / "zhc",
-        Path("/data/.openclaw/workspace/zero-human-company"),
-        Path("/data/.openclaw/workspace/zhc"),
-    ]
+        Path(os.path.expanduser("~/clawd/zero-human-company")),
+        Path(os.path.expanduser("~/clawd/zhc")),
+    ])
     candidates = []
     for root in roots:
         if not root.is_dir():

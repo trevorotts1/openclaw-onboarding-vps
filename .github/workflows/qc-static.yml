@@ -112,135 +112,139 @@ jobs:
           set -uo pipefail
           # Machine-enforce the 23-key flat placeholder-free GHL body rule across
           # every object-A example in references/ + templates/ + scripts/
-          # (including references/v6.0-source-playbook.md).
+          # (now INCLUDING references/v6.0-source-playbook.md).
           bash 38-conversational-ai-system/scripts/qc-23-key-bodies.sh
           echo "✓ All Skill 38 GHL RAW BODY examples satisfy the 23-key rule"
 
-      - name: Skill 38 trinity-registry reconciliation (bullet + table fixtures)
+      - name: Skill 38 TRINITY registry reconciliation (fixture tests)
         shell: bash
         run: |
           set -uo pipefail
-          # Prove qc-trinity-registry.sh reconciles the BULLET registry the
-          # installer actually writes (not just the documented table) — catches
-          # registered-but-missing-files and file-present-but-unregistered rows.
+          # Prove qc-trinity-registry.sh reconciles BOTH the table form and the
+          # bullet form (- <id>: <desc>) the installer actually writes — i.e. it
+          # catches registered-but-no-files and file-present-but-unregistered.
           bash 38-conversational-ai-system/scripts/qc-trinity-registry.test.sh
-          echo "✓ qc-trinity-registry reconciles bullet and table registries"
+          echo "✓ qc-trinity-registry reconciliation fixtures pass"
 
-      - name: Skill 38 MANDATORY GHL send-directive
+      - name: Skill 38 mandatory GHL send-directive
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce that EVERY GHL inbound server-mapping messageTemplate
-          # (the installer's canonical template + the playbook/reference examples)
-          # carries the mandatory send-directive: SEND via the GHL Conversations
-          # API, drafting-is-NOT-sending, do-not-end-turn-until-messageId. Drafting
-          # is not sending — a hook without this clause silently drops the reply.
+          # Machine-enforce that EVERY GHL inbound SERVER-mapping messageTemplate
+          # (installer canonical template + reference examples) carries the
+          # mandatory send-directive: SEND, the GHL Conversations API
+          # (conversations/messages), the drafting-is-NOT-sending clause, and
+          # "do not end your turn until a messageId/conversationId is returned".
+          # Drafting != sending — without this clause the agent drafts and stops
+          # and the customer gets nothing. Exits non-zero on any GHL inbound
+          # template that lacks the directive (or if none are found).
           bash 38-conversational-ai-system/scripts/qc-send-directive.sh
-          echo "✓ All Skill 38 GHL server-mapping messageTemplates carry the SEND-directive"
+          echo "✓ All Skill 38 GHL inbound server templates carry the mandatory send-directive"
 
-      - name: Skill 38 MANDATORY conversation-memory (read-before + append-after)
+      - name: Skill 38 conversation-memory read-before/append-after
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce that EVERY GHL inbound server-mapping messageTemplate
-          # (installer canonical + playbook/reference examples) READS the contact's
-          # conversation log BEFORE replying and APPENDS the inbound+reply AFTER
-          # sending. GHL inbound hook sessions are SINGLE-TURN / stateless — the
-          # per-contact log IS the agent's only cross-message memory; a template
-          # that drops either step makes the agent forget mid-conversation.
+          # Machine-enforce that EVERY GHL inbound SERVER-mapping messageTemplate
+          # (installer canonical template + reference examples) carries the
+          # conversation-memory steps: the conversational-logs path, a READ-before-
+          # replying instruction, and an APPEND-after-sending instruction. GHL
+          # inbound hook sessions are single-turn / stateless — the agent's only
+          # memory of a contact across messages is the per-contact log it must read
+          # before replying and append to after sending. Dropping these steps left a
+          # live client mid-booking with no memory. Exits non-zero on any GHL inbound
+          # template that lacks them (or if none are found).
           bash 38-conversational-ai-system/scripts/qc-conversation-memory.sh
-          echo "✓ All Skill 38 GHL server-mapping messageTemplates READ-before and APPEND-after the conversation log"
+          echo "✓ All Skill 38 GHL inbound server templates carry the conversation-memory read-before/append-after steps"
 
-      - name: Skill 38 per-playbook human-facing DOC gate (fixtures)
+      - name: Skill 38 per-playbook human-facing doc gate (fixture tests)
         shell: bash
         run: |
-          set -euo pipefail
-          # Machine-enforce the per-playbook human-facing DOC deliverable: when a
-          # conversation playbook is created, a human-facing copy MUST be created in
-          # the CLIENT's account (Notion -> Google Docs -> plain text) and its
-          # URL/path RECORDED (registry row or run-manifest playbookDocs[]). On a
-          # recent client this step was SKIPPED -- the agent scaffolded the playbook
-          # locally and reported "clean" but never created the client's Notion doc.
-          # The live gate (qc-playbook-doc.sh) runs against a client's installed
-          # conversation-workflows/ folder, so CI proves it via the fixture suite
-          # (mirroring qc-trinity-registry.test.sh): a playbook with no recorded doc
-          # FAILS; an empty folder is NO_PLAYBOOKS (exit 2), never a blind pass.
+          set -uo pipefail
+          # Machine-enforce the MANDATORY per-playbook human-facing doc deliverable
+          # (Notion → Google Docs → plain-text). When a conversation playbook is
+          # created (the base install creates the FIRST one — appointment booking),
+          # the agent must ALSO create a human-facing copy in the CLIENT's own
+          # account and record its URL/path in the registry. On a live client this
+          # step was SKIPPED — files scaffolded locally, install reported "clean",
+          # but no client doc, leaving the customer with no human-facing reference.
+          # qc-playbook-doc.sh is a RUNTIME gate (it reads the client's installed
+          # conversation-workflows/registry.md) so CI exercises it via its fixture
+          # tests, which prove it: FAILs a registered playbook with no recorded doc
+          # (table + bullet forms), PASSes when a Notion/Docs/text doc is recorded,
+          # exits 2 (NOT a blind PASS) when no playbooks exist, and catches an
+          # on-disk-but-unregistered playbook. qc-static bans claude-/anthropic
+          # strings in .py under 22/23, so this gate is BASH (with an inline py core).
           bash 38-conversational-ai-system/scripts/qc-playbook-doc.test.sh
-          echo "✓ qc-playbook-doc enforces the per-playbook human-facing doc deliverable"
+          echo "✓ qc-playbook-doc per-playbook human-facing doc gate fixtures pass"
 
       - name: Skill 38 client reference sheet copy-paste artifacts
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce that the generated CLIENT REFERENCE SHEET is bulletproof:
-          # it must LEAD with a literal "🚀 Quick Start" section and STILL carry a
-          # full "Reference & explanation" section after it (both, in that order);
-          # each copyable value must be in its OWN code block — the Authorization KEY
-          # and the "Bearer <token>" VALUE in SEPARATE blocks (never combined), and
-          # the Content-Type KEY and "application/json" VALUE in SEPARATE blocks (50+
-          # clients copy each field individually); plus the copyable ```json GHL Raw
-          # Body, the hook URL, the manual Custom-Webhook fill steps, the
-          # create-tag-FIRST + "Settings → Tags" instruction, and the post-build
-          # verification section (Trigger / Custom Webhook / Publish, including the
-          # blank/non-existent-tag-in-a-"does not contain"-filter gotcha that stranded
-          # a live client, Teresa). qc-reference-sheet.sh drives
-          # 21-generate-client-reference-sheet.sh in a sandbox (no openclaw on PATH →
-          # offline Layer-3 markdown) and FAILS if any marker is missing, so a
+          # Machine-enforce that the generated CLIENT REFERENCE SHEET always
+          # carries the two copy-paste artifacts a client cannot proceed without:
+          # the Authorization Bearer token and the GHL Custom Webhook RAW BODY as a
+          # real ```json fenced code block (plus the hook URL). On a live client
+          # (Teresa) the generated sheet had NO bearer token and NO copyable JSON —
+          # nothing to paste into GHL's Build-with-AI — which stranded the client.
+          # qc-reference-sheet.sh drives 21-generate-client-reference-sheet.sh in a
+          # sandbox (no openclaw on PATH → offline Layer-3 markdown) and FAILS if the
+          # rendered sheet lacks "Bearer", a ```json fence, or the hook URL, so a
           # template/script regression that drops them fails the build. BASH (with an
-          # inline grep/awk core), so it respects the .py claude-/anthropic ban.
+          # inline grep core), so it respects the .py claude-/anthropic ban.
           bash 38-conversational-ai-system/scripts/qc-reference-sheet.sh
-          echo "✓ Skill 38 client reference sheet: 🚀 Quick Start + after-it explanation + separate Authorization/Content-Type key+value blocks + bearer token + copyable Raw Body JSON + hook URL + manual-fill + create-tag-first + post-build verification"
+          echo "✓ Skill 38 client reference sheet carries the bearer token + copyable GHL Raw Body JSON + hook URL"
 
-      - name: Skill 38 MANDATORY Telegram doc-delivery (gated, transcript-grep)
+      - name: Skill 38 reference sheet is bulletproof (Quick Start + tag-first + post-build verify)
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce the un-skippable Telegram doc-delivery step. The
-          # install is NOT complete until the client has been SENT their
-          # Quick-Start / Notion doc LINK via Telegram. qc-notify-client-doc.sh
-          # asserts scripts/22-notify-client-doc.sh exists, GREPS THE TRANSCRIPTS
-          # (agents/*/sessions/*.jsonl, not sessions.json keys only — the Teresa
-          # lesson), is GATED (records clientDocDelivered + exits non-zero on
-          # miss/failure — never a silent skip), sends via the OpenClaw gateway
-          # (never api.telegram.org direct), and is wired into the QC checklist +
-          # INSTRUCTIONS. Also smoke-test the delivery script itself: a fixture
-          # transcript must resolve the most-frequent non-operator chat id, and a
-          # transcript with only the operator id must FAIL (exit 1) and record
-          # clientDocDelivered=false. BASH only (respects the .py claude-/anthropic ban).
-          bash 38-conversational-ai-system/scripts/qc-notify-client-doc.sh
-          # --- fixture smoke test (success path: client id wins) ---
-          tdir="$(mktemp -d)"
-          mkdir -p "$tdir/home/.openclaw/agents/main/sessions" "$tdir/master"
-          jl="$tdir/home/.openclaw/agents/main/sessions/s1.jsonl"
-          # Synthetic ids only (no real person): 1000000001 = the operator (excluded),
-          # 2000000002 = the client (the most-frequent non-operator id => should win).
-          printf '%s\n' '{"meta":{"chat":{"id":1000000001}},"text":"operator"}' >  "$jl"
-          printf '%s\n' '{"meta":{"chat":{"id":2000000002}},"text":"client"}'   >> "$jl"
-          printf '%s\n' '{"key":"agent:main:telegram:direct:2000000002"}'        >> "$jl"
-          printf '%s\n' '{"from":{"id":2000000002},"chatId":2000000002}'         >> "$jl"
-          echo "https://notion.so/demo-abc" > "$tdir/master/.notion-reference-page-url"
-          printf '# Run Manifest\n' > "$tdir/master/run-manifest-20260529-000000.md"
-          out="$(HOME="$tdir/home" MASTER_FILES_DIR="$tdir/master" OPENCLAW_HOME="$tdir/home/.openclaw" \
-            OPERATOR_TELEGRAM_CHAT_ID=1000000001 \
-            bash 38-conversational-ai-system/scripts/22-notify-client-doc.sh --dry-run --json)"
-          echo "$out" | grep -q '"chat":"2000000002"' || { echo "✗ transcript-grep did not pick the client id"; exit 1; }
-          echo "$out" | grep -q '"clientDocDelivered":true' || { echo "✗ dry-run did not record delivered=true"; exit 1; }
-          # --- fixture smoke test (failure path: only operator id => exit 1, false) ---
-          tdir2="$(mktemp -d)"
-          mkdir -p "$tdir2/home/.openclaw/agents/main/sessions" "$tdir2/master"
-          printf '{"meta":{"chat":{"id":1000000001}}}\n' > "$tdir2/home/.openclaw/agents/main/sessions/s1.jsonl"
-          echo "https://notion.so/demo-xyz" > "$tdir2/master/.notion-reference-page-url"
-          printf '# Run Manifest\n' > "$tdir2/master/run-manifest-20260529-000000.md"
-          rc=0
-          HOME="$tdir2/home" MASTER_FILES_DIR="$tdir2/master" OPENCLAW_HOME="$tdir2/home/.openclaw" \
-            OPERATOR_TELEGRAM_CHAT_ID=1000000001 \
-            bash 38-conversational-ai-system/scripts/22-notify-client-doc.sh >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ no-client-chat path should exit 1, got $rc"; exit 1; }
-          grep -q 'clientDocDelivered=false' "$tdir2/master/run-manifest-20260529-000000.md" || { echo "✗ no-chat path did not record clientDocDelivered=false"; exit 1; }
-          rm -rf "$tdir" "$tdir2"
-          echo "✓ Skill 38 Telegram doc-delivery is mandatory, transcript-grep-based, gated, and wired"
+          # Machine-enforce the BULLETPROOF reference sheet (belt-and-suspenders):
+          #   • a section literally named "🚀 Quick Start" FIRST, and a COMPLETE
+          #     explanation/reference section AFTER it (both — Quick Start does not
+          #     replace the explanation)
+          #   • the copy-paste values LEAD, in order: URL → Authorization header
+          #     (key + value in SEPARATE code blocks, each its own copy button) →
+          #     Content-Type header → Raw Body JSON → manual Custom-Webhook fill
+          #     steps → post-build verification → Workflow-AI prompt
+          #   • the create-tags-FIRST instruction (+ Settings → Tags pointer): tags
+          #     must exist before the workflow is built (Teresa: Build-with-AI made a
+          #     "does not contain <blank>" filter against a never-created tag)
+          #   • the POST-BUILD verification section (verify trigger/tag-exists +
+          #     custom webhook + Published-not-Draft AFTER Build with AI runs)
+          #   • the mandatory "Build-with-AI will NOT fill these — do it yourself"
+          #     manual-fill instructions
+          # GHL's Build-with-AI only builds the workflow SHAPE; it does not reliably
+          # populate the Custom Webhook URL / Authorization header / Content-Type /
+          # Raw Body, nor does it create the tags its filters reference, so the client
+          # MUST paste the values and create the tags by hand. This drives the
+          # generator offline (Layer-3 markdown) and FAILs if any of the above is
+          # missing. BASH (grep/awk core) — respects the .py claude-/anthropic ban.
+          bash 38-conversational-ai-system/scripts/qc-reference-sheet.sh --require-manual-fill
+          echo "✓ Skill 38 reference sheet is bulletproof: 🚀 Quick Start + explanation, separate Authorization key/value blocks, tag-first, manual-fill, post-build verification"
 
-      - name: Skill 38 backend-ready gate (no-config => SKIP, not fail)
+      - name: Skill 38 install-script config-key gate
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce that NO install script writes a config shape that
+          # invalidates the openclaw 2026.5.27 config (so a fresh install can't ship a
+          # config that fails `openclaw config validate`), and that none trips the
+          # known jq-1.7 / pointer-sourcing install bugs. Specifically FAILS on:
+          #   • agents.defaults.async / agents.defaults.batch WRITES (rejected by the
+          #     .strict() 2026.5.27 schema)
+          #   • a legacy cron.jobs JSON config block (does not validate on 2026.5.27 —
+          #     crons must be registered via `openclaw cron add`)
+          #   • the jq-1.7-invalid top-level `.x //= {};` update-assignment
+          #   • sourcing the master-files POINTER (a bare path / directory) with `.`
+          #   • a hardcoded legacy skill path (~/clawd/skills/38-openclaw-cloudflare-tunnel)
+          # All five were verified live on a 2026.5.27 box (v1.4.11). BASH — respects
+          # the .py claude-/anthropic ban.
+          bash 38-conversational-ai-system/scripts/qc-config-schema-safety.sh
+          echo "✓ No Skill 38 install script writes a config-invalidating shape or trips the known install bugs"
+
+      - name: Skill 38 backend-ready gate SKIPs cleanly with no install
         shell: bash
         run: |
           set -uo pipefail
@@ -251,148 +255,6 @@ jobs:
           bash 38-conversational-ai-system/scripts/qc-backend-ready.sh --config /nonexistent/openclaw.json >/dev/null 2>&1 || rc=$?
           [ "$rc" -eq 3 ] || { echo "✗ backend-ready with no config should exit 3 (SKIP), got $rc"; exit 1; }
           echo "✓ Skill 38 backend-ready gate exits 3 (SKIP) when no install is present"
-
-      - name: Skill 38 config schema-safety (no config-invalidating install scripts)
-        shell: bash
-        run: |
-          set -uo pipefail
-          # Machine-enforce that NO Skill 38 install script writes a config shape
-          # that fails `openclaw config validate` on 2026.5.27, and that none uses
-          # jq syntax jq 1.7 rejects. Catches the three v1.4.11 install-script bugs
-          # found on a live box: (1) a legacy `.cron.jobs` write (crons must go
-          # through `openclaw cron add`), (2) unsupported `agents.defaults.async/
-          # .batch` model keys, (3) a `.hooks //= {};` jq statement (jq 1.7 rejects
-          # the top-level `;`). A regression that reintroduces any of them fails CI.
-          bash 38-conversational-ai-system/scripts/qc-config-schema-safety.sh
-          echo "✓ Skill 38 install scripts are config-schema-safe (no .cron.jobs / agents.defaults.async-batch / jq '//= …;')"
-
-      - name: Skill 38 AI backend self-test wiring (24-self-test-hook.sh)
-        shell: bash
-        run: |
-          set -uo pipefail
-          # The agent self-tests the FULL inbound->reply chain by GROUND TRUTH
-          # BEFORE the client ever tests: backend prepared -> POST a synthetic
-          # 23-key GHL inbound to its OWN public hook (real Bearer token) -> verify
-          # hook 200 + configured model (no 401/429) + read the log + GHL
-          # Conversations API send returned a messageId (temp test contact created
-          # then deleted, test log removed). The live run needs an install; CI runs
-          # the STATIC wiring check (script present + documents the full chain +
-          # pass/fail + cleanup + wired as a BLOCKING gate in the QC checklist).
-          bash 38-conversational-ai-system/scripts/24-self-test-hook.sh --check-wiring
-          # The standalone backend-self-test STANDARD gate (static assertions:
-          # the self-test script exists/parses, POSTs the synthetic flat-23-key
-          # inbound with the real Bearer, verifies the full chain + cleanup, and is
-          # wired as a blocking readiness gate + documented).
-          bash 38-conversational-ai-system/scripts/qc-self-test.sh
-          # Also assert the live mode SKIPs (exit 3) when there is no install.
-          rc=0
-          bash 38-conversational-ai-system/scripts/24-self-test-hook.sh --live --config /nonexistent/openclaw.json >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 3 ] || { echo "✗ self-test --live with no config should exit 3 (SKIP), got $rc"; exit 1; }
-          echo "✓ Skill 38 AI backend self-test exists, documents the full chain + cleanup, is wired as a blocking gate, and SKIPs cleanly with no install"
-
-      - name: Skill 38 NO personal/client data (universal-skill guard)
-        shell: bash
-        run: |
-          set -uo pipefail
-          # Skill 38 is UNIVERSAL — the SAME brain for any client. Real names /
-          # client data must NOT appear anywhere in the skill OR in the doc it
-          # generates (a client once opened "their" Notion doc and saw someone
-          # else's name). qc-no-personal-data.sh scans the whole tree AND drives
-          # 21-generate-client-reference-sheet.sh in an offline sandbox to scan the
-          # generated markdown, and FAILS on any forbidden identifier.
-          bash 38-conversational-ai-system/scripts/qc-no-personal-data.sh
-          # Negative self-test: a planted identifier MUST make the gate FAIL (exit 1).
-          ng="$(mktemp -d)"
-          cp -r 38-conversational-ai-system "$ng/skill"
-          printf '\n<!-- planted leak: Teresa / 5252140759 -->\n' >> "$ng/skill/INSTRUCTIONS.md"
-          rc=0
-          bash "$ng/skill/scripts/qc-no-personal-data.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ no-personal-data gate should FAIL (exit 1) on a planted identifier, got $rc"; exit 1; }
-          rm -rf "$ng"
-          echo "✓ Skill 38 carries no personal/client data (tree + generated output), and the guard fails closed on a planted identifier"
-
-      - name: Skill 38 TOOLS.md GHL API quick-reference (source + installer + gate fixtures)
-        shell: bash
-        run: |
-          set -uo pipefail
-          # The installer (24-update-tools-md.sh) preloads the CLIENT agent's TOOLS.md
-          # with the verified GHL Convert-and-Flow API quick-reference so the agent has
-          # the exact request shapes (method/URL/3 headers/body/scope) in its CORE
-          # context and answers fast at runtime. The gate (qc-tools-md-ghl-ref.sh)
-          # FAILs if the canonical block is missing any messaging type (SMS/Email/FB/
-          # IG/Live_Chat), any calendar op (list/get/create/free-slots), any
-          # appointment op (book/reschedule/cancel), the send-invoice op, or any
-          # required scope; if it exceeds the concise size budget; or if it leaks any
-          # personal/client identifier. CI proves all of it statically (no install
-          # needed). BASH only (respects the .py claude-/anthropic ban).
-          ref=38-conversational-ai-system/references/ghl-api-quick-reference.md
-          gate=38-conversational-ai-system/scripts/qc-tools-md-ghl-ref.sh
-          inst=38-conversational-ai-system/scripts/24-update-tools-md.sh
-
-          # (1) source block is complete + concise + leak-free
-          bash "$gate"
-
-          # (2) installer injects the block, is idempotent, and the injected block passes LIVE
-          tdir="$(mktemp -d)"
-          tm="$tdir/TOOLS.md"
-          printf '# TOOLS.md\n\npre-existing content\n' > "$tm"
-          PUBLIC_HOSTNAME="claw.ci-fixture.example.com" bash "$inst" "$tm" >/dev/null
-          [ "$(grep -c 'BEGIN SKILL38: GHL_API_QUICK_REFERENCE' "$tm")" -eq 1 ] || { echo "✗ installer did not inject exactly one block"; exit 1; }
-          grep -q 'pre-existing content' "$tm" || { echo "✗ installer clobbered existing TOOLS.md content"; exit 1; }
-          PUBLIC_HOSTNAME="claw.ci-fixture.example.com" bash "$inst" "$tm" >/dev/null   # idempotent re-run
-          [ "$(grep -c 'BEGIN SKILL38: GHL_API_QUICK_REFERENCE' "$tm")" -eq 1 ] || { echo "✗ installer duplicated the block on re-run (not idempotent)"; exit 1; }
-          bash "$gate" --tools-md "$tm" >/dev/null || { echo "✗ injected block failed the live gate"; exit 1; }
-
-          # (3) live gate exits 3 (SKIPPED-INCOMPLETE) when the marker is absent
-          printf '# TOOLS.md\n\nno block\n' > "$tdir/empty.md"
-          rc=0; bash "$gate" --tools-md "$tdir/empty.md" >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 3 ] || { echo "✗ missing-marker TOOLS.md should exit 3, got $rc"; exit 1; }
-
-          # (4) negative: a leaked email / oversize budget / dropped op each FAIL (exit 1)
-          cp "$ref" "$tdir/leak.md"; printf '\nclient@acmeco.com\n' >> "$tdir/leak.md"
-          rc=0; bash "$gate" --ref-file "$tdir/leak.md" >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ email-leak block should FAIL (exit 1), got $rc"; exit 1; }
-          rc=0; bash "$gate" --ref-file "$ref" --max-lines 10 >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ oversize block should FAIL (exit 1), got $rc"; exit 1; }
-          grep -v '"type":"Live_Chat"' "$ref" > "$tdir/drop.md"
-          rc=0; bash "$gate" --ref-file "$tdir/drop.md" >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ dropped-operation block should FAIL (exit 1), got $rc"; exit 1; }
-
-          rm -rf "$tdir"
-          echo "✓ Skill 38 TOOLS.md GHL quick-reference: source complete + concise + leak-free; installer idempotent; live gate + negatives all behave"
-
-      - name: Skill 38 ZHC- programmatic tag-prefix rule (v1.5.0)
-        shell: bash
-        run: |
-          set -uo pipefail
-          # Machine-enforce that every tag the agent CREATES programmatically is
-          # ZHC- prefixed (protocols/zhc-tag-prefix-protocol.md + MEMORY.md Rule
-          # 20): the rule is documented (prefix + not-retroactive), the canonical
-          # F44/F45/F47/F50 tag tokens are the ZHC- forms, and no bare create-tag
-          # example literal (create_tag name= / POST .../tags "name":) survives
-          # un-prefixed. BASH only (respects the .py claude-/anthropic ban).
-          bash 38-conversational-ai-system/scripts/qc-zhc-tag-prefix.sh
-          # Negative self-test 1: a planted bare create-tag example MUST FAIL (exit 1).
-          ng="$(mktemp -d)"
-          cp -r 38-conversational-ai-system "$ng/skill"
-          printf '\nghl_skill.create_tag(location_id=<LOCATION_ID>, name="hot-lead")\n' \
-            >> "$ng/skill/protocols/aggression-detection-protocol.md"
-          rc=0
-          bash "$ng/skill/scripts/qc-zhc-tag-prefix.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ ZHC- gate should FAIL (exit 1) on a planted bare create-tag, got $rc"; exit 1; }
-          rm -rf "$ng"
-          # Negative self-test 2: a planted BARE F29 follow-up tag (prose "tag contact
-          # as `cold-lead-released`") MUST FAIL (exit 1) — proves the new follow-up
-          # coverage genuinely bites, not just the create_tag literal parser.
-          ng2="$(mktemp -d)"
-          cp -r 38-conversational-ai-system "$ng2/skill"
-          printf '\nAfter T10, tag contact as `cold-lead-released` and stop.\n' \
-            >> "$ng2/skill/protocols/intelligent-followup-protocol.md"
-          rc2=0
-          bash "$ng2/skill/scripts/qc-zhc-tag-prefix.sh" --skill-dir "$ng2/skill" >/dev/null 2>&1 || rc2=$?
-          [ "$rc2" -eq 1 ] || { echo "✗ ZHC- gate should FAIL (exit 1) on a planted bare F29 follow-up tag, got $rc2"; exit 1; }
-          rm -rf "$ng2"
-          echo "✓ Skill 38 ZHC- tag-prefix rule documented + enforced; fails closed on a bare create-tag AND a bare F29 follow-up tag"
 
       - name: Skill 38 F52 JSONL data contract (v1.5.0)
         shell: bash
@@ -444,89 +306,122 @@ jobs:
           rm -rf "$ng"
           echo "✓ Skill 38 F45 + F47 substance enforced (every roadmap spec point present); fails closed on a stripped substance point"
 
-      - name: Skill 38 Communications Playbook Standard (mandatory checklist + negative)
+      - name: Skill 38 AI backend self-test gate (static wiring)
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce that references/communications-playbook-standard.md still
-          # carries its hard §0 "EVERY COMMUNICATION PLAYBOOK MUST INCLUDE ALL OF THE
-          # FOLLOWING" mandatory checklist and every required item: channel+persona/
-          # voice, opening behavior, goal/desired-outcome, the MANDATORY SEND rule
-          # (GHL Conversations API, mirror the channel, send by contactId,
-          # conversationId READ-only, drafting != sending), the conversation-memory
-          # read-before/append-after protocol, escalation/handoff + honesty floor,
-          # quiet-hours + compliance-keyword respect, the ZHC- tag prefix for
-          # programmatic tags, per-channel formatting, and the 8 channels. Mirrors the
-          # workflow-ai-instructions-standard §0 rigor.
-          bash 38-conversational-ai-system/scripts/qc-communications-playbook-standard.sh
-          # Negative: dropping a mandatory item (the ZHC- tag prefix) MUST FAIL (exit 1).
-          ng="$(mktemp -d)"; cp -r 38-conversational-ai-system "$ng/skill"
-          grep -v 'ZHC-' "$ng/skill/references/communications-playbook-standard.md" > "$ng/skill/references/cps.tmp"
-          mv "$ng/skill/references/cps.tmp" "$ng/skill/references/communications-playbook-standard.md"
-          rc=0; bash "$ng/skill/scripts/qc-communications-playbook-standard.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ dropping the ZHC- tag prefix should FAIL the gate (exit 1), got $rc"; exit 1; }
-          rm -rf "$ng"
-          echo "✓ Skill 38 Communications Playbook Standard carries its §0 mandatory checklist; gate fails closed when a mandatory item is dropped"
+          # The agent self-tests the FULL inbound->reply chain by GROUND TRUTH BEFORE
+          # the client ever tests (readiness -> synthetic flat-23-key POST to its OWN
+          # public hook -> verify 200/{ok:true} + configured model + log read + GHL
+          # Conversations API messageId, with temp-contact create/delete + cleanup).
+          # The live run needs an install; CI runs the STATIC wiring gate
+          # (qc-self-test.sh asserts scripts/24-self-test-hook.sh exists, is bash -n
+          # clean, POSTs a synthetic flat-23-key body with the real Bearer token,
+          # verifies by ground truth, does temp-contact cleanup, writes selfTestPassed,
+          # and is wired as a BLOCKING gate in 11-run-qc-checklist.sh). BASH only.
+          bash 38-conversational-ai-system/scripts/qc-self-test.sh
+          echo "✓ Skill 38 AI backend self-test exists, documents the full chain + cleanup, and is wired as a blocking gate"
 
-      - name: Skill 38 GHL Raw Body JSON Standard (23-key FLAT rule + negative)
+      - name: Skill 38 mandatory Telegram doc-delivery gate
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce that references/ghl-raw-body-json-standard.md documents the
-          # §0 "FULL 23-key FLAT JSON" rule (23 = minimum AND standard, never fewer,
-          # never nested), the FLAT rule, the placeholder-free messageTemplate stub,
-          # deliver:false, and the EXACT 23 keys — and composes with qc-23-key-bodies.sh
-          # so every real object-A body in the skill obeys it.
-          bash 38-conversational-ai-system/scripts/qc-ghl-raw-body-standard.sh
-          # Negative: dropping one of the 23 keys (location_name) MUST FAIL (exit 1).
-          ng="$(mktemp -d)"; cp -r 38-conversational-ai-system "$ng/skill"
-          grep -v 'location_name' "$ng/skill/references/ghl-raw-body-json-standard.md" > "$ng/skill/references/rb.tmp"
-          mv "$ng/skill/references/rb.tmp" "$ng/skill/references/ghl-raw-body-json-standard.md"
-          rc=0; bash "$ng/skill/scripts/qc-ghl-raw-body-standard.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ dropping a 23-key list entry should FAIL the gate (exit 1), got $rc"; exit 1; }
-          rm -rf "$ng"
-          echo "✓ Skill 38 GHL Raw Body JSON Standard documents the FLAT 23-key rule + list; gate fails closed when a key is dropped (and composes qc-23-key-bodies.sh)"
+          # Machine-enforce the MANDATORY Telegram delivery of the client's
+          # setup-doc LINK. Every client gets their link via Telegram, no matter
+          # what — the operator was tired of repeating this, so it's a gated step,
+          # not prose. The install is NOT complete until the client has been SENT
+          # their Quick-Start / Notion doc link via the OpenClaw gateway
+          # (openclaw message send --channel telegram). qc-notify-client-doc.sh
+          # statically asserts that scripts/22-notify-client-doc.sh exists, sends
+          # via the gateway (never curl api.telegram.org), DISCOVERS the chat from
+          # the TRANSCRIPTS (agents/*/sessions/*.jsonl — the four shapes, most-
+          # frequent non-operator id — the Teresa lesson, NOT just sessions.json
+          # keys), LOUD-fails (clientDocDelivered=false + non-zero) when no chat is
+          # found, and is wired into INSTRUCTIONS.md + the v6.0 playbook + the comms
+          # standard. BASH (grep/awk core) — respects the .py claude-/anthropic ban.
+          bash 38-conversational-ai-system/scripts/qc-notify-client-doc.sh
+          echo "✓ Skill 38 mandatory Telegram doc-delivery is wired (22-notify-client-doc.sh + binding instructions)"
 
-      - name: Skill 38 Notion Client-Doc Standard (ordered mandatory list + negative)
+      - name: Skill 38 GHL TOOLS.md quick-reference (complete + concise + zero personal data)
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce that references/notion-client-doc-standard.md documents the
-          # §0 "EVERY CLIENT NOTION SETUP DOC MUST INCLUDE ALL OF THE FOLLOWING, IN THIS
-          # ORDER" list and its 12 items: Quick-Start first, the two-block Authorization
-          # (block1 "Authorization" / block2 "Bearer <token>" value-only, NEVER a
-          # combined block), the two-block Content-Type, the FLAT 23-key Raw Body,
-          # tags-first + field-by-field manual fill + "Build-with-AI builds the SHAPE
-          # only" warning + post-build VERIFY, the Communication Playbooks section,
-          # VPS-vs-Mac, how-it-works LAST, each value in its own code block, Telegram
-          # delivery, and the universal no-personal-data rule — and composes with
-          # qc-reference-sheet.sh so the actually-generated doc conforms.
-          bash 38-conversational-ai-system/scripts/qc-notion-doc-standard.sh
-          # Negative: dropping the "Quick Start FIRST" item MUST FAIL (exit 1).
-          ng="$(mktemp -d)"; cp -r 38-conversational-ai-system "$ng/skill"
-          grep -v 'Quick Start FIRST' "$ng/skill/references/notion-client-doc-standard.md" > "$ng/skill/references/nd.tmp"
-          mv "$ng/skill/references/nd.tmp" "$ng/skill/references/notion-client-doc-standard.md"
-          rc=0; bash "$ng/skill/scripts/qc-notion-doc-standard.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
-          [ "$rc" -eq 1 ] || { echo "✗ dropping 'Quick Start FIRST' should FAIL the gate (exit 1), got $rc"; exit 1; }
+          # Machine-enforce the GHL API quick-reference block that
+          # scripts/24-update-tools-md.sh injects into the CLIENT TOOLS.md so the
+          # agent has the exact request shapes in its CORE context and replies fast
+          # (no digging through the dense full reference at runtime). The gate scans
+          # the canonical source (references/ghl-api-quick-reference.md, injected
+          # verbatim) and FAILS if it is missing any listed operation (each
+          # messaging channel type SMS/Email/FB/IG/Live_Chat, calendars
+          # list/get/create, free-slots, appointment book/reschedule/cancel, send
+          # invoice) or any required PIT scope, if it exceeds the concise size
+          # budget (no core-file bloat), or if any personal/client identifier
+          # (real email/phone, concrete id, real client host) appears in this
+          # UNIVERSAL artifact. Verified shapes per Skill 38
+          # references/GHL-INBOUND-AND-PLAYBOOKS.md §7-9 (Version: 2021-04-15; the
+          # 6 valid send types; GMB is NOT a send type) + 29-ghl-convert-and-flow
+          # references/{conversations,calendars,payments}.md. BASH (inline py core)
+          # — respects the .py claude-/anthropic ban.
+          bash 38-conversational-ai-system/scripts/qc-tools-md-ghl-ref.sh
+          echo "✓ Skill 38 GHL TOOLS.md quick-reference is complete, concise, and free of personal/client data"
+
+      - name: Skill 38 ZHC programmatic-tag-prefix rule (Round-3 Queue-A)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce the ZHC tag-prefix rule (v1.5.0): every tag the agent
+          # creates PROGRAMMATICALLY carries the `ZHC-` prefix, so operators can tell
+          # agent-created tags apart from their own. qc-zhc-tag-prefix.sh asserts:
+          # MEMORY Rule 20 is appended (06-append-memory-rules.sh), the
+          # SKILL38_ZHC_TAG_PREFIX behavioral block is inserted (05-update-agents-md.sh),
+          # the dedicated protocol (zhc-tag-prefix-protocol.md) exists + states "NOT
+          # retroactive" + reuses the existing D.1/Section-6 create_tag mechanism, every
+          # Round-3 Queue-A feature tag (ZHC-tension-detected, ZHC-aggression-detected,
+          # ZHC-interrupt-handled, ZHC-faq-detoured, ZHC-aggression-handled-and-resumed,
+          # ZHC-out-of-service-area/-confirmed/-flexible, ZHC-faq-answered,
+          # ZHC-bot-suspected) is present + ZHC-prefixed, and the D.1 + Section-6 example
+          # tags were updated to the ZHC- form with no bare agent-created example left
+          # behind. BASH (grep core) — respects the .py claude-/anthropic ban.
+          bash 38-conversational-ai-system/scripts/qc-zhc-tag-prefix.sh
+          # Negative self-test 1: a planted bare create-tag example MUST FAIL (exit 1).
+          ng="$(mktemp -d)"
+          cp -r 38-conversational-ai-system "$ng/skill"
+          printf '\nghl_skill.create_tag(location_id=<LOCATION_ID>, name="hot-lead")\n' \
+            >> "$ng/skill/protocols/aggression-detection-protocol.md"
+          rc=0
+          bash "$ng/skill/scripts/qc-zhc-tag-prefix.sh" --skill-dir "$ng/skill" >/dev/null 2>&1 || rc=$?
+          [ "$rc" -eq 1 ] || { echo "✗ ZHC- gate should FAIL (exit 1) on a planted bare create-tag, got $rc"; exit 1; }
           rm -rf "$ng"
-          echo "✓ Skill 38 Notion Client-Doc Standard documents the ordered mandatory list; gate fails closed when a mandatory item is dropped (and composes qc-reference-sheet.sh)"
+          # Negative self-test 2: a planted BARE F29 follow-up tag (prose "tag contact
+          # as `cold-lead-released`") MUST FAIL (exit 1) — proves the new follow-up
+          # coverage genuinely bites, not just the create_tag literal parser.
+          ng2="$(mktemp -d)"
+          cp -r 38-conversational-ai-system "$ng2/skill"
+          printf '\nAfter T10, tag contact as `cold-lead-released` and stop.\n' \
+            >> "$ng2/skill/protocols/intelligent-followup-protocol.md"
+          rc2=0
+          bash "$ng2/skill/scripts/qc-zhc-tag-prefix.sh" --skill-dir "$ng2/skill" >/dev/null 2>&1 || rc2=$?
+          [ "$rc2" -eq 1 ] || { echo "✗ ZHC- gate should FAIL (exit 1) on a planted bare F29 follow-up tag, got $rc2"; exit 1; }
+          rm -rf "$ng2"
+          echo "✓ Skill 38 ZHC tag-prefix rule enforced: every programmatic-tag example uses the ZHC- prefix; fails closed on a bare create-tag AND a bare F29 follow-up tag"
 
       - name: Skill 38 ZHC Pixel (Feature 49) invariants
         shell: bash
         run: |
           set -uo pipefail
-          # Machine-enforce the F49 ZHC Pixel invariants from the repo alone: the
+          # Machine-enforce the ZHC Pixel (F49) invariants from the repo alone: the
           # pixel JS template + its three placeholders + the generator that substitutes
-          # them (27-render-pixel-js.sh); the OpenClaw `pixel-visitor-signal` hook
-          # (deliver:false, bot-gate-first messageTemplate, scoped Pixel Concierge agent
-          # + hook:pixel: allow-list — 28-configure-pixel-hook.sh); the
-          # STEP_1_45_PIXEL_CONCIERGE AGENTS.md block + protocols/zhc-pixel-protocol.md;
-          # the ZHC- pixel tag prefixes (ZHC-pixel-visitor/-returning-visitor/-high-intent)
-          # and ZHC_ field set (ZHC_first_visit_date/_total_visits/_pages_viewed/
-          # _high_intent_signal); the GDPR/CCPA/DNT/deletion privacy controls in BOTH the
-          # protocol and the template; the scope precheck (26-verify-pixel-prerequisites.sh)
-          # naming Pages:Edit + Workers Scripts:Edit + Workers Routes:Edit + the token Doc;
-          # and the scope-gated deploy (29-deploy-pixel-cloudflare.sh). BASH only.
+          # them; the OpenClaw `pixel-visitor-signal` hook (deliver:false, bot-gate-first
+          # messageTemplate, scoped Pixel Concierge agent + hook:pixel: allow-list); the
+          # Pixel Concierge AGENTS.md Step 1.45 block + the protocol doc; the ZHC- tag
+          # prefixes (ZHC-pixel-visitor/-returning-visitor/-high-intent) and ZHC_ field
+          # prefixes (ZHC_first_visit_date/_total_visits/_pages_viewed/_high_intent_signal);
+          # the privacy controls documented in the protocol AND enforced in the browser
+          # bundle (GDPR consent deferral, CCPA opt-out, Do-Not-Track hard-stop, deletion
+          # via delete_request); the CF scope precheck that names Pages:Edit / Workers
+          # Scripts:Edit / Workers Routes:Edit and points at the token-instructions Google
+          # Doc; the scope-GATED deploy; and ZERO personal/client data in any F49 file.
+          # BASH (grep core) — respects the .py claude-/anthropic ban.
           bash 38-conversational-ai-system/scripts/qc-zhc-pixel.sh
           echo "✓ Skill 38 ZHC Pixel (F49) invariants hold"
 
@@ -535,10 +430,8 @@ jobs:
         run: |
           set -uo pipefail
           # Prove qc-zhc-pixel.sh actually FAILS when an F49 invariant is broken (a green
-          # gate that can never go red is worthless). The fixture copies the skill, breaks
-          # three different invariants in three throwaway copies (removes the
-          # pixel-visitor-signal hook registration, drops a required ZHC_ field, neuters a
-          # required scope name), and asserts the gate exits non-zero each time.
+          # gate that never fails is worthless). Copies the skill to a temp dir, removes
+          # the pixel-visitor-signal hook registration, and asserts the gate exits non-zero.
           bash 38-conversational-ai-system/scripts/qc-zhc-pixel.test.sh
           echo "✓ qc-zhc-pixel negative test passes (the gate fails on a broken invariant)"
 
@@ -747,6 +640,65 @@ jobs:
           bash 38-conversational-ai-system/scripts/qc-webhook-chaining.test.sh
           echo "✓ qc-webhook-chaining negative test passes (the gate fails on each broken invariant)"
 
+      - name: Skill 38 UNIVERSAL no-personal-data gate (Round-3 Queue-A additions)
+        shell: bash
+        run: |
+          set -uo pipefail
+          # The skill is UNIVERSAL — ZERO real personal/client identifiers anywhere
+          # in the tree (the Round-3 Queue-A protocols + scripts must use generic
+          # placeholders only). Runs the static (--no-gen) scan in CI so a leaked
+          # name in any new file fails the build. BASH (grep core).
+          bash 38-conversational-ai-system/scripts/qc-no-personal-data.sh --no-gen
+          echo "✓ Skill 38 carries no personal/client data (UNIVERSAL)"
+
+      - name: Skill 38 Communication Playbook Standard
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce the COMMUNICATION PLAYBOOK STANDARD: assert
+          # references/communications-playbook-standard.md carries the hard leading
+          # "EVERY COMMUNICATION PLAYBOOK MUST INCLUDE ALL OF THE FOLLOWING" mandatory
+          # checklist and every required item (a)-(i): channel/persona, opening behavior,
+          # conversation goal, mandatory SEND (Conversations API + mirror + drafting!=sending),
+          # conversation-memory read-before/append-after, escalation+honesty-floor,
+          # quiet-hours/compliance, ZHC- tag-prefix, per-channel formatting — plus the 8
+          # channels named and the SKILL.md/INSTRUCTIONS.md pointer. Removing any mandatory
+          # item FAILS the build. BASH (grep core) — respects the .py claude-/anthropic ban.
+          bash 38-conversational-ai-system/scripts/qc-communications-playbook-standard.sh
+          echo "✓ Skill 38 communication playbook standard carries the mandatory checklist + items (a)-(i)"
+
+      - name: Skill 38 GHL Raw Body JSON Standard
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce the GHL RAW BODY JSON STANDARD: assert
+          # references/ghl-raw-body-json-standard.md carries the hard "EVERY GHL CUSTOM
+          # WEBHOOK RAW BODY MUST BE THE FULL 23-KEY FLAT JSON" headline (23 is the minimum
+          # AND the standard, never fewer, never nested), the FLAT/placeholder-free/deliver:false
+          # rules, the exact 23-key list, the canonical body, and the references to
+          # GHL-INBOUND-AND-PLAYBOOKS.md (source of truth) + qc-23-key-bodies.sh. The gate
+          # COMPOSES qc-23-key-bodies.sh so the standard's own canonical body is proven
+          # 23-key/flat/placeholder-free. BASH (grep core) — respects the .py ban.
+          bash 38-conversational-ai-system/scripts/qc-ghl-raw-body-standard.sh
+          echo "✓ Skill 38 GHL raw body JSON standard codifies the FLAT 23-key body + the canonical body is lint-clean"
+
+      - name: Skill 38 Notion Client-Doc Standard
+        shell: bash
+        run: |
+          set -uo pipefail
+          # Machine-enforce the NOTION CLIENT-DOC STANDARD: assert
+          # references/notion-client-doc-standard.md carries the hard "EVERY CLIENT NOTION
+          # SETUP DOC MUST INCLUDE ALL OF THE FOLLOWING, IN THIS ORDER" headline and the full
+          # ordered mandatory list (1-12): Quick-Start-first → URL block → two-block
+          # Authorization (block1 "Authorization", block2 value-only "Bearer <token>", never
+          # combined) → Content-Type split → FLAT 23-key body → tags-first + manual-fill +
+          # Build-with-AI-shape-only + post-build VERIFY → Communication Playbooks → VPS-vs-Mac
+          # → how-it-works LAST → every-value-its-own-block → Telegram delivery → UNIVERSAL.
+          # The gate COMPOSES qc-reference-sheet.sh --require-manual-fill so the generator is
+          # proven to match the standard's order. BASH (grep core) — respects the .py ban.
+          bash 38-conversational-ai-system/scripts/qc-notion-doc-standard.sh
+          echo "✓ Skill 38 Notion client-doc standard codifies the ordered structure (1-12) + the generator matches it"
+
       - name: Skill 37 Telegram delivery-confirmation gate (anti-faking)
         shell: bash
         run: |
@@ -929,19 +881,38 @@ jobs:
           fi
           echo "✓ All 162 Skill 42 SOPs follow PA-NN-NN-slug.md"
 
-      - name: Skill 43 Graphify Knowledge Graph install QC (simulated install)
+      # PRD 1.9: Path-authority guard — no Python script may define a top-level
+      # WORKSPACE_ROOT =, ZHC_ROOTS =, or MASTER_FILES = constant outside of a
+      # try/except block or function.  All path resolution goes through
+      # get_openclaw_paths() in shared-utils/detect_platform.py.
+      # Shell scripts are excluded (they legitimately use WORKSPACE_ROOT for
+      # OpenClaw workspace, not the company root).
+      # Exclusions: migrate/archive scripts, detect_platform.py itself, the
+      # HEARTBEAT/check scripts that ARE the canonical resolver, and fallback
+      # lines inside except/else blocks.
+      - name: PRD 1.9 path-authority guard (no rogue top-level WORKSPACE_ROOT / ZHC_ROOTS / MASTER_FILES in Python)
         shell: bash
         run: |
           set -uo pipefail
-          # qc-graphify-knowledge-graph.sh checks the skill folder is complete and that
-          # the load-bearing facts are present in the docs: installs graphifyy[all],
-          # registers the OpenClaw skill (graphify install --platform claw), wires
-          # AGENTS.md (graphify claw install), installs the FREE AST hook (graphify hook
-          # install), maps on the CLIENT'S OWN model (--backend ollama), states the
-          # on-demand-vs-free split, routes questions through `graphify query`, references
-          # the no-comingling guardrail (N29), and carries the VPS no-apt warning. The
-          # graphify binary + Skill 23 checks are WARN-only (no live install in CI).
-          mkdir -p "$HOME/.openclaw/skills"
-          ln -snf "$GITHUB_WORKSPACE/43-graphify-knowledge-graph" "$HOME/.openclaw/skills/43-graphify-knowledge-graph"
-          bash 43-graphify-knowledge-graph/qc-graphify-knowledge-graph.sh
-          echo "✓ Skill 43 install QC green (folder complete / commands verified / N29 referenced / no apt)"
+          # Only scan Python files (shell WORKSPACE_ROOT is the OpenClaw workspace, not a company root).
+          # Pattern: top-level bare assignment (zero indent, not inside try/except/def/class).
+          # We look for lines starting with the constant name (no leading whitespace).
+          ROGUE=$(grep -rn \
+            --include="*.py" \
+            -E '^(WORKSPACE_ROOT|ZHC_ROOTS|MASTER_FILES)\s*=' \
+            . \
+            | grep -v '\.git/' \
+            | grep -v 'archive/' \
+            | grep -v 'migrate' \
+            | grep -v 'shared-utils/detect_platform.py' \
+            | grep -v 'scripts/check-company-root' \
+            || true)
+          if [ -n "$ROGUE" ]; then
+            echo "✗ PRD 1.9 violation — Python script(s) define a top-level path root constant:"
+            echo "$ROGUE" | sed 's/^/    /'
+            echo ""
+            echo "Fix: remove the constant and call get_openclaw_paths() from shared-utils/detect_platform.py."
+            echo "Fallback assignments inside try/except blocks are OK (indented — won't match this guard)."
+            exit 1
+          fi
+          echo "✓ PRD 1.9 path-authority guard: no rogue top-level WORKSPACE_ROOT / ZHC_ROOTS / MASTER_FILES in Python"

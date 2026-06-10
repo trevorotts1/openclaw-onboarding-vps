@@ -2880,8 +2880,16 @@ mkdir -p "$OC_BACKUPS"
 mkdir -p "$OC_CONFIG/master-files"
 mkdir -p "$OC_CONFIG/master-files/coaching-personas/personas"
 mkdir -p "$OC_CONFIG/master-files/project-prds"
+# PRD 1.9: create the canonical company root at /data/openclaw-master-files (persistent Docker volume).
+# This is separate from the legacy $OC_CONFIG/master-files path to avoid breaking existing installs.
+mkdir -p "/data/openclaw-master-files/zero-human-company"
+_DNDM_VPS="/data/openclaw-master-files/DO-NOT-DELETE.md"
+if [ ! -f "$_DNDM_VPS" ] && [ -f "$SKILLS_DIR/shared-utils/DO-NOT-DELETE.md" ]; then
+  cp "$SKILLS_DIR/shared-utils/DO-NOT-DELETE.md" "$_DNDM_VPS"
+fi
+unset _DNDM_VPS
 
-success "Backup folders created at $OC_BACKUPS, working files at $OC_CONFIG/master-files"
+success "Backup folders created at $OC_BACKUPS, working files at $OC_CONFIG/master-files, canonical company root at /data/openclaw-master-files"
 
 # ----------------------------------------------------------
 # Step 10: Write UPDATE PENDING Flag with 5-Phase Processing
