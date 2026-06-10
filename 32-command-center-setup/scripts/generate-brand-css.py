@@ -3,7 +3,7 @@
 generate-brand-css.py — v9.6.5
 
 Reads the active company's brand colors from the Mission Control database
-(or directly from /data/.openclaw/workspace/zero-human-company/<slug>/company-config.json
+(or directly from ~/clawd/zero-human-company/<slug>/company-config.json
 as a fallback) and writes a CSS file the Kanban frontend imports at runtime.
 
 The frontend imports this from `/public/brand.css` (or whatever path the
@@ -32,11 +32,29 @@ from pathlib import Path
 
 HOME = Path.home()
 
+# PRD 1.3: import the single shared DB resolver.
+_SHARED_UTILS = Path(__file__).resolve().parent.parent.parent / "shared-utils"
+sys.path.insert(0, str(_SHARED_UTILS))
+try:
+    from resolve_db import find_dashboard_db as _shared_find_dashboard_db  # type: ignore
+    _HAS_SHARED_RESOLVER = True
+except ImportError:
+    _HAS_SHARED_RESOLVER = False
+
 
 def find_db():
+    """
+    PRD 1.3: delegate to the shared resolver when available so every script
+    uses the same ordered candidate list.
+    """
+    if _HAS_SHARED_RESOLVER:
+        p = _shared_find_dashboard_db()
+        return p if p.exists() else None
+    # Fallback for bootstrap installs.
     for c in [
         HOME / "projects/command-center/mission-control.db",
         HOME / "projects/mission-control/mission-control.db",
+        Path("/data/projects/command-center/mission-control.db"),
         Path("/opt/mission-control/mission-control.db"),
         Path("/app/mission-control.db"),
     ]:
@@ -50,8 +68,8 @@ def find_zhc_company_config(slug=None):
     roots = [
         HOME / "clawd" / "zero-human-company",
         HOME / "clawd" / "zhc",
-        Path("/data/.openclaw/workspace/zero-human-company"),
-        Path("/data/.openclaw/workspace/zhc"),
+        Path(os.path.expanduser("~/clawd/zero-human-company")),  # PRD item 1.7: expanduser
+        Path(os.path.expanduser("~/clawd/zhc")),                  # PRD item 1.7: expanduser
     ]
     candidates = []
     for root in roots:
