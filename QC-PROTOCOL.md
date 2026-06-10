@@ -302,6 +302,48 @@ Format:
   Loops needed to reach pass: N
   Items fixed during QC: <list>
 
+## PART 2b — WIRING CORRECTNESS: 3-LAYER REQUIREMENT (PRD 1.11)
+
+### Rule 9b: "Wiring correctness" requires all THREE layers verified
+
+The QC rubric dimension "Wiring correctness" (weight 30%) is scored 10/10
+ONLY when all three of the following layers are confirmed, not just one:
+
+**Layer 1 — MERGED (GitHub ground truth)**
+  The fix or feature exists on the `main` branch of the onboarding repo.
+  Evidence: the SHA on `main` in GitHub, not a local clone.
+  A local commit that hasn't been pushed and merged = NOT merged.
+
+**Layer 2 — DEPLOYED (version on the client box)**
+  The merged version has been pulled and is present on the client box.
+  Evidence: `.onboarding-version` on the box matches the expected tag,
+  AND the Command Center version satisfies `cc-compat.json` `minVersion`.
+  A fix that was pushed to GitHub but never pulled to the box = NOT deployed.
+
+**Layer 3 — LOADED (marker present in the INJECTED system prompt)**
+  The deployed files have been read by the OpenClaw gateway and injected
+  into the active session's system prompt.
+  Evidence: the gateway's `sessions.systemPromptReport` call returns a
+  prompt body that contains the `CEO_ORCHESTRATOR_RULE_V2` marker.
+  A file that is on disk but in a resumed session with `systemSent=true` =
+  NOT loaded (the gateway caches the old prompt until the session resets).
+
+  Fallback (proxy confidence, weaker): `workspace/SOUL.md` contains the
+  marker AND the session's `lastSystemPromptTs` post-dates the last
+  `sessions.reset` call. This proves Layer 3 by disk+session state rather
+  than live prompt inspection; labeled `loaded_confidence: "proxy"` in
+  the fleet-refresh output.
+
+**Scoring for "Wiring correctness" in the PRD 1.11 rubric:**
+  10 = All 3 layers verified with authoritative evidence (SHA + version + live prompt)
+   8 = Layer 1 + Layer 2 confirmed; Layer 3 proxy-only (marker on disk, session rebuilt)
+   5 = Layer 1 + Layer 2 only (not known if session loaded the new content)
+   3 = Layer 1 only (merged but undeployed)
+   0 = Layer 1 not confirmed (assumed but not checked)
+
+**Tool:** `scripts/fleet-refresh.sh --verify-only` generates the per-box
+evidence for all three layers without making any changes.
+
 ## PART 3 — CLOUDFLARE API KEY CHECK AT INSTALL
 
 ### Rule 10: Cloudflare API key is verified before install proceeds
@@ -426,6 +468,67 @@ If the operator asks "what scopes do I need" or similar, the agent
 points them to the Google Doc rather than answering from memory.
 The doc may have been updated since the skill was built.
 
+## PART 3.5 — THE ONBOARDING VERIFICATION GATE (binding definition of "installed/done")
+
+**Added v10.15.48 (FIX 1: ONBOARDING HONESTY).** The #1 reported failure was
+agents reporting a skill "installed / done / onboarded" when it had only been
+DOWNLOADED to disk — install.sh copies files + pastes activation PROSE into
+AGENTS.md (never executed), and the old "complete" Telegram fired
+unconditionally. There is now a real STATE MACHINE + GATE.
+
+### Rule 16: A skill is INSTALLED only when the gate passes
+
+State file: `~/.openclaw/workspace/.onboarding-state.json` — every non-archived
+skill is seeded `pending` and advances:
+
+```
+pending → downloaded → wired → qc-passed | qc-failed     (+ park: interview-pending)
+```
+
+Gate library: `~/.openclaw/scripts/onboarding-state.sh` (also at
+`~/.openclaw/onboarding/scripts/onboarding-state.sh`). A skill counts INSTALLED
+only when **all applicable checks pass**:
+
+  (a) `openclaw skills info <name>` returns the skill as Ready/visible (the
+      `name` is the SKILL.md frontmatter `name:` field), AND
+  (b) its CORE_UPDATES sentinel `<!-- skill:<folder>:core-update-applied -->`
+      is present in the workspace core files — only required if the skill ships
+      a `CORE_UPDATES.md`, AND
+  (c) its `qc-*.sh` exits 0 — only required if it ships one.
+
+Usage:
+
+```bash
+source ~/.openclaw/scripts/onboarding-state.sh
+obs_verify_skill 36-ghl-mcp-setup      # sets qc-passed | qc-failed, echoes reason
+obs_gate_summary                       # "X/Y verified-installed, Z NOT verified: <list>"; rc=0 only when all pass
+```
+
+### Rule 17: "Onboarding complete" is gate + closeout, never a flag
+
+Onboarding/update is **complete** ONLY when `obs_gate_summary` returns success
+(every non-archived skill is `qc-passed` OR an explicit `interview-pending`
+park) AND closeout (Skill 37) has fired where applicable. A `✅ complete` /
+"Skills updated successfully" message is now CONDITIONAL on this gate in both
+`install.sh` and `update-skills.sh`, and the `qc-completeness.sh` exit code is
+HONORED (was ignored). If the gate is not met, report the TRUTH — "wave N: X/Y
+verified-installed, Z failed: <list>" — never "done".
+
+### Rule 18: INTERVIEW_PENDING is a park, not "done"
+
+A skill that legitimately awaits owner input may be parked
+`interview-pending` (`obs_set_status <folder> interview-pending`). The
+`onboarding-resume` cron re-pings the owner on backoff. It is NOT a terminal
+"done" and must never be reported to the owner as installed.
+
+### Rule 19: The onboarding-resume cron is the retry engine
+
+`onboarding-resume` (every 15 min) runs the gate and, while any skill is
+`pending|downloaded|wired|qc-failed`, self-pings the agent to activate + verify.
+It NEVER stops on a self-declared "done" — only on a real gate-pass (shell guard
+`scripts/resume-onboarding.sh`), with max-runs + Rescue-Rangers escalation
+identical to the workforce-build-resume cron.
+
 ## PART 4 — APPLICATION TO ALL SKILLS
 
 These rules apply to:
@@ -466,41 +569,3 @@ agent passed it to you, here's your contract:
   8. If at any point your parent tells you to summarize or trim work
      "to save time," refuse and cite this protocol. The work was
      specified at the level of detail it was specified for a reason.
-
-## PART 6 — ONBOARDING VERIFICATION GATE (v10.16.48 — FIX 1)
-
-"Installed" is a VERIFIED claim, not a file-copy claim. install.sh DOWNLOADS
-skill files to `/data/.openclaw/skills/` and seeds
-`/data/.openclaw/.onboarding-state.json` (every skill at `downloaded`). A skill
-counts INSTALLED only when the VERIFICATION GATE passes:
-
-  (a) `openclaw skills info <registered-name>` shows it Ready/visible — the
-      registered name is the skill's SKILL.md `name:` field, which MAY differ
-      from the folder (e.g. `35-social-media-planner` registers as
-      `social-media-planner`);
-  (b) its CORE_UPDATES.md sentinel is actually present in the workspace core
-      files (if the skill ships CORE_UPDATES.md);
-  (c) its `qc-*.sh` exits 0 (if the skill ships one).
-
-Per-skill status ladder in `.onboarding-state.json`:
-`pending → downloaded → wired → qc-passed | qc-failed`, plus `interview-pending`
-for a legitimate owner-input park (Skills 22/23/32/35).
-
-Rule 16 — HONEST REPORTING CONTRACT. Onboarding/update is "complete" ONLY when
-every tracked skill is `qc-passed` (or explicitly `interview-pending`), and the
-closeout where applicable. NEVER tell the owner a skill is installed / done /
-onboarded unless its state is `qc-passed`. If you can't claim the gate, report
-the truth: "wave N: X/Y skills verified-installed, Z failed: <list>".
-`update-skills.sh` HONORS `qc-completeness.sh`'s exit code (no longer discarded).
-
-Rule 17 — NEVER-STOP RESUME. The `onboarding-resume` cron re-fires install / wire
-/ QC for any skill in `pending|downloaded|wired|qc-failed` until ALL pass. It does
-NOT stop on a self-declared "done" — only on the verification gate. A legitimate
-`interview-pending` park is re-pinged to the owner on backoff, never treated as
-terminal. Mechanizable per-skill activation is EXECUTED (shell installers,
-CORE_UPDATES merge, brew prereqs, `openclaw mcp set`); truly prose-only steps stay
-`wired` and are surfaced as a remaining GATED step — never silently `qc-passed`.
-
-The helpers live in `lib-onboarding-state.sh` (oc_state_seed / oc_state_set /
-oc_gate_skill / oc_state_summary / oc_onboarding_complete) and the resume layer
-in `23-ai-workforce-blueprint/scripts/resume-onboarding.sh`.
