@@ -11,15 +11,15 @@ import os
 from typing import Dict, List, Optional
 
 ENV_FILE_PATHS = [
-    os.path.expanduser("~/clawd/secrets/.env"),
-    os.path.expanduser("~/.openclaw/.env"),
+    str(Path.home() / "clawd/secrets/.env"),
+    str(Path.home() / ".openclaw/.env"),
     "/data/.openclaw/.env",
-    os.path.expanduser("~/.env"),
-    os.path.expanduser("~/.clawdbot/.env"),
+    str(Path.home() / ".env"),
+    str(Path.home() / ".clawdbot/.env"),
 ]
 
 OPENCLAW_JSON_PATHS = [
-    os.path.expanduser("~/.openclaw/openclaw.json"),
+    str(Path.home() / ".openclaw/openclaw.json"),
     "/data/.openclaw/openclaw.json",
 ]
 

@@ -13,11 +13,11 @@ except ImportError:
     print("Run: pip3 install google-genai numpy --break-system-packages")
     sys.exit(1)
 
-DB_PATH = os.path.expanduser("~/clawd/data/coaching-personas/gemini-index.sqlite")
+DB_PATH = str(Path.home() / "clawd/data/coaching-personas/gemini-index.sqlite")
 
 def _find_master_files_dir():
     """Find the master files folder regardless of capitalization or spacing."""
-    downloads = Path(os.path.expanduser("~/Downloads"))
+    downloads = Path.home() / "Downloads"
     # First check the known exact path
     exact = downloads / "openclaw-master-files"
     if exact.exists():
@@ -36,9 +36,9 @@ def _find_master_files_dir():
     except Exception:
         pass
     # Final fallback to clawd data dir
-    return os.path.expanduser("~/clawd/data/coaching-personas/personas")
+    return str(Path.home() / "clawd/data/coaching-personas/personas")
 
-PERSONAS_DIR = os.path.expanduser("~/clawd/data/coaching-personas/personas")
+PERSONAS_DIR = str(Path.home() / "clawd/data/coaching-personas/personas")
 if not os.path.exists(PERSONAS_DIR):
     PERSONAS_DIR = _find_master_files_dir()
 
