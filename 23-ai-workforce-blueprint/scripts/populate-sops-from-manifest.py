@@ -44,15 +44,30 @@ from datetime import datetime
 from pathlib import Path
 
 
-# ─── PATHS ────────────────────────────────────────────────────────────────────
+# ─── PATHS (PRD 1.9: canonical root from get_openclaw_paths()) ────────────────
 
 HOME = Path.home()
-ZHC_ROOTS = [
-    HOME / "clawd" / "zero-human-company",
-    HOME / "clawd" / "zhc",
-    Path(os.path.expanduser("~/clawd/zero-human-company")),  # PRD item 1.7: expanduser
-    Path(os.path.expanduser("~/clawd/zhc")),                  # PRD item 1.7: expanduser
-]
+
+# Build the ZHC search roots: canonical root first, legacy roots for backward compat.
+def _build_zhc_roots() -> list:
+    """Return ZHC root candidates — canonical root first (PRD 1.9)."""
+    _su = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "shared-utils")
+    sys.path.insert(0, os.path.realpath(_su))
+    roots = []
+    try:
+        from detect_platform import get_openclaw_paths as _gop
+        roots.append(_gop()["company_root"])
+    except Exception:
+        pass
+    roots.extend([
+        HOME / "clawd" / "zero-human-company",
+        HOME / "clawd" / "zhc",
+        Path(os.path.expanduser("~/clawd/zero-human-company")),
+        Path(os.path.expanduser("~/clawd/zhc")),
+    ])
+    return roots
+
+ZHC_SEARCH_ROOTS = _build_zhc_roots()
 
 SELECTOR_CANDIDATES = [
     HOME / "Downloads" / "openclaw-master-files" / "shared-utils" / "select_model.py",
@@ -67,7 +82,7 @@ def find_manifest(explicit_path=None):
         p = Path(explicit_path)
         if p.exists():
             return p
-    for root in ZHC_ROOTS:
+    for root in ZHC_SEARCH_ROOTS:
         if root.is_dir():
             for entry in sorted(root.iterdir()):
                 manifest = entry / "sop-research-manifest.json"
@@ -107,7 +122,7 @@ def resolve_model(skill, purpose_tier="heavy", input_chars=None):
 
 # ─── SUB-AGENT SPAWN ──────────────────────────────────────────────────────────
 
-# v10.16.5: 6-location resolver for the openclaw binary. shutil.which("openclaw")
+# v10.15.5: 6-location resolver for the openclaw binary. shutil.which("openclaw")
 # alone fails on macOS non-interactive subprocesses (PATH doesn't include
 # /opt/homebrew/bin without a login shell) and on VPS containers (different
 # canonical paths). Cache the resolution at module load.
@@ -160,7 +175,7 @@ def build_subagent_prompt(dept_entry, sub_agent_instructions, model_id):
 def spawn_via_openclaw(dept_entry, prompt, model_id, timeout):
     """Use openclaw CLI sub-agent spawn (preferred path).
 
-    v10.16.5: uses the resolved absolute path from find_openclaw() so the
+    v10.15.5: uses the resolved absolute path from find_openclaw() so the
     subprocess does not depend on the spawning shell's PATH.
     """
     bin_path = _OPENCLAW_BIN or "openclaw"
@@ -232,7 +247,7 @@ def main():
     if not manifest_path:
         print("[POPULATE-SOPS] ERROR: No sop-research-manifest.json found in any ZHC folder.", file=sys.stderr)
         print("  Looked in:", file=sys.stderr)
-        for r in ZHC_ROOTS:
+        for r in ZHC_SEARCH_ROOTS:
             print(f"    {r}", file=sys.stderr)
         return 1
 
