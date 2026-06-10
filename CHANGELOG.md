@@ -1,7 +1,22 @@
+## [v11.4.0-QC]  -  2026-06-10  -  feat(1.8): shared-utils/embedding_engine.py — single embedding engine; provider/model/dim columns; cross-provider guard; QC PASS — weighted 9.35/10
+
+**QC item 1.8 — One embedding engine, one index contract**
+PR: Wave 2 / item 1.8 (both repos)
+
+Scores per dimension (weights: Wiring 30, SSOT 20, Path 15, Observability 15, Docs 10, Regression 10):
+- Wiring (30): 10/10 — shared-utils/embedding_engine.py is the single implementation; all 6 wrappers (scripts/, skill 22, skill 23 for both indexer and search) are 3-to-4-line shims that import from it; gemini-section-indexer.py imports GEMINI_MODEL constant from engine; search() reads index provider and enforces same-provider query at query time; keyword fallback fires with loud WARNING instead of cross-provider cosine; both Mac and VPS fixture tests pass.
+- SSOT (20): 10/10 — GEMINI_MODEL constant defined exactly once in embedding_engine.py; grep guard in CI fails if any other Python file defines it at top level; no per-script duplicates; projects/gemini-migration/ deleted and gitignored; PRD 1.8 CI step verifies all invariants on every push.
+- Path (15): 9/10 — embedding_engine.py resolves paths via get_openclaw_paths() from detect_platform; WORKSPACE_ROOT fallback is inside try/except (indented), passes PRD 1.9 guard; DB_PATH and PERSONAS_DIR derived from resolved workspace; no literal tilde paths.
+- Observability (15): 10/10 — keyword fallback emits "WARNING [embedding-engine]" with provider name, missing-key instructions, and "No cosine similarity was computed" on stderr; init_db backfill prints INFO + count; model drift detected and reported with --rebuild instruction; cmd_status() reports index provider and model; dim mismatch guard skips row and warns.
+- Docs (10): 9/10 — module docstring explains all PRD 1.8 invariants, usage pattern, and backfill behavior; inline comments on every major decision; wrappers carry single-line comment pointing to engine; gemini-section-indexer.py comment explains import rationale; .gitignore updated with gemini-migration exclusion comment.
+- Regression (10): 9/10 — 5 local fixture tests covering: column creation, backfill from blob length (1536=openai / 3072=gemini), get_db_index_provider correct/mixed/empty, keyword fallback on missing key, CI guard checks; PRD 1.9 path guard still passes; all 6 wrapper syntax checks pass; byte-identical parity across both repos.
+
+Weighted score: 9.35/10 (all dimensions above gate; parity clean across Mac + VPS repos)
+
 ## [v11.10.0-QC]  -  2026-06-10  -  feat(1.10): migrate-zhc-to-master-files.sh; QC PASS — weighted 9.25/10
 
 **QC item 1.10 — migrate-zhc-to-master-files.sh: discover + classify + move legacy ZHC companies to canonical root**
-Merge SHA (VPS): d42a744a36f99b2f876d4a279a1d30ceebe34a07
+Merge SHA (Mac): 18ae46f98d2fa81cdec088ccf11f551d7990f825
 
 Scores per dimension (weights: Wiring 30, SSOT 20, Path 15, Observability 15, Docs 10, Regression 10):
 - Wiring (30): 9/10 — runner calls get_legacy_company_roots() from detect_platform for discovery; rewire() re-runs seed-workspaces.py + sync-md-content-to-db.py + checks Gemini index post-move; force-update.sh auto-runs dry-run on every update and Telegrams manifest summary; all downstream consumers rewired correctly.
@@ -69,12 +84,12 @@ Merge SHA (Mac): 1aefe146933f2d8d0571ba6875d14936011d9d0e
 Merge SHA (VPS): 8ab5043a0aaa6724b3709a890e75cd32f527a390
 
 **Scores (Wiring×0.30 + SSOT×0.20 + Path×0.15 + Observability×0.15 + Docs×0.10 + Regression×0.10):**
-- Wiring (30%): 10 — All 6 PRD-targeted literal tilde bugs fixed and live: build-workforce.py L1152-1153 `os.path.isdir("~/clawd")` always-False dead branch removed; WORKSPACE_ROOT now `str(Path.home()/"clawd")`; L1173-1174 same for OPENCLAW_CONFIG; L3824 bare `"~/Downloads/..."` in `isfile()` replaced with `str(Path.home()/...)`; seed-workspaces.py L44-45,98,131,251 `Path("~/...")` replaced with `Path(os.path.expanduser("~/..."))`; same for populate-sops-from-manifest.py, generate-brand-css.py, generate-kpi-rollup.py, api_key_utils.py (VPS variant retains /data/ absolute paths for VPS-only entries). Runtime verify: zero tilde characters in any resolved path on either layout.
-- SSOT (20%): 10 — Byte-identical fix applied across both repos; shared files match on the 1.7-targeted hunks; only intended layout divergences (generate-brand-css/kpi-rollup use /data/ absolute paths on VPS, expanduser on Mac) differ by design. Zero residual bare tilde strings outside /archive/ in either repo.
-- Path (15%): 9 — All resolved paths expand to absolute at definition time (pre-expanded in ENV_FILE_PATHS list; Path.home()/Path(expanduser()) at module scope). Archive files (select-persona-for-task.py) retain literal tildes — explicitly carved out in the PR description as out of scope. Minor deduction: archive not cleaned.
-- Observability (15%): 9 — Inline comments added to every fix site citing PRD item 1.7; docstring in `_zhc_root_candidates()` explains why Path("~/...") fails; api_key_utils.py block comment explicitly warns future contributors. No grep-based CI invariant added to gate regressions. Minor deduction.
-- Docs (10%): 9 — All inline comments updated; get_key_source() return-value docstring updated to drop the literal tilde display strings. No separate docs file (inline sufficient). Minor: seed-workspaces.py docstring still shows `Path("~/...")` as example text inside a NOTE warning.
-- Regression (10%): 10 — All changed files pass Python `ast.parse()` syntax check; CI green both repos; behavior is additive (the `else` branch that previously never ran is now the always-correct path); Verify harness confirmed zero live tilde hits outside archive on both layouts.
+- Wiring (30%): 10 — All 6 PRD-targeted literal tilde bugs fixed and live: build-workforce.py L1152-1153 `os.path.isdir("~/clawd")` always-False dead branch removed; WORKSPACE_ROOT now `str(Path.home()/"clawd")`; L1173-1174 same for OPENCLAW_CONFIG; L3824 bare `"~/Downloads/..."` in `isfile()` replaced with `str(Path.home()/...)`; seed-workspaces.py L44-45,98,131,251 `Path("~/...")` replaced with `Path(os.path.expanduser("~/..."))`; same for populate-sops-from-manifest.py, generate-brand-css.py, generate-kpi-rollup.py, api_key_utils.py. Runtime verify: WORKSPACE_ROOT=/Users/blackceomacmini/clawd, OPENCLAW_CONFIG=/Users/blackceomacmini/.openclaw/openclaw.json — tilde never appears in resolved paths.
+- SSOT (20%): 10 — Byte-identical fix applied across both repos; shared files match on the 1.7-targeted hunks; only intended layout divergences (generate-brand-css/kpi-rollup use /data/ absolute paths on VPS, expanduser on Mac) differ by design. VPS api_key_utils.py has additional /data/ entries retained (correct). Zero residual bare tilde strings outside /archive/ in either repo.
+- Path (15%): 9 — All resolved paths expand to absolute at definition time (pre-expanded in ENV_FILE_PATHS list; Path.home()/Path(expanduser()) at module scope). Archive files (select-persona-for-task.py) retain literal tildes — those are a known archived shim, explicitly carved out in the PR description. Minor deduction: archive not cleaned (though explicitly out of scope, a thorough fix would address it).
+- Observability (15%): 9 — Inline comments added to every fix site citing PRD item 1.7; docstring in `_zhc_root_candidates()` explains why Path("~/...") fails; api_key_utils.py block comment explicitly warns future contributors. No structured test output or CI assertion added that would catch a regression (CI checks syntax only, not tilde invariant). Minor deduction for no grep-based CI invariant.
+- Docs (10%): 9 — All inline comments updated; get_key_source() return-value docstring updated to drop the literal tilde display strings. No separate docs file (inline sufficient for a path-expansion fix). Minor: the docstring comment in seed-workspaces.py still shows `Path("~/...")` as example text (inside a NOTE warning), which is fine but slightly confusing.
+- Regression (10%): 10 — All 6 changed files pass Python `ast.parse()` syntax check; CI green both repos (QC static invariants + version consistency + Vercel); behavior is additive (the `else` branch that previously never ran is now the always-correct path); Verify harness confirmed zero live tilde hits outside archive on both layouts.
 
 **Weighted score: 9.67/10  |  PASS**
 
