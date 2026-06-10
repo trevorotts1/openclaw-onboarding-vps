@@ -13,7 +13,7 @@ Add concise summaries and file paths only. Never paste full documentation into c
 ```
 ## AI Workforce Blueprint (Installed)
 Builds the folder and file system that turns your AI into a trained workforce.
-Skill: /data/.openclaw/skills/23-ai-workforce-blueprint/
+Skill: ~/.openclaw/skills/23-ai-workforce-blueprint/
 Full document: ai-workforce-blueprint-full.md (66,819 chars)
 
 Department folder rules:
@@ -31,10 +31,10 @@ Agent management:
 Persona integration:
 - Each department gets governing-personas.md as a REFERENCE GUIDE (not a static assignment)
 - Every department AGENTS.md includes the Persona Operating Protocol (Dynamic Selection Engine)
-- Dynamic selection (v9.6.2+): every dept director calls `select-persona-for-task.py --dept X --task "..." --format json` for every task. The script unifies semantic search (Gemini Embeddings 2 via gemini-search.py) + keyword filter (dept domain tags from persona-categories.json) + full 5-layer alignment scoring. One call. The director does NOT separately invoke gemini-search.py.
+- Dynamic selection (v11.4.0+): every dept director calls `persona-selector-v2.py --department X --task "..." --format json` for every task. This is the CANONICAL selector. It runs a four-stage funnel: (A) governing-personas.md pool, (B) DEPT_DOMAIN_TAGS keyword filter, (C) Gemini semantic search via gemini-search.py, (D) 5-layer alignment scoring on funnel survivors. Output JSON includes "funnel" counts for QC observability. `select-persona-for-task.py` is a deprecated shim that delegates to v2; update any callers. The director does NOT separately invoke gemini-search.py.
 - 5-layer scoring: Owner Values (25%), Company Mission (25%), Business KPIs (20%), Dept KPIs (15%), Task Fit (15%)
 - Fallback: if Gemini unavailable, selector falls back to keyword + 5-layer only (exits 2 instead of 0, but still returns a winner). NEVER returns "no persona selected".
-- Reason log: AUTO-LOGGED by the selector to /data/.openclaw/workspace/zero-human-company/[slug]/departments/[dept]/memory/[date].md. The director does NOT log again.
+- Reason log: AUTO-LOGGED by the selector to ~/clawd/zero-human-company/[slug]/departments/[dept]/memory/[date].md. The director does NOT log again.
 - persona-matching-protocol.md documents the full runtime matching process
 - Dev Devil's Advocate (DA) auto-created per department using Act As If Protocol
 - Persona diversity tracked in agent performance metrics
@@ -49,11 +49,11 @@ Workspace location: [fill in after build]
 ### Governing Personas — Update Protocol
 
 When a new book is added to the persona library:
-1. Run `python3 /data/.openclaw/workspace/scripts/gemini-indexer.py` to re-index the coaching-personas collection
+1. Run `python3 ~/.openclaw/workspace/scripts/gemini-indexer.py` to re-index the coaching-personas collection
 2. Review `governing-personas.md` in each department folder for relevant departments (the new persona may be a better fit for some tasks)
 3. Update persona assignments in `governing-personas.md` if the new persona is a better fit for Primary or Secondary slots
-4. Update `/data/.openclaw/workspace/ORG-CHART.md` if specialist roles or department structure changes as a result
-5. Update `/data/.openclaw/workspace/persona-matrix.md` to include the new persona in the company pool
+4. Update `~/.openclaw/workspace/ORG-CHART.md` if specialist roles or department structure changes as a result
+5. Update `~/.openclaw/workspace/persona-matrix.md` to include the new persona in the company pool
 
 This ensures the workforce stays current as the persona library grows.
 ```
@@ -67,16 +67,16 @@ This ensures the workforce stays current as the persona library grows.
 **Exact text to add:**
 ```
 ## AI Workforce Blueprint - Scaffold Script
-Script: /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
-Run: python3 /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
+Script: ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
+Run: python3 ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
 
 Key functions:
-- create_department_workspace(): builds /data/.openclaw/workspace/departments/[name]/ with inherited core files
+- create_department_workspace(): builds ~/.openclaw/workspace/departments/[name]/ with inherited core files
 - create_governing_personas_md(): maps persona-categories.json to department domain tags
 - determine_specialists(): classifies roles as permanent (daily) or on-call (template)
 - add_agent_to_config(): backs up config, then adds agents.list entry
-- generate_org_chart(): creates /data/.openclaw/workspace/ORG-CHART.md
-- generate_departments_json(): creates departments.json for Command Center (written to /data/.openclaw/master-files/company-discovery/departments.json)
+- generate_org_chart(): creates ~/.openclaw/workspace/ORG-CHART.md
+- generate_departments_json(): creates departments.json for Command Center (written to ~/Downloads/openclaw-master-files/company-discovery/departments.json)
 - generate_soul_md(): creates unique SOUL.md from interview answers
 - log_fallback(): tracks when clients hesitate during interview
 
@@ -85,7 +85,7 @@ Options:
 - Option B (Quick Setup): uses existing workspace context + industry best practices
 - Option C (Audit/Resume): scans existing folders, fills gaps, does not overwrite
 
-Full reference: /data/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
+Full reference: ~/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
 ```
 
 ---
@@ -98,16 +98,16 @@ Full reference: /data/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-bl
 
 ```
 ## AI Workforce Blueprint (Installed [DATE])
-- Skill: /data/.openclaw/skills/23-ai-workforce-blueprint/
+- Skill: ~/.openclaw/skills/23-ai-workforce-blueprint/
 - Workspace built at: [fill in path after build]
 - Departments: [fill in after build]
-- Build script: /data/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
+- Build script: ~/.openclaw/skills/23-ai-workforce-blueprint/scripts/build-workforce.py
 - Source: Available at your onboarding package repo.
 - Routing file: [workspace]/universal-sops/00-ROUTING.md
 - Persona matrix: [workspace]/persona-matrix.md
 - Org chart: [workspace]/ORG-CHART.md
-- Command Center config: /data/.openclaw/master-files/company-discovery/departments.json
-- Full blueprint: /data/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
+- Command Center config: ~/Downloads/openclaw-master-files/company-discovery/departments.json
+- Full blueprint: ~/.openclaw/skills/23-ai-workforce-blueprint/ai-workforce-blueprint-full.md
 ```
 
 ---
@@ -126,25 +126,25 @@ Built: [DATE]
 Status: COMPLETE | IN_PROGRESS | NOT_STARTED
 
 Zero Human Company folder (everything for this company lives here):
-- /data/.openclaw/workspace/zero-human-company/[company-slug]/
+- ~/clawd/zero-human-company/[company-slug]/
 
 Per-company artifacts:
-- Pre-interview research: /data/.openclaw/workspace/zero-human-company/[company-slug]/pre-interview-research.md
-- Interview answers (permanent record): /data/.openclaw/workspace/zero-human-company/[company-slug]/workforce-interview-answers.md
-- Interview handoff (progress / resume): /data/.openclaw/workspace/zero-human-company/[company-slug]/interview-handoff.md
-- ORG-CHART: /data/.openclaw/workspace/zero-human-company/[company-slug]/ORG-CHART.md
-- Persona matrix: /data/.openclaw/workspace/zero-human-company/[company-slug]/persona-matrix.md
-- Departments JSON (Command Center): /data/.openclaw/workspace/zero-human-company/[company-slug]/departments.json
-- SOP research manifest (parallel sub-agent job queue): /data/.openclaw/workspace/zero-human-company/[company-slug]/sop-research-manifest.json
-- Department workspaces: /data/.openclaw/workspace/zero-human-company/[company-slug]/departments/[dept-id]/
+- Pre-interview research: ~/clawd/zero-human-company/[company-slug]/pre-interview-research.md
+- Interview answers (permanent record): ~/clawd/zero-human-company/[company-slug]/workforce-interview-answers.md
+- Interview handoff (progress / resume): ~/clawd/zero-human-company/[company-slug]/interview-handoff.md
+- ORG-CHART: ~/clawd/zero-human-company/[company-slug]/ORG-CHART.md
+- Persona matrix: ~/clawd/zero-human-company/[company-slug]/persona-matrix.md
+- Departments JSON (Command Center): ~/clawd/zero-human-company/[company-slug]/departments.json
+- SOP research manifest (parallel sub-agent job queue): ~/clawd/zero-human-company/[company-slug]/sop-research-manifest.json
+- Department workspaces: ~/clawd/zero-human-company/[company-slug]/departments/[dept-id]/
 
 Discovery order if an agent is looking for an older / legacy install:
-1. /data/.openclaw/workspace/zero-human-company/[slug]/        — v9.6.0+ canonical
-2. /data/.openclaw/workspace/zhc/[slug]/                       — short alias
-3. /data/.openclaw/workspace/departments/                       — pre-v9.6.0 legacy (still readable)
+1. ~/clawd/zero-human-company/[slug]/        — v9.6.0+ canonical
+2. ~/clawd/zhc/[slug]/                       — short alias
+3. ~/clawd/departments/                       — pre-v9.6.0 legacy (still readable)
 
 Multi-company: if the owner has more than one company, each gets its own
-slug folder under /data/.openclaw/workspace/zero-human-company/. Don't mix departments
+slug folder under ~/clawd/zero-human-company/. Don't mix departments
 across companies. ORG-CHART, persona matrix, and departments.json are
 per-company files, not shared.
 ```
@@ -159,8 +159,8 @@ per-company files, not shared.
 ```
 ## 🔴 Skill 23 Interview Resume Protocol (Added with v6.1.2; updated v9.6.0 for ZHC paths)
 At the START of every session, check the per-company handoff file:
-- v9.6.0+ path: /data/.openclaw/workspace/zero-human-company/[company-slug]/interview-handoff.md
-- Legacy path: /data/.openclaw/master-files/company-discovery/interview-handoff.md
+- v9.6.0+ path: ~/clawd/zero-human-company/[company-slug]/interview-handoff.md
+- Legacy path: ~/Downloads/openclaw-master-files/company-discovery/interview-handoff.md
 
 - If it exists and status is "in_progress": resume the interview from the next unanswered question. Do NOT start over.
 - If interview-handoff.md is missing but workforce-interview-answers.md exists: reconstruct progress from the answers file, rebuild the handoff, and resume.
@@ -213,9 +213,9 @@ No update required.
 **Exact text to add:**
 ```
 ## Pending Skill Setup - Check and Remind
-File: /data/.openclaw/skills/.pending-setup.md
+File: ~/.openclaw/skills/.pending-setup.md
 If this file exists with entries marked Status: PENDING, proactively remind the user.
 When relevant to what they are working on, say: "You have a pending skill setup for [key] - want to add that now?"
-When user provides the key: save it to /data/.openclaw/workspace/secrets/.env and mark the entry Status: COMPLETE.
+When user provides the key: save it to ~/.openclaw/workspace/secrets/.env and mark the entry Status: COMPLETE.
 Never nag - bring it up once per session max, only when relevant.
 ```
