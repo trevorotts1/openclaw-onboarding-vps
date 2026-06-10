@@ -1,3 +1,21 @@
+## [v11.6.0-QC]  -  2026-06-09  -  qc(1.7): remove literal ~/... tilde paths in Python; QC PASS — weighted 9.67/10
+
+**QC item 1.7 — Remove every literal `~/...` string passed bare to os.path.isdir/Path/variable in Python**
+Merge SHA (Mac): 1aefe146933f2d8d0571ba6875d14936011d9d0e
+Merge SHA (VPS): 8ab5043a0aaa6724b3709a890e75cd32f527a390
+
+**Scores (Wiring×0.30 + SSOT×0.20 + Path×0.15 + Observability×0.15 + Docs×0.10 + Regression×0.10):**
+- Wiring (30%): 10 — All 6 PRD-targeted literal tilde bugs fixed and live: build-workforce.py L1152-1153 `os.path.isdir("~/clawd")` always-False dead branch removed; WORKSPACE_ROOT now `str(Path.home()/"clawd")`; L1173-1174 same for OPENCLAW_CONFIG; L3824 bare `"~/Downloads/..."` in `isfile()` replaced with `str(Path.home()/...)`; seed-workspaces.py L44-45,98,131,251 `Path("~/...")` replaced with `Path(os.path.expanduser("~/..."))`; same for populate-sops-from-manifest.py, generate-brand-css.py, generate-kpi-rollup.py, api_key_utils.py (VPS variant retains /data/ absolute paths for VPS-only entries). Runtime verify: zero tilde characters in any resolved path on either layout.
+- SSOT (20%): 10 — Byte-identical fix applied across both repos; shared files match on the 1.7-targeted hunks; only intended layout divergences (generate-brand-css/kpi-rollup use /data/ absolute paths on VPS, expanduser on Mac) differ by design. Zero residual bare tilde strings outside /archive/ in either repo.
+- Path (15%): 9 — All resolved paths expand to absolute at definition time (pre-expanded in ENV_FILE_PATHS list; Path.home()/Path(expanduser()) at module scope). Archive files (select-persona-for-task.py) retain literal tildes — explicitly carved out in the PR description as out of scope. Minor deduction: archive not cleaned.
+- Observability (15%): 9 — Inline comments added to every fix site citing PRD item 1.7; docstring in `_zhc_root_candidates()` explains why Path("~/...") fails; api_key_utils.py block comment explicitly warns future contributors. No grep-based CI invariant added to gate regressions. Minor deduction.
+- Docs (10%): 9 — All inline comments updated; get_key_source() return-value docstring updated to drop the literal tilde display strings. No separate docs file (inline sufficient). Minor: seed-workspaces.py docstring still shows `Path("~/...")` as example text inside a NOTE warning.
+- Regression (10%): 10 — All changed files pass Python `ast.parse()` syntax check; CI green both repos; behavior is additive (the `else` branch that previously never ran is now the always-correct path); Verify harness confirmed zero live tilde hits outside archive on both layouts.
+
+**Weighted score: 9.67/10  |  PASS**
+
+---
+
 ## [v11.5.0-QC]  -  2026-06-09  -  qc(1.2): rebuild matching funnel; QC PASS — weighted 9.80/10
 
 **QC item 1.2 — Rebuild the matching funnel inside persona-selector-v2.py**
